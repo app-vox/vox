@@ -1,0 +1,74 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  padding: 24px;
+  background: #1a1a2e;
+  color: #eee;
+  font-size: 14px;
+}
+
+h1 { font-size: 20px; margin-bottom: 24px; }
+h2 { font-size: 16px; margin: 16px 0 8px; color: #aaa; }
+
+section { margin-bottom: 20px; }
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #ccc;
+}
+
+input {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  margin-top: 4px;
+  background: #16213e;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #eee;
+  font-size: 14px;
+}
+
+input:focus { border-color: #4a90d9; outline: none; }
+
+button {
+  padding: 10px 20px;
+  margin-right: 8px;
+  margin-top: 12px;
+  background: #4a90d9;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+button:hover { background: #357abd; }
+
+#status {
+  margin-top: 16px;
+  padding: 8px;
+  font-size: 13px;
+  color: #aaa;
+}
+
+.model-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #222;
+}
+
+.model-row input[type="radio"] { margin-right: 8px; }
+
+.model-row .download-btn {
+  padding: 4px 12px;
+  font-size: 12px;
+  background: #2d6a4f;
+}
+
+.model-row .downloaded { color: #4caf50; font-size: 12px; }

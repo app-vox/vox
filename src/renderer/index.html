@@ -2,10 +2,34 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Vox</title>
+  <title>Vox Settings</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Vox</h1>
-  <p>Voice-to-text for macOS</p>
+  <h1>Vox Settings</h1>
+
+  <section>
+    <h2>LLM Provider</h2>
+    <label>Endpoint<input type="url" id="llm-endpoint" placeholder="https://..."></label>
+    <label>API Key<input type="password" id="llm-apikey" placeholder="Your API key"></label>
+    <label>Model<input type="text" id="llm-model" placeholder="gpt-4o"></label>
+  </section>
+
+  <section>
+    <h2>Whisper Model</h2>
+    <div id="model-list"></div>
+  </section>
+
+  <section>
+    <h2>Shortcuts</h2>
+    <label>Hold mode<input type="text" id="shortcut-hold" placeholder="Alt+Space"></label>
+    <label>Toggle mode<input type="text" id="shortcut-toggle" placeholder="Alt+Shift+Space"></label>
+  </section>
+
+  <button id="save-btn">Save</button>
+  <button id="test-btn">Test (3s recording)</button>
+  <div id="status"></div>
+
+  <script src="settings.js"></script>
 </body>
 </html>
