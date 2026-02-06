@@ -37,7 +37,7 @@ export class FoundryProvider implements LlmProvider {
       throw new Error(`LLM request failed: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as { choices: { message: { content: string } }[] };
     return data.choices[0].message.content.trim();
   }
 }
