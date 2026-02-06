@@ -1,0 +1,22 @@
+appId: com.vox.app
+productName: Vox
+directories:
+  output: out
+mac:
+  category: public.app-category.productivity
+  target: dmg
+dmg:
+  title: Vox
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+files:
+  - dist/**/*
+  - src/renderer/**/*.html
+  - src/renderer/**/*.css
+  - node_modules/**/*
+  - "!node_modules/*/{CHANGELOG.md,README.md,readme.md}"
