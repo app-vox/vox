@@ -1,0 +1,23 @@
+{
+  "name": "vox",
+  "version": "0.1.0",
+  "description": "Open-source macOS voice-to-text with local Whisper transcription and LLM correction",
+  "main": "dist/main/app.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && electron .",
+    "dev": "tsc --watch & electron .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dist": "npm run build && electron-builder"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^25.2.1",
+    "electron": "^40.2.1",
+    "electron-builder": "^26.7.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}
