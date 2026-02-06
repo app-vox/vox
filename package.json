@@ -19,5 +19,8 @@
     "electron-builder": "^26.7.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
+  },
+  "dependencies": {
+    "whisper-node": "^1.1.1"
   }
 }
