@@ -9,8 +9,7 @@
     "dev": "tsc --watch & electron .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "dist": "npm run build && electron-builder",
-    "postinstall": "patch-package"
+    "dist": "npm run build && electron-builder"
   },
   "author": "",
   "license": "MIT",
@@ -18,12 +17,10 @@
     "@types/node": "^25.2.1",
     "electron": "^40.2.1",
     "electron-builder": "^26.7.0",
-    "patch-package": "^8.0.1",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   },
   "dependencies": {
-    "node-global-key-listener": "^0.3.0",
     "whisper-node": "^1.1.1"
   }
 }

@@ -80,4 +80,68 @@ document.getElementById("save-btn")!.addEventListener("click", async () => {
   document.getElementById("status")!.textContent = "Settings saved.";
 });
 
+document.getElementById("test-btn")!.addEventListener("click", async () => {
+  const statusEl = document.getElementById("status")!;
+  const testBtn = document.getElementById("test-btn") as HTMLButtonElement;
+
+  testBtn.disabled = true;
+  statusEl.textContent = "Recording for 3 seconds...";
+
+  try {
+    // Record audio directly in this visible renderer window
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const audioContext = new AudioContext();
+    if (audioContext.state === "suspended") {
+      await audioContext.resume();
+    }
+
+    const source = audioContext.createMediaStreamSource(stream);
+    const processor = audioContext.createScriptProcessor(4096, 1, 1);
+    const chunks: Float32Array[] = [];
+
+    processor.onaudioprocess = (e) => {
+      chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+    };
+    source.connect(processor);
+    processor.connect(audioContext.destination);
+
+    // Wait 3 seconds
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    // Stop recording
+    processor.disconnect();
+    stream.getTracks().forEach((t) => t.stop());
+
+    // Merge chunks
+    const totalLength = chunks.reduce((sum, c) => sum + c.length, 0);
+    const merged = new Float32Array(totalLength);
+    let offset = 0;
+    for (const chunk of chunks) {
+      merged.set(chunk, offset);
+      offset += chunk.length;
+    }
+
+    const sampleRate = audioContext.sampleRate;
+    audioContext.close();
+
+    // Send raw audio to main process for transcription
+    const result = await ipcRenderer.invoke("test:transcribe", {
+      audioBuffer: Array.from(merged),
+      sampleRate,
+    });
+
+    let output = `Whisper: ${result.rawText || "(empty)"}`;
+    if (result.correctedText) {
+      output += `\nLLM: ${result.correctedText}`;
+    } else if (result.llmError) {
+      output += `\nLLM error: ${result.llmError}`;
+    }
+    statusEl.textContent = output;
+  } catch (err: any) {
+    statusEl.textContent = `Test failed: ${err.message}`;
+  } finally {
+    testBtn.disabled = false;
+  }
+});
+
 init();

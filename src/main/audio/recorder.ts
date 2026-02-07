@@ -1,71 +1,81 @@
-import { BrowserWindow } from "electron";
+import { type ChildProcess, spawn } from "child_process";
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
 
 export interface RecordingResult {
   audioBuffer: Float32Array;
   sampleRate: number;
 }
 
+const TARGET_RATE = 16000;
+
 export class AudioRecorder {
-  private recorderWindow: BrowserWindow | null = null;
+  private process: ChildProcess | null = null;
+  private tempPath: string | null = null;
 
   async start(): Promise<void> {
-    this.recorderWindow = new BrowserWindow({
-      show: false,
-      webPreferences: {
-        nodeIntegration: true,
-        contextIsolation: false,
-      },
+    this.tempPath = path.join(os.tmpdir(), `vox-recording-${Date.now()}.wav`);
+
+    // Use sox 'rec' to capture 16kHz mono 16-bit WAV directly
+    this.process = spawn("rec", [
+      "-r", String(TARGET_RATE),
+      "-c", "1",
+      "-b", "16",
+      this.tempPath,
+    ], {
+      stdio: ["pipe", "pipe", "pipe"],
     });
 
-    await this.recorderWindow.loadURL("about:blank");
-
-    await this.recorderWindow.webContents.executeJavaScript(`
-      (async () => {
-        window.__voxStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        window.__voxContext = new AudioContext({ sampleRate: 16000 });
-        const source = window.__voxContext.createMediaStreamSource(window.__voxStream);
-        window.__voxProcessor = window.__voxContext.createScriptProcessor(4096, 1, 1);
-        window.__voxChunks = [];
-        window.__voxProcessor.onaudioprocess = (e) => {
-          window.__voxChunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
-        };
-        source.connect(window.__voxProcessor);
-        window.__voxProcessor.connect(window.__voxContext.destination);
-      })()
-    `);
+    // Wait briefly for sox to initialize
+    await new Promise<void>((resolve, reject) => {
+      const onError = (err: Error) => {
+        cleanup();
+        reject(new Error(`Failed to start recording: ${err.message}`));
+      };
+      const onSpawn = () => {
+        cleanup();
+        resolve();
+      };
+      const cleanup = () => {
+        this.process?.removeListener("error", onError);
+        this.process?.removeListener("spawn", onSpawn);
+      };
+      this.process!.on("error", onError);
+      this.process!.on("spawn", onSpawn);
+    });
   }
 
   async stop(): Promise<RecordingResult> {
-    if (!this.recorderWindow) {
+    if (!this.process || !this.tempPath) {
       throw new Error("Recorder not started");
     }
 
-    const result = await this.recorderWindow.webContents.executeJavaScript(`
-      (() => {
-        window.__voxProcessor.disconnect();
-        window.__voxStream.getTracks().forEach(t => t.stop());
+    const proc = this.process;
+    const filePath = this.tempPath;
+    this.process = null;
+    this.tempPath = null;
 
-        const totalLength = window.__voxChunks.reduce((sum, c) => sum + c.length, 0);
-        const merged = new Float32Array(totalLength);
-        let offset = 0;
-        for (const chunk of window.__voxChunks) {
-          merged.set(chunk, offset);
-          offset += chunk.length;
-        }
+    // SIGINT makes sox finalize the WAV header properly
+    proc.kill("SIGINT");
 
-        return {
-          audioBuffer: Array.from(merged),
-          sampleRate: window.__voxContext.sampleRate,
-        };
-      })()
-    `);
+    await new Promise<void>((resolve) => {
+      proc.on("close", () => resolve());
+    });
 
-    this.recorderWindow.close();
-    this.recorderWindow = null;
+    const wavBuffer = fs.readFileSync(filePath);
+    fs.unlinkSync(filePath);
 
-    return {
-      audioBuffer: new Float32Array(result.audioBuffer),
-      sampleRate: result.sampleRate,
-    };
+    // WAV header is 44 bytes, data is 16-bit signed PCM
+    const dataOffset = 44;
+    const numSamples = (wavBuffer.length - dataOffset) / 2;
+    const audioBuffer = new Float32Array(numSamples);
+
+    for (let i = 0; i < numSamples; i++) {
+      const int16 = wavBuffer.readInt16LE(dataOffset + i * 2);
+      audioBuffer[i] = int16 / (int16 < 0 ? 0x8000 : 0x7fff);
+    }
+
+    return { audioBuffer, sampleRate: TARGET_RATE };
   }
 }

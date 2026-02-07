@@ -7,6 +7,10 @@ export interface FoundryConfig {
   model: string;
 }
 
+interface AnthropicResponse {
+  content: { type: string; text: string }[];
+}
+
 export class FoundryProvider implements LlmProvider {
   private readonly config: FoundryConfig;
 
@@ -15,17 +19,20 @@ export class FoundryProvider implements LlmProvider {
   }
 
   async correct(rawText: string): Promise<string> {
-    const url = `${this.config.endpoint}/openai/deployments/${this.config.model}/chat/completions?api-version=2024-02-01`;
+    const base = this.config.endpoint.replace(/\/+$/, "");
+    const url = `${base}/v1/messages`;
 
     const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "api-key": this.config.apiKey,
+        "Authorization": `Bearer ${this.config.apiKey}`,
+        "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
+        model: this.config.model,
+        system: LLM_SYSTEM_PROMPT,
         messages: [
-          { role: "system", content: LLM_SYSTEM_PROMPT },
           { role: "user", content: rawText },
         ],
         temperature: 0.3,
@@ -34,10 +41,15 @@ export class FoundryProvider implements LlmProvider {
     });
 
     if (!response.ok) {
-      throw new Error(`LLM request failed: ${response.status} ${response.statusText}`);
+      const body = await response.text();
+      throw new Error(`LLM request failed: ${response.status} ${response.statusText} — ${body}`);
     }
 
-    const data = await response.json() as { choices: { message: { content: string } }[] };
-    return data.choices[0].message.content.trim();
+    const data = await response.json() as AnthropicResponse;
+    const textBlock = data.content.find((b) => b.type === "text");
+    if (!textBlock) {
+      throw new Error("LLM returned no text content");
+    }
+    return textBlock.text.trim();
   }
 }

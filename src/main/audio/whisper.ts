@@ -1,4 +1,4 @@
-import whisper from "whisper-node";
+import { execFile } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
@@ -7,12 +7,9 @@ export interface TranscriptionResult {
   text: string;
 }
 
-/**
- * Transcribe an audio buffer using whisper.cpp via whisper-node.
- *
- * whisper-node expects a WAV file path, so we encode the Float32Array
- * to a temporary 16-bit PCM WAV file, run transcription, then clean up.
- */
+const WHISPER_CPP_DIR = path.join(__dirname, "../../../node_modules/whisper-node/lib/whisper.cpp");
+const WHISPER_BIN = path.join(WHISPER_CPP_DIR, "main");
+
 export async function transcribe(
   audioBuffer: Float32Array,
   sampleRate: number,
@@ -24,17 +21,8 @@ export async function transcribe(
     const wavBuffer = encodeWav(audioBuffer, sampleRate);
     fs.writeFileSync(tempPath, wavBuffer);
 
-    const result = await whisper(tempPath, {
-      modelPath,
-      whisperOptions: {
-        language: "auto",
-      },
-    });
-
-    const text = (result ?? [])
-      .map((segment: { speech: string }) => segment.speech)
-      .join(" ")
-      .trim();
+    const stdout = await runWhisper(modelPath, tempPath);
+    const text = parseWhisperOutput(stdout);
 
     return { text };
   } finally {
@@ -44,13 +32,39 @@ export async function transcribe(
   }
 }
 
-/**
- * Encode a Float32Array of audio samples into a 16-bit PCM WAV buffer.
- *
- * @param samples - Mono audio samples in the range [-1, 1]
- * @param sampleRate - Sample rate in Hz (e.g. 16000)
- * @returns A Node.js Buffer containing a valid WAV file
- */
+function runWhisper(modelPath: string, filePath: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    execFile(
+      WHISPER_BIN,
+      ["-l", "auto", "-m", modelPath, "-f", filePath],
+      { cwd: WHISPER_CPP_DIR, timeout: 30000 },
+      (error, stdout, stderr) => {
+        if (error) {
+          reject(new Error(`Whisper failed: ${stderr || error.message}`));
+          return;
+        }
+        // whisper.cpp writes transcription to stderr, plain text to stdout
+        resolve(stderr + "\n" + stdout);
+      }
+    );
+  });
+}
+
+function parseWhisperOutput(output: string): string {
+  // Match lines like: [00:00:00.000 --> 00:00:03.000]   Testando para ver se funciona
+  const lines = output.match(/\[\d{2}:\d{2}:\d{2}\.\d{3}\s-->\s\d{2}:\d{2}:\d{2}\.\d{3}\]\s+.+/g);
+  if (!lines) return "";
+
+  return lines
+    .map((line) => {
+      const match = line.match(/\]\s+(.+)/);
+      return match ? match[1].trim() : "";
+    })
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+}
+
 function encodeWav(samples: Float32Array, sampleRate: number): Buffer {
   const numChannels = 1;
   const bitsPerSample = 16;
@@ -61,26 +75,22 @@ function encodeWav(samples: Float32Array, sampleRate: number): Buffer {
 
   const buffer = Buffer.alloc(headerSize + dataSize);
 
-  // RIFF header
   buffer.write("RIFF", 0);
   buffer.writeUInt32LE(36 + dataSize, 4);
   buffer.write("WAVE", 8);
 
-  // fmt sub-chunk
   buffer.write("fmt ", 12);
-  buffer.writeUInt32LE(16, 16); // Sub-chunk size (16 for PCM)
-  buffer.writeUInt16LE(1, 20); // Audio format: PCM
+  buffer.writeUInt32LE(16, 16);
+  buffer.writeUInt16LE(1, 20);
   buffer.writeUInt16LE(numChannels, 22);
   buffer.writeUInt32LE(sampleRate, 24);
   buffer.writeUInt32LE(byteRate, 28);
   buffer.writeUInt16LE(blockAlign, 32);
   buffer.writeUInt16LE(bitsPerSample, 34);
 
-  // data sub-chunk
   buffer.write("data", 36);
   buffer.writeUInt32LE(dataSize, 40);
 
-  // Convert float samples to 16-bit signed integers
   for (let i = 0; i < samples.length; i++) {
     const clamped = Math.max(-1, Math.min(1, samples[i]));
     const int16 = clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff;

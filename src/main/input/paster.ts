@@ -1,26 +1,21 @@
-import { clipboard } from "electron";
+import { clipboard, Notification } from "electron";
 import { execSync } from "child_process";
 
-export interface PasteAction {
-  clipboardText: string;
-  shouldPaste: boolean;
-}
-
-export function buildPasteSequence(text: string): PasteAction {
-  return {
-    clipboardText: text,
-    shouldPaste: text.length > 0,
-  };
-}
-
 export function pasteText(text: string): void {
-  const action = buildPasteSequence(text);
-  if (!action.shouldPaste) return;
+  if (!text) return;
 
-  clipboard.writeText(action.clipboardText);
+  clipboard.writeText(text);
 
-  // Simulate Cmd+V using AppleScript (most reliable cross-app method on macOS)
-  execSync(
-    'osascript -e \'tell application "System Events" to keystroke "v" using command down\''
-  );
+  try {
+    // Simulate Cmd+V using AppleScript — requires Accessibility permission
+    execSync(
+      'osascript -e \'tell application "System Events" to keystroke "v" using command down\'',
+      { timeout: 3000 }
+    );
+  } catch {
+    new Notification({
+      title: "Vox",
+      body: "Auto-paste failed. Grant Accessibility access to Electron in System Settings. Text is on your clipboard — press Cmd+V.",
+    }).show();
+  }
 }

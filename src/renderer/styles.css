@@ -53,6 +53,12 @@ button:hover { background: #357abd; }
   padding: 8px;
   font-size: 13px;
   color: #aaa;
+  white-space: pre-wrap;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .model-row {

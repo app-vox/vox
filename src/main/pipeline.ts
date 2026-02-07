@@ -2,6 +2,8 @@ import { type LlmProvider } from "./llm/provider";
 import { type RecordingResult } from "./audio/recorder";
 import { type TranscriptionResult } from "./audio/whisper";
 
+export type PipelineStage = "transcribing" | "correcting";
+
 export interface PipelineDeps {
   recorder: {
     start(): Promise<void>;
@@ -15,6 +17,7 @@ export interface PipelineDeps {
   llmProvider: LlmProvider;
   paste(text: string): void;
   modelPath: string;
+  onStage?: (stage: PipelineStage) => void;
 }
 
 export class Pipeline {
@@ -31,6 +34,7 @@ export class Pipeline {
   async stopAndProcess(): Promise<string> {
     const recording = await this.deps.recorder.stop();
 
+    this.deps.onStage?.("transcribing");
     const transcription = await this.deps.transcribe(
       recording.audioBuffer,
       recording.sampleRate,
@@ -41,6 +45,7 @@ export class Pipeline {
 
     let finalText: string;
     try {
+      this.deps.onStage?.("correcting");
       finalText = await this.deps.llmProvider.correct(rawText);
     } catch {
       // LLM failed — fall back to raw transcription
