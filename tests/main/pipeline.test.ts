@@ -17,14 +17,11 @@ describe("Pipeline", () => {
     correct: vi.fn().mockResolvedValue("corrected text"),
   };
 
-  const mockPaste = vi.fn();
-
-  it("should run the full pipeline: record -> transcribe -> correct -> paste", async () => {
+  it("should run the full pipeline: record -> transcribe -> correct", async () => {
     const pipeline = new Pipeline({
       recorder: mockRecorder,
       transcribe: mockTranscribe,
       llmProvider: mockProvider,
-      paste: mockPaste,
       modelPath: "/models/ggml-small.bin",
     });
 
@@ -35,11 +32,10 @@ describe("Pipeline", () => {
     expect(mockRecorder.stop).toHaveBeenCalled();
     expect(mockTranscribe).toHaveBeenCalled();
     expect(mockProvider.correct).toHaveBeenCalledWith("raw transcription");
-    expect(mockPaste).toHaveBeenCalledWith("corrected text");
     expect(result).toBe("corrected text");
   });
 
-  it("should paste raw text if LLM correction fails", async () => {
+  it("should fall back to raw text if LLM correction fails", async () => {
     const failingProvider: LlmProvider = {
       correct: vi.fn().mockRejectedValue(new Error("LLM unavailable")),
     };
@@ -48,14 +44,12 @@ describe("Pipeline", () => {
       recorder: mockRecorder,
       transcribe: mockTranscribe,
       llmProvider: failingProvider,
-      paste: mockPaste,
       modelPath: "/models/ggml-small.bin",
     });
 
     await pipeline.startRecording();
     const result = await pipeline.stopAndProcess();
 
-    expect(mockPaste).toHaveBeenCalledWith("raw transcription");
     expect(result).toBe("raw transcription");
   });
 });

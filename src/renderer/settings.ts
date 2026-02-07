@@ -36,6 +36,7 @@ async function init(): Promise<void> {
   (document.getElementById("shortcut-toggle") as HTMLInputElement).value = config.shortcuts.toggle;
 
   await loadModels(config.whisper.model);
+  await refreshPermissions();
 }
 
 // ---- Model list ----
@@ -117,6 +118,67 @@ document.getElementById("save-btn")!.addEventListener("click", async () => {
   saveStatus.textContent = "Settings saved.";
   saveStatus.classList.add("visible");
   setTimeout(() => saveStatus.classList.remove("visible"), 2000);
+});
+
+// ---- Permissions ----
+
+async function refreshPermissions(): Promise<void> {
+  const status = await ipcRenderer.invoke("permissions:status");
+
+  const micBadge = document.getElementById("perm-mic-badge")!;
+  const micBtn = document.getElementById("perm-mic-btn")!;
+  if (status.microphone === "granted") {
+    micBadge.textContent = "Granted";
+    micBadge.className = "permission-badge granted";
+    micBadge.style.display = "";
+    micBtn.style.display = "none";
+  } else {
+    micBadge.textContent = status.microphone === "denied" ? "Denied" : "Not Granted";
+    micBadge.className = "permission-badge missing";
+    micBadge.style.display = "";
+    micBtn.style.display = "";
+  }
+
+  const accBadge = document.getElementById("perm-acc-badge")!;
+  const accBtn = document.getElementById("perm-acc-btn")!;
+  if (status.accessibility) {
+    accBadge.textContent = "Granted";
+    accBadge.className = "permission-badge granted";
+    accBadge.style.display = "";
+    accBtn.style.display = "none";
+  } else {
+    accBadge.textContent = "Not Granted";
+    accBadge.className = "permission-badge missing";
+    accBadge.style.display = "";
+    accBtn.style.display = "";
+  }
+}
+
+document.getElementById("perm-mic-btn")!.addEventListener("click", async () => {
+  const btn = document.getElementById("perm-mic-btn") as HTMLButtonElement;
+  btn.disabled = true;
+  btn.textContent = "Requesting...";
+  await ipcRenderer.invoke("permissions:request-microphone");
+  await refreshPermissions();
+  btn.disabled = false;
+  btn.textContent = "Grant Access";
+});
+
+document.getElementById("perm-acc-btn")!.addEventListener("click", async () => {
+  await ipcRenderer.invoke("permissions:request-accessibility");
+});
+
+// Refresh permissions when switching to the permissions tab
+document.querySelectorAll<HTMLButtonElement>(".tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    if (tab.dataset.tab === "permissions") refreshPermissions();
+  });
+});
+
+// Refresh permissions when the window regains focus (e.g. returning from System Settings)
+window.addEventListener("focus", () => {
+  const activeTab = document.querySelector(".tab.active") as HTMLButtonElement | null;
+  if (activeTab?.dataset.tab === "permissions") refreshPermissions();
 });
 
 // ---- Test ----

@@ -23,7 +23,7 @@
       <button class="tab active" data-tab="llm">LLM Provider</button>
       <button class="tab" data-tab="whisper">Whisper Model</button>
       <button class="tab" data-tab="shortcuts">Shortcuts</button>
-      <button class="tab" data-tab="test">Test</button>
+      <button class="tab" data-tab="permissions">Permissions</button>
     </nav>
 
     <main class="content">
@@ -94,9 +94,51 @@
         </div>
       </div>
 
-      <!-- Test Tab -->
-      <div class="tab-panel" id="panel-test">
+      <!-- Permissions Tab -->
+      <div class="tab-panel" id="panel-permissions">
         <div class="card">
+          <div class="card-header">
+            <h2>System Permissions</h2>
+            <p class="card-description">Vox requires these macOS permissions to function properly.</p>
+          </div>
+          <div class="card-body">
+            <div class="permission-row" id="perm-mic">
+              <div class="permission-info">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="22"/>
+                </svg>
+                <div>
+                  <div class="permission-name">Microphone</div>
+                  <div class="permission-desc">Required for voice recording</div>
+                </div>
+              </div>
+              <div class="permission-action">
+                <span class="permission-badge granted" id="perm-mic-badge">Granted</span>
+                <button class="btn btn-secondary btn-sm" id="perm-mic-btn" style="display:none">Grant Access</button>
+              </div>
+            </div>
+            <div class="permission-row" id="perm-acc">
+              <div class="permission-info">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <div>
+                  <div class="permission-name">Accessibility</div>
+                  <div class="permission-desc">Required for auto-paste (Cmd+V simulation)</div>
+                </div>
+              </div>
+              <div class="permission-action">
+                <span class="permission-badge granted" id="perm-acc-badge">Granted</span>
+                <button class="btn btn-secondary btn-sm" id="perm-acc-btn" style="display:none">Open Settings</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 16px">
           <div class="card-header">
             <h2>Pipeline Test</h2>
             <p class="card-description">Record a 3-second audio sample to test transcription and LLM correction.</p>

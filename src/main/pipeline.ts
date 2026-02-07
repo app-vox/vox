@@ -15,7 +15,6 @@ export interface PipelineDeps {
     modelPath: string
   ): Promise<TranscriptionResult>;
   llmProvider: LlmProvider;
-  paste(text: string): void;
   modelPath: string;
   onStage?: (stage: PipelineStage) => void;
 }
@@ -52,7 +51,6 @@ export class Pipeline {
       finalText = rawText;
     }
 
-    this.deps.paste(finalText);
     return finalText;
   }
 }

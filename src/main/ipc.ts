@@ -1,4 +1,5 @@
-import { ipcMain } from "electron";
+import { app, ipcMain, systemPreferences, BrowserWindow, shell } from "electron";
+import * as path from "path";
 import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
 import { type VoxConfig } from "../shared/config";
@@ -76,5 +77,63 @@ export function registerIpcHandlers(
     }
 
     return { rawText, correctedText, llmError };
+  });
+
+  ipcMain.handle("permissions:status", () => {
+    // Use only native AXIsProcessTrusted via koffi — avoid Electron's
+    // isTrustedAccessibilityClient which can interfere with TCC on Sequoia.
+    let accessibility: boolean | string = false;
+    try {
+      const koffi = require("koffi");
+      const appServices = koffi.load("/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices");
+      const AXIsProcessTrusted = appServices.func("AXIsProcessTrusted", "bool", []);
+      accessibility = AXIsProcessTrusted();
+    } catch (err: any) {
+      accessibility = `error: ${err.message}`;
+    }
+
+    return {
+      microphone: systemPreferences.getMediaAccessStatus("microphone"),
+      accessibility,
+      pid: process.pid,
+      execPath: process.execPath,
+      bundleId: app.name,
+    };
+  });
+
+  ipcMain.handle("permissions:request-microphone", async () => {
+    app.focus({ steal: true });
+    const granted = await systemPreferences.askForMediaAccess("microphone");
+    return granted;
+  });
+
+  ipcMain.handle("permissions:request-accessibility", () => {
+    // Don't call isTrustedAccessibilityClient(true) — on Sequoia it can
+    // register the app incorrectly causing the toggle to bounce back.
+    // Instead, just open System Settings and let the user add the app via "+".
+    shell.openExternal("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility");
+  });
+
+  ipcMain.handle("permissions:test-paste", () => {
+    const { pasteText } = require("./input/paster");
+
+    // Check native accessibility status
+    let hasAccessibility = false;
+    try {
+      const koffi = require("koffi");
+      const as = koffi.load("/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices");
+      hasAccessibility = as.func("AXIsProcessTrusted", "bool", [])();
+    } catch { /* ignore */ }
+
+    try {
+      pasteText("Vox paste test");
+      return {
+        ok: true,
+        hasAccessibility,
+        mode: hasAccessibility ? "auto-paste" : "clipboard-only",
+      };
+    } catch (err: any) {
+      return { ok: false, error: String(err.message || err), hasAccessibility };
+    }
   });
 }
