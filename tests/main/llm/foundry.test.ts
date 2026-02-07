@@ -11,9 +11,9 @@ describe("FoundryProvider", () => {
 
   beforeEach(() => {
     provider = new FoundryProvider({
-      endpoint: "https://foundry.example.com",
+      endpoint: "https://foundry.example.com/anthropic",
       apiKey: "test-key",
-      model: "gpt-4o",
+      model: "claude-opus-4-6",
     });
     vi.clearAllMocks();
   });
@@ -22,7 +22,7 @@ describe("FoundryProvider", () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
-        choices: [{ message: { content: "I wanted to talk about the new feature." } }],
+        content: [{ type: "text", text: "I wanted to talk about the new feature." }],
       }),
     });
 
@@ -37,6 +37,7 @@ describe("FoundryProvider", () => {
       ok: false,
       status: 401,
       statusText: "Unauthorized",
+      text: async () => "Unauthorized",
     });
 
     await expect(provider.correct("test")).rejects.toThrow("LLM request failed: 401 Unauthorized");
@@ -46,7 +47,7 @@ describe("FoundryProvider", () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
-        choices: [{ message: { content: "cleaned text" } }],
+        content: [{ type: "text", text: "cleaned text" }],
       }),
     });
 
@@ -55,9 +56,37 @@ describe("FoundryProvider", () => {
     const callArgs = mockFetch.mock.calls[0];
     const body = JSON.parse(callArgs[1].body);
 
-    expect(body.messages[0].role).toBe("system");
-    expect(body.messages[0].content).toContain("speech-to-text post-processor");
-    expect(body.messages[1].role).toBe("user");
-    expect(body.messages[1].content).toBe("raw text");
+    expect(body.system).toContain("speech-to-text post-processor");
+    expect(body.messages[0].role).toBe("user");
+    expect(body.messages[0].content).toBe("raw text");
+  });
+
+  it("should call the correct endpoint URL", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        content: [{ type: "text", text: "result" }],
+      }),
+    });
+
+    await provider.correct("test");
+
+    const url = mockFetch.mock.calls[0][0];
+    expect(url).toBe("https://foundry.example.com/anthropic/v1/messages");
+  });
+
+  it("should send anthropic-version header", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        content: [{ type: "text", text: "result" }],
+      }),
+    });
+
+    await provider.correct("test");
+
+    const headers = mockFetch.mock.calls[0][1].headers;
+    expect(headers["anthropic-version"]).toBe("2023-06-01");
+    expect(headers["Authorization"]).toBe("Bearer test-key");
   });
 });
