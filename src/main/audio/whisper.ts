@@ -7,7 +7,10 @@ export interface TranscriptionResult {
   text: string;
 }
 
-const WHISPER_CPP_DIR = path.join(__dirname, "../../../node_modules/whisper-node/lib/whisper.cpp");
+// In packaged builds, __dirname points inside app.asar but native binaries
+// are in app.asar.unpacked. Replace .asar with .asar.unpacked for the binary path.
+const baseDir = __dirname.replace("app.asar", "app.asar.unpacked");
+const WHISPER_CPP_DIR = path.join(baseDir, "../../../node_modules/whisper-node/lib/whisper.cpp");
 const WHISPER_BIN = path.join(WHISPER_CPP_DIR, "main");
 
 export async function transcribe(

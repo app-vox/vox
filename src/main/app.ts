@@ -1,4 +1,4 @@
-import { app, globalShortcut, systemPreferences, session, BrowserWindow, Tray, Menu, nativeImage, Notification, dialog } from "electron";
+import { app, globalShortcut, session, BrowserWindow, Tray, Menu, nativeImage, Notification } from "electron";
 import * as path from "path";
 import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
@@ -35,7 +35,6 @@ function setupPipeline(): void {
     recorder: new AudioRecorder(),
     transcribe,
     llmProvider,
-    paste: pasteText,
     modelPath,
     onStage: (stage) => {
       indicator?.show(stage);
@@ -91,52 +90,54 @@ function openSettings(): void {
 function setupShortcuts(): void {
   indicator = new IndicatorWindow();
 
-  const stateMachine = new ShortcutStateMachine({
+  let stateMachine: ShortcutStateMachine;
+
+  stateMachine = new ShortcutStateMachine({
     onStart: () => {
+      console.log("[Vox] Recording started");
       indicator!.show("listening");
       pipeline!.startRecording().catch((err: Error) => {
+        console.error("[Vox] Recording failed:", err.message);
         indicator!.hide();
         new Notification({ title: "Vox", body: `Recording failed: ${err.message}` }).show();
       });
     },
-    onStop: () => {
+    onStop: async () => {
+      stateMachine.setProcessing();
+      console.log("[Vox] Recording stopped, processing pipeline");
       indicator!.show("transcribing");
-      pipeline!.stopAndProcess()
-        .then((text) => {
-          new Notification({ title: "Vox", body: text || "(empty transcription)" }).show();
-        })
-        .catch((err: Error) => {
-          new Notification({ title: "Vox", body: `Failed: ${err.message}` }).show();
-        })
-        .finally(() => {
-          indicator!.hide();
-        });
+      try {
+        const text = await pipeline!.stopAndProcess();
+        console.log("[Vox] Pipeline complete, text:", text.slice(0, 80));
+        // Hide indicator and wait for the target app to regain focus before pasting
+        indicator!.hide();
+        await new Promise((r) => setTimeout(r, 200));
+        pasteText(text);
+        new Notification({ title: "Vox", body: text || "(empty transcription)" }).show();
+      } catch (err: any) {
+        console.error("[Vox] Pipeline failed:", err.message);
+        indicator!.hide();
+        new Notification({ title: "Vox", body: `Failed: ${err.message}` }).show();
+      } finally {
+        stateMachine.setIdle();
+        console.log("[Vox] Ready for next recording");
+      }
     },
   });
 
-  // Both shortcuts use toggle mode via Electron's globalShortcut
-  // (globalShortcut only detects key-down, not key-up, so hold mode
-  // is not possible without a native addon — using toggle for both)
+  // Hold mode: macOS sends repeated key-down events while held.
+  // We detect release when the repeats stop (400ms timeout).
   globalShortcut.register("Alt+Space", () => {
-    stateMachine.handleTogglePress();
+    stateMachine.handleHoldKeyRepeat();
   });
 
+  // Toggle mode: press once to start, press again to stop.
   globalShortcut.register("Alt+Shift+Space", () => {
     stateMachine.handleTogglePress();
   });
 }
 
 app.whenReady().then(async () => {
-  // Request microphone permission BEFORE hiding the dock —
-  // macOS won't show permission dialogs for background/agent apps
-  const micGranted = await systemPreferences.askForMediaAccess("microphone");
-  if (!micGranted) {
-    new Notification({
-      title: "Vox",
-      body: "Microphone access denied. Enable it in System Settings > Privacy & Security > Microphone.",
-    }).show();
-  }
-
   // Auto-grant Electron-level media permission for all renderer windows
   session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
     callback(permission === "media");
@@ -145,28 +146,10 @@ app.whenReady().then(async () => {
     return permission === "media";
   });
 
-  // Prompt for Accessibility permission (needed for auto-paste via Cmd+V simulation).
-  // The `true` parameter makes macOS show a dialog directing the user to System Settings.
-  const accessibilityGranted = systemPreferences.isTrustedAccessibilityClient(true);
-  if (!accessibilityGranted) {
-    dialog.showMessageBoxSync({
-      type: "info",
-      title: "Vox — Accessibility Permission",
-      message: "Vox needs Accessibility access to auto-paste transcribed text.",
-      detail: "A system dialog should have appeared. Grant access to Electron in System Settings > Privacy & Security > Accessibility, then restart Vox.",
-    });
-  }
-
-  app.dock?.hide();
-
   registerIpcHandlers(configManager, modelManager);
   setupPipeline();
   setupTray();
   setupShortcuts();
-
-  console.log("[Vox] App ready. Tray and shortcuts active.");
-  console.log(`[Vox] Microphone permission: ${micGranted ? "granted" : "denied"}`);
-  console.log("[Vox] Press Alt+Space or Alt+Shift+Space to toggle recording.");
 });
 
 app.on("will-quit", () => {

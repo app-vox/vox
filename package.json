@@ -21,6 +21,37 @@
     "vitest": "^4.0.18"
   },
   "dependencies": {
+    "koffi": "^2.15.1",
     "whisper-node": "^1.1.1"
+  },
+  "build": {
+    "appId": "com.rodrigoluizs.vox",
+    "productName": "Vox",
+    "afterSign": "build/notarize.cjs",
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": "dir",
+      "identity": "Rodrigo Luiz Dos Santos Costa Silva (7Y57846YR9)",
+      "provisioningProfile": "build/Vox_Profile.provisionprofile",
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "extendInfo": {
+        "LSUIElement": true,
+        "NSMicrophoneUsageDescription": "Vox needs microphone access to record your voice for transcription.",
+        "NSAccessibilityUsageDescription": "Vox needs accessibility access to paste transcribed text automatically."
+      }
+    },
+    "files": [
+      "dist/**/*",
+      "src/renderer/**/*",
+      "resources/**/*"
+    ],
+    "asarUnpack": [
+      "node_modules/whisper-node/**/*",
+      "node_modules/koffi/**/*"
+    ],
+    "extraResources": [
+      "resources/**/*"
+    ]
   }
 }

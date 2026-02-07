@@ -410,6 +410,65 @@ input::placeholder {
   cursor: not-allowed;
 }
 
+/* ---- Permission Rows ---- */
+
+.permission-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.permission-row:last-child {
+  border-bottom: none;
+}
+
+.permission-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-secondary);
+}
+
+.permission-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.permission-desc {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.permission-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.permission-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-weight: 500;
+}
+
+.permission-badge.granted {
+  color: var(--success);
+  background: var(--success-bg);
+}
+
+.permission-badge.missing {
+  color: var(--warning);
+  background: rgba(245, 158, 11, 0.1);
+}
+
 /* ---- Status Box ---- */
 
 .status-box {
