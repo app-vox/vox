@@ -1,5 +1,6 @@
 import { app, globalShortcut, session, BrowserWindow, Tray, Menu, nativeImage, Notification } from "electron";
 import * as path from "path";
+import { uIOhook, UiohookKey } from "uiohook-napi";
 import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
 import { AudioRecorder } from "./audio/recorder";
@@ -125,16 +126,24 @@ function setupShortcuts(): void {
     },
   });
 
-  // Hold mode: macOS sends repeated key-down events while held.
-  // We detect release when the repeats stop (400ms timeout).
+  // Hold mode: globalShortcut detects key-down, uiohook detects key-up.
   globalShortcut.register("Alt+Space", () => {
-    stateMachine.handleHoldKeyRepeat();
+    stateMachine.handleHoldKeyDown();
   });
 
   // Toggle mode: press once to start, press again to stop.
   globalShortcut.register("Alt+Shift+Space", () => {
     stateMachine.handleTogglePress();
   });
+
+  // Detect Space key-up for hold mode release via native keyboard hook.
+  // globalShortcut only fires on key-down; uiohook gives us key-up events.
+  uIOhook.on("keyup", (e) => {
+    if (e.keycode === UiohookKey.Space) {
+      stateMachine.handleHoldKeyUp();
+    }
+  });
+  uIOhook.start();
 }
 
 app.whenReady().then(async () => {
@@ -154,6 +163,7 @@ app.whenReady().then(async () => {
 
 app.on("will-quit", () => {
   globalShortcut.unregisterAll();
+  uIOhook.stop();
 });
 
 app.on("window-all-closed", () => {

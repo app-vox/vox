@@ -1,61 +1,54 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { ShortcutStateMachine } from "../../../src/main/shortcuts/listener";
 
 describe("ShortcutStateMachine", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it("should emit start on first hold key repeat", () => {
+  it("should emit start on hold key down", () => {
     const onStart = vi.fn();
     const onStop = vi.fn();
     const sm = new ShortcutStateMachine({ onStart, onStop });
 
-    sm.handleHoldKeyRepeat();
+    sm.handleHoldKeyDown();
 
     expect(onStart).toHaveBeenCalledOnce();
     expect(onStop).not.toHaveBeenCalled();
+    expect(sm.getState()).toBe("hold");
   });
 
-  it("should emit stop when hold key repeats stop (key released)", () => {
+  it("should emit stop on hold key up", () => {
     const onStart = vi.fn();
     const onStop = vi.fn();
     const sm = new ShortcutStateMachine({ onStart, onStop });
 
-    sm.handleHoldKeyRepeat();
+    sm.handleHoldKeyDown();
+    sm.handleHoldKeyUp();
+
     expect(onStart).toHaveBeenCalledOnce();
-
-    // Simulate key release by letting the timer expire
-    vi.advanceTimersByTime(400);
-
     expect(onStop).toHaveBeenCalledOnce();
     expect(sm.getState()).toBe("idle");
   });
 
-  it("should not emit stop while key repeats continue", () => {
+  it("should ignore duplicate hold key down events", () => {
     const onStart = vi.fn();
     const onStop = vi.fn();
     const sm = new ShortcutStateMachine({ onStart, onStop });
 
-    sm.handleHoldKeyRepeat();
+    sm.handleHoldKeyDown();
+    sm.handleHoldKeyDown();
+    sm.handleHoldKeyDown();
 
-    // Simulate key repeats every 100ms (before 400ms timeout)
-    vi.advanceTimersByTime(300);
-    sm.handleHoldKeyRepeat();
-    vi.advanceTimersByTime(300);
-    sm.handleHoldKeyRepeat();
-    vi.advanceTimersByTime(300);
+    expect(onStart).toHaveBeenCalledTimes(1);
+    expect(sm.getState()).toBe("hold");
+  });
+
+  it("should ignore hold key up when not in hold state", () => {
+    const onStart = vi.fn();
+    const onStop = vi.fn();
+    const sm = new ShortcutStateMachine({ onStart, onStop });
+
+    sm.handleHoldKeyUp(); // idle — should be ignored
 
     expect(onStop).not.toHaveBeenCalled();
-    expect(sm.getState()).toBe("hold");
-
-    // Now release (let timeout expire)
-    vi.advanceTimersByTime(400);
-    expect(onStop).toHaveBeenCalledOnce();
+    expect(sm.getState()).toBe("idle");
   });
 
   it("should toggle on first press and stop on second press", () => {
@@ -65,42 +58,44 @@ describe("ShortcutStateMachine", () => {
 
     sm.handleTogglePress();
     expect(onStart).toHaveBeenCalledOnce();
+    expect(sm.getState()).toBe("toggle");
 
     sm.handleTogglePress();
     expect(onStop).toHaveBeenCalledOnce();
+    expect(sm.getState()).toBe("idle");
   });
 
-  it("should not allow toggle during hold", () => {
+  it("should promote hold to toggle when toggle is pressed during hold", () => {
     const onStart = vi.fn();
     const onStop = vi.fn();
     const sm = new ShortcutStateMachine({ onStart, onStop });
 
-    sm.handleHoldKeyRepeat();
-    sm.handleTogglePress(); // should be ignored
-
-    expect(onStart).toHaveBeenCalledTimes(1);
+    sm.handleHoldKeyDown(); // enters hold
     expect(sm.getState()).toBe("hold");
+
+    sm.handleTogglePress(); // promotes to toggle
+    expect(sm.getState()).toBe("toggle");
+    expect(onStart).toHaveBeenCalledTimes(1); // no duplicate onStart
+    expect(onStop).not.toHaveBeenCalled();
+
+    // Key up should NOT stop recording since we promoted to toggle
+    sm.handleHoldKeyUp();
+    expect(onStop).not.toHaveBeenCalled();
+    expect(sm.getState()).toBe("toggle");
+
+    // Second toggle press stops recording
+    sm.handleTogglePress();
+    expect(onStop).toHaveBeenCalledOnce();
+    expect(sm.getState()).toBe("idle");
   });
 
-  it("should only emit start once for multiple hold repeats", () => {
-    const onStart = vi.fn();
-    const onStop = vi.fn();
-    const sm = new ShortcutStateMachine({ onStart, onStop });
-
-    sm.handleHoldKeyRepeat();
-    sm.handleHoldKeyRepeat();
-    sm.handleHoldKeyRepeat();
-
-    expect(onStart).toHaveBeenCalledTimes(1);
-  });
-
-  it("should ignore hold key repeats while processing", () => {
+  it("should ignore hold key down while processing", () => {
     const onStart = vi.fn();
     const onStop = vi.fn();
     const sm = new ShortcutStateMachine({ onStart, onStop });
 
     sm.setProcessing();
-    sm.handleHoldKeyRepeat();
+    sm.handleHoldKeyDown();
 
     expect(onStart).not.toHaveBeenCalled();
     expect(sm.getState()).toBe("processing");
@@ -134,22 +129,16 @@ describe("ShortcutStateMachine", () => {
     expect(onStart).toHaveBeenCalledOnce();
   });
 
-  it("should clear pending hold timer when entering processing", () => {
+  it("should ignore hold key up while processing", () => {
     const onStart = vi.fn();
     const onStop = vi.fn();
     const sm = new ShortcutStateMachine({ onStart, onStop });
 
-    // Start a hold (creates timer)
-    sm.handleHoldKeyRepeat();
-    expect(sm.getState()).toBe("hold");
-
-    // Simulate: hold timer fires → idle → onStop called → setProcessing
-    vi.advanceTimersByTime(400);
-    expect(onStop).toHaveBeenCalledOnce();
+    sm.handleHoldKeyDown();
     sm.setProcessing();
+    sm.handleHoldKeyUp();
 
-    // Additional timer ticks should not cause another onStop
-    vi.advanceTimersByTime(1000);
-    expect(onStop).toHaveBeenCalledTimes(1);
+    expect(onStop).not.toHaveBeenCalled();
+    expect(sm.getState()).toBe("processing");
   });
 });

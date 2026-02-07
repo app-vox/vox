@@ -1,9 +1,16 @@
-.PHONY: release run
+.PHONY: release run build install uninstall
 
-release:
+release: build uninstall install
+
+build:
 	npm run dist
-	mv dist/mac-arm64/Vox.app /Applications/Vox.app
+
+install:
+	mv dist/mac-arm64/Vox.app /Applications
 	open /Applications/Vox.app
+
+uninstall:
+	rm -rf /Applications/Vox.app
 
 run:
 	npm run start

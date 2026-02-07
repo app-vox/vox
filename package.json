@@ -23,9 +23,11 @@
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.985.0",
     "koffi": "^2.15.1",
+    "uiohook-napi": "^1.5.4",
     "whisper-node": "^1.1.1"
   },
   "build": {
+    "npmRebuild": false,
     "appId": "com.rodrigoluizs.vox",
     "productName": "Vox",
     "afterSign": "build/notarize.cjs",
@@ -49,7 +51,8 @@
     ],
     "asarUnpack": [
       "node_modules/whisper-node/**/*",
-      "node_modules/koffi/**/*"
+      "node_modules/koffi/**/*",
+      "node_modules/uiohook-napi/**/*"
     ],
     "extraResources": [
       "resources/**/*"
