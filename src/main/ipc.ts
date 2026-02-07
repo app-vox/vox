@@ -1,13 +1,25 @@
-import { app, ipcMain, systemPreferences, BrowserWindow, shell } from "electron";
+import { app, ipcMain, nativeImage, systemPreferences, BrowserWindow, shell } from "electron";
 import * as path from "path";
 import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
 import { type VoxConfig } from "../shared/config";
 
+function getResourcePath(...segments: string[]): string {
+  return app.isPackaged
+    ? path.join(process.resourcesPath, "resources", ...segments)
+    : path.join(__dirname, "../../resources", ...segments);
+}
+
 export function registerIpcHandlers(
   configManager: ConfigManager,
   modelManager: ModelManager
 ): void {
+  ipcMain.handle("resources:data-url", (_event, ...segments: string[]) => {
+    const filePath = getResourcePath(...segments);
+    const image = nativeImage.createFromPath(filePath);
+    return image.toDataURL();
+  });
+
   ipcMain.handle("config:load", () => {
     return configManager.load();
   });
@@ -32,7 +44,7 @@ export function registerIpcHandlers(
 
   ipcMain.handle("test:transcribe", async (_event, recording: { audioBuffer: number[]; sampleRate: number }) => {
     const { transcribe } = await import("./audio/whisper");
-    const { FoundryProvider } = await import("./llm/foundry");
+    const { createLlmProvider } = await import("./llm/factory");
 
     const config = configManager.load();
     const modelPath = modelManager.getModelPath(config.whisper.model);
@@ -61,19 +73,11 @@ export function registerIpcHandlers(
 
     let correctedText: string | null = null;
     let llmError: string | null = null;
-    if (config.llm.endpoint && config.llm.apiKey) {
-      try {
-        const llm = new FoundryProvider({
-          endpoint: config.llm.endpoint,
-          apiKey: config.llm.apiKey,
-          model: config.llm.model,
-        });
-        correctedText = await llm.correct(rawText);
-      } catch (err: any) {
-        llmError = err.message || String(err);
-      }
-    } else {
-      llmError = "No endpoint or API key configured";
+    try {
+      const llm = createLlmProvider(config.llm);
+      correctedText = await llm.correct(rawText);
+    } catch (err: any) {
+      llmError = err.message || String(err);
     }
 
     return { rawText, correctedText, llmError };

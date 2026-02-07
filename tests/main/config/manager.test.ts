@@ -66,4 +66,29 @@ describe("ConfigManager", () => {
     expect(loaded.whisper.model).toBe("small");
     expect(loaded.shortcuts.hold).toBe("Alt+Space");
   });
+
+  it("should merge old config without bedrock fields using defaults", () => {
+    const oldConfig = {
+      llm: {
+        provider: "foundry",
+        endpoint: "https://old.com",
+        apiKey: "old-key",
+        model: "claude",
+      },
+    };
+    fs.mkdirSync(testDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(testDir, "config.json"),
+      JSON.stringify(oldConfig),
+    );
+
+    const loaded = manager.load();
+
+    expect(loaded.llm.provider).toBe("foundry");
+    expect(loaded.llm.endpoint).toBe("https://old.com");
+    expect(loaded.llm.region).toBe("us-east-1");
+    expect(loaded.llm.accessKeyId).toBe("");
+    expect(loaded.llm.secretAccessKey).toBe("");
+    expect(loaded.llm.modelId).toBe("anthropic.claude-3-5-sonnet-20241022-v2:0");
+  });
 });

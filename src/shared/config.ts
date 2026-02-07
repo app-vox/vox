@@ -1,8 +1,19 @@
+export type LlmProviderType = "foundry" | "bedrock";
+
 export interface LlmConfig {
-  provider: string;
+  provider: LlmProviderType;
+
+  // Foundry fields
   endpoint: string;
   apiKey: string;
   model: string;
+
+  // Bedrock fields
+  region: string;
+  profile: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  modelId: string;
 }
 
 export interface WhisperConfig {
@@ -29,6 +40,11 @@ export function createDefaultConfig(): VoxConfig {
       endpoint: "",
       apiKey: "",
       model: "gpt-4o",
+      region: "us-east-1",
+      profile: "",
+      accessKeyId: "",
+      secretAccessKey: "",
+      modelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
     },
     whisper: {
       model: "small",

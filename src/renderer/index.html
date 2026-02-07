@@ -9,11 +9,7 @@
   <div class="app">
     <header class="header">
       <div class="header-title">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-          <line x1="12" y1="19" x2="12" y2="22"/>
-        </svg>
+        <img alt="Vox" class="header-logo" id="header-logo">
         <span>Vox</span>
       </div>
       <span class="header-subtitle">Settings</span>
@@ -36,24 +32,77 @@
           </div>
           <div class="card-body">
             <div class="field">
-              <label for="llm-endpoint">Endpoint</label>
-              <input type="url" id="llm-endpoint" placeholder="https://your-resource.services.ai.azure.com/anthropic">
+              <label for="llm-provider">Provider</label>
+              <select id="llm-provider">
+                <option value="foundry">Microsoft Foundry</option>
+                <option value="bedrock">AWS Bedrock</option>
+              </select>
             </div>
-            <div class="field">
-              <label for="llm-apikey">API Key</label>
-              <div class="input-group">
-                <input type="password" id="llm-apikey" placeholder="Enter your API key">
-                <button class="icon-btn" id="toggle-apikey" title="Show/hide key">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                  </svg>
-                </button>
+
+            <!-- Foundry fields -->
+            <div id="fields-foundry">
+              <div class="field">
+                <label for="llm-endpoint">Endpoint</label>
+                <input type="url" id="llm-endpoint" placeholder="https://your-resource.services.ai.azure.com/anthropic">
+              </div>
+              <div class="field">
+                <label for="llm-apikey">API Key</label>
+                <div class="input-group">
+                  <input type="password" id="llm-apikey" placeholder="Enter your API key">
+                  <button class="icon-btn" id="toggle-apikey" title="Show/hide key">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div class="field">
+                <label for="llm-model">Model</label>
+                <input type="text" id="llm-model" placeholder="gpt-4o">
               </div>
             </div>
-            <div class="field">
-              <label for="llm-model">Model</label>
-              <input type="text" id="llm-model" placeholder="gpt-4o">
+
+            <!-- Bedrock fields -->
+            <div id="fields-bedrock" style="display: none">
+              <div class="field">
+                <label for="llm-region">Region</label>
+                <input type="text" id="llm-region" placeholder="us-east-1">
+              </div>
+              <div class="field">
+                <label for="llm-profile">AWS Profile</label>
+                <input type="text" id="llm-profile" placeholder="default">
+                <p class="field-hint">Optional. Named profile from ~/.aws/credentials. Ignored when Access Key ID is provided.</p>
+              </div>
+              <div class="field">
+                <label for="llm-access-key">Access Key ID</label>
+                <div class="input-group">
+                  <input type="password" id="llm-access-key" placeholder="Leave empty to use default credentials">
+                  <button class="icon-btn" id="toggle-access-key" title="Show/hide key">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </button>
+                </div>
+                <p class="field-hint">Optional. If empty, uses AWS default credential chain (env vars, ~/.aws/credentials, IAM roles).</p>
+              </div>
+              <div class="field">
+                <label for="llm-secret-key">Secret Access Key</label>
+                <div class="input-group">
+                  <input type="password" id="llm-secret-key" placeholder="Leave empty to use default credentials">
+                  <button class="icon-btn" id="toggle-secret-key" title="Show/hide key">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div class="field">
+                <label for="llm-model-id">Model ID</label>
+                <input type="text" id="llm-model-id" placeholder="anthropic.claude-3-5-sonnet-20241022-v2:0">
+              </div>
             </div>
           </div>
         </div>

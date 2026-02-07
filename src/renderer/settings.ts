@@ -17,24 +17,52 @@ document.querySelectorAll<HTMLButtonElement>(".tab").forEach((tab) => {
   });
 });
 
-// ---- Show/hide API key ----
+// ---- Provider field switching ----
 
-document.getElementById("toggle-apikey")!.addEventListener("click", () => {
-  const input = document.getElementById("llm-apikey") as HTMLInputElement;
-  input.type = input.type === "password" ? "text" : "password";
-});
+function updateProviderFields(): void {
+  const provider = (document.getElementById("llm-provider") as HTMLSelectElement).value;
+  document.getElementById("fields-foundry")!.style.display = provider === "foundry" ? "" : "none";
+  document.getElementById("fields-bedrock")!.style.display = provider === "bedrock" ? "" : "none";
+}
+
+document.getElementById("llm-provider")!.addEventListener("change", updateProviderFields);
+
+// ---- Show/hide secret fields ----
+
+function setupToggle(buttonId: string, inputId: string): void {
+  document.getElementById(buttonId)?.addEventListener("click", () => {
+    const input = document.getElementById(inputId) as HTMLInputElement;
+    input.type = input.type === "password" ? "text" : "password";
+  });
+}
+
+setupToggle("toggle-apikey", "llm-apikey");
+setupToggle("toggle-access-key", "llm-access-key");
+setupToggle("toggle-secret-key", "llm-secret-key");
 
 // ---- Init ----
 
 async function init(): Promise<void> {
   const config = await ipcRenderer.invoke("config:load");
 
+  (document.getElementById("llm-provider") as HTMLSelectElement).value = config.llm.provider || "foundry";
   (document.getElementById("llm-endpoint") as HTMLInputElement).value = config.llm.endpoint;
   (document.getElementById("llm-apikey") as HTMLInputElement).value = config.llm.apiKey;
   (document.getElementById("llm-model") as HTMLInputElement).value = config.llm.model;
+  (document.getElementById("llm-region") as HTMLInputElement).value = config.llm.region || "";
+  (document.getElementById("llm-profile") as HTMLInputElement).value = config.llm.profile || "";
+  (document.getElementById("llm-access-key") as HTMLInputElement).value = config.llm.accessKeyId || "";
+  (document.getElementById("llm-secret-key") as HTMLInputElement).value = config.llm.secretAccessKey || "";
+  (document.getElementById("llm-model-id") as HTMLInputElement).value = config.llm.modelId || "";
   (document.getElementById("shortcut-hold") as HTMLInputElement).value = config.shortcuts.hold;
   (document.getElementById("shortcut-toggle") as HTMLInputElement).value = config.shortcuts.toggle;
 
+  // Load logo as data URL from main process (resources are in extraResources, not in the asar)
+  const logoDataUrl: string = await ipcRenderer.invoke("resources:data-url", "trayIcon@8x.png");
+  const logoEl = document.getElementById("header-logo") as HTMLImageElement;
+  if (logoEl) logoEl.src = logoDataUrl;
+
+  updateProviderFields();
   await loadModels(config.whisper.model);
   await refreshPermissions();
 }
@@ -100,10 +128,15 @@ document.getElementById("save-btn")!.addEventListener("click", async () => {
 
   const config = {
     llm: {
-      provider: "foundry",
+      provider: (document.getElementById("llm-provider") as HTMLSelectElement).value,
       endpoint: (document.getElementById("llm-endpoint") as HTMLInputElement).value,
       apiKey: (document.getElementById("llm-apikey") as HTMLInputElement).value,
       model: (document.getElementById("llm-model") as HTMLInputElement).value,
+      region: (document.getElementById("llm-region") as HTMLInputElement).value,
+      profile: (document.getElementById("llm-profile") as HTMLInputElement).value,
+      accessKeyId: (document.getElementById("llm-access-key") as HTMLInputElement).value,
+      secretAccessKey: (document.getElementById("llm-secret-key") as HTMLInputElement).value,
+      modelId: (document.getElementById("llm-model-id") as HTMLInputElement).value,
     },
     whisper: { model: selectedModel },
     shortcuts: {

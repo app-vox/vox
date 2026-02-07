@@ -4,7 +4,7 @@ import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
 import { AudioRecorder } from "./audio/recorder";
 import { transcribe } from "./audio/whisper";
-import { FoundryProvider } from "./llm/foundry";
+import { createLlmProvider } from "./llm/factory";
 import { pasteText } from "./input/paster";
 import { Pipeline } from "./pipeline";
 import { ShortcutStateMachine } from "./shortcuts/listener";
@@ -25,11 +25,7 @@ function setupPipeline(): void {
   const config = configManager.load();
   const modelPath = modelManager.getModelPath(config.whisper.model);
 
-  const llmProvider = new FoundryProvider({
-    endpoint: config.llm.endpoint,
-    apiKey: config.llm.apiKey,
-    model: config.llm.model,
-  });
+  const llmProvider = createLlmProvider(config.llm);
 
   pipeline = new Pipeline({
     recorder: new AudioRecorder(),
@@ -42,13 +38,17 @@ function setupPipeline(): void {
   });
 }
 
+function getResourcePath(...segments: string[]): string {
+  return app.isPackaged
+    ? path.join(process.resourcesPath, "resources", ...segments)
+    : path.join(__dirname, "../../resources", ...segments);
+}
+
 function setupTray(): void {
-  // Load tray icon from resources/ (macOS template image — black with alpha)
-  const iconPath = path.join(__dirname, "../../resources/trayIcon.png");
+  const iconPath = getResourcePath("trayIcon.png");
   const icon = nativeImage.createFromPath(iconPath);
   icon.setTemplateImage(true);
   tray = new Tray(icon);
-  tray.setTitle("Vox");
 
   const contextMenu = Menu.buildFromTemplate([
     { label: "Settings", click: () => openSettings() },
