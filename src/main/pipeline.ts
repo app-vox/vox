@@ -21,6 +21,29 @@ export interface PipelineDeps {
 }
 
 /**
+ * Format enumerated lists with bullet points.
+ * Detects numbered lists (1., 2., etc.) and converts to bullet points.
+ */
+function formatEnumeratedList(text: string): string {
+  // Match number followed by period/parenthesis/dash at start of line or after newline
+  // Examples: "1. Item", "1) Item", "1 - Item"
+  const numberedListPattern = /(^|[\r\n]+)\s*(\d+)[.)]\s+/g;
+
+  // Count how many numbered items exist
+  const matches = [...text.matchAll(numberedListPattern)];
+  if (matches.length < 2) {
+    return text; // Not a list or only one item
+  }
+
+  // Replace numbered prefixes with bullet points, preserving line breaks
+  const formatted = text.replace(numberedListPattern, (match, lineBreak) => {
+    return `${lineBreak}• `;
+  });
+
+  return formatted;
+}
+
+/**
  * Detect non-speech Whisper output caused by background noise.
  * Whisper hallucinates in two ways with noise:
  * 1. Repetitive characters/tokens (e.g. "ლლლლლლ")
@@ -101,6 +124,9 @@ export class Pipeline {
       // LLM failed — fall back to raw transcription
       finalText = rawText;
     }
+
+    // Format enumerated lists with bullet points
+    finalText = formatEnumeratedList(finalText);
 
     return finalText;
   }
