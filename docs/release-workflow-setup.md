@@ -43,7 +43,20 @@ Base64-encode the .p8 file:
 base64 -i AuthKey_XXXXXXXXXX.p8 | pbcopy
 ```
 
-## 3. Add secrets to GitHub
+## 3. Export your Provisioning Profile
+
+The app requires a Mac App Store / Developer ID provisioning profile for signing. Since the profile is not stored in the repository, it must be provided as a GitHub secret.
+
+1. Locate your provisioning profile (e.g., `Vox_Profile.provisionprofile`)
+2. Base64-encode it:
+
+```bash
+base64 -i Vox_Profile.provisionprofile | pbcopy
+```
+
+The encoded value is now in your clipboard — this is `PROVISIONING_PROFILE_BASE64`.
+
+## 4. Add secrets to GitHub
 
 Go to your repo > **Settings > Secrets and variables > Actions** and add:
 
@@ -54,6 +67,7 @@ Go to your repo > **Settings > Secrets and variables > Actions** and add:
 | `APPLE_API_KEY_ID`       | Key ID from step 2 (e.g., `ABC123DEFG`)       |
 | `APPLE_API_ISSUER_ID`    | Issuer ID from step 2 (UUID format)            |
 | `APPLE_API_KEY_BASE64`   | Base64-encoded .p8 API key file from step 2    |
+| `PROVISIONING_PROFILE_BASE64` | Base64-encoded provisioning profile from step 3 |
 
 ## Running the workflow
 
