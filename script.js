@@ -1,48 +1,71 @@
-// OS Detection
+// OS and Architecture Detection
 const detectOS = () => {
     const userAgent = window.navigator.userAgent.toLowerCase();
     const platform = window.navigator.platform.toLowerCase();
 
     // Check for iOS/iPhone/iPad first (they sometimes report as Mac)
     if (userAgent.includes('iphone') || userAgent.includes('ipad') || userAgent.includes('ipod')) {
-        return 'ios';
+        return { os: 'ios', arch: null };
     }
 
     // Check for macOS (desktop only)
     if ((platform.includes('mac') || userAgent.includes('mac')) && !userAgent.includes('iphone') && !userAgent.includes('ipad')) {
         // Additional check: if it's a touch device claiming to be Mac, it's probably iOS
         if ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 1) {
-            return 'ios';
+            return { os: 'ios', arch: null };
         }
-        return 'macos';
+
+        // Detect architecture (Apple Silicon vs Intel)
+        // Apple Silicon reports as 'arm' in platform or has specific indicators
+        const isAppleSilicon = platform.includes('arm') ||
+                               userAgent.includes('apple') && userAgent.includes('arm') ||
+                               // MacBook Air/Pro M1/M2/M3 indicators
+                               (platform === 'macintel' && navigator.maxTouchPoints > 0);
+
+        return {
+            os: 'macos',
+            arch: isAppleSilicon ? 'arm64' : 'intel'
+        };
     }
 
     if (platform.includes('win') || userAgent.includes('win')) {
-        return 'windows';
+        return { os: 'windows', arch: null };
     }
 
     if (platform.includes('linux') || userAgent.includes('linux')) {
-        return 'linux';
+        return { os: 'linux', arch: null };
     }
 
-    return 'other';
+    return { os: 'other', arch: null };
 };
 
-// Update download button based on OS
+// Update download button based on OS and architecture
 const updateDownloadButton = () => {
     const downloadBtn = document.getElementById('download-btn');
     const downloadText = document.getElementById('download-text');
-    const os = detectOS();
+    const { os, arch } = detectOS();
 
-    if (os !== 'macos') {
+    // Only enable download for macOS with Apple Silicon (ARM64)
+    if (os !== 'macos' || arch !== 'arm64') {
         downloadBtn.classList.add('btn-disabled');
         downloadBtn.removeAttribute('href');
         downloadBtn.style.cursor = 'not-allowed';
         downloadBtn.style.opacity = '0.6';
         downloadText.textContent = 'Coming Soon';
 
-        // Add tooltip
-        downloadBtn.setAttribute('title', 'Currently available for macOS only. Windows and Linux support coming soon.');
+        // Set appropriate tooltip message
+        let tooltipMessage = '';
+        if (os === 'macos' && arch === 'intel') {
+            tooltipMessage = 'Currently available for Apple Silicon Macs only. Intel support coming soon.';
+        } else if (os === 'windows' || os === 'linux') {
+            tooltipMessage = 'Currently available for macOS (Apple Silicon) only. Windows and Linux support coming soon.';
+        } else if (os === 'ios') {
+            tooltipMessage = 'Currently available for macOS only. iOS support coming soon.';
+        } else {
+            tooltipMessage = 'Currently available for macOS (Apple Silicon) only.';
+        }
+
+        downloadBtn.setAttribute('title', tooltipMessage);
 
         // Prevent click
         downloadBtn.addEventListener('click', (e) => {
@@ -161,7 +184,8 @@ const fetchLatestRelease = async () => {
 };
 
 // Fetch latest release on page load
-fetchLatestRelease();
+// Disabled: using direct link to latest ARM64 DMG
+// fetchLatestRelease();
 
 // Scroll Animations
 const observerOptions = {
