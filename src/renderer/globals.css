@@ -33,6 +33,7 @@
   --spacing-half: 2px;
   --spacing-0-75: 3px;
   --spacing-1-5: 6px;
+  --spacing-2-5: 10px;
 
   /* Typography scale */
   --font-size-xs: 11px;
@@ -125,6 +126,7 @@
   --spacing-half: 2px;
   --spacing-0-75: 3px;
   --spacing-1-5: 6px;
+  --spacing-2-5: 10px;
 
   /* Typography duplicates */
   --font-size-xs: 11px;
