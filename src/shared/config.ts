@@ -1,5 +1,3 @@
-import { LLM_SYSTEM_PROMPT } from "./constants";
-
 export type ThemeMode = "light" | "dark" | "system";
 
 export type LlmProviderType = "foundry" | "bedrock";
@@ -62,6 +60,6 @@ export function createDefaultConfig(): VoxConfig {
     },
     theme: "system",
     enableLlmEnhancement: false,
-    customPrompt: LLM_SYSTEM_PROMPT,
+    customPrompt: "",
   };
 }
