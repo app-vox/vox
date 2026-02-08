@@ -18,6 +18,7 @@ const modelManager = new ModelManager(modelsDir);
 
 let pipeline: Pipeline | null = null;
 let shortcutManager: ShortcutManager | null = null;
+const recorder = new AudioRecorder();
 
 function setupPipeline(): void {
   const config = configManager.load();
@@ -25,7 +26,7 @@ function setupPipeline(): void {
   const llmProvider = createLlmProvider(config.llm);
 
   pipeline = new Pipeline({
-    recorder: new AudioRecorder(),
+    recorder,
     transcribe,
     llmProvider,
     modelPath,
@@ -80,6 +81,7 @@ app.whenReady().then(async () => {
 
 app.on("will-quit", () => {
   shortcutManager?.stop();
+  recorder.dispose();
 });
 
 app.on("window-all-closed", () => {
