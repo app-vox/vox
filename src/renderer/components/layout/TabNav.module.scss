@@ -1,21 +1,21 @@
 .tabs {
   display: flex;
   gap: 0;
-  padding: 0 24px;
+  padding: 0 var(--spacing-6);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-bg-root);
 }
 
 .tab {
   position: relative;
-  padding: 12px 16px;
+  padding: var(--spacing-3) var(--spacing-4);
   background: none;
   border: none;
   color: var(--color-text-tertiary);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: color 150ms ease;
+  transition: color var(--duration-fast) var(--ease-default);
   white-space: nowrap;
 
   &:hover {
@@ -29,8 +29,8 @@
       content: "";
       position: absolute;
       bottom: -1px;
-      left: 16px;
-      right: 16px;
+      left: var(--spacing-4);
+      right: var(--spacing-4);
       height: 1px;
       background: var(--color-text-primary);
     }
