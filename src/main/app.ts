@@ -50,7 +50,7 @@ app.whenReady().then(async () => {
   const initialConfig = configManager.load();
   nativeTheme.themeSource = initialConfig.theme;
 
-  registerIpcHandlers(configManager, modelManager);
+  registerIpcHandlers(configManager, modelManager, () => setupPipeline());
 
   // Ensure the recommended "small" model is downloaded before starting
   const recommendedModel = initialConfig.whisper.model;
@@ -77,6 +77,11 @@ app.whenReady().then(async () => {
   shortcutManager.start();
 
   setupTray(() => openHome(reloadConfig));
+
+  // Open settings window automatically in dev mode
+  if (!app.isPackaged) {
+    openHome(reloadConfig);
+  }
 });
 
 app.on("will-quit", () => {

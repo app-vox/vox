@@ -9,6 +9,12 @@ const CODE_TO_KEY: Record<string, string> = {
   Minus: "-", Equal: "=", BracketLeft: "[", BracketRight: "]",
   Backslash: "\\", Semicolon: ";", Quote: "'", Comma: ",", Period: ".", Slash: "/",
   Backquote: "`",
+  // Media keys (Fn+F1-F12 on Mac often produce these)
+  BrightnessDown: "BrightnessDown", BrightnessUp: "BrightnessUp",
+  AudioVolumeDown: "AudioVolumeDown", AudioVolumeUp: "AudioVolumeUp", AudioVolumeMute: "AudioVolumeMute",
+  MediaPlayPause: "MediaPlayPause", MediaStop: "MediaStop",
+  MediaTrackPrevious: "MediaTrackPrevious", MediaTrackNext: "MediaTrackNext",
+  LaunchApp1: "LaunchApp1", LaunchApp2: "LaunchApp2",
 };
 
 for (let i = 65; i <= 90; i++) {
@@ -16,15 +22,16 @@ for (let i = 65; i <= 90; i++) {
   CODE_TO_KEY[`Key${ch}`] = ch;
 }
 for (let i = 0; i <= 9; i++) CODE_TO_KEY[`Digit${i}`] = String(i);
-for (let i = 1; i <= 12; i++) CODE_TO_KEY[`F${i}`] = `F${i}`;
+for (let i = 1; i <= 24; i++) CODE_TO_KEY[`F${i}`] = `F${i}`;
 
 function isModifierCode(code: string): boolean {
   return code.startsWith("Shift") || code.startsWith("Control") ||
-         code.startsWith("Alt") || code.startsWith("Meta");
+         code.startsWith("Alt") || code.startsWith("Meta") ||
+         code === "Fn" || code === "FnLock";
 }
 
 const PLATFORM_LABELS: Record<string, string> = {
-  Command: "\u2318", Ctrl: "\u2303", Alt: "\u2325", Shift: "\u21E7",
+  Command: "\u2318", Ctrl: "\u2303", Alt: "\u2325", Shift: "\u21E7", Fn: "Fn",
 };
 
 function parseAccelerator(accelerator: string): string[] {
@@ -67,6 +74,24 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange }: S
       e.preventDefault();
       e.stopPropagation();
 
+      // Debug: Log EVERYTHING about the key event
+      console.log("=".repeat(80));
+      console.log("[ShortcutRecorder] KEY PRESSED - COMPLETE EVENT DETAILS:");
+      console.log("  e.key:", e.key);
+      console.log("  e.code:", e.code);
+      console.log("  e.keyCode:", e.keyCode);
+      console.log("  e.which:", e.which);
+      console.log("  e.location:", e.location);
+      console.log("  e.repeat:", e.repeat);
+      console.log("  Modifiers:");
+      console.log("    metaKey (Command):", e.metaKey);
+      console.log("    ctrlKey:", e.ctrlKey);
+      console.log("    altKey (Option):", e.altKey);
+      console.log("    shiftKey:", e.shiftKey);
+      console.log("  Event type:", e.type);
+      console.log("  Timestamp:", e.timeStamp);
+      console.log("=".repeat(80));
+
       if (e.code === "Escape") {
         stopRecording(true);
         return;
@@ -78,15 +103,61 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange }: S
       if (e.altKey) modifiers.push("Alt");
       if (e.shiftKey) modifiers.push("Shift");
 
+      // Try to detect Fn key through various methods:
+      // 1. Direct detection via key/code
+      const isFnDirect = e.key === "Fn" || e.code === "Fn" || e.keyCode === 63;
+
+      // 2. Fn+F1-F12 often produce F13-F24 on Mac
+      const isFnBasedKey = e.code.startsWith("F") && parseInt(e.code.substring(1)) > 12;
+
+      // 3. Media keys (Fn+F1-F12 mapped to brightness/volume)
+      const isMediaKey = e.code.includes("Media") || e.code.includes("Audio") ||
+                         e.code.includes("Brightness") || e.code.includes("Launch");
+
+      // If we detect Fn key, add it as a modifier
+      if (isFnDirect) {
+        modifiers.push("Fn");
+        console.log("[ShortcutRecorder] ✓ Fn key detected directly!");
+      }
+
+      if (isFnBasedKey || isMediaKey) {
+        console.log("[ShortcutRecorder] ✓ Fn-based key detected (F13-F24 or media key)");
+      }
+
+      // If it's just Fn key pressed alone (or with other modifiers)
+      if (isFnDirect) {
+        setPreviewParts(modifiers);
+        // If there are other modifiers with Fn, show them. Otherwise just show Fn.
+        if (modifiers.length === 1 && modifiers[0] === "Fn") {
+          console.log("[ShortcutRecorder] Fn key alone pressed - waiting for main key");
+        }
+        return;
+      }
+
       if (isModifierCode(e.code)) {
         if (modifiers.length > 0) setPreviewParts(modifiers);
         return;
       }
 
-      const mainKey = CODE_TO_KEY[e.code];
-      if (!mainKey || modifiers.length === 0) return;
+      // Try to get the key from code, or fallback to key property
+      let mainKey = CODE_TO_KEY[e.code];
 
-      const accelerator = [...modifiers, mainKey].join("+");
+      // If code doesn't match, try the key property (catches media keys)
+      if (!mainKey && e.key) {
+        mainKey = CODE_TO_KEY[e.key] || e.key;
+      }
+
+      if (!mainKey) {
+        console.log("[ShortcutRecorder] ❌ Unknown key, cannot record");
+        console.log("[ShortcutRecorder] Tried e.code:", e.code, "and e.key:", e.key);
+        return;
+      }
+
+      console.log("[ShortcutRecorder] ✓ Main key detected:", mainKey);
+
+      const accelerator = modifiers.length > 0
+        ? [...modifiers, mainKey].join("+")
+        : mainKey;
 
       if (accelerator === otherValue) {
         setConflict(true);

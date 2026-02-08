@@ -24,6 +24,8 @@ export class ConfigManager {
         whisper: { ...defaults.whisper, ...saved.whisper },
         shortcuts: { ...defaults.shortcuts, ...saved.shortcuts },
         theme: saved.theme ?? defaults.theme,
+        enableLlmEnhancement: saved.enableLlmEnhancement ?? defaults.enableLlmEnhancement,
+        customPrompt: saved.customPrompt ?? defaults.customPrompt,
       };
     } catch {
       return defaults;

@@ -6,7 +6,8 @@ import { getResourcePath } from "./resources";
 
 export function registerIpcHandlers(
   configManager: ConfigManager,
-  modelManager: ModelManager
+  modelManager: ModelManager,
+  reloadPipeline: () => void
 ): void {
   ipcMain.handle("resources:data-url", (_event, ...segments: string[]) => {
     const filePath = getResourcePath(...segments);
@@ -21,6 +22,8 @@ export function registerIpcHandlers(
   ipcMain.handle("config:save", (_event, config: VoxConfig) => {
     configManager.save(config);
     nativeTheme.themeSource = config.theme;
+    // Reload pipeline to pick up new LLM config (custom prompt, enableLlmEnhancement, etc)
+    reloadPipeline();
   });
 
   ipcMain.handle("models:list", () => {
@@ -96,7 +99,7 @@ export function registerIpcHandlers(
     let correctedText: string | null = null;
     let llmError: string | null = null;
     try {
-      const llm = createLlmProvider(config.llm);
+      const llm = createLlmProvider(config);
       correctedText = await llm.correct(rawText);
     } catch (err: unknown) {
       llmError = err instanceof Error ? err.message : String(err);
