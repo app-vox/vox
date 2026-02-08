@@ -101,6 +101,13 @@ jobs:
           mkdir -p ~/private_keys
           echo "$APPLE_API_KEY_BASE64" | base64 --decode > ~/private_keys/AuthKey_${APPLE_API_KEY_ID}.p8
 
+      - name: Restore provisioning profile
+        env:
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          mkdir -p build
+          echo "$PROVISIONING_PROFILE_BASE64" | base64 --decode > build/Vox_Profile.provisionprofile
+
       - name: Build app
         run: npm run build
 
