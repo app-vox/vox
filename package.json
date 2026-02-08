@@ -18,7 +18,7 @@
     "test:watch": "vitest",
     "dist": "electron-vite build && electron-builder"
   },
-  "author": "",
+  "author": "Rodrigo Silva (https://github.com/rodrigoluizs)",
   "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^9.39.2",
@@ -58,7 +58,6 @@
     "mac": {
       "category": "public.app-category.productivity",
       "target": "dir",
-      "identity": "Rodrigo Luiz Dos Santos Costa Silva (7Y57846YR9)",
       "provisioningProfile": "build/Vox_Profile.provisionprofile",
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",

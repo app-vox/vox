@@ -5,3 +5,16 @@ out/
 *.tsbuildinfo
 .DS_Store
 .idea/
+
+# Secrets and certificates
+.env
+.env.*
+*.p12
+*.p8
+*.pem
+*.key
+build/*.provisionprofile
+
+# Local notes and plans
+open-source-audit.md
+docs/plans/

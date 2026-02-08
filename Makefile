@@ -6,7 +6,9 @@ build:
 	npm run dist
 
 install:
-	mv dist/mac-arm64/Vox.app /Applications
+	@APP=$$(find out -maxdepth 2 -name 'Vox.app' -type d 2>/dev/null | head -1); \
+	if [ -z "$$APP" ]; then echo "Vox.app not found in out/. Run 'make build' first."; exit 1; fi; \
+	cp -R "$$APP" /Applications/Vox.app; \
 	open /Applications/Vox.app
 
 uninstall:
