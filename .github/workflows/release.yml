@@ -119,7 +119,21 @@ jobs:
             out/*.zip
           if-no-files-found: error
 
-      - name: Create GitHub Release
+      - name: Prepare release assets
+        if: ${{ !inputs.dry_run }}
+        run: |
+          # Find the built files
+          DMG=$(find out -name "*.dmg" -type f | head -1)
+          ZIP=$(find out -name "*.zip" -type f | head -1)
+
+          # Create copies with stable names (no version) for the latest release
+          cp "$DMG" out/Vox-arm64.dmg
+          cp "$ZIP" out/Vox-arm64-mac.zip
+
+          echo "DMG=$DMG" >> "$GITHUB_ENV"
+          echo "ZIP=$ZIP" >> "$GITHUB_ENV"
+
+      - name: Create versioned GitHub Release
         if: ${{ !inputs.dry_run }}
         env:
           GH_TOKEN: ${{ github.token }}
@@ -130,13 +144,34 @@ jobs:
           git tag "$TAG" 2>/dev/null || true
           git push origin "$TAG" 2>/dev/null || true
 
-          # Find the built files
-          DMG=$(find out -name "*.dmg" -type f | head -1)
-          ZIP=$(find out -name "*.zip" -type f | head -1)
-
           gh release create "$TAG" \
             --title "Vox $TAG" \
             --generate-notes \
             "$DMG" "$ZIP"
 
-          echo "Release created: $TAG"
+          echo "Versioned release created: $TAG"
+
+      - name: Update latest release
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Delete existing latest release and tag if they exist
+          gh release delete latest --yes 2>/dev/null || true
+          git push origin :refs/tags/latest 2>/dev/null || true
+
+          # Create new latest tag pointing to current commit
+          git tag -f latest
+          git push origin latest
+
+          # Create the latest release with stable-name assets
+          gh release create latest \
+            --title "Vox Latest (${{ steps.version.outputs.tag }})" \
+            --notes "This release always points to the latest version. Current: **${{ steps.version.outputs.tag }}**
+
+### Download
+- **DMG**: [Vox-arm64.dmg](https://github.com/rodrigoluizs/vox/releases/download/latest/Vox-arm64.dmg)
+- **Zip**: [Vox-arm64-mac.zip](https://github.com/rodrigoluizs/vox/releases/download/latest/Vox-arm64-mac.zip)" \
+            out/Vox-arm64.dmg out/Vox-arm64-mac.zip
+
+          echo "Latest release updated"
