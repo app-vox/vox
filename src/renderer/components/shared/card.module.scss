@@ -1,31 +1,32 @@
 .card {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
+  min-height: var(--min-h-card);
 
   & + & {
-    margin-top: 16px;
+    margin-top: var(--spacing-4);
   }
 }
 
 .header {
-  padding: 20px 24px 0;
+  padding: var(--spacing-5) var(--spacing-6) 0;
 
   h2 {
-    font-size: 15px;
-    font-weight: 600;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
     letter-spacing: -0.01em;
-    margin-bottom: 4px;
+    margin-bottom: var(--spacing-1);
   }
 }
 
 .description {
-  font-size: 13px;
+  font-size: var(--font-size-base);
   color: var(--color-text-secondary);
-  margin-bottom: 4px;
+  margin-bottom: var(--spacing-1);
 }
 
 .body {
-  padding: 20px 24px 24px;
+  padding: var(--spacing-5) var(--spacing-6) var(--spacing-6);
 }
