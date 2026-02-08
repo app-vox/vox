@@ -3,6 +3,7 @@
 Open-source macOS voice-to-text app with local Whisper transcription and LLM-powered correction.
 
 [![CI](https://github.com/rodrigoluizs/vox/actions/workflows/ci.yml/badge.svg)](https://github.com/rodrigoluizs/vox/actions/workflows/ci.yml)
+[![Release](https://github.com/rodrigoluizs/vox/actions/workflows/release.yml/badge.svg)](https://github.com/rodrigoluizs/vox/actions/workflows/release.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ## About
@@ -120,7 +121,7 @@ If the LLM correction fails, Vox falls back to the raw transcription. If whisper
 npm run dist
 ```
 
-This compiles the Electron app and packages it with electron-builder.
+This compiles the Electron app and packages it with electron-builder. The build is code-signed and notarized using your local keychain profile.
 
 ### Install locally
 
@@ -129,6 +130,19 @@ make release
 ```
 
 This builds, removes any existing `/Applications/Vox.app`, and installs the new build.
+
+### Release workflow
+
+The project includes a manually-triggered GitHub Actions workflow that builds, signs, notarizes, and publishes a GitHub Release with DMG and zip artifacts.
+
+To trigger a release:
+
+1. Go to **Actions > Release** in the GitHub repo
+2. Click **Run workflow**
+3. Optionally enter a version tag (e.g., `v1.0.0`) or leave blank to use the version from `package.json`
+4. Enable **Dry run** to test the build without creating a release
+
+The workflow requires GitHub secrets for the Apple Developer ID certificate and App Store Connect API key. See [docs/release-workflow-setup.md](docs/release-workflow-setup.md) for setup instructions.
 
 ## Scripts
 
