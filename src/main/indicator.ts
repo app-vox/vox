@@ -1,12 +1,13 @@
 import { BrowserWindow, screen } from "electron";
 
-type IndicatorMode = "listening" | "transcribing" | "correcting" | "error";
+type IndicatorMode = "listening" | "transcribing" | "correcting" | "error" | "canceled";
 
 const LABELS: Record<IndicatorMode, { color: string; text: string; pulse: boolean }> = {
   listening:    { color: "#ff4444", text: "Listening...",    pulse: false },
   transcribing: { color: "#ffaa00", text: "Transcribing...", pulse: true },
   correcting:   { color: "#44aaff", text: "Correcting...",   pulse: true },
   error:        { color: "#ff6b6b", text: "No audio",        pulse: false },
+  canceled:     { color: "#fbbf24", text: "Canceled",        pulse: false },
 };
 
 function buildHtml(mode: IndicatorMode): string {
@@ -122,6 +123,11 @@ export class IndicatorWindow {
 
   showError(durationMs = 3000): void {
     this.show("error");
+    setTimeout(() => this.hide(), durationMs);
+  }
+
+  showCanceled(durationMs = 1500): void {
+    this.show("canceled");
     setTimeout(() => this.hide(), durationMs);
   }
 

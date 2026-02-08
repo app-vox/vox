@@ -5,7 +5,6 @@ import { pasteText, isAccessibilityGranted } from "../input/paster";
 import { type Pipeline, CanceledError } from "../pipeline";
 import { ShortcutStateMachine } from "./listener";
 import { IndicatorWindow } from "../indicator";
-import { setTrayListeningState } from "../tray";
 
 /** Map Electron accelerator key names to UiohookKey keycodes. */
 const KEY_TO_UIOHOOK: Record<string, number> = {
@@ -117,7 +116,6 @@ export class ShortcutManager {
           pipeline.cancel();
           this.indicator.showCanceled();
           this.stateMachine.setIdle();
-          this.updateTrayState();
         }
       }
     });
@@ -146,7 +144,6 @@ export class ShortcutManager {
     }
     this.stateMachine.handleTogglePress();
     // Update tray immediately after toggle (before async recording starts)
-    setTimeout(() => this.updateTrayState(), 100);
   }
 
   /** Stop recording and process (complete listening) */
@@ -167,7 +164,6 @@ export class ShortcutManager {
       pipeline.cancel();
       this.indicator.showCanceled();
       this.stateMachine.setIdle();
-      this.updateTrayState();
     }
   }
 
@@ -257,11 +253,9 @@ export class ShortcutManager {
     const pipeline = this.deps.getPipeline();
     console.log("[Vox] Recording started");
     this.indicator.show("listening");
-    this.updateTrayState();
     pipeline.startRecording().catch((err: Error) => {
       console.error("[Vox] Recording failed:", err.message);
       this.indicator.hide();
-      this.updateTrayState();
       new Notification({ title: "Vox", body: `Recording failed: ${err.message}` }).show();
     });
   }
@@ -269,7 +263,6 @@ export class ShortcutManager {
   private async onRecordingStop(): Promise<void> {
     const pipeline = this.deps.getPipeline();
     this.stateMachine.setProcessing();
-    this.updateTrayState();
     console.log("[Vox] Recording stopped, processing pipeline");
     this.indicator.show("transcribing");
     try {
@@ -298,12 +291,7 @@ export class ShortcutManager {
       }
     } finally {
       this.stateMachine.setIdle();
-      this.updateTrayState();
       console.log("[Vox] Ready for next recording");
     }
-  }
-
-  private updateTrayState(): void {
-    setTrayListeningState(this.isRecording());
   }
 }
