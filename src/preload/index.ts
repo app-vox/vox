@@ -55,6 +55,10 @@ export interface VoxAPI {
   resources: {
     dataUrl(...segments: string[]): Promise<string>;
   };
+  theme: {
+    getSystemDark(): Promise<boolean>;
+    onSystemThemeChanged(callback: (isDark: boolean) => void): void;
+  };
 }
 
 const voxApi: VoxAPI = {
@@ -86,6 +90,12 @@ const voxApi: VoxAPI = {
   },
   resources: {
     dataUrl: (...segments) => ipcRenderer.invoke("resources:data-url", ...segments),
+  },
+  theme: {
+    getSystemDark: () => ipcRenderer.invoke("theme:system-dark"),
+    onSystemThemeChanged: (callback) => {
+      ipcRenderer.on("theme:system-changed", (_event, isDark: boolean) => callback(isDark));
+    },
   },
 };
 

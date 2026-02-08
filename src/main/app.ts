@@ -1,4 +1,4 @@
-import { app, session } from "electron";
+import { app, nativeTheme, session } from "electron";
 import * as path from "path";
 import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
@@ -45,6 +45,9 @@ app.whenReady().then(async () => {
   session.defaultSession.setPermissionCheckHandler((_webContents, permission) => {
     return permission === "media";
   });
+
+  const initialConfig = configManager.load();
+  nativeTheme.themeSource = initialConfig.theme;
 
   registerIpcHandlers(configManager, modelManager);
   setupPipeline();

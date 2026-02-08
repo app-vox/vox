@@ -1,3 +1,5 @@
+export type ThemeMode = "light" | "dark" | "system";
+
 export type LlmProviderType = "foundry" | "bedrock";
 
 export interface LlmConfig {
@@ -31,6 +33,7 @@ export interface VoxConfig {
   llm: LlmConfig;
   whisper: WhisperConfig;
   shortcuts: ShortcutsConfig;
+  theme: ThemeMode;
 }
 
 export function createDefaultConfig(): VoxConfig {
@@ -53,5 +56,6 @@ export function createDefaultConfig(): VoxConfig {
       hold: "Alt+Space",
       toggle: "Alt+Shift+Space",
     },
+    theme: "system",
   };
 }

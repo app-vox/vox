@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, nativeTheme } from "electron";
 import * as path from "path";
 
 let homeWindow: BrowserWindow | null = null;
@@ -10,13 +10,13 @@ export function openHome(onClosed: () => void): void {
   }
 
   homeWindow = new BrowserWindow({
-    width: 580,
+    width: 640,
     height: 720,
-    minWidth: 520,
+    minWidth: 620,
     minHeight: 640,
     title: "Vox",
     titleBarStyle: "hiddenInset",
-    backgroundColor: "#0a0a0a",
+    backgroundColor: nativeTheme.shouldUseDarkColors ? "#0a0a0a" : "#ffffff",
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
