@@ -73,4 +73,4 @@ The workflow will:
 
 ## Local development
 
-Local builds (`npm run dist` / `make release`) continue to work as before using your keychain profile `vox-notarize`. The notarization script (`build/notarize.cjs`) auto-detects whether it's running in CI (API key env vars present) or locally (falls back to keychain profile).
+Local builds (`npm run dist` / `make release`) continue to work as before using your keychain profile `vox-notarize`. In CI, electron-builder handles notarization natively via the `APPLE_API_KEY`, `APPLE_API_KEY_ID`, and `APPLE_API_ISSUER` env vars, and the `afterSign` hook (`build/notarize.cjs`) skips automatically.
