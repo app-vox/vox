@@ -6,7 +6,7 @@ import form from "../shared/forms.module.scss";
 export function FoundryFields() {
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
-  const debouncedSave = useDebouncedSave(500, true);
+  const { debouncedSave, flush } = useDebouncedSave(500, true);
 
   if (!config) return null;
 
@@ -24,6 +24,7 @@ export function FoundryFields() {
           type="url"
           value={config.llm.endpoint}
           onChange={(e) => update("endpoint", e.target.value)}
+          onBlur={flush}
           placeholder="https://your-resource.services.ai.azure.com/anthropic"
         />
       </div>
@@ -33,6 +34,7 @@ export function FoundryFields() {
           id="llm-apikey"
           value={config.llm.apiKey}
           onChange={(v) => update("apiKey", v)}
+          onBlur={flush}
           placeholder="Enter your API key"
         />
       </div>
@@ -43,6 +45,7 @@ export function FoundryFields() {
           type="text"
           value={config.llm.model}
           onChange={(e) => update("model", e.target.value)}
+          onBlur={flush}
           placeholder="gpt-4o"
         />
       </div>

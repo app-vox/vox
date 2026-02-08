@@ -7,12 +7,13 @@ import { StatusBox } from "../ui/StatusBox";
 import type { LlmProviderType } from "../../../shared/config";
 import card from "../shared/card.module.scss";
 import form from "../shared/forms.module.scss";
+import buttons from "../shared/buttons.module.scss";
 
 export function LlmPanel() {
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
-  const debouncedSave = useDebouncedSave(500, true);
+  const { debouncedSave, flush } = useDebouncedSave(500, true);
   const [testing, setTesting] = useState(false);
   const [testStatus, setTestStatus] = useState<{ text: string; type: "info" | "success" | "error" }>({ text: "", type: "info" });
   const [activeTab, setActiveTab] = useState<"provider" | "prompt">("provider");
@@ -21,7 +22,7 @@ export function LlmPanel() {
 
   const handleProviderChange = (provider: LlmProviderType) => {
     updateConfig({ llm: { ...config.llm, provider } });
-    saveConfig();
+    saveConfig(true);
   };
 
   const handleTest = async () => {
@@ -60,7 +61,7 @@ export function LlmPanel() {
               checked={config.enableLlmEnhancement ?? false}
               onChange={(e) => {
                 updateConfig({ enableLlmEnhancement: e.target.checked });
-                saveConfig();
+                saveConfig(true);
               }}
             />
             Improve My Transcriptions with AI
@@ -107,7 +108,7 @@ export function LlmPanel() {
                   <button
                     onClick={handleTest}
                     disabled={testing}
-                    className="btn btn-secondary btn-sm"
+                    className={`${buttons.btn} ${buttons.secondary} ${buttons.sm}`}
                   >
                     Test Connection
                   </button>
@@ -126,6 +127,7 @@ export function LlmPanel() {
                     updateConfig({ customPrompt: e.target.value });
                     debouncedSave();
                   }}
+                  onBlur={flush}
                   placeholder="Add additional instructions for the AI..."
                   rows={12}
                   className={form.monospaceTextarea}
