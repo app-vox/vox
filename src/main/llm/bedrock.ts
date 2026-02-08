@@ -13,17 +13,14 @@ export interface BedrockConfig {
   accessKeyId: string;
   secretAccessKey: string;
   modelId: string;
-  systemPrompt?: string;
 }
 
 export class BedrockProvider implements LlmProvider {
   private readonly client: BedrockRuntimeClient;
   private readonly modelId: string;
-  private readonly systemPrompt: string;
 
   constructor(config: BedrockConfig) {
     this.modelId = config.modelId;
-    this.systemPrompt = config.systemPrompt ?? LLM_SYSTEM_PROMPT;
 
     const clientConfig: Record<string, unknown> = {
       region: config.region,
@@ -47,7 +44,7 @@ export class BedrockProvider implements LlmProvider {
   async correct(rawText: string): Promise<string> {
     const command = new ConverseCommand({
       modelId: this.modelId,
-      system: [{ text: this.systemPrompt }],
+      system: [{ text: LLM_SYSTEM_PROMPT }],
       messages: [
         {
           role: "user",
