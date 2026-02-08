@@ -188,11 +188,14 @@ jobs:
           # Create the latest release with stable-name assets
           gh release create latest \
             --title "Vox Latest (${{ steps.version.outputs.tag }})" \
-            --notes "This release always points to the latest version. Current: **${{ steps.version.outputs.tag }}**
+            --notes "$(cat <<'NOTES'
+          This release always points to the latest version. Current: **${{ steps.version.outputs.tag }}**
 
-### Download
-- **DMG**: [Vox-arm64.dmg](https://github.com/rodrigoluizs/vox/releases/download/latest/Vox-arm64.dmg)
-- **Zip**: [Vox-arm64-mac.zip](https://github.com/rodrigoluizs/vox/releases/download/latest/Vox-arm64-mac.zip)" \
+          ### Download
+          - **DMG**: [Vox-arm64.dmg](https://github.com/rodrigoluizs/vox/releases/download/latest/Vox-arm64.dmg)
+          - **Zip**: [Vox-arm64-mac.zip](https://github.com/rodrigoluizs/vox/releases/download/latest/Vox-arm64-mac.zip)
+          NOTES
+          )" \
             out/Vox-arm64.dmg out/Vox-arm64-mac.zip
 
           echo "Latest release updated"
