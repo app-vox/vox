@@ -1,14 +1,8 @@
-import { app, ipcMain, nativeImage, systemPreferences, BrowserWindow, shell } from "electron";
-import * as path from "path";
+import { app, ipcMain, nativeImage, systemPreferences, shell } from "electron";
 import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
 import { type VoxConfig } from "../shared/config";
-
-function getResourcePath(...segments: string[]): string {
-  return app.isPackaged
-    ? path.join(process.resourcesPath, "resources", ...segments)
-    : path.join(__dirname, "../../resources", ...segments);
-}
+import { getResourcePath } from "./resources";
 
 export function registerIpcHandlers(
   configManager: ConfigManager,
