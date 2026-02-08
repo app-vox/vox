@@ -178,36 +178,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Sequential stage animation
-    const animateStages = () => {
-        const stages = document.querySelectorAll('.stage');
-        let currentStage = 0;
+    // Sequential status overlay animation
+    const animateStatusOverlays = () => {
+        const overlays = document.querySelectorAll('.status-overlay');
+        const labels = document.querySelectorAll('.stage-label');
+        let currentIndex = 0;
 
-        const activateStage = () => {
-            // Remove active class from all stages
-            stages.forEach(stage => stage.classList.remove('active'));
+        const activateStatus = () => {
+            // Remove active class from all overlays and labels
+            overlays.forEach(overlay => overlay.classList.remove('active'));
+            labels.forEach(label => label.classList.remove('active'));
 
-            // Add active class to current stage
-            if (stages[currentStage]) {
-                stages[currentStage].classList.add('active');
+            // Add active class to current overlay
+            if (overlays[currentIndex]) {
+                overlays[currentIndex].classList.add('active');
             }
 
-            // Move to next stage
-            currentStage = (currentStage + 1) % stages.length;
+            // Highlight corresponding label (0=listening->0, 1=transcribing->1, 2=correcting->2)
+            if (labels[currentIndex]) {
+                labels[currentIndex].classList.add('active');
+            }
+
+            // Move to next status
+            currentIndex = (currentIndex + 1) % overlays.length;
         };
 
         // Initial activation
-        activateStage();
+        activateStatus();
 
-        // Repeat every 2 seconds
-        setInterval(activateStage, 2000);
+        // Repeat every 2.5 seconds
+        setInterval(activateStatus, 2500);
     };
 
-    // Start stage animation when demo container is visible
+    // Start animation when demo container is visible
     const demoObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                animateStages();
+                animateStatusOverlays();
                 demoObserver.unobserve(entry.target);
             }
         });

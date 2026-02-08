@@ -88,45 +88,43 @@
                 <!-- Demo Visual -->
                 <div class="demo-container">
                     <div class="demo-header">How it works</div>
+
+                    <!-- Animated Status Overlays -->
+                    <div class="demo-overlay-container">
+                        <div class="status-overlay" data-status="listening">
+                            <div class="status-dot status-dot-red"></div>
+                            <span class="status-text">Listening...</span>
+                        </div>
+                        <div class="status-overlay" data-status="transcribing">
+                            <div class="status-dot status-dot-yellow"></div>
+                            <span class="status-text">Transcribing...</span>
+                        </div>
+                        <div class="status-overlay" data-status="correcting">
+                            <div class="status-dot status-dot-blue"></div>
+                            <span class="status-text">Correcting...</span>
+                        </div>
+                    </div>
+
+                    <!-- Stage Labels -->
                     <div class="demo-stages">
-                        <div class="stage" data-stage="1">
-                            <div class="stage-icon record">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                                    <circle cx="12" cy="12" r="8"/>
-                                </svg>
-                            </div>
+                        <div class="stage-label">
                             <h3 class="stage-title">Record</h3>
                             <p class="stage-description">Press hotkey to record</p>
                         </div>
-                        <div class="stage" data-stage="2">
-                            <div class="stage-icon transcribe">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
-                                </svg>
-                            </div>
+                        <div class="stage-label">
                             <h3 class="stage-title">Transcribe</h3>
                             <p class="stage-description">Whisper processes locally</p>
                         </div>
-                        <div class="stage" data-stage="3">
-                            <div class="stage-icon enhance">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 3v18M3 12h18M7.5 7.5l9 9M16.5 7.5l-9 9"/>
-                                    <circle cx="12" cy="12" r="9"/>
-                                </svg>
-                            </div>
+                        <div class="stage-label">
                             <h3 class="stage-title">AI Enhancement</h3>
                             <p class="stage-description">Optional correction</p>
                         </div>
-                        <div class="stage" data-stage="4">
-                            <div class="stage-icon paste">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                </svg>
-                            </div>
+                        <div class="stage-label">
                             <h3 class="stage-title">Paste</h3>
                             <p class="stage-description">Clean text, ready to use</p>
                         </div>
                     </div>
+
                     <div class="demo-transcription">
                         <svg class="quote-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                             <path d="M7.5 4.5c0 1.38-1.12 2.5-2.5 2.5S2.5 5.88 2.5 4.5 3.62 2 5 2s2.5.62 2.5 2.5zm-5 4c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5S6.38 6 5 6s-2.5 1.12-2.5 2.5zm8 0c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5S13.38 6 12 6s-2.5 1.12-2.5 2.5z"/>
