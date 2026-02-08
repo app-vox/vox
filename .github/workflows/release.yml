@@ -21,29 +21,21 @@ permissions:
   contents: write
 
 jobs:
-  release:
-    name: Build, Sign & Release
-    runs-on: macos-latest
-
+  version:
+    name: Bump Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+      tag: ${{ steps.bump.outputs.tag }}
     steps:
-      - name: Generate app token
-        id: app-token
-        uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1
-        with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
-
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-        with:
-          token: ${{ steps.app-token.outputs.token }}
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
-          cache: npm
 
       - name: Bump version
-        id: version
+        id: bump
         run: |
           CURRENT=$(node -p "require('./package.json').version")
           IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
@@ -55,11 +47,34 @@ jobs:
           esac
 
           NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
-          npm version "$NEW_VERSION" --no-git-tag-version
 
           echo "tag=v${NEW_VERSION}" >> "$GITHUB_OUTPUT"
           echo "version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
           echo "Bumped $CURRENT -> $NEW_VERSION (${{ inputs.release_type }})"
+
+  build:
+    name: Build (${{ matrix.arch }})
+    needs: version
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-latest
+          - arch: x64
+            runner: macos-13
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Apply version
+        run: npm version "${{ needs.version.outputs.version }}" --no-git-tag-version
 
       - name: Install dependencies
         run: npm ci
@@ -122,13 +137,11 @@ jobs:
 
       - name: Package and sign (DMG + zip)
         env:
-          # electron-builder uses these for signing
           CSC_KEYCHAIN: ${{ env.KEYCHAIN_PATH }}
-          # electron-builder uses these for notarization (built-in CI notarization)
           APPLE_API_KEY: ~/private_keys/AuthKey_${{ secrets.APPLE_API_KEY_ID }}.p8
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER_ID }}
-        run: npx electron-builder --mac dmg zip --publish never
+        run: npx electron-builder --mac dmg zip --${{ matrix.arch }} --publish never
 
       - name: Clean up keychain
         if: always()
@@ -137,46 +150,88 @@ jobs:
             security delete-keychain "$KEYCHAIN_PATH"
           fi
 
+      - name: Rename artifacts
+        run: |
+          VERSION="${{ needs.version.outputs.version }}"
+          ARCH="${{ matrix.arch }}"
+
+          DMG=$(find out -name "*.dmg" -type f | head -1)
+          ZIP=$(find out -name "*.zip" -type f | head -1)
+
+          mv "$DMG" "out/Vox-${VERSION}-mac-${ARCH}.dmg"
+          mv "$ZIP" "out/Vox-${VERSION}-mac-${ARCH}.zip"
+
       - name: Upload artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: vox-${{ steps.version.outputs.version }}-mac
+          name: vox-${{ needs.version.outputs.version }}-mac-${{ matrix.arch }}
           path: |
             out/*.dmg
             out/*.zip
           if-no-files-found: error
 
+  release:
+    name: Publish Release
+    needs: [version, build]
+    if: ${{ !inputs.dry_run }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: artifacts
+          pattern: vox-*-mac-*
+
       - name: Prepare release assets
-        if: ${{ !inputs.dry_run }}
         run: |
-          # Find the built files
-          DMG=$(find out -name "*.dmg" -type f | head -1)
-          ZIP=$(find out -name "*.zip" -type f | head -1)
+          VERSION="${{ needs.version.outputs.version }}"
+          mkdir -p release
 
-          # Create copies with stable names (no version) for the latest release
-          cp "$DMG" out/Vox-arm64.dmg
-          cp "$ZIP" out/Vox-arm64-mac.zip
+          # Move versioned artifacts to release directory
+          find artifacts -type f \( -name "*.dmg" -o -name "*.zip" \) -exec mv {} release/ \;
 
-          echo "DMG=$DMG" >> "$GITHUB_ENV"
-          echo "ZIP=$ZIP" >> "$GITHUB_ENV"
+          # Create stable-named copies for the latest release
+          cp "release/Vox-${VERSION}-mac-arm64.dmg" "release/Vox-mac-arm64.dmg"
+          cp "release/Vox-${VERSION}-mac-arm64.zip" "release/Vox-mac-arm64.zip"
+          cp "release/Vox-${VERSION}-mac-x64.dmg"   "release/Vox-mac-x64.dmg"
+          cp "release/Vox-${VERSION}-mac-x64.zip"    "release/Vox-mac-x64.zip"
+
+          ls -lh release/
 
       - name: Commit version bump
-        if: ${{ !inputs.dry_run }}
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
+          npm version "${{ needs.version.outputs.version }}" --no-git-tag-version
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add package.json package-lock.json
-          git commit -m "chore(release): bump version to ${{ steps.version.outputs.version }}"
+          git commit -m "chore(release): bump version to ${{ needs.version.outputs.version }}"
           git push origin HEAD:main
 
       - name: Create versioned GitHub Release
-        if: ${{ !inputs.dry_run }}
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          TAG="${{ steps.version.outputs.tag }}"
+          VERSION="${{ needs.version.outputs.version }}"
+          TAG="${{ needs.version.outputs.tag }}"
 
           git tag "$TAG"
           git push origin "$TAG"
@@ -184,15 +239,19 @@ jobs:
           gh release create "$TAG" \
             --title "Vox $TAG" \
             --generate-notes \
-            "$DMG" "$ZIP"
+            "release/Vox-${VERSION}-mac-arm64.dmg" \
+            "release/Vox-${VERSION}-mac-arm64.zip" \
+            "release/Vox-${VERSION}-mac-x64.dmg" \
+            "release/Vox-${VERSION}-mac-x64.zip"
 
           echo "Versioned release created: $TAG"
 
       - name: Update latest release
-        if: ${{ !inputs.dry_run }}
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
+          TAG="${{ needs.version.outputs.tag }}"
+
           # Delete existing latest release and tag if they exist
           gh release delete latest --yes 2>/dev/null || true
           git push origin :refs/tags/latest 2>/dev/null || true
@@ -203,15 +262,24 @@ jobs:
 
           # Create the latest release with stable-name assets
           gh release create latest \
-            --title "Vox Latest (${{ steps.version.outputs.tag }})" \
+            --title "Vox Latest ($TAG)" \
             --notes "$(cat <<'NOTES'
-          This release always points to the latest version. Current: **${{ steps.version.outputs.tag }}**
+          This release always points to the latest version. Current: **$TAG**
 
           ### Download
-          - **DMG**: [Vox-arm64.dmg](https://github.com/app-vox/vox/releases/download/latest/Vox-arm64.dmg)
-          - **Zip**: [Vox-arm64-mac.zip](https://github.com/app-vox/vox/releases/download/latest/Vox-arm64-mac.zip)
+
+          **Apple Silicon (M1/M2/M3/M4):**
+          - [Vox-mac-arm64.dmg](https://github.com/app-vox/vox/releases/download/latest/Vox-mac-arm64.dmg)
+          - [Vox-mac-arm64.zip](https://github.com/app-vox/vox/releases/download/latest/Vox-mac-arm64.zip)
+
+          **Intel:**
+          - [Vox-mac-x64.dmg](https://github.com/app-vox/vox/releases/download/latest/Vox-mac-x64.dmg)
+          - [Vox-mac-x64.zip](https://github.com/app-vox/vox/releases/download/latest/Vox-mac-x64.zip)
           NOTES
           )" \
-            out/Vox-arm64.dmg out/Vox-arm64-mac.zip
+            release/Vox-mac-arm64.dmg \
+            release/Vox-mac-arm64.zip \
+            release/Vox-mac-x64.dmg \
+            release/Vox-mac-x64.zip
 
           echo "Latest release updated"
