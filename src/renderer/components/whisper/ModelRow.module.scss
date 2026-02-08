@@ -17,6 +17,11 @@
     font-size: 13px;
     color: var(--color-text-primary);
     cursor: pointer;
+
+    &:has(input:disabled) {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
   }
 
   input[type="radio"] {
@@ -30,9 +35,9 @@
     cursor: pointer;
     position: relative;
     flex-shrink: 0;
-    transition: border-color 150ms ease;
+    transition: border-color 150ms ease, opacity 150ms ease;
 
-    &:hover { border-color: var(--color-text-tertiary); }
+    &:hover:not(:disabled) { border-color: var(--color-text-tertiary); }
     &:checked { border-color: var(--color-text-primary); }
 
     &:checked::after {
@@ -44,6 +49,11 @@
       height: 8px;
       border-radius: 50%;
       background: var(--color-text-primary);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.3;
     }
   }
 }

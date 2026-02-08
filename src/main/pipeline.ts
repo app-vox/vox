@@ -84,19 +84,36 @@ function isGarbageTranscription(text: string): boolean {
   return false;
 }
 
+export class CanceledError extends Error {
+  constructor() {
+    super("Operation was canceled");
+    this.name = "CanceledError";
+  }
+}
+
 export class Pipeline {
   private readonly deps: PipelineDeps;
+  private canceled = false;
 
   constructor(deps: PipelineDeps) {
     this.deps = deps;
   }
 
+  cancel(): void {
+    this.canceled = true;
+  }
+
   async startRecording(): Promise<void> {
+    this.canceled = false; // Reset cancel flag on new recording
     await this.deps.recorder.start();
   }
 
   async stopAndProcess(): Promise<string> {
     const recording = await this.deps.recorder.stop();
+
+    if (this.canceled) {
+      throw new CanceledError();
+    }
 
     this.deps.onStage?.("transcribing");
     const transcription = await this.deps.transcribe(
@@ -104,6 +121,10 @@ export class Pipeline {
       recording.sampleRate,
       this.deps.modelPath
     );
+
+    if (this.canceled) {
+      throw new CanceledError();
+    }
 
     const rawText = transcription.text.trim();
 
@@ -116,6 +137,10 @@ export class Pipeline {
       return rawText;
     }
 
+    if (this.canceled) {
+      throw new CanceledError();
+    }
+
     let finalText: string;
     try {
       this.deps.onStage?.("correcting");
@@ -123,6 +148,10 @@ export class Pipeline {
     } catch {
       // LLM failed — fall back to raw transcription
       finalText = rawText;
+    }
+
+    if (this.canceled) {
+      throw new CanceledError();
     }
 
     // Format enumerated lists with bullet points

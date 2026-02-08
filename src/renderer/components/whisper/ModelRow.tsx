@@ -80,6 +80,7 @@ export function ModelRow({ model, selected, onSelect }: ModelRowProps) {
           name="whisper-model"
           value={model.size}
           checked={selected}
+          disabled={!downloaded}
           onChange={() => onSelect(model.size)}
         />
         <span className={styles.name}>{model.size}</span>
