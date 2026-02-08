@@ -1,15 +1,16 @@
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 500;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-4);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background 150ms ease, opacity 150ms ease;
+  transition: background var(--duration-fast) var(--ease-default), opacity var(--duration-fast) var(--ease-default);
   outline: none;
+  min-height: var(--min-h-input);
 
   &:disabled {
     opacity: 0.5;
@@ -38,6 +39,6 @@
 }
 
 .sm {
-  padding: 4px 12px;
-  font-size: 12px;
+  padding: var(--spacing-1) var(--spacing-3);
+  font-size: var(--font-size-sm);
 }
