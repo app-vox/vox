@@ -42,7 +42,7 @@ export function FoundryFields() {
           type="text"
           value={config.llm.model}
           onChange={(e) => update("model", e.target.value)}
-          placeholder="azure_ai/generic-claude-opus-4-6"
+          placeholder="gpt-4o"
         />
       </div>
     </>
