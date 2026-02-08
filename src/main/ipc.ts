@@ -42,33 +42,52 @@ export function registerIpcHandlers(
     });
   });
 
+  ipcMain.handle("llm:test", async () => {
+    const { createLlmProvider } = await import("./llm/factory");
+    const config = configManager.load();
+    try {
+      const llm = createLlmProvider(config.llm);
+      await llm.correct("Hello");
+      return { ok: true };
+    } catch (err: any) {
+      return { ok: false, error: err.message || String(err) };
+    }
+  });
+
+  function resampleTo16kHz(samples: Float32Array, inputRate: number): Float32Array {
+    const targetRate = 16000;
+    if (inputRate === targetRate) return samples;
+    const ratio = targetRate / inputRate;
+    const newLength = Math.round(samples.length * ratio);
+    const resampled = new Float32Array(newLength);
+    for (let i = 0; i < newLength; i++) {
+      const srcIndex = i / ratio;
+      const low = Math.floor(srcIndex);
+      const high = Math.min(low + 1, samples.length - 1);
+      const frac = srcIndex - low;
+      resampled[i] = samples[low] * (1 - frac) + samples[high] * frac;
+    }
+    return resampled;
+  }
+
+  ipcMain.handle("whisper:test", async (_event, recording: { audioBuffer: number[]; sampleRate: number }) => {
+    const { transcribe } = await import("./audio/whisper");
+    const config = configManager.load();
+    const modelPath = modelManager.getModelPath(config.whisper.model);
+    const samples = resampleTo16kHz(new Float32Array(recording.audioBuffer), recording.sampleRate);
+    const result = await transcribe(samples, 16000, modelPath);
+    return result.text;
+  });
+
   ipcMain.handle("test:transcribe", async (_event, recording: { audioBuffer: number[]; sampleRate: number }) => {
     const { transcribe } = await import("./audio/whisper");
     const { createLlmProvider } = await import("./llm/factory");
 
     const config = configManager.load();
     const modelPath = modelManager.getModelPath(config.whisper.model);
+    const samples = resampleTo16kHz(new Float32Array(recording.audioBuffer), recording.sampleRate);
 
-    let samples = new Float32Array(recording.audioBuffer);
-    const inputRate = recording.sampleRate;
-
-    // Resample to 16kHz if needed — Whisper expects 16kHz mono audio
-    const targetRate = 16000;
-    if (inputRate !== targetRate) {
-      const ratio = targetRate / inputRate;
-      const newLength = Math.round(samples.length * ratio);
-      const resampled = new Float32Array(newLength);
-      for (let i = 0; i < newLength; i++) {
-        const srcIndex = i / ratio;
-        const low = Math.floor(srcIndex);
-        const high = Math.min(low + 1, samples.length - 1);
-        const frac = srcIndex - low;
-        resampled[i] = samples[low] * (1 - frac) + samples[high] * frac;
-      }
-      samples = resampled;
-    }
-
-    const result = await transcribe(samples, targetRate, modelPath);
+    const result = await transcribe(samples, 16000, modelPath);
     const rawText = result.text;
 
     let correctedText: string | null = null;

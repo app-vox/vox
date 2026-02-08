@@ -104,6 +104,11 @@
                 <input type="text" id="llm-model-id" placeholder="anthropic.claude-3-5-sonnet-20241022-v2:0">
               </div>
             </div>
+
+            <div class="field" style="margin-top: 24px; border-top: 1px solid var(--border); padding-top: 20px;">
+              <button class="btn btn-secondary btn-sm" id="llm-test-btn">Test Connection</button>
+              <div id="llm-test-status" class="status-box"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -117,6 +122,12 @@
           </div>
           <div class="card-body">
             <div id="model-list"></div>
+
+            <div class="field" style="margin-top: 24px; border-top: 1px solid var(--border); padding-top: 20px;">
+              <button class="btn btn-secondary btn-sm" id="whisper-test-btn">Test Whisper</button>
+              <p class="field-hint">Records 5 seconds of audio and runs it through the selected model.</p>
+              <div id="whisper-test-status" class="status-box"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -199,7 +210,7 @@
         <div class="card" style="margin-top: 16px">
           <div class="card-header">
             <h2>Pipeline Test</h2>
-            <p class="card-description">Record a 3-second audio sample to test transcription and LLM correction.</p>
+            <p class="card-description">Record a 5-second audio sample to test transcription and LLM correction.</p>
           </div>
           <div class="card-body">
             <button class="btn btn-primary" id="test-btn">
@@ -207,7 +218,7 @@
                 <circle cx="12" cy="12" r="10"/>
                 <circle cx="12" cy="12" r="3" fill="currentColor"/>
               </svg>
-              Record 3s Test
+              Record 5s Test
             </button>
             <div id="status" class="status-box"></div>
           </div>

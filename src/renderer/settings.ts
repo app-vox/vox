@@ -237,6 +237,100 @@ setupToggle("toggle-apikey", "llm-apikey");
 setupToggle("toggle-access-key", "llm-access-key");
 setupToggle("toggle-secret-key", "llm-secret-key");
 
+// ---- Audio recording helper ----
+
+async function recordAudio(seconds: number): Promise<{ audioBuffer: number[]; sampleRate: number }> {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  const audioContext = new AudioContext();
+  if (audioContext.state === "suspended") {
+    await audioContext.resume();
+  }
+
+  const source = audioContext.createMediaStreamSource(stream);
+  const processor = audioContext.createScriptProcessor(4096, 1, 1);
+  const chunks: Float32Array[] = [];
+
+  processor.onaudioprocess = (e) => {
+    chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+  };
+  source.connect(processor);
+  processor.connect(audioContext.destination);
+
+  await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+
+  processor.disconnect();
+  stream.getTracks().forEach((t) => t.stop());
+
+  const totalLength = chunks.reduce((sum, c) => sum + c.length, 0);
+  const merged = new Float32Array(totalLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    merged.set(chunk, offset);
+    offset += chunk.length;
+  }
+
+  const sampleRate = audioContext.sampleRate;
+  audioContext.close();
+
+  return { audioBuffer: Array.from(merged), sampleRate };
+}
+
+// ---- LLM test ----
+
+function setTestStatus(text: string, type: "info" | "success" | "error" = "info"): void {
+  const el = document.getElementById("llm-test-status")!;
+  el.textContent = text;
+  el.className = `status-box status-${type}`;
+}
+
+document.getElementById("llm-test-btn")!.addEventListener("click", async () => {
+  const btn = document.getElementById("llm-test-btn") as HTMLButtonElement;
+  btn.disabled = true;
+  setTestStatus("Testing connection...", "info");
+
+  await saveConfig();
+
+  try {
+    const result = await ipcRenderer.invoke("llm:test");
+    if (result.ok) {
+      setTestStatus("Connection successful", "success");
+    } else {
+      setTestStatus(`Connection failed: ${result.error}`, "error");
+    }
+  } catch (err: any) {
+    setTestStatus(`Connection failed: ${err.message}`, "error");
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// ---- Whisper test ----
+
+function setWhisperTestStatus(text: string, type: "info" | "success" | "error" = "info"): void {
+  const el = document.getElementById("whisper-test-status")!;
+  el.textContent = text;
+  el.className = `status-box status-${type}`;
+}
+
+document.getElementById("whisper-test-btn")!.addEventListener("click", async () => {
+  const btn = document.getElementById("whisper-test-btn") as HTMLButtonElement;
+  btn.disabled = true;
+  setWhisperTestStatus("Recording for 5 seconds...", "info");
+
+  await saveConfig();
+
+  try {
+    const recording = await recordAudio(5);
+    setWhisperTestStatus("Transcribing...", "info");
+    const text = await ipcRenderer.invoke("whisper:test", recording);
+    setWhisperTestStatus(text || "(no speech detected)", text ? "success" : "info");
+  } catch (err: any) {
+    setWhisperTestStatus(`Test failed: ${err.message}`, "error");
+  } finally {
+    btn.disabled = false;
+  }
+});
+
 // ---- Init ----
 
 async function init(): Promise<void> {
@@ -438,47 +532,14 @@ document.getElementById("test-btn")!.addEventListener("click", async () => {
   const testBtn = document.getElementById("test-btn") as HTMLButtonElement;
 
   testBtn.disabled = true;
-  setStatus("Recording for 3 seconds...", "info");
+  setStatus("Recording for 5 seconds...", "info");
 
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const audioContext = new AudioContext();
-    if (audioContext.state === "suspended") {
-      await audioContext.resume();
-    }
-
-    const source = audioContext.createMediaStreamSource(stream);
-    const processor = audioContext.createScriptProcessor(4096, 1, 1);
-    const chunks: Float32Array[] = [];
-
-    processor.onaudioprocess = (e) => {
-      chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
-    };
-    source.connect(processor);
-    processor.connect(audioContext.destination);
-
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-
-    processor.disconnect();
-    stream.getTracks().forEach((t) => t.stop());
+    const recording = await recordAudio(5);
 
     setStatus("Transcribing...", "info");
 
-    const totalLength = chunks.reduce((sum, c) => sum + c.length, 0);
-    const merged = new Float32Array(totalLength);
-    let offset = 0;
-    for (const chunk of chunks) {
-      merged.set(chunk, offset);
-      offset += chunk.length;
-    }
-
-    const sampleRate = audioContext.sampleRate;
-    audioContext.close();
-
-    const result = await ipcRenderer.invoke("test:transcribe", {
-      audioBuffer: Array.from(merged),
-      sampleRate,
-    });
+    const result = await ipcRenderer.invoke("test:transcribe", recording);
 
     let output = `Whisper: ${result.rawText || "(empty)"}`;
     if (result.correctedText) {

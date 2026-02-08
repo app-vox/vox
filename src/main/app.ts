@@ -67,10 +67,10 @@ function openSettings(): void {
   }
 
   settingsWindow = new BrowserWindow({
-    width: 540,
-    height: 600,
-    minWidth: 480,
-    minHeight: 500,
+    width: 580,
+    height: 720,
+    minWidth: 520,
+    minHeight: 640,
     title: "Vox Settings",
     titleBarStyle: "hiddenInset",
     backgroundColor: "#0a0a0a",
