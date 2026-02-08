@@ -12,7 +12,7 @@ on:
           - minor
           - major
       dry_run:
-        description: "Dry run — build and sign but skip GitHub Release creation and version commit"
+        description: "Dry run - build and sign but skip GitHub Release creation and version commit"
         required: false
         type: boolean
         default: false
@@ -50,7 +50,7 @@ jobs:
 
           echo "tag=v${NEW_VERSION}" >> "$GITHUB_OUTPUT"
           echo "version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
-          echo "Bumped $CURRENT → $NEW_VERSION (${{ inputs.release_type }})"
+          echo "Bumped $CURRENT -> $NEW_VERSION (${{ inputs.release_type }})"
 
       - name: Install dependencies
         run: npm ci
