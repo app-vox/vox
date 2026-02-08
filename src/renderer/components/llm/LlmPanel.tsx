@@ -108,7 +108,7 @@ export function LlmPanel() {
                   <button
                     onClick={handleTest}
                     disabled={testing}
-                    className={`${buttons.btn} ${buttons.secondary} ${buttons.sm}`}
+                    className={`${buttons.btn} ${buttons.primary}`}
                   >
                     Test Connection
                   </button>
