@@ -2,24 +2,24 @@
   display: inline-flex;
   background: var(--color-bg-input);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 3px;
-  gap: 2px;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-0-5);
+  gap: var(--spacing-0-5);
 }
 
 .segment {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 16px;
+  gap: var(--spacing-1-5);
+  padding: var(--spacing-1-5) var(--spacing-4);
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   background: none;
   color: var(--color-text-tertiary);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: color 150ms ease, background 150ms ease, border-color 150ms ease;
+  transition: color var(--duration-fast) var(--ease-default), background var(--duration-fast) var(--ease-default), border-color var(--duration-fast) var(--ease-default);
 
   &:hover {
     color: var(--color-text-secondary);
