@@ -51,6 +51,9 @@
     "npmRebuild": false,
     "appId": "com.rodrigoluizs.vox",
     "productName": "Vox",
+    "directories": {
+      "output": "out"
+    },
     "afterSign": "build/notarize.cjs",
     "mac": {
       "category": "public.app-category.productivity",
@@ -64,6 +67,13 @@
         "NSMicrophoneUsageDescription": "Vox needs microphone access to record your voice for transcription.",
         "NSAccessibilityUsageDescription": "Vox needs accessibility access to paste transcribed text automatically."
       }
+    },
+    "dmg": {
+      "title": "Vox",
+      "contents": [
+        { "x": 130, "y": 220 },
+        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+      ]
     },
     "files": [
       "out/**/*",
