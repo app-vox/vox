@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { FoundryProvider } from "../../../src/main/llm/foundry";
 import { type LlmProvider } from "../../../src/main/llm/provider";
+import { LLM_SYSTEM_PROMPT } from "../../../src/shared/constants";
 
 // Mock global fetch
 const mockFetch = vi.fn();
@@ -14,6 +15,7 @@ describe("FoundryProvider", () => {
       endpoint: "https://foundry.example.com/anthropic",
       apiKey: "test-key",
       model: "claude-opus-4-6",
+      customPrompt: LLM_SYSTEM_PROMPT,
     });
     vi.clearAllMocks();
   });
@@ -56,7 +58,7 @@ describe("FoundryProvider", () => {
     const callArgs = mockFetch.mock.calls[0];
     const body = JSON.parse(callArgs[1].body);
 
-    expect(body.system).toContain("speech-to-text post-processor");
+    expect(body.system).toBe(LLM_SYSTEM_PROMPT);
     expect(body.messages[0].role).toBe("user");
     expect(body.messages[0].content).toBe("raw text");
   });
