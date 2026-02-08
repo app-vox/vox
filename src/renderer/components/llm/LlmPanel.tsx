@@ -42,33 +42,59 @@ export function LlmPanel() {
     <div className="card">
       <div className="card-header">
         <h2>LLM Provider</h2>
-        <p className="card-description">Configure the language model used for post-processing transcriptions.</p>
+        <p className="card-description">
+          Optionally configure a language model to enhance and correct transcriptions.
+        </p>
       </div>
       <div className="card-body">
         <div className="field">
-          <label htmlFor="llm-provider">Provider</label>
-          <select
-            id="llm-provider"
-            value={config.llm.provider || "foundry"}
-            onChange={(e) => handleProviderChange(e.target.value as LlmProviderType)}
-          >
-            <option value="foundry">Microsoft Foundry</option>
-            <option value="bedrock">AWS Bedrock</option>
-          </select>
+          <label htmlFor="enable-llm-enhancement">
+            <input
+              type="checkbox"
+              id="enable-llm-enhancement"
+              checked={config.enableLlmEnhancement ?? false}
+              onChange={(e) => {
+                updateConfig({ enableLlmEnhancement: e.target.checked });
+                saveConfig();
+              }}
+              style={{ width: "auto", marginRight: "8px" }}
+            />
+            Enable LLM Enhancement
+          </label>
+          <p className="field-hint">
+            When disabled, Vox will use Whisper transcription only.
+            When enabled, transcriptions will be corrected and enhanced by an LLM.
+          </p>
         </div>
 
-        {config.llm.provider === "bedrock" ? <BedrockFields /> : <FoundryFields />}
+        {config.enableLlmEnhancement && (
+          <>
+            <div className="field">
+              <label htmlFor="llm-provider">Provider</label>
+              <select
+                id="llm-provider"
+                value={config.llm.provider || "foundry"}
+                onChange={(e) => handleProviderChange(e.target.value as LlmProviderType)}
+              >
+                <option value="foundry">Microsoft Foundry</option>
+                <option value="bedrock">AWS Bedrock</option>
+              </select>
+            </div>
 
-        <div className="test-section">
-          <button
-            onClick={handleTest}
-            disabled={testing}
-            className="btn btn-secondary btn-sm"
-          >
-            Test Connection
-          </button>
-          <StatusBox text={testStatus.text} type={testStatus.type} />
-        </div>
+            {config.llm.provider === "bedrock" ? <BedrockFields /> : <FoundryFields />}
+
+            <div className="test-section">
+              <button
+                onClick={handleTest}
+                disabled={testing}
+                className="btn btn-secondary btn-sm"
+              >
+                Test Connection
+              </button>
+              <StatusBox text={testStatus.text} type={testStatus.type} />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
