@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import styles from "./SaveToast.module.scss";
 
 interface SaveToastProps {
   show: boolean;
@@ -22,26 +23,7 @@ export function SaveToast({ show, onHide }: SaveToastProps) {
   if (!show && !visible) return null;
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: "16px",
-        right: "16px",
-        background: "#10b981",
-        color: "white",
-        padding: "12px 16px",
-        borderRadius: "8px",
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        zIndex: 9999,
-        opacity: visible ? 1 : 0,
-        transition: "opacity 0.3s ease-in-out",
-        fontSize: "14px",
-        fontWeight: "500",
-      }}
-    >
+    <div className={`${styles.toast} ${visible ? styles.visible : styles.hidden}`}>
       <svg
         width="16"
         height="16"
