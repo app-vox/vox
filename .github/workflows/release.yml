@@ -97,9 +97,10 @@ jobs:
         env:
           # electron-builder uses these for signing
           CSC_KEYCHAIN: ${{ env.KEYCHAIN_PATH }}
-          # notarize.cjs uses these for notarization
+          # electron-builder uses these for notarization (built-in CI notarization)
+          APPLE_API_KEY: ~/private_keys/AuthKey_${{ secrets.APPLE_API_KEY_ID }}.p8
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
-          APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER_ID }}
         run: npx electron-builder --mac dmg zip
 
       - name: Clean up keychain
