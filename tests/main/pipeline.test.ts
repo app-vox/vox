@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { Pipeline } from "../../src/main/pipeline";
 import { type LlmProvider } from "../../src/main/llm/provider";
+import { NoopProvider } from "../../src/main/llm/noop";
 
 describe("Pipeline", () => {
   const mockRecorder = {
@@ -51,5 +52,43 @@ describe("Pipeline", () => {
     const result = await pipeline.stopAndProcess();
 
     expect(result).toBe("raw transcription");
+  });
+
+  it("should not call onStage('correcting') when using NoopProvider", async () => {
+    const onStageSpy = vi.fn();
+
+    const pipeline = new Pipeline({
+      recorder: mockRecorder,
+      transcribe: mockTranscribe,
+      llmProvider: new NoopProvider(),
+      modelPath: "/path/to/model",
+      onStage: onStageSpy,
+    });
+
+    await pipeline.startRecording();
+    const result = await pipeline.stopAndProcess();
+
+    expect(onStageSpy).toHaveBeenCalledWith("transcribing");
+    expect(onStageSpy).not.toHaveBeenCalledWith("correcting");
+    expect(result).toBe("raw transcription");
+  });
+
+  it("should call onStage('correcting') with real LLM provider", async () => {
+    const onStageSpy = vi.fn();
+
+    const pipeline = new Pipeline({
+      recorder: mockRecorder,
+      transcribe: mockTranscribe,
+      llmProvider: mockProvider,
+      modelPath: "/path/to/model",
+      onStage: onStageSpy,
+    });
+
+    await pipeline.startRecording();
+    const result = await pipeline.stopAndProcess();
+
+    expect(onStageSpy).toHaveBeenCalledWith("transcribing");
+    expect(onStageSpy).toHaveBeenCalledWith("correcting");
+    expect(result).toBe("corrected text");
   });
 });
