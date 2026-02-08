@@ -76,6 +76,11 @@ app.whenReady().then(async () => {
   shortcutManager.start();
 
   setupTray(() => openHome(reloadConfig));
+
+  // Open settings window automatically in dev mode
+  if (!app.isPackaged) {
+    openHome(reloadConfig);
+  }
 });
 
 app.on("will-quit", () => {
