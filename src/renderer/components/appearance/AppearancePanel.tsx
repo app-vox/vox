@@ -51,6 +51,9 @@ export function AppearancePanel() {
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const triggerToast = useSaveToast((s) => s.trigger);
 
+  // Detect if running in dev mode
+  const isDevMode = import.meta.env.DEV;
+
   if (!config) return null;
 
   const setTheme = async (theme: ThemeMode) => {
@@ -60,6 +63,7 @@ export function AppearancePanel() {
   };
 
   const toggleLaunchAtLogin = async () => {
+    if (isDevMode) return; // Prevent toggle in dev mode
     updateConfig({ launchAtLogin: !config.launchAtLogin });
     await saveConfig(false);
     triggerToast();
@@ -94,15 +98,21 @@ export function AppearancePanel() {
           <p className={card.description}>Control how Vox launches on your system.</p>
         </div>
         <div className={card.body}>
-          <label className={styles.checkboxRow}>
+          <label className={`${styles.checkboxRow} ${isDevMode ? styles.disabled : ""}`}>
             <input
               type="checkbox"
               checked={config.launchAtLogin}
+              disabled={isDevMode}
               onChange={toggleLaunchAtLogin}
             />
             <div>
               <div className={styles.checkboxLabel}>Launch at login</div>
-              <div className={styles.checkboxDesc}>Automatically start Vox when you log in to your computer</div>
+              <div className={styles.checkboxDesc}>
+                {isDevMode
+                  ? "Disabled in development mode. This feature works only in the production build."
+                  : "Automatically start Vox when you log in to your computer"
+                }
+              </div>
             </div>
           </label>
         </div>
