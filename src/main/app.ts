@@ -102,12 +102,7 @@ app.whenReady().then(async () => {
   });
   shortcutManager.start();
 
-  setupTray({
-    onOpenHome: () => openHome(reloadConfig),
-    onStartListening: () => shortcutManager?.triggerToggle(),
-    onStopListening: () => shortcutManager?.stopAndProcess(),
-    onCancelListening: () => shortcutManager?.cancelRecording(),
-  });
+  setupTray(() => openHome(reloadConfig));
 
   // Open settings window automatically in dev mode
   if (!app.isPackaged) {
