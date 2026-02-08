@@ -126,19 +126,28 @@
         <div class="card">
           <div class="card-header">
             <h2>Keyboard Shortcuts</h2>
-            <p class="card-description">Configure the keyboard shortcuts for voice recording.</p>
+            <p class="card-description">Configure the keyboard shortcuts for voice recording. Click a field and press your desired key combination.</p>
           </div>
           <div class="card-body">
             <div class="field">
-              <label for="shortcut-hold">Hold mode</label>
-              <input type="text" id="shortcut-hold" placeholder="Alt+Space" readonly>
+              <label>Hold mode</label>
+              <div class="shortcut-field" id="shortcut-hold" tabindex="0">
+                <span class="shortcut-display"></span>
+                <span class="shortcut-placeholder">Press shortcut...</span>
+              </div>
+              <input type="hidden" id="shortcut-hold-value">
               <p class="field-hint">Hold to record, release to stop.</p>
             </div>
             <div class="field">
-              <label for="shortcut-toggle">Toggle mode</label>
-              <input type="text" id="shortcut-toggle" placeholder="Alt+Shift+Space" readonly>
+              <label>Toggle mode</label>
+              <div class="shortcut-field" id="shortcut-toggle" tabindex="0">
+                <span class="shortcut-display"></span>
+                <span class="shortcut-placeholder">Press shortcut...</span>
+              </div>
+              <input type="hidden" id="shortcut-toggle-value">
               <p class="field-hint">Press once to start, press again to stop.</p>
             </div>
+            <button class="btn btn-secondary btn-sm" id="restore-defaults-btn" style="margin-top: 8px">Restore Defaults</button>
           </div>
         </div>
       </div>
