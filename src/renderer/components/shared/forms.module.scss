@@ -1,5 +1,5 @@
 .field {
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-5);
 
   &:last-child {
     margin-bottom: 0;
@@ -7,43 +7,43 @@
 
   > label {
     display: block;
-    font-size: 13px;
-    font-weight: 500;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
     color: var(--color-text-secondary);
-    margin-bottom: 8px;
+    margin-bottom: var(--spacing-2);
   }
 }
 
 .hint {
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   color: var(--color-text-muted);
-  margin-top: 6px;
+  margin-top: var(--spacing-1-5);
 }
 
 .inputGroup {
   position: relative;
 
   input {
-    padding-right: 40px;
+    padding-right: var(--spacing-10);
   }
 }
 
 .iconBtn {
   position: absolute;
-  right: 4px;
+  right: var(--spacing-1);
   top: 50%;
   transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
+  width: var(--size-icon-xl);
+  height: var(--size-icon-xl);
   display: flex;
   align-items: center;
   justify-content: center;
   background: none;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-base);
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: color 150ms ease, background 150ms ease;
+  transition: color var(--duration-fast) var(--ease-default), background var(--duration-fast) var(--ease-default);
 
   &:hover {
     color: var(--color-text-secondary);
@@ -52,38 +52,38 @@
 }
 
 .testSection {
-  margin-top: 24px;
+  margin-top: var(--spacing-6);
   border-top: 1px solid var(--color-border);
-  padding-top: 20px;
+  padding-top: var(--spacing-5);
 }
 
 .inlineTabs {
   display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-  border-bottom: 1px solid var(--color-border, #e5e7eb);
-  margin-top: 8px;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-4);
+  border-bottom: 1px solid var(--color-border);
+  margin-top: var(--spacing-2);
 }
 
 .inlineTab {
-  padding: 8px 16px;
+  padding: var(--spacing-2) var(--spacing-4);
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  color: #6b7280;
+  color: var(--color-text-tertiary);
   font-weight: 400;
   cursor: pointer;
   margin-bottom: -1px;
-  transition: color 150ms ease, border-color 150ms ease, font-weight 150ms ease;
+  transition: color var(--duration-fast) var(--ease-default), border-color var(--duration-fast) var(--ease-default), font-weight var(--duration-fast) var(--ease-default);
 
   &:hover {
-    color: #3b82f6;
+    color: var(--color-accent);
   }
 
   &.active {
-    border-bottom-color: #3b82f6;
-    color: #3b82f6;
-    font-weight: 600;
+    border-bottom-color: var(--color-accent);
+    color: var(--color-accent);
+    font-weight: var(--font-weight-semibold);
   }
 }
 
@@ -93,13 +93,13 @@
 
   input[type="checkbox"] {
     width: auto;
-    margin-right: 8px;
+    margin-right: var(--spacing-2);
   }
 }
 
 .monospaceTextarea {
   font-family: monospace;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   width: 100%;
   resize: vertical;
 }
