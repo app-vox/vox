@@ -3,13 +3,28 @@ const detectOS = () => {
     const userAgent = window.navigator.userAgent.toLowerCase();
     const platform = window.navigator.platform.toLowerCase();
 
-    if (platform.includes('mac') || userAgent.includes('mac')) {
+    // Check for iOS/iPhone/iPad first (they sometimes report as Mac)
+    if (userAgent.includes('iphone') || userAgent.includes('ipad') || userAgent.includes('ipod')) {
+        return 'ios';
+    }
+
+    // Check for macOS (desktop only)
+    if ((platform.includes('mac') || userAgent.includes('mac')) && !userAgent.includes('iphone') && !userAgent.includes('ipad')) {
+        // Additional check: if it's a touch device claiming to be Mac, it's probably iOS
+        if ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 1) {
+            return 'ios';
+        }
         return 'macos';
-    } else if (platform.includes('win') || userAgent.includes('win')) {
+    }
+
+    if (platform.includes('win') || userAgent.includes('win')) {
         return 'windows';
-    } else if (platform.includes('linux') || userAgent.includes('linux')) {
+    }
+
+    if (platform.includes('linux') || userAgent.includes('linux')) {
         return 'linux';
     }
+
     return 'other';
 };
 
@@ -182,32 +197,113 @@ document.addEventListener('DOMContentLoaded', () => {
     const animateStatusOverlays = () => {
         const overlays = document.querySelectorAll('.status-overlay');
         const labels = document.querySelectorAll('.stage-label');
+        const inputField = document.querySelector('.demo-input-field');
+        const typedText = document.querySelector('.typed-text');
+        const cursor = document.querySelector('.typing-cursor');
+        const fullText = "Hey team, let's sync up tomorrow at 10 AM to discuss the new feature rollout. I'll share the design specs beforehand.";
+
         let currentIndex = 0;
+        let typingTimeout;
+        let cycleTimeout;
+
+        const typeText = (text, element, callback) => {
+            element.textContent = '';
+            cursor.classList.add('active');
+            inputField.classList.add('active');
+
+            // Show text almost instantly (simulating paste behavior)
+            let i = 0;
+            const type = () => {
+                if (i < text.length) {
+                    element.textContent += text.charAt(i);
+                    i++;
+                    typingTimeout = setTimeout(type, 8); // Very fast - 8ms per char (~0.8s total)
+                } else {
+                    setTimeout(() => {
+                        cursor.classList.remove('active');
+                        inputField.classList.remove('active');
+                        if (callback) callback();
+                    }, 1000); // Stay 1 second after text appears
+                }
+            };
+            type();
+        };
 
         const activateStatus = () => {
+            // Clear any ongoing typing
+            if (typingTimeout) {
+                clearTimeout(typingTimeout);
+            }
+
             // Remove active class from all overlays and labels
             overlays.forEach(overlay => overlay.classList.remove('active'));
             labels.forEach(label => label.classList.remove('active'));
 
-            // Add active class to current overlay
-            if (overlays[currentIndex]) {
-                overlays[currentIndex].classList.add('active');
+            // Clear text when starting new cycle
+            if (typedText) {
+                typedText.textContent = '';
+            }
+            cursor.classList.remove('active');
+            inputField.classList.remove('active');
+
+            // Determine delay based on current stage
+            let delay;
+
+            if (currentIndex === 0) {
+                // Listening - 2.5 seconds
+                delay = 2500;
+                if (overlays[currentIndex]) {
+                    overlays[currentIndex].classList.add('active');
+                }
+                if (labels[currentIndex]) {
+                    labels[currentIndex].classList.add('active');
+                }
+            } else if (currentIndex === 1) {
+                // Transcribing - 1.2 seconds (faster)
+                delay = 1200;
+                if (overlays[currentIndex]) {
+                    overlays[currentIndex].classList.add('active');
+                }
+                if (labels[currentIndex]) {
+                    labels[currentIndex].classList.add('active');
+                }
+            } else if (currentIndex === 2) {
+                // Correcting - 1 second (faster)
+                delay = 1000;
+                if (overlays[currentIndex]) {
+                    overlays[currentIndex].classList.add('active');
+                }
+                if (labels[currentIndex]) {
+                    labels[currentIndex].classList.add('active');
+                }
+
+                // After correcting, trigger paste with typing
+                setTimeout(() => {
+                    overlays.forEach(overlay => overlay.classList.remove('active'));
+                    if (labels[3]) {
+                        labels[3].classList.add('active');
+                    }
+                    // Typing takes ~3s + 1s display = 4s total
+                    typeText(fullText, typedText, () => {
+                        // After typing finishes and 1s display, move to next
+                        cycleTimeout = setTimeout(() => {
+                            currentIndex = (currentIndex + 1) % overlays.length;
+                            activateStatus();
+                        }, 0);
+                    });
+                }, delay);
+
+                // Don't set cycleTimeout here, it will be set after typing
+                return;
             }
 
-            // Highlight corresponding label (0=listening->0, 1=transcribing->1, 2=correcting->2)
-            if (labels[currentIndex]) {
-                labels[currentIndex].classList.add('active');
-            }
-
-            // Move to next status
+            // Move to next status after delay
             currentIndex = (currentIndex + 1) % overlays.length;
+            cycleTimeout = setTimeout(activateStatus, delay);
         };
 
         // Initial activation
         activateStatus();
-
-        // Repeat every 2.5 seconds
-        setInterval(activateStatus, 2500);
     };
 
     // Start animation when demo container is visible

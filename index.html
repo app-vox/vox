@@ -68,10 +68,10 @@
                 <div class="hero-content">
                     <h1 class="hero-title">
                         Voice to text.<br>
-                        <span class="text-accent">Locally. Accurately.</span>
+                        <span class="text-accent">Safely. Free. Accurately.</span>
                     </h1>
                     <p class="hero-subtitle">
-                        Open-source macOS menu bar app with local Whisper transcription and optional AI enhancement.
+                        100% free and open-source. Local Whisper transcription with optional LLM enhancement using your own API keys.
                     </p>
                     <div class="hero-cta">
                         <a href="https://github.com/app-vox/vox/releases/latest" class="btn btn-primary" id="download-btn" target="_blank" rel="noopener noreferrer">
@@ -91,6 +91,7 @@
 
                     <!-- Animated Status Overlays -->
                     <div class="demo-overlay-container">
+                        <div class="demo-background"></div>
                         <div class="status-overlay" data-status="listening">
                             <div class="status-dot status-dot-red"></div>
                             <span class="status-text">Listening...</span>
@@ -105,31 +106,56 @@
                         </div>
                     </div>
 
-                    <!-- Stage Labels -->
+                    <!-- Result Field (above stages) -->
+                    <div class="demo-result">
+                        <div class="demo-result-label">Result</div>
+                        <div class="demo-input-field">
+                            <span class="typed-text"></span><span class="typing-cursor"></span>
+                        </div>
+                    </div>
+
+                    <!-- Divider -->
+                    <hr class="demo-divider">
+
+                    <!-- Stage Icons and Labels -->
                     <div class="demo-stages">
                         <div class="stage-label">
+                            <div class="stage-icon record">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                    <circle cx="12" cy="12" r="8"/>
+                                </svg>
+                            </div>
                             <h3 class="stage-title">Record</h3>
                             <p class="stage-description">Press hotkey to record</p>
                         </div>
                         <div class="stage-label">
+                            <div class="stage-icon transcribe">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+                                </svg>
+                            </div>
                             <h3 class="stage-title">Transcribe</h3>
                             <p class="stage-description">Whisper processes locally</p>
                         </div>
                         <div class="stage-label">
+                            <div class="stage-icon enhance">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 3v18M3 12h18M7.5 7.5l9 9M16.5 7.5l-9 9"/>
+                                    <circle cx="12" cy="12" r="9"/>
+                                </svg>
+                            </div>
                             <h3 class="stage-title">AI Enhancement</h3>
                             <p class="stage-description">Optional correction</p>
                         </div>
                         <div class="stage-label">
+                            <div class="stage-icon paste">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                </svg>
+                            </div>
                             <h3 class="stage-title">Paste</h3>
                             <p class="stage-description">Clean text, ready to use</p>
                         </div>
-                    </div>
-
-                    <div class="demo-transcription">
-                        <svg class="quote-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                            <path d="M7.5 4.5c0 1.38-1.12 2.5-2.5 2.5S2.5 5.88 2.5 4.5 3.62 2 5 2s2.5.62 2.5 2.5zm-5 4c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5S6.38 6 5 6s-2.5 1.12-2.5 2.5zm8 0c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5S13.38 6 12 6s-2.5 1.12-2.5 2.5z"/>
-                        </svg>
-                        <p>Hey team, let's sync up tomorrow at 10 AM to discuss the new feature rollout. I'll share the design specs beforehand.</p>
                     </div>
                 </div>
             </div>
