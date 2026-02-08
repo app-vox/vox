@@ -19,7 +19,6 @@ let AXIsProcessTrusted: any;
 function initCGEvent(): void {
   if (cg) return;
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const koffi = require("koffi");
 
   cg = koffi.load("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics");

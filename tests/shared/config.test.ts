@@ -1,11 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  type VoxConfig,
-  type LlmConfig,
-  type WhisperConfig,
-  type ShortcutsConfig,
-  createDefaultConfig,
-} from "../../src/shared/config";
+import { createDefaultConfig } from "../../src/shared/config";
 
 describe("VoxConfig", () => {
   it("should create a default config with expected shape", () => {

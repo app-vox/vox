@@ -9,6 +9,7 @@
     "dev": "electron-vite dev",
     "build:legacy": "tsc",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
     "dist": "electron-vite build && electron-builder"
@@ -16,6 +17,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@tailwindcss/vite": "^4.1.18",
     "@types/node": "^25.2.1",
     "@types/react": "^19.2.13",
@@ -24,10 +26,13 @@
     "electron": "^40.2.1",
     "electron-builder": "^26.7.0",
     "electron-vite": "^5.0.0",
+    "eslint": "^9.39.2",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.54.0",
     "vitest": "^4.0.18",
     "zustand": "^5.0.11"
   },
