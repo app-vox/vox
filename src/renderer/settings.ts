@@ -167,8 +167,8 @@ function handleShortcutKeyDown(e: KeyboardEvent): void {
   previousValue = "";
   document.getElementById(fieldId)!.classList.remove("recording");
 
-  // Re-enable global shortcuts (from saved config — new values apply after Save)
-  ipcRenderer.invoke("shortcuts:enable");
+  // Save and re-register shortcuts immediately
+  saveConfig();
 }
 
 // Set up shortcut field click handlers
@@ -200,6 +200,7 @@ document.getElementById("restore-defaults-btn")!.addEventListener("click", () =>
   stopRecording(true);
   setShortcutValue("shortcut-hold", "Alt+Space");
   setShortcutValue("shortcut-toggle", "Alt+Shift+Space");
+  saveConfig();
 });
 
 // ---- Tab navigation ----
@@ -315,14 +316,16 @@ async function loadModels(selectedModel: string): Promise<void> {
 
     container.appendChild(row);
   }
+
+  // Auto-save when whisper model selection changes
+  container.addEventListener("change", () => saveConfig());
 }
 
-// ---- Save ----
+// ---- Auto-save ----
 
-document.getElementById("save-btn")!.addEventListener("click", async () => {
+function gatherConfig() {
   const selectedModel = (document.querySelector('input[name="whisper-model"]:checked') as HTMLInputElement)?.value || "small";
-
-  const config = {
+  return {
     llm: {
       provider: (document.getElementById("llm-provider") as HTMLSelectElement).value,
       endpoint: (document.getElementById("llm-endpoint") as HTMLInputElement).value,
@@ -340,17 +343,27 @@ document.getElementById("save-btn")!.addEventListener("click", async () => {
       toggle: getShortcutValue("shortcut-toggle"),
     },
   };
+}
 
-  await ipcRenderer.invoke("config:save", config);
-
-  // Re-register global shortcuts from the newly saved config
+async function saveConfig(): Promise<void> {
+  await ipcRenderer.invoke("config:save", gatherConfig());
   await ipcRenderer.invoke("shortcuts:enable");
+}
 
-  const saveStatus = document.getElementById("save-status")!;
-  saveStatus.textContent = "Settings saved.";
-  saveStatus.classList.add("visible");
-  setTimeout(() => saveStatus.classList.remove("visible"), 2000);
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+
+function debouncedSave(): void {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => saveConfig(), 500);
+}
+
+// Text/password/url inputs: debounced save
+document.querySelectorAll<HTMLInputElement>('input[type="text"], input[type="password"], input[type="url"]').forEach((input) => {
+  input.addEventListener("input", debouncedSave);
 });
+
+// Provider select: immediate save
+document.getElementById("llm-provider")!.addEventListener("change", () => saveConfig());
 
 // ---- Permissions ----
 

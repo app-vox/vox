@@ -639,28 +639,6 @@ select:focus {
   border: 1px solid var(--border);
 }
 
-/* ---- Footer ---- */
-
-.footer {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 24px;
-  border-top: 1px solid var(--border);
-  background: var(--bg-root);
-}
-
-.save-status {
-  font-size: 13px;
-  color: var(--success);
-  opacity: 0;
-  transition: opacity 300ms ease;
-}
-
-.save-status.visible {
-  opacity: 1;
-}
-
 /* ---- Scrollbar ---- */
 
 .content::-webkit-scrollbar {
