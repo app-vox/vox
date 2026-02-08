@@ -1,10 +1,10 @@
 import { type LlmProvider } from "./provider";
-import { LLM_SYSTEM_PROMPT } from "../../shared/constants";
 
 export interface FoundryConfig {
   endpoint: string;
   apiKey: string;
   model: string;
+  customPrompt: string;
 }
 
 interface AnthropicResponse {
@@ -19,6 +19,11 @@ export class FoundryProvider implements LlmProvider {
   }
 
   async correct(rawText: string): Promise<string> {
+    console.log("[FoundryProvider] System prompt being sent:");
+    console.log("━".repeat(80));
+    console.log(this.config.customPrompt);
+    console.log("━".repeat(80));
+
     const base = this.config.endpoint.replace(/\/+$/, "");
     const url = `${base}/v1/messages`;
 
@@ -31,7 +36,7 @@ export class FoundryProvider implements LlmProvider {
       },
       body: JSON.stringify({
         model: this.config.model,
-        system: LLM_SYSTEM_PROMPT,
+        system: this.config.customPrompt,
         messages: [
           { role: "user", content: rawText },
         ],
