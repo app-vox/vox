@@ -1,6 +1,7 @@
 import { app, nativeTheme, session } from "electron";
 import * as path from "path";
 import { ConfigManager } from "./config/manager";
+import { createSecretStore } from "./config/secrets";
 import { ModelManager } from "./models/manager";
 import { AudioRecorder } from "./audio/recorder";
 import { transcribe } from "./audio/whisper";
@@ -13,7 +14,7 @@ import { registerIpcHandlers } from "./ipc";
 
 const configDir = path.join(app.getPath("userData"));
 const modelsDir = path.join(configDir, "models");
-const configManager = new ConfigManager(configDir);
+const configManager = new ConfigManager(configDir, createSecretStore());
 const modelManager = new ModelManager(modelsDir);
 
 let pipeline: Pipeline | null = null;

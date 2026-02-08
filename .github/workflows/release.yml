@@ -192,8 +192,8 @@ jobs:
           This release always points to the latest version. Current: **${{ steps.version.outputs.tag }}**
 
           ### Download
-          - **DMG**: [Vox-arm64.dmg](https://github.com/rodrigoluizs/vox/releases/download/latest/Vox-arm64.dmg)
-          - **Zip**: [Vox-arm64-mac.zip](https://github.com/rodrigoluizs/vox/releases/download/latest/Vox-arm64-mac.zip)
+          - **DMG**: [Vox-arm64.dmg](https://github.com/app-vox/vox/releases/download/latest/Vox-arm64.dmg)
+          - **Zip**: [Vox-arm64-mac.zip](https://github.com/app-vox/vox/releases/download/latest/Vox-arm64-mac.zip)
           NOTES
           )" \
             out/Vox-arm64.dmg out/Vox-arm64-mac.zip

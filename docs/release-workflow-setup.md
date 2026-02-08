@@ -14,7 +14,7 @@ Open **Keychain Access** on your Mac:
 
 1. In the sidebar, select the **login** keychain
 2. Click the **My Certificates** category
-3. Find **"Developer ID Application: Rodrigo Luiz Dos Santos Costa Silva (7Y57846YR9)"**
+3. Find your **"Developer ID Application: Your Name (TEAM_ID)"** certificate
 4. Right-click it > **Export...**
 5. Choose format **Personal Information Exchange (.p12)**
 6. Set a strong password (you'll need it for the GitHub secret)
