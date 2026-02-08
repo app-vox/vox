@@ -1,7 +1,0 @@
-node_modules/
-dist/
-out/
-*.dmg
-*.tsbuildinfo
-.DS_Store
-.idea/

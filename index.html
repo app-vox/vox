@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vox - Voice to text. Locally. Accurately.</title>
+
+    <!-- Meta Tags -->
+    <meta name="description" content="Open-source macOS menu bar app with local Whisper transcription and LLM-powered correction. Your voice stays on your device.">
+    <meta name="keywords" content="vox, voice to text, whisper, transcription, macos, open source, privacy, local processing">
+    <meta name="author" content="Vox Community">
+
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="Vox - Voice to text. Locally. Accurately.">
+    <meta property="og:description" content="Open-source macOS menu bar app with local Whisper transcription and LLM-powered correction.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://rodrigoluizs.github.io/vox/">
+    <meta property="og:image" content="https://rodrigoluizs.github.io/vox/assets/logo.png">
+
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Vox - Voice to text. Locally. Accurately.">
+    <meta name="twitter:description" content="Open-source macOS menu bar app with local Whisper transcription and LLM-powered correction.">
+    <meta name="twitter:image" content="https://rodrigoluizs.github.io/vox/assets/logo.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="apple-touch-icon" href="assets/favicon.png">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="#" class="logo" aria-label="Vox Homepage">
+                    <img src="assets/logo.png" alt="Vox Logo" width="32" height="32">
+                    <span>Vox</span>
+                </a>
+                <nav class="header-nav">
+                    <a href="https://github.com/rodrigoluizs/vox" class="github-stars" id="github-stars" target="_blank" rel="noopener noreferrer">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                            <path d="M8 0.198c-4.418 0-8 3.582-8 8 0 3.535 2.292 6.533 5.47 7.59.4.075.547-.172.547-.385 0-.19-.007-.693-.01-1.36-2.226.483-2.695-1.073-2.695-1.073-.364-.924-.89-1.17-.89-1.17-.725-.496.056-.486.056-.486.803.056 1.225.824 1.225.824.714 1.223 1.873.87 2.33.665.072-.517.279-.87.508-1.07-1.777-.2-3.644-.888-3.644-3.953 0-.873.31-1.587.823-2.147-.09-.202-.36-1.015.07-2.117 0 0 .67-.215 2.2.82.64-.178 1.32-.266 2-.27.68.004 1.36.092 2 .27 1.52-1.035 2.19-.82 2.19-.82.43 1.102.16 1.915.08 2.117.51.56.82 1.274.82 2.147 0 3.073-1.87 3.75-3.65 3.947.28.24.54.73.54 1.48 0 1.07-.01 1.93-.01 2.19 0 .21.14.46.55.38C13.71 14.53 16 11.53 16 8c0-4.418-3.582-8-8-8z"/>
+                        </svg>
+                        <span class="star-count" id="star-count">-</span>
+                    </a>
+                    <a href="https://github.com/rodrigoluizs/vox" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">Star on GitHub</a>
+                    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                        <svg class="sun-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="10" cy="10" r="4"/>
+                            <path d="M10 1v2m0 14v2M19 10h-2M3 10H1m15.071-6.071l-1.414 1.414M6.343 14.657l-1.414 1.414m12.142 0l-1.414-1.414M6.343 5.343L4.929 3.929"/>
+                        </svg>
+                        <svg class="moon-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
+                        </svg>
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <span class="badge">Open Source</span>
+                    <h1 class="hero-title">
+                        Voice to text.<br>
+                        <span class="text-accent">Locally. Accurately.</span>
+                    </h1>
+                    <p class="hero-subtitle">
+                        Open-source macOS menu bar app with local Whisper transcription and LLM-powered correction.
+                    </p>
+                    <div class="hero-cta">
+                        <a href="https://github.com/rodrigoluizs/vox/releases/latest" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                                <path d="M8.75 1.75a.75.75 0 00-1.5 0v5.69L5.03 5.22a.75.75 0 00-1.06 1.06l3.5 3.5a.75.75 0 001.06 0l3.5-3.5a.75.75 0 00-1.06-1.06L8.75 7.44V1.75z"/>
+                                <path d="M2.5 9.5a.75.75 0 01.75.75v2.5c0 .138.112.25.25.25h8.5a.25.25 0 00.25-.25v-2.5a.75.75 0 011.5 0v2.5A1.75 1.75 0 0112 15H4a1.75 1.75 0 01-1.75-1.75v-2.5a.75.75 0 01.75-.75z"/>
+                            </svg>
+                            Download for macOS
+                        </a>
+                        <a href="https://github.com/rodrigoluizs/vox" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">Star on GitHub</a>
+                    </div>
+                </div>
+
+                <!-- Demo Visual -->
+                <div class="demo-container">
+                    <div class="demo-header">Vox Menu Bar</div>
+                    <div class="demo-stages">
+                        <div class="stage">
+                            <div class="stage-icon record">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                    <circle cx="12" cy="12" r="8"/>
+                                </svg>
+                            </div>
+                            <h3 class="stage-title">Record</h3>
+                            <p class="stage-description">Press hotkey to record</p>
+                        </div>
+                        <div class="stage">
+                            <div class="stage-icon transcribe">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+                                </svg>
+                            </div>
+                            <h3 class="stage-title">Transcribe</h3>
+                            <p class="stage-description">Whisper processes locally</p>
+                        </div>
+                        <div class="stage">
+                            <div class="stage-icon paste">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                </svg>
+                            </div>
+                            <h3 class="stage-title">Paste</h3>
+                            <p class="stage-description">Clean text, ready to use</p>
+                        </div>
+                    </div>
+                    <div class="demo-transcription">
+                        <svg class="quote-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M7.5 4.5c0 1.38-1.12 2.5-2.5 2.5S2.5 5.88 2.5 4.5 3.62 2 5 2s2.5.62 2.5 2.5zm-5 4c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5S6.38 6 5 6s-2.5 1.12-2.5 2.5zm8 0c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5S13.38 6 12 6s-2.5 1.12-2.5 2.5z"/>
+                        </svg>
+                        <p>Hey team, let's sync up tomorrow at 10 AM to discuss the new feature rollout. I'll share the design specs beforehand.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Privacy Section -->
+        <section class="privacy">
+            <div class="container">
+                <div class="privacy-card">
+                    <div class="privacy-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                    </div>
+                    <h2 class="privacy-title">Your voice stays on your device</h2>
+                    <p class="privacy-description">
+                        Transcription runs entirely on your Mac using Whisper. Only the resulting text is sent to an LLM for correction — your audio never leaves your device.
+                    </p>
+                    <div class="privacy-features">
+                        <span class="feature-pill">Local processing</span>
+                        <span class="feature-pill">No cloud audio</span>
+                        <span class="feature-pill">Open source</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="footer-text">Built by the open-source community</p>
+                <nav class="footer-nav">
+                    <a href="https://github.com/rodrigoluizs/vox/blob/main/README.md" target="_blank" rel="noopener noreferrer">Docs</a>
+                    <span class="separator">•</span>
+                    <a href="https://github.com/rodrigoluizs/vox" target="_blank" rel="noopener noreferrer">GitHub</a>
+                    <span class="separator">•</span>
+                    <a href="https://github.com/rodrigoluizs/vox/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>
+                </nav>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="script.js"></script>
+</body>
+</html>
