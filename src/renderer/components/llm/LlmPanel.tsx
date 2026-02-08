@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useConfigStore } from "../../stores/config-store";
+import { useDebouncedSave } from "../../hooks/use-debounced-save";
 import { FoundryFields } from "./FoundryFields";
 import { BedrockFields } from "./BedrockFields";
 import { StatusBox } from "../ui/StatusBox";
@@ -11,6 +12,7 @@ export function LlmPanel() {
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
+  const debouncedSave = useDebouncedSave(500, true);
   const [testing, setTesting] = useState(false);
   const [testStatus, setTestStatus] = useState<{ text: string; type: "info" | "success" | "error" }>({ text: "", type: "info" });
   const [activeTab, setActiveTab] = useState<"provider" | "prompt">("provider");
@@ -122,7 +124,7 @@ export function LlmPanel() {
                   value={config.customPrompt || ""}
                   onChange={(e) => {
                     updateConfig({ customPrompt: e.target.value });
-                    saveConfig();
+                    debouncedSave();
                   }}
                   placeholder="Add additional instructions for the AI..."
                   rows={12}
