@@ -132,7 +132,7 @@ body {
 }
 
 .github-stars {
-    display: none;
+    display: flex;
     align-items: center;
     gap: 0.375rem;
     padding: 0.375rem 0.75rem;
@@ -143,12 +143,6 @@ body {
     text-decoration: none;
     font-size: var(--font-size-sm);
     transition: all var(--transition-fast);
-}
-
-@media (min-width: 640px) {
-    .github-stars {
-        display: flex;
-    }
 }
 
 .github-stars:hover {
