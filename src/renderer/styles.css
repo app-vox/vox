@@ -506,6 +506,100 @@ select:focus {
   background: rgba(245, 158, 11, 0.1);
 }
 
+/* ---- Shortcut Recorder ---- */
+
+.shortcut-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 38px;
+  padding: 6px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color var(--transition);
+  outline: none;
+  user-select: none;
+}
+
+.shortcut-field:hover {
+  border-color: var(--border-hover);
+}
+
+.shortcut-field:focus {
+  border-color: var(--border-focus);
+}
+
+.shortcut-field.recording {
+  border-color: var(--accent);
+  animation: shortcut-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes shortcut-pulse {
+  0%, 100% { border-color: var(--accent); }
+  50% { border-color: var(--border-hover); }
+}
+
+.shortcut-field.conflict {
+  animation: shortcut-shake 0.4s ease;
+  border-color: var(--error);
+}
+
+@keyframes shortcut-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+.shortcut-field .shortcut-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.shortcut-field .shortcut-placeholder {
+  display: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.shortcut-field.recording .shortcut-placeholder {
+  display: inline;
+}
+
+.shortcut-field.recording .shortcut-display:empty + .shortcut-placeholder {
+  display: inline;
+}
+
+.shortcut-field.recording .shortcut-display:not(:empty) + .shortcut-placeholder {
+  display: none;
+}
+
+.shortcut-field kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.shortcut-field .separator {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
 /* ---- Status Box ---- */
 
 .status-box {

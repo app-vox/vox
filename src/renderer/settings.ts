@@ -6,6 +6,202 @@ interface ModelInfo {
   downloaded: boolean;
 }
 
+// ---- Shortcut recorder ----
+
+const CODE_TO_KEY: Record<string, string> = {
+  Space: "Space", Enter: "Enter", Backspace: "Backspace", Tab: "Tab",
+  ArrowUp: "Up", ArrowDown: "Down", ArrowLeft: "Left", ArrowRight: "Right",
+  Delete: "Delete", Home: "Home", End: "End", PageUp: "PageUp", PageDown: "PageDown",
+  Minus: "-", Equal: "=", BracketLeft: "[", BracketRight: "]",
+  Backslash: "\\", Semicolon: ";", Quote: "'", Comma: ",", Period: ".", Slash: "/",
+  Backquote: "`",
+};
+
+// Build KeyA→A, Digit0→0, F1→F1 etc.
+for (let i = 65; i <= 90; i++) {
+  const ch = String.fromCharCode(i);
+  CODE_TO_KEY[`Key${ch}`] = ch;
+}
+for (let i = 0; i <= 9; i++) {
+  CODE_TO_KEY[`Digit${i}`] = String(i);
+}
+for (let i = 1; i <= 12; i++) {
+  CODE_TO_KEY[`F${i}`] = `F${i}`;
+}
+
+function isModifierCode(code: string): boolean {
+  return code.startsWith("Shift") || code.startsWith("Control") ||
+         code.startsWith("Alt") || code.startsWith("Meta");
+}
+
+function buildAccelerator(modifiers: string[], key: string): string {
+  return [...modifiers, key].join("+");
+}
+
+function parseAccelerator(accelerator: string): string[] {
+  return accelerator.split("+");
+}
+
+function renderShortcutKeys(container: HTMLElement, parts: string[]): void {
+  const display = container.querySelector(".shortcut-display") as HTMLElement;
+  display.innerHTML = "";
+  parts.forEach((part, i) => {
+    if (i > 0) {
+      const sep = document.createElement("span");
+      sep.className = "separator";
+      sep.textContent = "+";
+      display.appendChild(sep);
+    }
+    const kbd = document.createElement("kbd");
+    // Use platform-friendly labels
+    if (part === "Command") kbd.textContent = "\u2318";
+    else if (part === "Ctrl") kbd.textContent = "\u2303";
+    else if (part === "Alt") kbd.textContent = "\u2325";
+    else if (part === "Shift") kbd.textContent = "\u21E7";
+    else kbd.textContent = part;
+    display.appendChild(kbd);
+  });
+}
+
+function setShortcutValue(id: string, accelerator: string): void {
+  const field = document.getElementById(id)!;
+  const hidden = document.getElementById(`${id}-value`) as HTMLInputElement;
+  hidden.value = accelerator;
+  renderShortcutKeys(field, parseAccelerator(accelerator));
+}
+
+function getShortcutValue(id: string): string {
+  return (document.getElementById(`${id}-value`) as HTMLInputElement).value;
+}
+
+let activeRecorder: string | null = null;
+let previousValue: string = "";
+
+function startRecording(fieldId: string): void {
+  if (activeRecorder === fieldId) return;
+  stopRecording(true);
+
+  activeRecorder = fieldId;
+  previousValue = getShortcutValue(fieldId);
+
+  const field = document.getElementById(fieldId)!;
+  field.classList.add("recording");
+
+  // Clear display to show placeholder
+  const display = field.querySelector(".shortcut-display") as HTMLElement;
+  display.innerHTML = "";
+
+  // Disable global shortcuts so they don't fire while recording
+  ipcRenderer.invoke("shortcuts:disable");
+}
+
+function stopRecording(cancel: boolean): void {
+  if (!activeRecorder) return;
+
+  const field = document.getElementById(activeRecorder)!;
+  field.classList.remove("recording");
+
+  if (cancel) {
+    // Revert to previous value
+    setShortcutValue(activeRecorder, previousValue);
+  }
+
+  activeRecorder = null;
+  previousValue = "";
+
+  // Re-enable global shortcuts from the saved config on disk
+  ipcRenderer.invoke("shortcuts:enable");
+}
+
+function handleShortcutKeyDown(e: KeyboardEvent): void {
+  if (!activeRecorder) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  // Escape cancels
+  if (e.code === "Escape") {
+    stopRecording(true);
+    return;
+  }
+
+  // Ignore lone modifier presses — just show them in real-time
+  const modifiers: string[] = [];
+  if (e.metaKey) modifiers.push("Command");
+  if (e.ctrlKey) modifiers.push("Ctrl");
+  if (e.altKey) modifiers.push("Alt");
+  if (e.shiftKey) modifiers.push("Shift");
+
+  if (isModifierCode(e.code)) {
+    // Show modifiers-only preview
+    if (modifiers.length > 0) {
+      const field = document.getElementById(activeRecorder)!;
+      renderShortcutKeys(field, modifiers);
+    }
+    return;
+  }
+
+  // Non-modifier key pressed
+  const mainKey = CODE_TO_KEY[e.code];
+  if (!mainKey) return; // Unknown key, ignore
+
+  // Require at least one modifier
+  if (modifiers.length === 0) return;
+
+  const accelerator = buildAccelerator(modifiers, mainKey);
+
+  // Prevent duplicate: the other field must not have the same shortcut
+  const otherId = activeRecorder === "shortcut-hold" ? "shortcut-toggle" : "shortcut-hold";
+  if (accelerator === getShortcutValue(otherId)) {
+    const field = document.getElementById(activeRecorder)!;
+    field.classList.add("conflict");
+    setTimeout(() => field.classList.remove("conflict"), 600);
+    return;
+  }
+
+  setShortcutValue(activeRecorder, accelerator);
+
+  // Done — finalize
+  const fieldId = activeRecorder;
+  activeRecorder = null;
+  previousValue = "";
+  document.getElementById(fieldId)!.classList.remove("recording");
+
+  // Re-enable global shortcuts (from saved config — new values apply after Save)
+  ipcRenderer.invoke("shortcuts:enable");
+}
+
+// Set up shortcut field click handlers
+document.querySelectorAll<HTMLDivElement>(".shortcut-field").forEach((field) => {
+  field.addEventListener("click", () => {
+    startRecording(field.id);
+  });
+});
+
+// Global keydown for recording
+document.addEventListener("keydown", handleShortcutKeyDown);
+
+// Click outside to cancel
+document.addEventListener("mousedown", (e) => {
+  if (!activeRecorder) return;
+  const field = document.getElementById(activeRecorder)!;
+  if (!field.contains(e.target as Node)) {
+    stopRecording(true);
+  }
+});
+
+// Cancel recording when the window loses focus
+window.addEventListener("blur", () => {
+  if (activeRecorder) stopRecording(true);
+});
+
+// Restore defaults button
+document.getElementById("restore-defaults-btn")!.addEventListener("click", () => {
+  stopRecording(true);
+  setShortcutValue("shortcut-hold", "Alt+Space");
+  setShortcutValue("shortcut-toggle", "Alt+Shift+Space");
+});
+
 // ---- Tab navigation ----
 
 document.querySelectorAll<HTMLButtonElement>(".tab").forEach((tab) => {
@@ -54,8 +250,8 @@ async function init(): Promise<void> {
   (document.getElementById("llm-access-key") as HTMLInputElement).value = config.llm.accessKeyId || "";
   (document.getElementById("llm-secret-key") as HTMLInputElement).value = config.llm.secretAccessKey || "";
   (document.getElementById("llm-model-id") as HTMLInputElement).value = config.llm.modelId || "";
-  (document.getElementById("shortcut-hold") as HTMLInputElement).value = config.shortcuts.hold;
-  (document.getElementById("shortcut-toggle") as HTMLInputElement).value = config.shortcuts.toggle;
+  setShortcutValue("shortcut-hold", config.shortcuts.hold);
+  setShortcutValue("shortcut-toggle", config.shortcuts.toggle);
 
   // Load logo as data URL from main process (resources are in extraResources, not in the asar)
   const logoDataUrl: string = await ipcRenderer.invoke("resources:data-url", "trayIcon@8x.png");
@@ -140,12 +336,15 @@ document.getElementById("save-btn")!.addEventListener("click", async () => {
     },
     whisper: { model: selectedModel },
     shortcuts: {
-      hold: (document.getElementById("shortcut-hold") as HTMLInputElement).value,
-      toggle: (document.getElementById("shortcut-toggle") as HTMLInputElement).value,
+      hold: getShortcutValue("shortcut-hold"),
+      toggle: getShortcutValue("shortcut-toggle"),
     },
   };
 
   await ipcRenderer.invoke("config:save", config);
+
+  // Re-register global shortcuts from the newly saved config
+  await ipcRenderer.invoke("shortcuts:enable");
 
   const saveStatus = document.getElementById("save-status")!;
   saveStatus.textContent = "Settings saved.";
