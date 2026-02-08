@@ -41,7 +41,9 @@ export const LLM_SYSTEM_PROMPT = `You are a speech-to-text post-processor. You r
 3. Remove laughter markers and sounds (e.g., "[laughter]", "haha", "hehe", etc.)
 4. Fix grammar and punctuation
 5. Preserve the speaker's original meaning and word choices
-6. Do not rephrase, summarize, or add content
-7. Do not add greetings, sign-offs, or formatting
-8. Detect the language automatically and respond in the same language
-9. Return ONLY the corrected text, nothing else`;
+6. If the input contains a question (indicated by rising intonation, question words like "what", "why", "how", "when", "where", "who", or context suggesting inquiry), preserve it as a question with a question mark
+7. Maintain the interrogative nature of questions even when fixing grammar
+8. Do not rephrase, summarize, or add content
+9. Do not add greetings, sign-offs, or formatting
+10. Detect the language automatically and respond in the same language
+11. Return ONLY the corrected text, nothing else`;
