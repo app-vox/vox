@@ -4,6 +4,8 @@ import { FoundryFields } from "./FoundryFields";
 import { BedrockFields } from "./BedrockFields";
 import { StatusBox } from "../ui/StatusBox";
 import type { LlmProviderType } from "../../../shared/config";
+import card from "../shared/card.module.scss";
+import form from "../shared/forms.module.scss";
 
 export function LlmPanel() {
   const config = useConfigStore((s) => s.config);
@@ -40,16 +42,16 @@ export function LlmPanel() {
   };
 
   return (
-    <div className="card">
-      <div className="card-header">
+    <div className={card.card}>
+      <div className={card.header}>
         <h2>AI Text Correction (LLM)</h2>
-        <p className="card-description">
+        <p className={card.description}>
           Improve your transcriptions by automatically fixing grammar, removing filler words, and cleaning up your speech.
         </p>
       </div>
-      <div className="card-body">
-        <div className="field">
-          <label htmlFor="enable-llm-enhancement">
+      <div className={card.body}>
+        <div className={form.field}>
+          <label htmlFor="enable-llm-enhancement" className={form.checkboxLabel}>
             <input
               type="checkbox"
               id="enable-llm-enhancement"
@@ -58,51 +60,26 @@ export function LlmPanel() {
                 updateConfig({ enableLlmEnhancement: e.target.checked });
                 saveConfig();
               }}
-              style={{ width: "auto", marginRight: "8px" }}
             />
             Improve My Transcriptions with AI
           </label>
-          <p className="field-hint">
+          <p className={form.hint}>
             When off, you'll get the raw Whisper transcription. When on, AI will fix grammar, remove filler words (um, uh, like), and polish your text.
           </p>
         </div>
 
         {config.enableLlmEnhancement && (
           <>
-            <div style={{
-              display: "flex",
-              gap: "8px",
-              marginBottom: "16px",
-              borderBottom: "1px solid var(--color-border, #e5e7eb)",
-              marginTop: "8px",
-            }}>
+            <div className={form.inlineTabs}>
               <button
                 onClick={() => setActiveTab("provider")}
-                style={{
-                  padding: "8px 16px",
-                  background: "none",
-                  border: "none",
-                  borderBottom: activeTab === "provider" ? "2px solid #3b82f6" : "none",
-                  color: activeTab === "provider" ? "#3b82f6" : "#6b7280",
-                  fontWeight: activeTab === "provider" ? "600" : "400",
-                  cursor: "pointer",
-                  marginBottom: "-1px",
-                }}
+                className={`${form.inlineTab} ${activeTab === "provider" ? form.active : ""}`}
               >
                 Provider
               </button>
               <button
                 onClick={() => setActiveTab("prompt")}
-                style={{
-                  padding: "8px 16px",
-                  background: "none",
-                  border: "none",
-                  borderBottom: activeTab === "prompt" ? "2px solid #3b82f6" : "none",
-                  color: activeTab === "prompt" ? "#3b82f6" : "#6b7280",
-                  fontWeight: activeTab === "prompt" ? "600" : "400",
-                  cursor: "pointer",
-                  marginBottom: "-1px",
-                }}
+                className={`${form.inlineTab} ${activeTab === "prompt" ? form.active : ""}`}
               >
                 Custom Prompt
               </button>
@@ -110,7 +87,7 @@ export function LlmPanel() {
 
             {activeTab === "provider" && (
               <>
-                <div className="field">
+                <div className={form.field}>
                   <label htmlFor="llm-provider">Provider</label>
                   <select
                     id="llm-provider"
@@ -124,7 +101,7 @@ export function LlmPanel() {
 
                 {config.llm.provider === "bedrock" ? <BedrockFields /> : <FoundryFields />}
 
-                <div className="test-section">
+                <div className={form.testSection}>
                   <button
                     onClick={handleTest}
                     disabled={testing}
@@ -138,7 +115,7 @@ export function LlmPanel() {
             )}
 
             {activeTab === "prompt" && (
-              <div className="field">
+              <div className={form.field}>
                 <label htmlFor="custom-prompt">Custom Instructions</label>
                 <textarea
                   id="custom-prompt"
@@ -149,9 +126,9 @@ export function LlmPanel() {
                   }}
                   placeholder="Add additional instructions for the AI..."
                   rows={12}
-                  style={{ fontFamily: "monospace", fontSize: "12px", width: "100%", resize: "vertical" }}
+                  className={form.monospaceTextarea}
                 />
-                <p className="field-hint">
+                <p className={form.hint}>
                   Your custom instructions will be added on top of Vox's default behavior (fix grammar, remove filler words, preserve meaning). Leave empty to use only the defaults.
                 </p>
               </div>
