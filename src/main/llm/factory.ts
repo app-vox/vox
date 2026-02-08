@@ -11,9 +11,9 @@ export function createLlmProvider(config: VoxConfig): LlmProvider {
     return new NoopProvider();
   }
 
-  // Append custom prompt AFTER default system prompt (only if custom is not empty and different from default)
+  // Append custom prompt AFTER default system prompt (only if custom is not empty)
   const customPrompt = config.customPrompt?.trim();
-  const prompt = customPrompt && customPrompt !== LLM_SYSTEM_PROMPT
+  const prompt = customPrompt
     ? `${LLM_SYSTEM_PROMPT}\n\nADDITIONAL CUSTOM INSTRUCTIONS:\n${customPrompt}`
     : LLM_SYSTEM_PROMPT;
 
