@@ -17,6 +17,9 @@ export function createLlmProvider(config: VoxConfig): LlmProvider {
     ? `${LLM_SYSTEM_PROMPT}\n\nADDITIONAL CUSTOM INSTRUCTIONS:\n${customPrompt}`
     : LLM_SYSTEM_PROMPT;
 
+  console.log("[Vox] Creating LLM provider with prompt length:", prompt.length);
+  console.log("[Vox] Custom prompt present:", !!customPrompt);
+
   // Otherwise route to configured provider
   switch (config.llm.provider) {
     case "bedrock":
