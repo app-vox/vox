@@ -48,8 +48,14 @@ export function registerIpcHandlers(
   ipcMain.handle("llm:test", async () => {
     const { createLlmProvider } = await import("./llm/factory");
     const config = configManager.load();
+
+    // If LLM enhancement is disabled, skip test
+    if (!config.enableLlmEnhancement) {
+      return { ok: true };
+    }
+
     try {
-      const llm = createLlmProvider(config.llm);
+      const llm = createLlmProvider(config);
       await llm.correct("Hello");
       return { ok: true };
     } catch (err: unknown) {
@@ -96,7 +102,7 @@ export function registerIpcHandlers(
     let correctedText: string | null = null;
     let llmError: string | null = null;
     try {
-      const llm = createLlmProvider(config.llm);
+      const llm = createLlmProvider(config);
       correctedText = await llm.correct(rawText);
     } catch (err: unknown) {
       llmError = err instanceof Error ? err.message : String(err);

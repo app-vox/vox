@@ -5,7 +5,6 @@ import {
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromIni } from "@aws-sdk/credential-provider-ini";
 import { type LlmProvider } from "./provider";
-import { LLM_SYSTEM_PROMPT } from "../../shared/constants";
 
 export interface BedrockConfig {
   region: string;
@@ -13,14 +12,17 @@ export interface BedrockConfig {
   accessKeyId: string;
   secretAccessKey: string;
   modelId: string;
+  customPrompt: string;
 }
 
 export class BedrockProvider implements LlmProvider {
   private readonly client: BedrockRuntimeClient;
   private readonly modelId: string;
+  private readonly customPrompt: string;
 
   constructor(config: BedrockConfig) {
     this.modelId = config.modelId;
+    this.customPrompt = config.customPrompt;
 
     const clientConfig: Record<string, unknown> = {
       region: config.region,
@@ -42,9 +44,14 @@ export class BedrockProvider implements LlmProvider {
   }
 
   async correct(rawText: string): Promise<string> {
+    console.log("[BedrockProvider] System prompt being sent:");
+    console.log("━".repeat(80));
+    console.log(this.customPrompt);
+    console.log("━".repeat(80));
+
     const command = new ConverseCommand({
       modelId: this.modelId,
-      system: [{ text: LLM_SYSTEM_PROMPT }],
+      system: [{ text: this.customPrompt }],
       messages: [
         {
           role: "user",
