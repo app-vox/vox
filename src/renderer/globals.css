@@ -53,6 +53,28 @@
 
   /* Letter spacing */
   --letter-spacing-tight: -0.01em;
+
+  /* Border radius */
+  --radius-sm: 3px;
+  --radius-base: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-full: 100px;
+
+  /* Common sizes */
+  --size-icon-sm: 16px;
+  --size-icon-base: 20px;
+  --size-icon-md: 24px;
+  --size-icon-lg: 28px;
+  --size-icon-xl: 32px;
+
+  /* Min heights */
+  --min-h-input: 38px;
+  --min-h-card: 56px;
+
+  /* Min widths */
+  --min-w-button: 24px;
+  --min-w-select: 180px;
 }
 
 /*
@@ -104,6 +126,22 @@
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.6;
   --letter-spacing-tight: -0.01em;
+
+  /* Sizing duplicates */
+  --radius-sm: 3px;
+  --radius-base: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-full: 100px;
+  --size-icon-sm: 16px;
+  --size-icon-base: 20px;
+  --size-icon-md: 24px;
+  --size-icon-lg: 28px;
+  --size-icon-xl: 32px;
+  --min-h-input: 38px;
+  --min-h-card: 56px;
+  --min-w-button: 24px;
+  --min-w-select: 180px;
 }
 
 /* ---- Light theme overrides ---- */
