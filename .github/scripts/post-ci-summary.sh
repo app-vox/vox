@@ -32,13 +32,29 @@ BODY="${MARKER}
 
 *[Run #${RUN_NUMBER}](${RUN_URL})*"
 
-# Find existing summary comment
-COMMENT_ID=$(gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" \
-  --jq ".[] | select(.body | contains(\"${MARKER}\")) | .id" | head -1)
+# Find existing summary comment via GraphQL (avoids REST /issues/ 404 on private repos)
+COMMENT_NODE_ID=$(gh api graphql -f query='
+  query($owner: String!, $name: String!, $number: Int!) {
+    repository(owner: $owner, name: $name) {
+      pullRequest(number: $number) {
+        comments(first: 100) {
+          nodes { id body }
+        }
+      }
+    }
+  }
+' -f owner="${REPO%/*}" -f name="${REPO#*/}" -F number="${PR_NUMBER}" \
+  --jq ".data.repository.pullRequest.comments.nodes[] | select(.body | startswith(\"${MARKER}\")) | .id" \
+  2>/dev/null | head -1) || true
 
-if [ -n "$COMMENT_ID" ]; then
-  gh api "repos/${REPO}/issues/${PR_NUMBER}/comments/${COMMENT_ID}" \
-    -X PATCH -f body="${BODY}"
+if [ -n "$COMMENT_NODE_ID" ]; then
+  gh api graphql -f query='
+    mutation($id: ID!, $body: String!) {
+      updateIssueComment(input: {id: $id, body: $body}) {
+        issueComment { id }
+      }
+    }
+  ' -f id="$COMMENT_NODE_ID" -f body="$BODY" > /dev/null
 else
   gh pr comment "${PR_NUMBER}" --repo "${REPO}" --body "${BODY}"
 fi
