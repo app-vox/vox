@@ -1,31 +1,27 @@
-import { app, globalShortcut, ipcMain, session, BrowserWindow, Tray, Menu, nativeImage, Notification } from "electron";
+import { app, session } from "electron";
 import * as path from "path";
-import { uIOhook, UiohookKey } from "uiohook-napi";
 import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
 import { AudioRecorder } from "./audio/recorder";
 import { transcribe } from "./audio/whisper";
 import { createLlmProvider } from "./llm/factory";
-import { pasteText, isAccessibilityGranted } from "./input/paster";
 import { Pipeline } from "./pipeline";
-import { ShortcutStateMachine } from "./shortcuts/listener";
-import { IndicatorWindow } from "./indicator";
+import { ShortcutManager } from "./shortcuts/manager";
+import { setupTray } from "./tray";
+import { openHome } from "./windows/home";
 import { registerIpcHandlers } from "./ipc";
-
-let tray: Tray | null = null;
-let pipeline: Pipeline | null = null;
-let indicator: IndicatorWindow | null = null;
-let homeWindow: BrowserWindow | null = null;
 
 const configDir = path.join(app.getPath("userData"));
 const modelsDir = path.join(configDir, "models");
 const configManager = new ConfigManager(configDir);
 const modelManager = new ModelManager(modelsDir);
 
+let pipeline: Pipeline | null = null;
+let shortcutManager: ShortcutManager | null = null;
+
 function setupPipeline(): void {
   const config = configManager.load();
   const modelPath = modelManager.getModelPath(config.whisper.model);
-
   const llmProvider = createLlmProvider(config.llm);
 
   pipeline = new Pipeline({
@@ -33,241 +29,16 @@ function setupPipeline(): void {
     transcribe,
     llmProvider,
     modelPath,
-    onStage: (stage) => {
-      indicator?.show(stage);
-    },
+    onStage: (stage) => shortcutManager?.showIndicator(stage),
   });
 }
 
-function getResourcePath(...segments: string[]): string {
-  return app.isPackaged
-    ? path.join(process.resourcesPath, "resources", ...segments)
-    : path.join(__dirname, "../../resources", ...segments);
+function reloadConfig(): void {
+  setupPipeline();
+  shortcutManager?.registerShortcutKeys();
 }
-
-function setupTray(): void {
-  const iconPath = getResourcePath("trayIcon.png");
-  const icon = nativeImage.createFromPath(iconPath);
-  icon.setTemplateImage(true);
-  tray = new Tray(icon);
-
-  const contextMenu = Menu.buildFromTemplate([
-    { label: "Home", click: () => openHome() },
-    { type: "separator" },
-    { label: "Quit", click: () => app.quit() },
-  ]);
-
-  tray.setContextMenu(contextMenu);
-}
-
-function openHome(): void {
-  if (homeWindow) {
-    homeWindow.focus();
-    return;
-  }
-
-  homeWindow = new BrowserWindow({
-    width: 580,
-    height: 720,
-    minWidth: 520,
-    minHeight: 640,
-    title: "Vox",
-    titleBarStyle: "hiddenInset",
-    backgroundColor: "#0a0a0a",
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      sandbox: false,
-      preload: path.join(__dirname, "../preload/index.js"),
-    },
-  });
-
-  if (!app.isPackaged && process.env["ELECTRON_RENDERER_URL"]) {
-    homeWindow.loadURL(process.env["ELECTRON_RENDERER_URL"]);
-  } else {
-    homeWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
-  }
-
-  homeWindow.on("closed", () => {
-    homeWindow = null;
-    // Reload pipeline and re-register shortcuts in case config changed
-    setupPipeline();
-    if (currentStateMachine) {
-      registerShortcutKeys(currentStateMachine);
-    }
-  });
-}
-
-/** Map Electron accelerator key names to UiohookKey keycodes. */
-const KEY_TO_UIOHOOK: Record<string, number> = {
-  // Modifiers
-  Command: UiohookKey.Meta, Cmd: UiohookKey.Meta, Meta: UiohookKey.Meta,
-  Ctrl: UiohookKey.Ctrl, Control: UiohookKey.Ctrl,
-  Alt: UiohookKey.Alt, Option: UiohookKey.Alt,
-  Shift: UiohookKey.Shift,
-  // Regular keys
-  Space: UiohookKey.Space,
-  Enter: UiohookKey.Enter,
-  Backspace: UiohookKey.Backspace,
-  Tab: UiohookKey.Tab,
-  Delete: UiohookKey.Delete,
-  Home: UiohookKey.Home,
-  End: UiohookKey.End,
-  PageUp: UiohookKey.PageUp,
-  PageDown: UiohookKey.PageDown,
-  Up: UiohookKey.ArrowUp,
-  Down: UiohookKey.ArrowDown,
-  Left: UiohookKey.ArrowLeft,
-  Right: UiohookKey.ArrowRight,
-  F1: UiohookKey.F1, F2: UiohookKey.F2, F3: UiohookKey.F3, F4: UiohookKey.F4,
-  F5: UiohookKey.F5, F6: UiohookKey.F6, F7: UiohookKey.F7, F8: UiohookKey.F8,
-  F9: UiohookKey.F9, F10: UiohookKey.F10, F11: UiohookKey.F11, F12: UiohookKey.F12,
-  A: UiohookKey.A, B: UiohookKey.B, C: UiohookKey.C, D: UiohookKey.D,
-  E: UiohookKey.E, F: UiohookKey.F, G: UiohookKey.G, H: UiohookKey.H,
-  I: UiohookKey.I, J: UiohookKey.J, K: UiohookKey.K, L: UiohookKey.L,
-  M: UiohookKey.M, N: UiohookKey.N, O: UiohookKey.O, P: UiohookKey.P,
-  Q: UiohookKey.Q, R: UiohookKey.R, S: UiohookKey.S, T: UiohookKey.T,
-  U: UiohookKey.U, V: UiohookKey.V, W: UiohookKey.W, X: UiohookKey.X,
-  Y: UiohookKey.Y, Z: UiohookKey.Z,
-  "0": UiohookKey[0], "1": UiohookKey[1], "2": UiohookKey[2],
-  "3": UiohookKey[3], "4": UiohookKey[4], "5": UiohookKey[5],
-  "6": UiohookKey[6], "7": UiohookKey[7], "8": UiohookKey[8],
-  "9": UiohookKey[9],
-  // Punctuation
-  "-": UiohookKey.Minus, "=": UiohookKey.Equal,
-  "[": UiohookKey.BracketLeft, "]": UiohookKey.BracketRight,
-  "\\": UiohookKey.Backslash, ";": UiohookKey.Semicolon,
-  "'": UiohookKey.Quote, ",": UiohookKey.Comma,
-  ".": UiohookKey.Period, "/": UiohookKey.Slash,
-  "`": UiohookKey.Backquote,
-};
-
-/** Build the set of all uIOhook keycodes for every key in an accelerator. */
-function getHoldKeyCodes(accelerator: string): Set<number> {
-  const codes = new Set<number>();
-  for (const part of accelerator.split("+")) {
-    const code = KEY_TO_UIOHOOK[part];
-    if (code !== undefined) codes.add(code);
-  }
-  return codes;
-}
-
-// Set of keycodes for hold mode — releasing ANY of them triggers key-up
-let holdKeyCodes: Set<number> = new Set([UiohookKey.Space]);
-let currentStateMachine: ShortcutStateMachine | null = null;
-let accessibilityWasGranted = false;
-let watchdogTimer: ReturnType<typeof setInterval> | null = null;
-
-function registerShortcutKeys(stateMachine: ShortcutStateMachine): void {
-  const config = configManager.load();
-
-  globalShortcut.unregisterAll();
-
-  const holdOk = globalShortcut.register(config.shortcuts.hold, () => {
-    stateMachine.handleHoldKeyDown();
-  });
-
-  const toggleOk = globalShortcut.register(config.shortcuts.toggle, () => {
-    stateMachine.handleTogglePress();
-  });
-
-  if (!holdOk) console.warn(`[Vox] Failed to register hold shortcut: ${config.shortcuts.hold}`);
-  if (!toggleOk) console.warn(`[Vox] Failed to register toggle shortcut: ${config.shortcuts.toggle}`);
-
-  // Track ALL keys in the hold combo for key-up detection
-  holdKeyCodes = getHoldKeyCodes(config.shortcuts.hold);
-
-  console.log(`[Vox] Shortcuts registered: hold=${config.shortcuts.hold}, toggle=${config.shortcuts.toggle}`);
-}
-
-function setupShortcuts(): void {
-  indicator = new IndicatorWindow();
-
-  const stateMachine = new ShortcutStateMachine({
-    onStart: () => {
-      console.log("[Vox] Recording started");
-      indicator!.show("listening");
-      pipeline!.startRecording().catch((err: Error) => {
-        console.error("[Vox] Recording failed:", err.message);
-        indicator!.hide();
-        new Notification({ title: "Vox", body: `Recording failed: ${err.message}` }).show();
-      });
-    },
-    onStop: async () => {
-      stateMachine.setProcessing();
-      console.log("[Vox] Recording stopped, processing pipeline");
-      indicator!.show("transcribing");
-      try {
-        const text = await pipeline!.stopAndProcess();
-        console.log("[Vox] Pipeline complete, text:", text.slice(0, 80));
-        if (!text.trim()) {
-          indicator!.showError();
-        } else {
-          indicator!.hide();
-          // Wait for the target app to regain focus before pasting
-          await new Promise((r) => setTimeout(r, 200));
-          pasteText(text);
-          new Notification({ title: "Vox", body: text }).show();
-        }
-      } catch (err: any) {
-        console.error("[Vox] Pipeline failed:", err.message);
-        indicator!.showError();
-      } finally {
-        stateMachine.setIdle();
-        console.log("[Vox] Ready for next recording");
-      }
-    },
-  });
-
-  currentStateMachine = stateMachine;
-  registerShortcutKeys(stateMachine);
-
-  // Detect key-up for hold mode release via native keyboard hook.
-  // globalShortcut only fires on key-down; uiohook gives us key-up events.
-  // Releasing ANY key in the hold combo triggers stop (the user must hold all keys).
-  uIOhook.on("keyup", (e) => {
-    if (holdKeyCodes.has(e.keycode)) {
-      stateMachine.handleHoldKeyUp();
-    }
-  });
-  uIOhook.start();
-
-  accessibilityWasGranted = isAccessibilityGranted();
-  startAccessibilityWatchdog();
-}
-
-// Poll accessibility permission so we can stop uIOhook before libuiohook
-// enters a tight CGEventTapEnable re-enable loop that freezes the system.
-function startAccessibilityWatchdog(): void {
-  watchdogTimer = setInterval(() => {
-    const granted = isAccessibilityGranted();
-
-    if (accessibilityWasGranted && !granted) {
-      console.warn("[Vox] Accessibility permission revoked — stopping keyboard hook");
-      uIOhook.stop();
-      globalShortcut.unregisterAll();
-    } else if (!accessibilityWasGranted && granted) {
-      console.log("[Vox] Accessibility permission restored — restarting keyboard hook");
-      uIOhook.start();
-      if (currentStateMachine) registerShortcutKeys(currentStateMachine);
-    }
-
-    accessibilityWasGranted = granted;
-  }, 3000);
-}
-
-ipcMain.handle("shortcuts:disable", () => {
-  globalShortcut.unregisterAll();
-});
-
-ipcMain.handle("shortcuts:enable", () => {
-  if (currentStateMachine) {
-    registerShortcutKeys(currentStateMachine);
-  }
-});
 
 app.whenReady().then(async () => {
-  // Auto-grant Electron-level media permission for all renderer windows
   session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
     callback(permission === "media");
   });
@@ -277,14 +48,18 @@ app.whenReady().then(async () => {
 
   registerIpcHandlers(configManager, modelManager);
   setupPipeline();
-  setupTray();
-  setupShortcuts();
+
+  shortcutManager = new ShortcutManager({
+    configManager,
+    getPipeline: () => pipeline!,
+  });
+  shortcutManager.start();
+
+  setupTray(() => openHome(reloadConfig));
 });
 
 app.on("will-quit", () => {
-  if (watchdogTimer) clearInterval(watchdogTimer);
-  globalShortcut.unregisterAll();
-  uIOhook.stop();
+  shortcutManager?.stop();
 });
 
 app.on("window-all-closed", () => {
