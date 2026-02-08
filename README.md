@@ -2,8 +2,8 @@
 
 Open-source macOS voice-to-text app with local Whisper transcription and LLM-powered correction.
 
-[![CI](https://github.com/rodrigoluizs/vox/actions/workflows/ci.yml/badge.svg)](https://github.com/rodrigoluizs/vox/actions/workflows/ci.yml)
-[![Release](https://github.com/rodrigoluizs/vox/actions/workflows/release.yml/badge.svg)](https://github.com/rodrigoluizs/vox/actions/workflows/release.yml)
+[![CI](https://github.com/app-vox/vox/actions/workflows/ci.yml/badge.svg)](https://github.com/app-vox/vox/actions/workflows/ci.yml)
+[![Release](https://github.com/app-vox/vox/actions/workflows/release.yml/badge.svg)](https://github.com/app-vox/vox/actions/workflows/release.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ## About
@@ -51,7 +51,7 @@ A floating indicator pill shows the current stage (Listening, Transcribing, Corr
 
 ```bash
 brew install sox
-git clone https://github.com/rodrigoluizs/vox.git
+git clone https://github.com/app-vox/vox.git
 cd vox
 npm install
 ```
