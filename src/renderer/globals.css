@@ -33,6 +33,26 @@
   --spacing-half: 2px;
   --spacing-0-75: 3px;
   --spacing-1-5: 6px;
+
+  /* Typography scale */
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 13px;
+  --font-size-md: 14px;
+  --font-size-lg: 15px;
+
+  /* Font weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  /* Line heights */
+  --line-height-none: 1;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.6;
+
+  /* Letter spacing */
+  --letter-spacing-tight: -0.01em;
 }
 
 /*
@@ -70,6 +90,20 @@
   --spacing-half: 2px;
   --spacing-0-75: 3px;
   --spacing-1-5: 6px;
+
+  /* Typography duplicates */
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 13px;
+  --font-size-md: 14px;
+  --font-size-lg: 15px;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --line-height-none: 1;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.6;
+  --letter-spacing-tight: -0.01em;
 }
 
 /* ---- Light theme overrides ---- */
