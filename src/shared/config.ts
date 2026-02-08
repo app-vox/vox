@@ -34,8 +34,6 @@ export interface VoxConfig {
   whisper: WhisperConfig;
   shortcuts: ShortcutsConfig;
   theme: ThemeMode;
-  enableLlmEnhancement?: boolean;
-  customPrompt?: string;
 }
 
 export function createDefaultConfig(): VoxConfig {
@@ -59,7 +57,5 @@ export function createDefaultConfig(): VoxConfig {
       toggle: "Alt+Shift+Space",
     },
     theme: "system",
-    enableLlmEnhancement: false,
-    customPrompt: "",
   };
 }
