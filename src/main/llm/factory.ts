@@ -1,25 +1,41 @@
 import { type LlmProvider } from "./provider";
-import { type LlmConfig } from "../../shared/config";
+import { type VoxConfig } from "../../shared/config";
+import { LLM_SYSTEM_PROMPT } from "../../shared/constants";
 import { FoundryProvider } from "./foundry";
 import { BedrockProvider } from "./bedrock";
+import { NoopProvider } from "./noop";
 
-export function createLlmProvider(config: LlmConfig): LlmProvider {
-  switch (config.provider) {
+export function createLlmProvider(config: VoxConfig): LlmProvider {
+  // If LLM enhancement is disabled, return no-op provider
+  if (!config.enableLlmEnhancement) {
+    return new NoopProvider();
+  }
+
+  // Append custom prompt AFTER default system prompt (only if custom is not empty and different from default)
+  const customPrompt = config.customPrompt?.trim();
+  const prompt = customPrompt && customPrompt !== LLM_SYSTEM_PROMPT
+    ? `${LLM_SYSTEM_PROMPT}\n\nADDITIONAL CUSTOM INSTRUCTIONS:\n${customPrompt}`
+    : LLM_SYSTEM_PROMPT;
+
+  // Otherwise route to configured provider
+  switch (config.llm.provider) {
     case "bedrock":
       return new BedrockProvider({
-        region: config.region,
-        profile: config.profile,
-        accessKeyId: config.accessKeyId,
-        secretAccessKey: config.secretAccessKey,
-        modelId: config.modelId,
+        region: config.llm.region,
+        profile: config.llm.profile,
+        accessKeyId: config.llm.accessKeyId,
+        secretAccessKey: config.llm.secretAccessKey,
+        modelId: config.llm.modelId,
+        customPrompt: prompt,
       });
 
     case "foundry":
     default:
       return new FoundryProvider({
-        endpoint: config.endpoint,
-        apiKey: config.apiKey,
-        model: config.model,
+        endpoint: config.llm.endpoint,
+        apiKey: config.llm.apiKey,
+        model: config.llm.model,
+        customPrompt: prompt,
       });
   }
 }

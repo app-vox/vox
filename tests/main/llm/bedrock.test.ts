@@ -18,6 +18,7 @@ vi.mock("@aws-sdk/credential-provider-ini", () => ({
 import { BedrockProvider } from "../../../src/main/llm/bedrock";
 import { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
 import { type LlmProvider } from "../../../src/main/llm/provider";
+import { LLM_SYSTEM_PROMPT } from "../../../src/shared/constants";
 
 describe("BedrockProvider", () => {
   let provider: LlmProvider;
@@ -30,6 +31,7 @@ describe("BedrockProvider", () => {
       accessKeyId: "",
       secretAccessKey: "",
       modelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+      customPrompt: LLM_SYSTEM_PROMPT,
     });
   });
 

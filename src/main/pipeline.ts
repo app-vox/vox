@@ -1,4 +1,5 @@
 import { type LlmProvider } from "./llm/provider";
+import { NoopProvider } from "./llm/noop";
 import { type RecordingResult } from "./audio/recorder";
 import { type TranscriptionResult } from "./audio/whisper";
 
@@ -85,6 +86,11 @@ export class Pipeline {
 
     if (!rawText || isGarbageTranscription(rawText)) {
       return "";
+    }
+
+    // Skip LLM correction if using NoopProvider (Whisper-only mode)
+    if (this.deps.llmProvider instanceof NoopProvider) {
+      return rawText;
     }
 
     let finalText: string;

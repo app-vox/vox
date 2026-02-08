@@ -1,7 +1,6 @@
 import { useConfigStore } from "../../stores/config-store";
 import { useDebouncedSave } from "../../hooks/use-debounced-save";
 import { SecretInput } from "../ui/SecretInput";
-import form from "../shared/forms.module.scss";
 
 export function BedrockFields() {
   const config = useConfigStore((s) => s.config);
@@ -17,7 +16,7 @@ export function BedrockFields() {
 
   return (
     <>
-      <div className={form.field}>
+      <div className="field">
         <label htmlFor="llm-region">Region</label>
         <input
           id="llm-region"
@@ -27,7 +26,7 @@ export function BedrockFields() {
           placeholder="us-east-1"
         />
       </div>
-      <div className={form.field}>
+      <div className="field">
         <label htmlFor="llm-profile">AWS Profile</label>
         <input
           id="llm-profile"
@@ -36,9 +35,9 @@ export function BedrockFields() {
           onChange={(e) => update("profile", e.target.value)}
           placeholder="default"
         />
-        <p className={form.hint}>Optional. Named profile from ~/.aws/credentials. Ignored when Access Key ID is provided.</p>
+        <p className="field-hint">Optional. Named profile from ~/.aws/credentials. Ignored when Access Key ID is provided.</p>
       </div>
-      <div className={form.field}>
+      <div className="field">
         <label htmlFor="llm-access-key">Access Key ID</label>
         <SecretInput
           id="llm-access-key"
@@ -46,9 +45,9 @@ export function BedrockFields() {
           onChange={(v) => update("accessKeyId", v)}
           placeholder="Leave empty to use default credentials"
         />
-        <p className={form.hint}>Optional. If empty, uses AWS default credential chain (env vars, ~/.aws/credentials, IAM roles).</p>
+        <p className="field-hint">Optional. If empty, uses AWS default credential chain (env vars, ~/.aws/credentials, IAM roles).</p>
       </div>
-      <div className={form.field}>
+      <div className="field">
         <label htmlFor="llm-secret-key">Secret Access Key</label>
         <SecretInput
           id="llm-secret-key"
@@ -57,7 +56,7 @@ export function BedrockFields() {
           placeholder="Leave empty to use default credentials"
         />
       </div>
-      <div className={form.field}>
+      <div className="field">
         <label htmlFor="llm-model-id">Model ID</label>
         <input
           id="llm-model-id"

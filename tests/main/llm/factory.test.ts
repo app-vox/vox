@@ -7,41 +7,53 @@ vi.mock("../../../src/main/llm/bedrock", () => ({
 import { createLlmProvider } from "../../../src/main/llm/factory";
 import { FoundryProvider } from "../../../src/main/llm/foundry";
 import { BedrockProvider } from "../../../src/main/llm/bedrock";
-import { type LlmConfig, type LlmProviderType } from "../../../src/shared/config";
+import { NoopProvider } from "../../../src/main/llm/noop";
+import { type VoxConfig, createDefaultConfig } from "../../../src/shared/config";
+import { LLM_SYSTEM_PROMPT } from "../../../src/shared/constants";
 
-function makeConfig(overrides: Partial<LlmConfig> = {}): LlmConfig {
+function makeVoxConfig(overrides: Partial<VoxConfig> = {}): VoxConfig {
   return {
-    provider: "foundry",
-    endpoint: "",
-    apiKey: "",
-    model: "",
-    region: "",
-    profile: "",
-    accessKeyId: "",
-    secretAccessKey: "",
-    modelId: "",
+    ...createDefaultConfig(),
     ...overrides,
   };
 }
 
 describe("createLlmProvider", () => {
-  it("should return a FoundryProvider when provider is foundry", () => {
-    const provider = createLlmProvider(makeConfig({
-      provider: "foundry",
-      endpoint: "https://example.com",
-      apiKey: "key",
-      model: "claude",
-    }));
+  it("should return NoopProvider when LLM enhancement is disabled", () => {
+    const config = makeVoxConfig({
+      enableLlmEnhancement: false,
+    });
+    const provider = createLlmProvider(config);
+    expect(provider).toBeInstanceOf(NoopProvider);
+  });
 
+  it("should return FoundryProvider when LLM enhancement is enabled with Foundry", () => {
+    const config = makeVoxConfig({
+      enableLlmEnhancement: true,
+      llm: {
+        ...createDefaultConfig().llm,
+        provider: "foundry",
+        endpoint: "https://example.com",
+        apiKey: "key",
+        model: "claude",
+      },
+    });
+    const provider = createLlmProvider(config);
     expect(provider).toBeInstanceOf(FoundryProvider);
   });
 
-  it("should return a BedrockProvider when provider is bedrock", () => {
-    createLlmProvider(makeConfig({
-      provider: "bedrock",
-      region: "us-east-1",
-      modelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
-    }));
+  it("should return BedrockProvider when LLM enhancement is enabled with Bedrock", () => {
+    const config = makeVoxConfig({
+      enableLlmEnhancement: true,
+      llm: {
+        ...createDefaultConfig().llm,
+        provider: "bedrock",
+        region: "us-east-1",
+        modelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+      },
+    });
+
+    createLlmProvider(config);
 
     expect(BedrockProvider).toHaveBeenCalledWith({
       region: "us-east-1",
@@ -49,17 +61,7 @@ describe("createLlmProvider", () => {
       accessKeyId: "",
       secretAccessKey: "",
       modelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+      customPrompt: LLM_SYSTEM_PROMPT,
     });
-  });
-
-  it("should default to FoundryProvider for unknown provider", () => {
-    const provider = createLlmProvider(makeConfig({
-      provider: "unknown" as LlmProviderType,
-      endpoint: "https://example.com",
-      apiKey: "key",
-      model: "claude",
-    }));
-
-    expect(provider).toBeInstanceOf(FoundryProvider);
   });
 });

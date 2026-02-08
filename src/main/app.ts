@@ -18,15 +18,14 @@ const modelManager = new ModelManager(modelsDir);
 
 let pipeline: Pipeline | null = null;
 let shortcutManager: ShortcutManager | null = null;
-const recorder = new AudioRecorder();
 
 function setupPipeline(): void {
   const config = configManager.load();
   const modelPath = modelManager.getModelPath(config.whisper.model);
-  const llmProvider = createLlmProvider(config.llm);
+  const llmProvider = createLlmProvider(config);
 
   pipeline = new Pipeline({
-    recorder,
+    recorder: new AudioRecorder(),
     transcribe,
     llmProvider,
     modelPath,
@@ -81,7 +80,6 @@ app.whenReady().then(async () => {
 
 app.on("will-quit", () => {
   shortcutManager?.stop();
-  recorder.dispose();
 });
 
 app.on("window-all-closed", () => {
