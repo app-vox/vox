@@ -428,6 +428,12 @@ body {
     padding: var(--spacing-2xl) 0;
 }
 
+@media (min-width: 768px) {
+    .privacy {
+        padding: 5rem 0;
+    }
+}
+
 .privacy-card {
     max-width: 800px;
     margin: 0 auto;
@@ -435,32 +441,39 @@ body {
     background-color: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-xl);
-    padding: var(--spacing-xl);
+    padding: var(--spacing-2xl) var(--spacing-lg);
     transition: all var(--transition-base);
+}
+
+@media (min-width: 768px) {
+    .privacy-card {
+        padding: 4rem 3rem;
+    }
 }
 
 .privacy-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 80px;
-    height: 80px;
+    width: 96px;
+    height: 96px;
     background-color: rgba(99, 102, 241, 0.1);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-xl);
     color: var(--accent);
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
 }
 
 .privacy-title {
     font-size: var(--font-size-xl);
     font-weight: 700;
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
     line-height: var(--line-height-tight);
 }
 
 @media (min-width: 768px) {
     .privacy-title {
         font-size: var(--font-size-2xl);
+        margin-bottom: var(--spacing-xl);
     }
 }
 
@@ -468,7 +481,16 @@ body {
     font-size: var(--font-size-base);
     color: var(--text-secondary);
     line-height: var(--line-height-relaxed);
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (min-width: 768px) {
+    .privacy-description {
+        font-size: var(--font-size-lg);
+    }
 }
 
 .privacy-features {
