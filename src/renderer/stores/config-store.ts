@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { VoxConfig } from "../../shared/config";
+import { useSaveToast } from "../hooks/use-save-toast";
 
 interface ConfigState {
   config: VoxConfig | null;
@@ -8,7 +9,7 @@ interface ConfigState {
   setActiveTab: (tab: string) => void;
   loadConfig: () => Promise<void>;
   updateConfig: (partial: Partial<VoxConfig>) => void;
-  saveConfig: () => Promise<void>;
+  saveConfig: (showToast?: boolean) => Promise<void>;
 }
 
 export const useConfigStore = create<ConfigState>((set, get) => ({
@@ -38,10 +39,13 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     });
   },
 
-  saveConfig: async () => {
+  saveConfig: async (showToast = false) => {
     const config = get().config;
     if (!config) return;
     await window.voxApi.config.save(config);
     await window.voxApi.shortcuts.enable();
+    if (showToast) {
+      useSaveToast.getState().trigger();
+    }
   },
 }));

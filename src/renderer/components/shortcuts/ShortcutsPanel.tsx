@@ -1,4 +1,5 @@
 import { useConfigStore } from "../../stores/config-store";
+import { useSaveToast } from "../../hooks/use-save-toast";
 import { ShortcutRecorder } from "./ShortcutRecorder";
 import card from "../shared/card.module.scss";
 import btn from "../shared/buttons.module.scss";
@@ -7,22 +8,26 @@ export function ShortcutsPanel() {
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
+  const triggerToast = useSaveToast((s) => s.trigger);
 
   if (!config) return null;
 
-  const setHold = (accelerator: string) => {
+  const setHold = async (accelerator: string) => {
     updateConfig({ shortcuts: { ...config.shortcuts, hold: accelerator } });
-    saveConfig();
+    await saveConfig(false);
+    triggerToast();
   };
 
-  const setToggle = (accelerator: string) => {
+  const setToggle = async (accelerator: string) => {
     updateConfig({ shortcuts: { ...config.shortcuts, toggle: accelerator } });
-    saveConfig();
+    await saveConfig(false);
+    triggerToast();
   };
 
-  const restoreDefaults = () => {
+  const restoreDefaults = async () => {
     updateConfig({ shortcuts: { hold: "Alt+Space", toggle: "Alt+Shift+Space" } });
-    saveConfig();
+    await saveConfig(false);
+    triggerToast();
   };
 
   return (

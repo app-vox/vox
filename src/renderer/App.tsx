@@ -7,6 +7,8 @@ import { WhisperPanel } from "./components/whisper/WhisperPanel";
 import { ShortcutsPanel } from "./components/shortcuts/ShortcutsPanel";
 import { PermissionsPanel } from "./components/permissions/PermissionsPanel";
 import { AppearancePanel } from "./components/appearance/AppearancePanel";
+import { SaveToast } from "./components/ui/SaveToast";
+import { useSaveToast } from "./hooks/use-save-toast";
 import { useTheme } from "./hooks/use-theme";
 
 const PANELS: Record<string, () => JSX.Element | null> = {
@@ -22,6 +24,8 @@ export function App() {
   const activeTab = useConfigStore((s) => s.activeTab);
   const loadConfig = useConfigStore((s) => s.loadConfig);
   const theme = useConfigStore((s) => s.config?.theme);
+  const showToast = useSaveToast((s) => s.show);
+  const hideToast = useSaveToast((s) => s.hide);
 
   useTheme(theme);
 
@@ -46,6 +50,7 @@ export function App() {
       <main className="content">
         <Panel />
       </main>
+      <SaveToast show={showToast} onHide={hideToast} />
     </div>
   );
 }

@@ -6,10 +6,11 @@ interface SecretInputProps {
   id: string;
   value: string;
   onChange: (value: string) => void;
+  onBlur?: () => void;
   placeholder?: string;
 }
 
-export function SecretInput({ id, value, onChange, placeholder }: SecretInputProps) {
+export function SecretInput({ id, value, onChange, onBlur, placeholder }: SecretInputProps) {
   const [visible, setVisible] = useState(false);
 
   return (
@@ -19,6 +20,7 @@ export function SecretInput({ id, value, onChange, placeholder }: SecretInputPro
         type={visible ? "text" : "password"}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
         placeholder={placeholder}
       />
       <button
