@@ -5,6 +5,7 @@ export interface FoundryConfig {
   endpoint: string;
   apiKey: string;
   model: string;
+  systemPrompt?: string;
 }
 
 interface AnthropicResponse {
@@ -13,9 +14,11 @@ interface AnthropicResponse {
 
 export class FoundryProvider implements LlmProvider {
   private readonly config: FoundryConfig;
+  private readonly systemPrompt: string;
 
   constructor(config: FoundryConfig) {
     this.config = config;
+    this.systemPrompt = config.systemPrompt ?? LLM_SYSTEM_PROMPT;
   }
 
   async correct(rawText: string): Promise<string> {
@@ -31,7 +34,7 @@ export class FoundryProvider implements LlmProvider {
       },
       body: JSON.stringify({
         model: this.config.model,
-        system: LLM_SYSTEM_PROMPT,
+        system: this.systemPrompt,
         messages: [
           { role: "user", content: rawText },
         ],

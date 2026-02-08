@@ -23,7 +23,7 @@ const recorder = new AudioRecorder();
 function setupPipeline(): void {
   const config = configManager.load();
   const modelPath = modelManager.getModelPath(config.whisper.model);
-  const llmProvider = createLlmProvider(config.llm);
+  const llmProvider = createLlmProvider(config);
 
   pipeline = new Pipeline({
     recorder,
