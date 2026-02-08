@@ -144,11 +144,11 @@ select {
 
 .content {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: scroll;
   padding: 24px;
 
   &::-webkit-scrollbar { width: 6px; }
-  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-track { background: var(--color-bg-hover); }
   &::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
   &::-webkit-scrollbar-thumb:hover { background: var(--color-border-hover); }
 }
