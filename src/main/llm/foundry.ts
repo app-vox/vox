@@ -19,10 +19,8 @@ export class FoundryProvider implements LlmProvider {
   }
 
   async correct(rawText: string): Promise<string> {
-    console.log("[FoundryProvider] System prompt being sent:");
-    console.log("━".repeat(80));
-    console.log(this.config.customPrompt);
-    console.log("━".repeat(80));
+    const hasCustom = this.config.customPrompt.includes("ADDITIONAL CUSTOM INSTRUCTIONS");
+    console.log("[FoundryProvider] Correcting text, custom prompt:", hasCustom ? "YES" : "NO");
 
     const base = this.config.endpoint.replace(/\/+$/, "");
     const url = `${base}/v1/messages`;
