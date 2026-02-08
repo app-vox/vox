@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeImage, nativeTheme, systemPreferences, shell } from "electron";
+import { app, BrowserWindow, ipcMain, nativeImage, nativeTheme, systemPreferences, shell, dialog } from "electron";
 import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
 import { type VoxConfig, type WhisperModelSize } from "../shared/config";
