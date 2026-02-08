@@ -7,6 +7,7 @@ Manual GitHub Actions workflow that builds, signs, notarizes, and publishes Vox 
 - Apple Developer Program membership (paid)
 - Developer ID Application certificate in your local Keychain
 - Access to [App Store Connect](https://appstoreconnect.apple.com)
+- A GitHub App installed on the repository (for pushing to protected branches)
 
 ## 1. Export your Developer ID certificate as .p12
 
@@ -56,12 +57,30 @@ base64 -i Vox_Profile.provisionprofile | pbcopy
 
 The encoded value is now in your clipboard — this is `PROVISIONING_PROFILE_BASE64`.
 
-## 4. Add secrets to GitHub
+## 4. Create a GitHub App (for branch protection bypass)
+
+The release workflow pushes commits and tags to `main`. If branch protection rules require pull requests, the workflow needs a GitHub App token to bypass them.
+
+1. Go to your organization's **Settings > Developer settings > GitHub Apps > New GitHub App**
+2. Fill in:
+   - **App name**: e.g., `vox-release-bot`
+   - **Homepage URL**: your repo URL
+3. Uncheck **Webhook > Active**
+4. Under **Repository permissions**, set **Contents** to **Read and Write**
+5. Click **Create GitHub App**
+6. Note the **App ID** at the top of the settings page
+7. Under **Private keys**, click **Generate a private key** — a `.pem` file will download
+8. In the sidebar, click **Install App** → select your organization → choose the repository → **Install**
+9. In the repo's **Settings > Rules > Rulesets**, edit the `main` ruleset and add the GitHub App to the **Bypass list**
+
+## 5. Add secrets to GitHub
 
 Go to your repo > **Settings > Secrets and variables > Actions** and add:
 
 | Secret name              | Value                                          |
 | ------------------------ | ---------------------------------------------- |
+| `APP_ID`                 | GitHub App ID from step 4                      |
+| `APP_PRIVATE_KEY`        | Entire contents of the `.pem` file from step 4 |
 | `CERTIFICATE_P12_BASE64` | Base64-encoded .p12 certificate from step 1   |
 | `CERTIFICATE_PASSWORD`   | Password set when exporting the .p12           |
 | `APPLE_API_KEY_ID`       | Key ID from step 2 (e.g., `ABC123DEFG`)       |
