@@ -3,17 +3,18 @@ import { useConfigStore } from "../../stores/config-store";
 import { FoundryFields } from "./FoundryFields";
 import { BedrockFields } from "./BedrockFields";
 import { StatusBox } from "../ui/StatusBox";
+import type { LlmProviderType } from "../../../shared/config";
 
 export function LlmPanel() {
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const [testing, setTesting] = useState(false);
-  const [testStatus, setTestStatus] = useState({ text: "", type: "info" as const });
+  const [testStatus, setTestStatus] = useState<{ text: string; type: "info" | "success" | "error" }>({ text: "", type: "info" });
 
   if (!config) return null;
 
-  const handleProviderChange = (provider: string) => {
+  const handleProviderChange = (provider: LlmProviderType) => {
     updateConfig({ llm: { ...config.llm, provider } });
     saveConfig();
   };
@@ -49,7 +50,7 @@ export function LlmPanel() {
           <select
             id="llm-provider"
             value={config.llm.provider || "foundry"}
-            onChange={(e) => handleProviderChange(e.target.value)}
+            onChange={(e) => handleProviderChange(e.target.value as LlmProviderType)}
           >
             <option value="foundry">Microsoft Foundry</option>
             <option value="bedrock">AWS Bedrock</option>

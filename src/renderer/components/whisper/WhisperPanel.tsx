@@ -11,7 +11,7 @@ export function WhisperPanel() {
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [testing, setTesting] = useState(false);
-  const [testStatus, setTestStatus] = useState({ text: "", type: "info" as const });
+  const [testStatus, setTestStatus] = useState<{ text: string; type: "info" | "success" | "error" }>({ text: "", type: "info" });
 
   useEffect(() => {
     window.voxApi.models.list().then(setModels);

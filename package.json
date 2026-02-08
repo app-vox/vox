@@ -8,6 +8,7 @@
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
     "build:legacy": "tsc",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "dist": "electron-vite build && electron-builder"

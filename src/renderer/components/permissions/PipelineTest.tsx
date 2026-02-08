@@ -5,7 +5,7 @@ import { RecordIcon } from "../ui/icons";
 
 export function PipelineTest() {
   const [testing, setTesting] = useState(false);
-  const [testStatus, setTestStatus] = useState({ text: "", type: "info" as const });
+  const [testStatus, setTestStatus] = useState<{ text: string; type: "info" | "success" | "error" }>({ text: "", type: "info" });
 
   const handleTest = async () => {
     setTesting(true);

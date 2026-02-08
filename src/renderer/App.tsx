@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, type JSX } from "react";
 import { useConfigStore } from "./stores/config-store";
 import { Header } from "./components/layout/Header";
 import { TabNav } from "./components/layout/TabNav";
@@ -7,7 +7,7 @@ import { WhisperPanel } from "./components/whisper/WhisperPanel";
 import { ShortcutsPanel } from "./components/shortcuts/ShortcutsPanel";
 import { PermissionsPanel } from "./components/permissions/PermissionsPanel";
 
-const PANELS: Record<string, () => JSX.Element> = {
+const PANELS: Record<string, () => JSX.Element | null> = {
   llm: LlmPanel,
   whisper: WhisperPanel,
   shortcuts: ShortcutsPanel,
