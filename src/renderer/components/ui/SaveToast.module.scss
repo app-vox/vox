@@ -1,20 +1,20 @@
 .toast {
   position: fixed;
-  top: 16px;
-  right: 16px;
+  top: var(--spacing-4);
+  right: var(--spacing-4);
   background: var(--color-bg-card);
   color: var(--color-text-primary);
-  padding: 12px 16px;
-  border-radius: 8px;
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: var(--radius-lg);
   border: 1px solid var(--color-border-hover);
   display: flex;
   align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  gap: var(--spacing-2);
+  box-shadow: var(--shadow-toast);
   z-index: 9999;
   transition: opacity 0.3s ease-in-out;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
 
   &.visible {
     opacity: 1;
