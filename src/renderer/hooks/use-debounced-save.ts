@@ -5,8 +5,15 @@ export function useDebouncedSave(delayMs = 500, showToast = false) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveConfig = useConfigStore((s) => s.saveConfig);
 
-  return useCallback(() => {
+  const debouncedSave = useCallback(() => {
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => saveConfig(showToast), delayMs);
   }, [saveConfig, delayMs, showToast]);
+
+  const flush = useCallback(() => {
+    if (timer.current) clearTimeout(timer.current);
+    saveConfig(showToast);
+  }, [saveConfig, showToast]);
+
+  return { debouncedSave, flush };
 }

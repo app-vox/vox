@@ -1,11 +1,12 @@
 import { useConfigStore } from "../../stores/config-store";
 import { useDebouncedSave } from "../../hooks/use-debounced-save";
 import { SecretInput } from "../ui/SecretInput";
+import form from "../shared/forms.module.scss";
 
 export function FoundryFields() {
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
-  const debouncedSave = useDebouncedSave();
+  const { debouncedSave, flush } = useDebouncedSave(500, true);
 
   if (!config) return null;
 
@@ -16,32 +17,35 @@ export function FoundryFields() {
 
   return (
     <>
-      <div className="field">
+      <div className={form.field}>
         <label htmlFor="llm-endpoint">Endpoint</label>
         <input
           id="llm-endpoint"
           type="url"
           value={config.llm.endpoint}
           onChange={(e) => update("endpoint", e.target.value)}
+          onBlur={flush}
           placeholder="https://your-resource.services.ai.azure.com/anthropic"
         />
       </div>
-      <div className="field">
+      <div className={form.field}>
         <label htmlFor="llm-apikey">API Key</label>
         <SecretInput
           id="llm-apikey"
           value={config.llm.apiKey}
           onChange={(v) => update("apiKey", v)}
+          onBlur={flush}
           placeholder="Enter your API key"
         />
       </div>
-      <div className="field">
+      <div className={form.field}>
         <label htmlFor="llm-model">Model</label>
         <input
           id="llm-model"
           type="text"
           value={config.llm.model}
           onChange={(e) => update("model", e.target.value)}
+          onBlur={flush}
           placeholder="gpt-4o"
         />
       </div>

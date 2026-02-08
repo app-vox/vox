@@ -11,9 +11,8 @@ export function openHome(onClosed: () => void): void {
 
   homeWindow = new BrowserWindow({
     width: 640,
-    height: 720,
-    minWidth: 620,
-    minHeight: 640,
+    height: 840,
+    resizable: false,
     title: "Vox",
     titleBarStyle: "hiddenInset",
     backgroundColor: nativeTheme.shouldUseDarkColors ? "#0a0a0a" : "#ffffff",
