@@ -22,7 +22,6 @@ let shortcutManager: ShortcutManager | null = null;
 
 function setupPipeline(): void {
   const config = configManager.load();
-  console.log("[Vox] Setting up pipeline with customPrompt:", config.customPrompt?.slice(0, 50) || "(empty)");
   const modelPath = modelManager.getModelPath(config.whisper.model);
   const llmProvider = createLlmProvider(config);
 

@@ -20,11 +20,9 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle("config:save", (_event, config: VoxConfig) => {
-    console.log("[Vox] Saving config with customPrompt:", config.customPrompt?.slice(0, 50) || "(empty)");
     configManager.save(config);
     nativeTheme.themeSource = config.theme;
     // Reload pipeline to apply new config (especially custom prompt changes)
-    console.log("[Vox] Triggering pipeline reload...");
     onConfigChange?.();
   });
 
