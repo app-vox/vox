@@ -32,13 +32,13 @@ export function PermissionsPanel() {
   const accGranted = !!status?.accessibility;
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-lg border border-border bg-bg-card">
-        <div className="px-5 pt-5 pb-3">
-          <h2 className="text-base font-semibold">System Permissions</h2>
-          <p className="text-xs text-text-secondary mt-1">Vox requires these macOS permissions to function properly.</p>
+    <>
+      <div className="card">
+        <div className="card-header">
+          <h2>System Permissions</h2>
+          <p className="card-description">Vox requires these macOS permissions to function properly.</p>
         </div>
-        <div className="px-5 pb-5 space-y-1">
+        <div className="card-body">
           <PermissionRow
             icon={<MicIcon />}
             name="Microphone"
@@ -60,7 +60,9 @@ export function PermissionsPanel() {
         </div>
       </div>
 
-      <PipelineTest />
-    </div>
+      <div className="card">
+        <PipelineTest />
+      </div>
+    </>
   );
 }

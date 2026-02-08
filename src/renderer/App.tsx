@@ -37,7 +37,7 @@ export function App() {
     <div className="flex flex-col h-full">
       <Header />
       <TabNav />
-      <main className="flex-1 overflow-y-auto px-5 py-4">
+      <main className="content">
         <Panel />
       </main>
     </div>

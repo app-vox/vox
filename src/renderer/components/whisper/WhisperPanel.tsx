@@ -45,13 +45,13 @@ export function WhisperPanel() {
   };
 
   return (
-    <div className="rounded-lg border border-border bg-bg-card">
-      <div className="px-5 pt-5 pb-3">
-        <h2 className="text-base font-semibold">Whisper Model</h2>
-        <p className="text-xs text-text-secondary mt-1">Select the local speech recognition model. Larger models are more accurate but slower.</p>
+    <div className="card">
+      <div className="card-header">
+        <h2>Whisper Model</h2>
+        <p className="card-description">Select the local speech recognition model. Larger models are more accurate but slower.</p>
       </div>
-      <div className="px-5 pb-5">
-        <div className="space-y-1">
+      <div className="card-body">
+        <div>
           {models.map((model) => (
             <ModelRow
               key={model.size}
@@ -62,15 +62,15 @@ export function WhisperPanel() {
           ))}
         </div>
 
-        <div className="pt-4 mt-4 border-t border-border">
+        <div className="test-section">
           <button
             onClick={handleTest}
             disabled={testing}
-            className="px-3 py-1.5 text-sm rounded-md border border-border bg-bg-input text-text-secondary hover:text-text-primary hover:border-border-focus transition-colors disabled:opacity-50"
+            className="btn btn-secondary btn-sm"
           >
             Test Whisper
           </button>
-          <p className="text-xs text-text-muted mt-2">Records 5 seconds of audio and runs it through the selected model.</p>
+          <p className="field-hint">Records 5 seconds of audio and runs it through the selected model.</p>
           <StatusBox text={testStatus.text} type={testStatus.type} />
         </div>
       </div>

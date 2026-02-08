@@ -24,12 +24,12 @@ export function ShortcutsPanel() {
   };
 
   return (
-    <div className="rounded-lg border border-border bg-bg-card">
-      <div className="px-5 pt-5 pb-3">
-        <h2 className="text-base font-semibold">Keyboard Shortcuts</h2>
-        <p className="text-xs text-text-secondary mt-1">Configure the keyboard shortcuts for voice recording. Click a field and press your desired key combination.</p>
+    <div className="card">
+      <div className="card-header">
+        <h2>Keyboard Shortcuts</h2>
+        <p className="card-description">Configure the keyboard shortcuts for voice recording. Click a field and press your desired key combination.</p>
       </div>
-      <div className="px-5 pb-5 space-y-4">
+      <div className="card-body">
         <ShortcutRecorder
           label="Hold mode"
           hint="Hold to record, release to stop."
@@ -46,7 +46,8 @@ export function ShortcutsPanel() {
         />
         <button
           onClick={restoreDefaults}
-          className="px-3 py-1.5 text-sm rounded-md border border-border bg-bg-input text-text-secondary hover:text-text-primary hover:border-border-focus transition-colors"
+          className="btn btn-secondary btn-sm"
+          style={{ marginTop: 8 }}
         >
           Restore Defaults
         </button>

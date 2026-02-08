@@ -38,19 +38,18 @@ export function LlmPanel() {
   };
 
   return (
-    <div className="rounded-lg border border-border bg-bg-card">
-      <div className="px-5 pt-5 pb-3">
-        <h2 className="text-base font-semibold">LLM Provider</h2>
-        <p className="text-xs text-text-secondary mt-1">Configure the language model used for post-processing transcriptions.</p>
+    <div className="card">
+      <div className="card-header">
+        <h2>LLM Provider</h2>
+        <p className="card-description">Configure the language model used for post-processing transcriptions.</p>
       </div>
-      <div className="px-5 pb-5 space-y-4">
-        <div className="space-y-1.5">
-          <label htmlFor="llm-provider" className="block text-sm text-text-secondary">Provider</label>
+      <div className="card-body">
+        <div className="field">
+          <label htmlFor="llm-provider">Provider</label>
           <select
             id="llm-provider"
             value={config.llm.provider || "foundry"}
             onChange={(e) => handleProviderChange(e.target.value)}
-            className="w-full h-9 px-3 rounded-md bg-bg-input border border-border text-text-primary text-sm outline-none transition-colors focus:border-border-focus"
           >
             <option value="foundry">Microsoft Foundry</option>
             <option value="bedrock">AWS Bedrock</option>
@@ -59,11 +58,11 @@ export function LlmPanel() {
 
         {config.llm.provider === "bedrock" ? <BedrockFields /> : <FoundryFields />}
 
-        <div className="pt-4 border-t border-border">
+        <div className="test-section">
           <button
             onClick={handleTest}
             disabled={testing}
-            className="px-3 py-1.5 text-sm rounded-md border border-border bg-bg-input text-text-secondary hover:text-text-primary hover:border-border-focus transition-colors disabled:opacity-50"
+            className="btn btn-secondary btn-sm"
           >
             Test Connection
           </button>

@@ -8,12 +8,12 @@ export function Header() {
   }, []);
 
   return (
-    <header className="titlebar-drag flex items-center justify-between px-5 pt-6 pb-4">
-      <div className="flex items-center gap-3">
-        {logoSrc && <img alt="Vox" src={logoSrc} className="w-7 h-7" />}
-        <span className="text-lg font-semibold tracking-tight">Vox</span>
+    <header className="header">
+      <div className="header-title">
+        {logoSrc && <img alt="Vox" src={logoSrc} className="header-logo" />}
+        <span>Vox</span>
       </div>
-      <span className="text-xs text-text-secondary tracking-wide uppercase">Home</span>
+      <span className="header-subtitle">Home</span>
     </header>
   );
 }

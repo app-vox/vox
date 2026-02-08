@@ -19,26 +19,25 @@ export function ModelRow({ model, selected, onSelect }: ModelRowProps) {
   };
 
   return (
-    <div className="flex items-center justify-between py-2.5 px-3 rounded-md hover:bg-bg-hover transition-colors">
-      <label className="flex items-center gap-3 cursor-pointer flex-1">
+    <div className="model-row">
+      <label>
         <input
           type="radio"
           name="whisper-model"
           value={model.size}
           checked={selected}
           onChange={() => onSelect(model.size)}
-          className="accent-accent"
         />
-        <span className="text-sm font-medium">{model.size}</span>
-        <span className="text-xs text-text-secondary">{model.info.description}</span>
+        <span className="model-name">{model.size}</span>
+        <span className="model-desc">{model.info.description}</span>
       </label>
       {downloaded ? (
-        <span className="text-xs text-success font-medium">Downloaded</span>
+        <span className="downloaded">Downloaded</span>
       ) : (
         <button
           onClick={handleDownload}
           disabled={downloading}
-          className="px-2.5 py-1 text-xs rounded-md border border-border bg-bg-input text-text-secondary hover:text-text-primary hover:border-border-focus transition-colors disabled:opacity-50"
+          className="download-btn"
         >
           {downloading ? "Downloading..." : "Download"}
         </button>

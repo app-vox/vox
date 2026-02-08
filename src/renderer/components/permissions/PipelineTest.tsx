@@ -34,22 +34,22 @@ export function PipelineTest() {
   };
 
   return (
-    <div className="rounded-lg border border-border bg-bg-card">
-      <div className="px-5 pt-5 pb-3">
-        <h2 className="text-base font-semibold">Pipeline Test</h2>
-        <p className="text-xs text-text-secondary mt-1">Record a 5-second audio sample to test transcription and LLM correction.</p>
+    <>
+      <div className="card-header">
+        <h2>Pipeline Test</h2>
+        <p className="card-description">Record a 5-second audio sample to test transcription and LLM correction.</p>
       </div>
-      <div className="px-5 pb-5">
+      <div className="card-body">
         <button
           onClick={handleTest}
           disabled={testing}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md bg-accent text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
+          className="btn btn-primary"
         >
           <RecordIcon />
           Record 5s Test
         </button>
         <StatusBox text={testStatus.text} type={testStatus.type} />
       </div>
-    </div>
+    </>
   );
 }

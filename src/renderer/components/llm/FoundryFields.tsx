@@ -16,19 +16,18 @@ export function FoundryFields() {
 
   return (
     <>
-      <div className="space-y-1.5">
-        <label htmlFor="llm-endpoint" className="block text-sm text-text-secondary">Endpoint</label>
+      <div className="field">
+        <label htmlFor="llm-endpoint">Endpoint</label>
         <input
           id="llm-endpoint"
           type="url"
           value={config.llm.endpoint}
           onChange={(e) => update("endpoint", e.target.value)}
           placeholder="https://your-resource.services.ai.azure.com/anthropic"
-          className="w-full h-9 px-3 rounded-md bg-bg-input border border-border text-text-primary text-sm outline-none transition-colors focus:border-border-focus"
         />
       </div>
-      <div className="space-y-1.5">
-        <label htmlFor="llm-apikey" className="block text-sm text-text-secondary">API Key</label>
+      <div className="field">
+        <label htmlFor="llm-apikey">API Key</label>
         <SecretInput
           id="llm-apikey"
           value={config.llm.apiKey}
@@ -36,15 +35,14 @@ export function FoundryFields() {
           placeholder="Enter your API key"
         />
       </div>
-      <div className="space-y-1.5">
-        <label htmlFor="llm-model" className="block text-sm text-text-secondary">Model</label>
+      <div className="field">
+        <label htmlFor="llm-model">Model</label>
         <input
           id="llm-model"
           type="text"
           value={config.llm.model}
           onChange={(e) => update("model", e.target.value)}
           placeholder="gpt-4o"
-          className="w-full h-9 px-3 rounded-md bg-bg-input border border-border text-text-primary text-sm outline-none transition-colors focus:border-border-focus"
         />
       </div>
     </>

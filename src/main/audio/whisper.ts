@@ -1,3 +1,4 @@
+import { app } from "electron";
 import { execFile } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
@@ -7,10 +8,10 @@ export interface TranscriptionResult {
   text: string;
 }
 
-// In packaged builds, __dirname points inside app.asar but native binaries
-// are in app.asar.unpacked. Replace .asar with .asar.unpacked for the binary path.
-const baseDir = __dirname.replace("app.asar", "app.asar.unpacked");
-const WHISPER_CPP_DIR = path.join(baseDir, "../../../node_modules/whisper-node/lib/whisper.cpp");
+// In packaged builds, app.getAppPath() points inside app.asar but native
+// binaries are in app.asar.unpacked. Replace accordingly for the binary path.
+const appRoot = app.getAppPath().replace("app.asar", "app.asar.unpacked");
+const WHISPER_CPP_DIR = path.join(appRoot, "node_modules/whisper-node/lib/whisper.cpp");
 const WHISPER_BIN = path.join(WHISPER_CPP_DIR, "main");
 
 export async function transcribe(

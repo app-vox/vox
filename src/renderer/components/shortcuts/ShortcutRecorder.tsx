@@ -121,34 +121,34 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange }: S
     ? previewParts
     : parseAccelerator(value);
 
+  const fieldClasses = [
+    "shortcut-field",
+    recording && "recording",
+    conflict && "conflict",
+  ].filter(Boolean).join(" ");
+
   return (
-    <div className="space-y-1.5">
-      <label className="block text-sm text-text-secondary">{label}</label>
+    <div className="field">
+      <label>{label}</label>
       <div
         ref={fieldRef}
         onClick={() => !recording && startRecording()}
-        className={`flex items-center gap-1.5 h-9 px-3 rounded-md border cursor-pointer transition-all ${
-          recording
-            ? "border-accent animate-shortcut-pulse bg-bg-input"
-            : conflict
-              ? "border-error animate-shortcut-shake bg-bg-input"
-              : "border-border bg-bg-input hover:border-border-focus"
-        }`}
+        className={fieldClasses}
+        tabIndex={0}
       >
-        {recording && previewParts.length === 0 ? (
-          <span className="text-sm text-text-muted">Press shortcut...</span>
-        ) : (
-          displayParts.map((part, i) => (
-            <span key={i} className="flex items-center gap-1">
-              {i > 0 && <span className="text-text-muted text-xs">+</span>}
-              <kbd className="px-1.5 py-0.5 text-xs font-mono rounded bg-white/10 text-text-primary">
-                {PLATFORM_LABELS[part] || part}
-              </kbd>
+        <span className="shortcut-display">
+          {displayParts.map((part, i) => (
+            <span key={i}>
+              {i > 0 && <span className="separator">+</span>}
+              <kbd>{PLATFORM_LABELS[part] || part}</kbd>
             </span>
-          ))
+          ))}
+        </span>
+        {recording && previewParts.length === 0 && (
+          <span className="shortcut-placeholder">Press shortcut...</span>
         )}
       </div>
-      <p className="text-xs text-text-muted">{hint}</p>
+      <p className="field-hint">{hint}</p>
     </div>
   );
 }
