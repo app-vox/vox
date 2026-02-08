@@ -3,12 +3,16 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: "Version tag (e.g., v1.0.0). Leave empty to use package.json version."
-        required: false
-        type: string
+      release_type:
+        description: "Semver bump type"
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
       dry_run:
-        description: "Dry run — build and sign but skip GitHub Release creation"
+        description: "Dry run — build and sign but skip GitHub Release creation and version commit"
         required: false
         type: boolean
         default: false
@@ -29,17 +33,24 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Determine version
+      - name: Bump version
         id: version
         run: |
-          if [ -n "${{ inputs.version }}" ]; then
-            VERSION="${{ inputs.version }}"
-          else
-            VERSION="v$(node -p "require('./package.json').version")"
-          fi
-          echo "tag=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "version=${VERSION#v}" >> "$GITHUB_OUTPUT"
-          echo "Using version: ${VERSION}"
+          CURRENT=$(node -p "require('./package.json').version")
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+
+          case "${{ inputs.release_type }}" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+          esac
+
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          npm version "$NEW_VERSION" --no-git-tag-version
+
+          echo "tag=v${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Bumped $CURRENT → $NEW_VERSION (${{ inputs.release_type }})"
 
       - name: Install dependencies
         run: npm ci
@@ -133,6 +144,17 @@ jobs:
           echo "DMG=$DMG" >> "$GITHUB_ENV"
           echo "ZIP=$ZIP" >> "$GITHUB_ENV"
 
+      - name: Commit version bump
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "chore(release): bump version to ${{ steps.version.outputs.version }}"
+          git push origin HEAD:main
+
       - name: Create versioned GitHub Release
         if: ${{ !inputs.dry_run }}
         env:
@@ -140,9 +162,8 @@ jobs:
         run: |
           TAG="${{ steps.version.outputs.tag }}"
 
-          # Create the tag if it doesn't exist
-          git tag "$TAG" 2>/dev/null || true
-          git push origin "$TAG" 2>/dev/null || true
+          git tag "$TAG"
+          git push origin "$TAG"
 
           gh release create "$TAG" \
             --title "Vox $TAG" \
