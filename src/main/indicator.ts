@@ -109,9 +109,11 @@ export class IndicatorWindow {
     this.window.setIgnoreMouseEvents(true);
     this.window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
-    const display = screen.getPrimaryDisplay();
-    const x = Math.round(display.bounds.width / 2 - estimatedWidth / 2);
-    this.window.setPosition(x, 20);
+    // Show overlay on the display where the cursor currently is
+    const cursorPoint = screen.getCursorScreenPoint();
+    const display = screen.getDisplayNearestPoint(cursorPoint);
+    const x = Math.round(display.bounds.x + display.bounds.width / 2 - estimatedWidth / 2);
+    this.window.setPosition(x, display.bounds.y + 20);
 
     this.window.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(buildHtml(mode))}`);
 

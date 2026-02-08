@@ -144,6 +144,7 @@ export class ShortcutManager {
     }
     this.stateMachine.handleTogglePress();
     // Update tray immediately after toggle (before async recording starts)
+    setTimeout(() => this.updateTrayState(), 100);
   }
 
   /** Stop recording and process (complete listening) */
@@ -164,6 +165,7 @@ export class ShortcutManager {
       pipeline.cancel();
       this.indicator.showCanceled();
       this.stateMachine.setIdle();
+      this.updateTrayState();
     }
   }
 
@@ -177,6 +179,11 @@ export class ShortcutManager {
     if (this.watchdogTimer) clearInterval(this.watchdogTimer);
     globalShortcut.unregisterAll();
     uIOhook.stop();
+  }
+
+  private updateTrayState(): void {
+    const { setTrayListeningState } = require("../tray");
+    setTrayListeningState(this.isRecording());
   }
 
   registerShortcutKeys(): void {
@@ -253,9 +260,11 @@ export class ShortcutManager {
     const pipeline = this.deps.getPipeline();
     console.log("[Vox] Recording started");
     this.indicator.show("listening");
+    this.updateTrayState();
     pipeline.startRecording().catch((err: Error) => {
       console.error("[Vox] Recording failed:", err.message);
       this.indicator.hide();
+      this.updateTrayState();
       new Notification({ title: "Vox", body: `Recording failed: ${err.message}` }).show();
     });
   }
@@ -263,6 +272,7 @@ export class ShortcutManager {
   private async onRecordingStop(): Promise<void> {
     const pipeline = this.deps.getPipeline();
     this.stateMachine.setProcessing();
+    this.updateTrayState();
     console.log("[Vox] Recording stopped, processing pipeline");
     this.indicator.show("transcribing");
     try {
@@ -291,6 +301,7 @@ export class ShortcutManager {
       }
     } finally {
       this.stateMachine.setIdle();
+      this.updateTrayState();
       console.log("[Vox] Ready for next recording");
     }
   }
