@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
   pull-requests: write
 
 jobs:
@@ -53,38 +54,4 @@ jobs:
           LINT_OUTCOME: ${{ steps.lint.outcome }}
           TEST_OUTCOME: ${{ steps.test.outcome }}
           BUILD_OUTCOME: ${{ steps.build.outcome }}
-        run: |
-          status_icon() {
-            case "$1" in
-              success) echo "✅ Passed" ;;
-              failure) echo "❌ Failed" ;;
-              *) echo "⏭️ Skipped" ;;
-            esac
-          }
-
-          TYPECHECK=$(status_icon "$TYPECHECK_OUTCOME")
-          LINT=$(status_icon "$LINT_OUTCOME")
-          TEST=$(status_icon "$TEST_OUTCOME")
-          BUILD=$(status_icon "$BUILD_OUTCOME")
-
-          BODY="<!-- ci-summary -->
-          ## CI Summary
-
-          | Check | Status |
-          |-------|--------|
-          | Typecheck | ${TYPECHECK} |
-          | Lint | ${LINT} |
-          | Test | ${TEST} |
-          | Build | ${BUILD} |
-
-          *[Run #${RUN_NUMBER}](${RUN_URL})*"
-
-          COMMENT_ID=$(gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" \
-            --jq '.[] | select(.body | contains("<!-- ci-summary -->")) | .id' | head -1)
-
-          if [ -n "$COMMENT_ID" ]; then
-            gh api "repos/${REPO}/issues/${PR_NUMBER}/comments/${COMMENT_ID}" \
-              -X PATCH -f body="${BODY}"
-          else
-            gh pr comment "${PR_NUMBER}" --body "${BODY}"
-          fi
+        run: .github/scripts/post-ci-summary.sh
