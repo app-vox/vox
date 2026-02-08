@@ -18,4 +18,10 @@ describe("VoxConfig", () => {
     expect(config.shortcuts.hold).toBe("Alt+Space");
     expect(config.shortcuts.toggle).toBe("Alt+Shift+Space");
   });
+
+  it("should include enableLlmEnhancement flag in default config", () => {
+    const config = createDefaultConfig();
+    expect(config).toHaveProperty("enableLlmEnhancement");
+    expect(config.enableLlmEnhancement).toBe(false);
+  });
 });
