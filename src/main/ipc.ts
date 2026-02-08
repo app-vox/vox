@@ -6,7 +6,8 @@ import { getResourcePath } from "./resources";
 
 export function registerIpcHandlers(
   configManager: ConfigManager,
-  modelManager: ModelManager
+  modelManager: ModelManager,
+  onConfigChange?: () => void
 ): void {
   ipcMain.handle("resources:data-url", (_event, ...segments: string[]) => {
     const filePath = getResourcePath(...segments);
@@ -21,6 +22,8 @@ export function registerIpcHandlers(
   ipcMain.handle("config:save", (_event, config: VoxConfig) => {
     configManager.save(config);
     nativeTheme.themeSource = config.theme;
+    // Reload pipeline to apply new config (especially custom prompt changes)
+    onConfigChange?.();
   });
 
   ipcMain.handle("models:list", () => {

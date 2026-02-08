@@ -50,7 +50,7 @@ app.whenReady().then(async () => {
   const initialConfig = configManager.load();
   nativeTheme.themeSource = initialConfig.theme;
 
-  registerIpcHandlers(configManager, modelManager);
+  registerIpcHandlers(configManager, modelManager, reloadConfig);
 
   // Ensure the recommended "small" model is downloaded before starting
   const recommendedModel = initialConfig.whisper.model;
