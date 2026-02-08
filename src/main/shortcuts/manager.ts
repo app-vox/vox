@@ -145,9 +145,9 @@ export class ShortcutManager {
     const state = this.stateMachine.getState();
     if (state === "hold" || state === "toggle" || state === "processing") {
       console.log("[Vox] Cancel requested from tray");
-      const pipeline = this.deps.getPipeline();
-      pipeline.cancel();
-      this.indicator.showError(); // Using showError temporarily until showCanceled is added
+      // Note: pipeline.cancel() will be added in the escape-cancellation PR
+      // For now, just reset state
+      this.indicator.showError();
       this.stateMachine.setIdle();
       this.updateTrayState();
     }
