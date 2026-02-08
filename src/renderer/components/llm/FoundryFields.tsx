@@ -1,11 +1,12 @@
 import { useConfigStore } from "../../stores/config-store";
 import { useDebouncedSave } from "../../hooks/use-debounced-save";
 import { SecretInput } from "../ui/SecretInput";
+import form from "../shared/forms.module.scss";
 
 export function FoundryFields() {
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
-  const debouncedSave = useDebouncedSave();
+  const debouncedSave = useDebouncedSave(500, true);
 
   if (!config) return null;
 
@@ -16,7 +17,7 @@ export function FoundryFields() {
 
   return (
     <>
-      <div className="field">
+      <div className={form.field}>
         <label htmlFor="llm-endpoint">Endpoint</label>
         <input
           id="llm-endpoint"
@@ -26,7 +27,7 @@ export function FoundryFields() {
           placeholder="https://your-resource.services.ai.azure.com/anthropic"
         />
       </div>
-      <div className="field">
+      <div className={form.field}>
         <label htmlFor="llm-apikey">API Key</label>
         <SecretInput
           id="llm-apikey"
@@ -35,7 +36,7 @@ export function FoundryFields() {
           placeholder="Enter your API key"
         />
       </div>
-      <div className="field">
+      <div className={form.field}>
         <label htmlFor="llm-model">Model</label>
         <input
           id="llm-model"
