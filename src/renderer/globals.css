@@ -18,6 +18,21 @@
   --color-success: #22c55e;
   --color-error: #ef4444;
   --color-warning: #f59e0b;
+
+  /* Spacing scale */
+  --spacing-0: 0;
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+
+  /* Micro spacing */
+  --spacing-half: 2px;
+  --spacing-0-75: 3px;
+  --spacing-1-5: 6px;
 }
 
 /*
@@ -42,6 +57,19 @@
   --color-success: #22c55e;
   --color-error: #ef4444;
   --color-warning: #f59e0b;
+
+  /* Spacing scale duplicates for tree-shaking workaround */
+  --spacing-0: 0;
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-half: 2px;
+  --spacing-0-75: 3px;
+  --spacing-1-5: 6px;
 }
 
 /* ---- Light theme overrides ---- */
