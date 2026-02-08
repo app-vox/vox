@@ -59,26 +59,54 @@ export function AppearancePanel() {
     triggerToast();
   };
 
+  const toggleLaunchAtLogin = async () => {
+    updateConfig({ launchAtLogin: !config.launchAtLogin });
+    await saveConfig(false);
+    triggerToast();
+  };
+
   return (
-    <div className={card.card}>
-      <div className={card.header}>
-        <h2>Theme</h2>
-        <p className={card.description}>Choose your preferred appearance.</p>
-      </div>
-      <div className={card.body}>
-        <div className={styles.segmented}>
-          {THEME_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              className={`${styles.segment} ${config.theme === opt.value ? styles.active : ""}`}
-              onClick={() => setTheme(opt.value)}
-            >
-              {opt.icon}
-              <span>{opt.label}</span>
-            </button>
-          ))}
+    <>
+      <div className={card.card}>
+        <div className={card.header}>
+          <h2>Theme</h2>
+          <p className={card.description}>Choose your preferred appearance.</p>
+        </div>
+        <div className={card.body}>
+          <div className={styles.segmented}>
+            {THEME_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                className={`${styles.segment} ${config.theme === opt.value ? styles.active : ""}`}
+                onClick={() => setTheme(opt.value)}
+              >
+                {opt.icon}
+                <span>{opt.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+
+      <div className={card.card}>
+        <div className={card.header}>
+          <h2>Startup</h2>
+          <p className={card.description}>Control how Vox launches on your system.</p>
+        </div>
+        <div className={card.body}>
+          <label className={styles.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={config.launchAtLogin}
+              onChange={toggleLaunchAtLogin}
+            />
+            <div>
+              <div className={styles.checkboxLabel}>Launch at login</div>
+              <div className={styles.checkboxDesc}>Automatically start Vox when you log in to your computer</div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </>
   );
 }

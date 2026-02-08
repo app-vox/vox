@@ -31,3 +31,33 @@
     color: var(--color-text-primary);
   }
 }
+
+.checkboxRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  padding: 4px 0;
+
+  input[type="checkbox"] {
+    margin-top: 2px;
+    cursor: pointer;
+  }
+
+  div {
+    flex: 1;
+  }
+}
+
+.checkboxLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
+}
+
+.checkboxDesc {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  line-height: 1.4;
+}
