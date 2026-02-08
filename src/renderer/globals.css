@@ -164,6 +164,16 @@
   --duration-pulse: 1.5s;
   --duration-shake: 0.4s;
   --ease-default: ease;
+
+  /* Color opacity variants - dark theme */
+  --color-success-bg-light: rgba(34, 197, 94, 0.1);
+  --color-success-border: rgba(34, 197, 94, 0.15);
+  --color-error-bg-light: rgba(239, 68, 68, 0.1);
+  --color-error-border: rgba(239, 68, 68, 0.15);
+  --color-error-border-hover: rgba(239, 68, 68, 0.2);
+  --color-warning-bg-light: rgba(245, 158, 11, 0.1);
+  --color-warning-border: rgba(245, 158, 11, 0.15);
+  --color-shadow: rgba(0, 0, 0, 0.3);
 }
 
 /* ---- Light theme overrides ---- */
@@ -187,6 +197,16 @@
   --color-success: #16a34a;
   --color-error: #dc2626;
   --color-warning: #d97706;
+
+  /* Color opacity variants - light theme (same values work) */
+  --color-success-bg-light: rgba(34, 197, 94, 0.1);
+  --color-success-border: rgba(34, 197, 94, 0.15);
+  --color-error-bg-light: rgba(239, 68, 68, 0.1);
+  --color-error-border: rgba(239, 68, 68, 0.15);
+  --color-error-border-hover: rgba(239, 68, 68, 0.2);
+  --color-warning-bg-light: rgba(245, 158, 11, 0.1);
+  --color-warning-border: rgba(245, 158, 11, 0.15);
+  --color-shadow: rgba(0, 0, 0, 0.15);
 }
 
 /* ---- Base reset & body ---- */
