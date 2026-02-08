@@ -12,6 +12,7 @@ const KEY_TO_UIOHOOK: Record<string, number> = {
   Ctrl: UiohookKey.Ctrl, Control: UiohookKey.Ctrl,
   Alt: UiohookKey.Alt, Option: UiohookKey.Alt,
   Shift: UiohookKey.Shift,
+  Fn: 63, // Fn key (may not be detectable via uiohook on all systems)
   Space: UiohookKey.Space,
   Enter: UiohookKey.Enter,
   Backspace: UiohookKey.Backspace,
@@ -28,6 +29,9 @@ const KEY_TO_UIOHOOK: Record<string, number> = {
   F1: UiohookKey.F1, F2: UiohookKey.F2, F3: UiohookKey.F3, F4: UiohookKey.F4,
   F5: UiohookKey.F5, F6: UiohookKey.F6, F7: UiohookKey.F7, F8: UiohookKey.F8,
   F9: UiohookKey.F9, F10: UiohookKey.F10, F11: UiohookKey.F11, F12: UiohookKey.F12,
+  F13: UiohookKey.F13, F14: UiohookKey.F14, F15: UiohookKey.F15, F16: UiohookKey.F16,
+  F17: UiohookKey.F17, F18: UiohookKey.F18, F19: UiohookKey.F19, F20: UiohookKey.F20,
+  F21: UiohookKey.F21, F22: UiohookKey.F22, F23: UiohookKey.F23, F24: UiohookKey.F24,
   A: UiohookKey.A, B: UiohookKey.B, C: UiohookKey.C, D: UiohookKey.D,
   E: UiohookKey.E, F: UiohookKey.F, G: UiohookKey.G, H: UiohookKey.H,
   I: UiohookKey.I, J: UiohookKey.J, K: UiohookKey.K, L: UiohookKey.L,
@@ -45,6 +49,12 @@ const KEY_TO_UIOHOOK: Record<string, number> = {
   "'": UiohookKey.Quote, ",": UiohookKey.Comma,
   ".": UiohookKey.Period, "/": UiohookKey.Slash,
   "`": UiohookKey.Backquote,
+  // Media and special keys (might not work with uiohook, but support in Electron)
+  BrightnessDown: 0, BrightnessUp: 0,
+  AudioVolumeDown: 0, AudioVolumeUp: 0, AudioVolumeMute: 0,
+  MediaPlayPause: 0, MediaStop: 0,
+  MediaTrackPrevious: 0, MediaTrackNext: 0,
+  LaunchApp1: 0, LaunchApp2: 0,
 };
 
 function getHoldKeyCodes(accelerator: string): Set<number> {
@@ -68,6 +78,7 @@ export class ShortcutManager {
   private holdKeyCodes: Set<number> = new Set([UiohookKey.Space]);
   private accessibilityWasGranted = false;
   private watchdogTimer: ReturnType<typeof setInterval> | null = null;
+  private isInitializing = true;
 
   constructor(deps: ShortcutManagerDeps) {
     this.deps = deps;
@@ -85,6 +96,11 @@ export class ShortcutManager {
 
     uIOhook.on("keyup", (e) => {
       if (this.holdKeyCodes.has(e.keycode)) {
+        // Ignore events during initialization to prevent spurious shortcuts
+        if (this.isInitializing) {
+          console.log("[Vox] Ignoring shortcut during initialization");
+          return;
+        }
         this.stateMachine.handleHoldKeyUp();
       }
     });
@@ -92,6 +108,12 @@ export class ShortcutManager {
 
     this.accessibilityWasGranted = isAccessibilityGranted();
     this.startAccessibilityWatchdog();
+
+    // Allow shortcuts after a brief initialization period
+    setTimeout(() => {
+      this.isInitializing = false;
+      console.log("[Vox] Initialization complete, shortcuts enabled");
+    }, 1000);
   }
 
   showIndicator(mode: "listening" | "transcribing" | "correcting" | "error"): void {
@@ -107,13 +129,28 @@ export class ShortcutManager {
   registerShortcutKeys(): void {
     const config = this.deps.configManager.load();
 
+    // When re-registering shortcuts (e.g., after config change or hot reload),
+    // briefly disable shortcuts to prevent spurious activations
+    this.isInitializing = true;
+
+    // Cancel any ongoing recording to prevent spurious paste events
+    this.stateMachine.setIdle();
+
     globalShortcut.unregisterAll();
 
     const holdOk = globalShortcut.register(config.shortcuts.hold, () => {
+      if (this.isInitializing) {
+        console.log("[Vox] Ignoring hold shortcut during initialization");
+        return;
+      }
       this.stateMachine.handleHoldKeyDown();
     });
 
     const toggleOk = globalShortcut.register(config.shortcuts.toggle, () => {
+      if (this.isInitializing) {
+        console.log("[Vox] Ignoring toggle shortcut during initialization");
+        return;
+      }
       this.stateMachine.handleTogglePress();
     });
 
@@ -123,6 +160,12 @@ export class ShortcutManager {
     this.holdKeyCodes = getHoldKeyCodes(config.shortcuts.hold);
 
     console.log(`[Vox] Shortcuts registered: hold=${config.shortcuts.hold}, toggle=${config.shortcuts.toggle}`);
+
+    // Re-enable shortcuts after a longer delay to prevent spurious activations
+    setTimeout(() => {
+      this.isInitializing = false;
+      console.log("[Vox] Shortcuts re-enabled after registration");
+    }, 1500);
   }
 
   private registerIpcHandlers(): void {
@@ -172,13 +215,18 @@ export class ShortcutManager {
     try {
       const text = await pipeline.stopAndProcess();
       console.log("[Vox] Pipeline complete, text:", text.slice(0, 80));
-      if (!text.trim()) {
+      const trimmedText = text.trim();
+
+      // Only paste if we have valid, non-empty text from the transcript
+      if (!trimmedText || trimmedText.length === 0) {
+        console.log("[Vox] No valid text to paste, showing error");
         this.indicator.showError();
       } else {
+        console.log("[Vox] Valid text received, proceeding with paste");
         this.indicator.hide();
         await new Promise((r) => setTimeout(r, 200));
-        pasteText(text);
-        new Notification({ title: "Vox", body: text }).show();
+        pasteText(trimmedText);
+        new Notification({ title: "Vox", body: trimmedText }).show();
       }
     } catch (err: unknown) {
       console.error("[Vox] Pipeline failed:", err instanceof Error ? err.message : err);

@@ -6,7 +6,7 @@ const LABELS: Record<IndicatorMode, { color: string; text: string; pulse: boolea
   listening:    { color: "#ff4444", text: "Listening...",    pulse: false },
   transcribing: { color: "#ffaa00", text: "Transcribing...", pulse: true },
   correcting:   { color: "#44aaff", text: "Correcting...",   pulse: true },
-  error:        { color: "#ff4444", text: "Could not understand audio", pulse: false },
+  error:        { color: "#ff6b6b", text: "No audio",        pulse: false },
 };
 
 function buildHtml(mode: IndicatorMode): string {
@@ -18,24 +18,41 @@ function buildHtml(mode: IndicatorMode): string {
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { background: transparent; overflow: hidden; }
+  html, body {
+    background: transparent;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
   .pill {
-    display: inline-flex; align-items: center; gap: 10px;
-    padding: 10px 20px;
-    background: rgba(20, 20, 20, 0.88);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-radius: 22px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    color: white; font-size: 14px; font-weight: 500;
-    letter-spacing: 0.3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background: rgba(25, 25, 25, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.1px;
+    white-space: nowrap;
   }
   .dot {
-    width: 12px; height: 12px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     background: ${color};
     box-shadow: 0 0 8px ${color};
+    flex-shrink: 0;
     ${animation}
   }
   @keyframes pulse {
@@ -68,9 +85,12 @@ export class IndicatorWindow {
       return;
     }
 
+    // Use compact fixed width for error messages, dynamic for others
+    const estimatedWidth = mode === "error" ? 140 : 180;
+
     this.window = new BrowserWindow({
-      width: 200,
-      height: 44,
+      width: estimatedWidth,
+      height: 48,
       frame: false,
       transparent: true,
       hasShadow: false,
@@ -89,8 +109,8 @@ export class IndicatorWindow {
     this.window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
     const display = screen.getPrimaryDisplay();
-    const x = Math.round(display.bounds.width / 2 - 100);
-    this.window.setPosition(x, 40);
+    const x = Math.round(display.bounds.width / 2 - estimatedWidth / 2);
+    this.window.setPosition(x, 20);
 
     this.window.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(buildHtml(mode))}`);
 

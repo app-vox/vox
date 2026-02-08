@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useConfigStore } from "../../stores/config-store";
+import { useSaveToast } from "../../hooks/use-save-toast";
 import type { ThemeMode } from "../../../shared/config";
 import card from "../shared/card.module.scss";
 import styles from "./AppearancePanel.module.scss";
@@ -48,12 +49,14 @@ export function AppearancePanel() {
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
+  const triggerToast = useSaveToast((s) => s.trigger);
 
   if (!config) return null;
 
-  const setTheme = (theme: ThemeMode) => {
+  const setTheme = async (theme: ThemeMode) => {
     updateConfig({ theme });
-    saveConfig();
+    await saveConfig(false);
+    triggerToast();
   };
 
   return (

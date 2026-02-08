@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useConfigStore } from "../../stores/config-store";
+import { useSaveToast } from "../../hooks/use-save-toast";
 import { ModelRow } from "./ModelRow";
 import { StatusBox } from "../ui/StatusBox";
 import { recordAudio } from "../../utils/record-audio";
@@ -13,6 +14,7 @@ export function WhisperPanel() {
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
+  const triggerToast = useSaveToast((s) => s.trigger);
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [testing, setTesting] = useState(false);
   const [testStatus, setTestStatus] = useState<{ text: string; type: "info" | "success" | "error" }>({ text: "", type: "info" });
@@ -23,9 +25,10 @@ export function WhisperPanel() {
 
   if (!config) return null;
 
-  const handleSelect = (size: string) => {
+  const handleSelect = async (size: string) => {
     updateConfig({ whisper: { model: size as WhisperModelSize } });
-    saveConfig();
+    await saveConfig(false);
+    triggerToast();
   };
 
   const handleTest = async () => {
