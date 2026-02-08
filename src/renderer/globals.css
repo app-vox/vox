@@ -14,9 +14,33 @@
   --color-text-muted: #525252;
   --color-accent: #ededed;
   --color-accent-hover: #d4d4d4;
+  --color-btn-primary-text: #0a0a0a;
   --color-success: #22c55e;
   --color-error: #ef4444;
   --color-warning: #f59e0b;
+}
+
+/* ---- Light theme overrides ---- */
+
+[data-theme="light"],
+[data-theme="system"].system-light {
+  --color-bg-root: #ffffff;
+  --color-bg-card: #f5f5f5;
+  --color-bg-input: #ffffff;
+  --color-bg-hover: #e5e5e5;
+  --color-border: #d4d4d4;
+  --color-border-hover: #a3a3a3;
+  --color-border-focus: #171717;
+  --color-text-primary: #171717;
+  --color-text-secondary: #525252;
+  --color-text-tertiary: #737373;
+  --color-text-muted: #a3a3a3;
+  --color-accent: #171717;
+  --color-accent-hover: #404040;
+  --color-btn-primary-text: #ffffff;
+  --color-success: #16a34a;
+  --color-error: #dc2626;
+  --color-warning: #d97706;
 }
 
 /* ---- Animations ---- */
@@ -118,6 +142,7 @@ html, body, #root {
   font-weight: 500;
   cursor: pointer;
   transition: color 150ms ease;
+  white-space: nowrap;
 }
 
 .tab:hover { color: var(--color-text-secondary); }
@@ -289,7 +314,7 @@ select:focus { border-color: var(--color-border-focus); }
 
 .btn-primary {
   background: var(--color-accent);
-  color: #0a0a0a;
+  color: var(--color-btn-primary-text);
 }
 
 .btn-primary:hover:not(:disabled) { background: var(--color-accent-hover); }
@@ -555,6 +580,42 @@ select:focus { border-color: var(--color-border-focus); }
   margin-top: 24px;
   border-top: 1px solid var(--color-border);
   padding-top: 20px;
+}
+
+/* ---- Theme segmented control ---- */
+
+.theme-segmented {
+  display: inline-flex;
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.theme-segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: var(--color-text-tertiary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 150ms ease, background 150ms ease, border-color 150ms ease;
+}
+
+.theme-segment:hover {
+  color: var(--color-text-secondary);
+}
+
+.theme-segment.active {
+  background: var(--color-bg-hover);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
 }
 
 /* ---- Scrollbar ---- */

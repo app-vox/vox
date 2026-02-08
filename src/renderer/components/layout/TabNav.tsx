@@ -5,6 +5,7 @@ const TABS = [
   { id: "whisper", label: "Whisper Model" },
   { id: "shortcuts", label: "Shortcuts" },
   { id: "permissions", label: "Permissions" },
+  { id: "appearance", label: "Appearance" },
 ];
 
 export function TabNav() {

@@ -6,18 +6,24 @@ import { LlmPanel } from "./components/llm/LlmPanel";
 import { WhisperPanel } from "./components/whisper/WhisperPanel";
 import { ShortcutsPanel } from "./components/shortcuts/ShortcutsPanel";
 import { PermissionsPanel } from "./components/permissions/PermissionsPanel";
+import { AppearancePanel } from "./components/appearance/AppearancePanel";
+import { useTheme } from "./hooks/use-theme";
 
 const PANELS: Record<string, () => JSX.Element | null> = {
   llm: LlmPanel,
   whisper: WhisperPanel,
   shortcuts: ShortcutsPanel,
   permissions: PermissionsPanel,
+  appearance: AppearancePanel,
 };
 
 export function App() {
   const loading = useConfigStore((s) => s.loading);
   const activeTab = useConfigStore((s) => s.activeTab);
   const loadConfig = useConfigStore((s) => s.loadConfig);
+  const theme = useConfigStore((s) => s.config?.theme);
+
+  useTheme(theme);
 
   useEffect(() => {
     loadConfig();

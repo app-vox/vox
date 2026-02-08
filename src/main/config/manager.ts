@@ -23,6 +23,7 @@ export class ConfigManager {
         llm: { ...defaults.llm, ...saved.llm },
         whisper: { ...defaults.whisper, ...saved.whisper },
         shortcuts: { ...defaults.shortcuts, ...saved.shortcuts },
+        theme: saved.theme ?? defaults.theme,
       };
     } catch {
       return defaults;

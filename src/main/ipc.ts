@@ -1,4 +1,4 @@
-import { app, ipcMain, nativeImage, systemPreferences, shell } from "electron";
+import { app, BrowserWindow, ipcMain, nativeImage, nativeTheme, systemPreferences, shell } from "electron";
 import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
 import { type VoxConfig, type WhisperModelSize } from "../shared/config";
@@ -20,6 +20,7 @@ export function registerIpcHandlers(
 
   ipcMain.handle("config:save", (_event, config: VoxConfig) => {
     configManager.save(config);
+    nativeTheme.themeSource = config.theme;
   });
 
   ipcMain.handle("models:list", () => {
@@ -129,6 +130,17 @@ export function registerIpcHandlers(
     // register the app incorrectly causing the toggle to bounce back.
     // Instead, just open System Settings and let the user add the app via "+".
     shell.openExternal("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility");
+  });
+
+  ipcMain.handle("theme:system-dark", () => {
+    return nativeTheme.shouldUseDarkColors;
+  });
+
+  nativeTheme.on("updated", () => {
+    const isDark = nativeTheme.shouldUseDarkColors;
+    for (const win of BrowserWindow.getAllWindows()) {
+      win.webContents.send("theme:system-changed", isDark);
+    }
   });
 
   ipcMain.handle("permissions:test-paste", () => {
