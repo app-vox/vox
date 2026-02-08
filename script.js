@@ -1,3 +1,46 @@
+// OS Detection
+const detectOS = () => {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const platform = window.navigator.platform.toLowerCase();
+
+    if (platform.includes('mac') || userAgent.includes('mac')) {
+        return 'macos';
+    } else if (platform.includes('win') || userAgent.includes('win')) {
+        return 'windows';
+    } else if (platform.includes('linux') || userAgent.includes('linux')) {
+        return 'linux';
+    }
+    return 'other';
+};
+
+// Update download button based on OS
+const updateDownloadButton = () => {
+    const downloadBtn = document.getElementById('download-btn');
+    const downloadText = document.getElementById('download-text');
+    const os = detectOS();
+
+    if (os !== 'macos') {
+        downloadBtn.classList.add('btn-disabled');
+        downloadBtn.removeAttribute('href');
+        downloadBtn.style.cursor = 'not-allowed';
+        downloadBtn.style.opacity = '0.6';
+        downloadText.textContent = 'Coming Soon';
+
+        // Add tooltip
+        downloadBtn.setAttribute('title', 'Currently available for macOS only. Windows and Linux support coming soon.');
+
+        // Prevent click
+        downloadBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+        });
+    }
+};
+
+// Initialize OS detection on page load
+document.addEventListener('DOMContentLoaded', () => {
+    updateDownloadButton();
+});
+
 // Theme Toggle
 const themeToggle = document.getElementById('theme-toggle');
 const html = document.documentElement;
@@ -39,7 +82,7 @@ const fetchStarCount = async () => {
     const starCountElement = document.getElementById('star-count');
 
     try {
-        const response = await fetch('https://api.github.com/repos/rodrigoluizs/vox', {
+        const response = await fetch('https://api.github.com/repos/app-vox/vox', {
             headers: {
                 'Accept': 'application/vnd.github.v3+json'
             }
@@ -75,7 +118,7 @@ const fetchLatestRelease = async () => {
     const downloadButtons = document.querySelectorAll('a[href*="releases"]');
 
     try {
-        const response = await fetch('https://api.github.com/repos/rodrigoluizs/vox/releases/latest', {
+        const response = await fetch('https://api.github.com/repos/app-vox/vox/releases/latest', {
             headers: {
                 'Accept': 'application/vnd.github.v3+json'
             }

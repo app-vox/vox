@@ -1,6 +1,6 @@
 # Vox Landing Page
 
-This is the `gh-pages` branch containing the landing page for Vox, published at [https://rodrigoluizs.github.io/vox/](https://rodrigoluizs.github.io/vox/).
+This is the `gh-pages` branch containing the landing page for Vox, published at [https://app-vox.github.io/vox/](https://app-vox.github.io/vox/).
 
 ## Structure
 
