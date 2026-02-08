@@ -1,12 +1,13 @@
 import { BrowserWindow, screen } from "electron";
 
-type IndicatorMode = "listening" | "transcribing" | "correcting" | "error";
+type IndicatorMode = "listening" | "transcribing" | "correcting" | "error" | "canceled";
 
 const LABELS: Record<IndicatorMode, { color: string; text: string; pulse: boolean }> = {
   listening:    { color: "#ff4444", text: "Listening...",    pulse: false },
   transcribing: { color: "#ffaa00", text: "Transcribing...", pulse: true },
   correcting:   { color: "#44aaff", text: "Correcting...",   pulse: true },
   error:        { color: "#ff6b6b", text: "No audio",        pulse: false },
+  canceled:     { color: "#fbbf24", text: "Canceled",        pulse: false },
 };
 
 function buildHtml(mode: IndicatorMode): string {
@@ -108,9 +109,11 @@ export class IndicatorWindow {
     this.window.setIgnoreMouseEvents(true);
     this.window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
-    const display = screen.getPrimaryDisplay();
-    const x = Math.round(display.bounds.width / 2 - estimatedWidth / 2);
-    this.window.setPosition(x, 20);
+    // Show overlay on the display where the cursor currently is
+    const cursorPoint = screen.getCursorScreenPoint();
+    const display = screen.getDisplayNearestPoint(cursorPoint);
+    const x = Math.round(display.bounds.x + display.bounds.width / 2 - estimatedWidth / 2);
+    this.window.setPosition(x, display.bounds.y + 20);
 
     this.window.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(buildHtml(mode))}`);
 
@@ -122,6 +125,11 @@ export class IndicatorWindow {
 
   showError(durationMs = 3000): void {
     this.show("error");
+    setTimeout(() => this.hide(), durationMs);
+  }
+
+  showCanceled(durationMs = 1500): void {
+    this.show("canceled");
     setTimeout(() => this.hide(), durationMs);
   }
 

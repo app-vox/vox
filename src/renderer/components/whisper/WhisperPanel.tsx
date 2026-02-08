@@ -3,6 +3,7 @@ import { useConfigStore } from "../../stores/config-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
 import { ModelRow } from "./ModelRow";
 import { StatusBox } from "../ui/StatusBox";
+import { RecordIcon } from "../ui/icons";
 import { recordAudio } from "../../utils/record-audio";
 import type { ModelInfo } from "../../../preload/index";
 import type { WhisperModelSize } from "../../../shared/config";
@@ -26,6 +27,13 @@ export function WhisperPanel() {
   if (!config) return null;
 
   const handleSelect = async (size: string) => {
+    // Only allow selection of downloaded models
+    const selectedModel = models.find((m) => m.size === size);
+    if (!selectedModel?.downloaded) {
+      return;
+    }
+
+    // Update config and save
     updateConfig({ whisper: { model: size as WhisperModelSize } });
     await saveConfig(false);
     triggerToast();
@@ -73,8 +81,9 @@ export function WhisperPanel() {
           <button
             onClick={handleTest}
             disabled={testing}
-            className={`${btn.btn} ${btn.secondary} ${btn.sm}`}
+            className={`${btn.btn} ${btn.primary}`}
           >
+            <RecordIcon />
             Test Whisper
           </button>
           <p className={form.hint}>Records 5 seconds of audio and runs it through the selected model.</p>
