@@ -67,13 +67,12 @@
         <section class="hero">
             <div class="container">
                 <div class="hero-content">
-                    <span class="badge">Open Source</span>
                     <h1 class="hero-title">
                         Voice to text.<br>
                         <span class="text-accent">Locally. Accurately.</span>
                     </h1>
                     <p class="hero-subtitle">
-                        Open-source macOS menu bar app with local Whisper transcription and LLM-powered correction.
+                        Open-source macOS menu bar app with local Whisper transcription and optional AI enhancement.
                     </p>
                     <div class="hero-cta">
                         <a href="https://github.com/rodrigoluizs/vox/releases/latest" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
@@ -89,9 +88,9 @@
 
                 <!-- Demo Visual -->
                 <div class="demo-container">
-                    <div class="demo-header">Vox Menu Bar</div>
+                    <div class="demo-header">Vox Mini</div>
                     <div class="demo-stages">
-                        <div class="stage">
+                        <div class="stage" data-stage="1">
                             <div class="stage-icon record">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                                     <circle cx="12" cy="12" r="8"/>
@@ -100,7 +99,7 @@
                             <h3 class="stage-title">Record</h3>
                             <p class="stage-description">Press hotkey to record</p>
                         </div>
-                        <div class="stage">
+                        <div class="stage" data-stage="2">
                             <div class="stage-icon transcribe">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
@@ -109,7 +108,17 @@
                             <h3 class="stage-title">Transcribe</h3>
                             <p class="stage-description">Whisper processes locally</p>
                         </div>
-                        <div class="stage">
+                        <div class="stage" data-stage="3">
+                            <div class="stage-icon enhance">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 3v18M3 12h18M7.5 7.5l9 9M16.5 7.5l-9 9"/>
+                                    <circle cx="12" cy="12" r="9"/>
+                                </svg>
+                            </div>
+                            <h3 class="stage-title">AI Enhancement</h3>
+                            <p class="stage-description">Optional correction</p>
+                        </div>
+                        <div class="stage" data-stage="4">
                             <div class="stage-icon paste">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
@@ -140,7 +149,7 @@
                     </div>
                     <h2 class="privacy-title">Your voice stays on your device</h2>
                     <p class="privacy-description">
-                        Transcription runs entirely on your Mac using Whisper. Only the resulting text is sent to an LLM for correction — your audio never leaves your device.
+                        Transcription runs entirely on your Mac using Whisper. Optionally, the resulting text can be sent to an LLM for enhancement — your audio never leaves your device.
                     </p>
                     <div class="privacy-features">
                         <span class="feature-pill">Local processing</span>

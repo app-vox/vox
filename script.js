@@ -70,6 +70,41 @@ const fetchStarCount = async () => {
 // Fetch star count on page load
 fetchStarCount();
 
+// Fetch latest release download link
+const fetchLatestRelease = async () => {
+    const downloadButtons = document.querySelectorAll('a[href*="releases"]');
+
+    try {
+        const response = await fetch('https://api.github.com/repos/rodrigoluizs/vox/releases/latest', {
+            headers: {
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
+        if (!response.ok) {
+            // No releases yet, keep default link
+            return;
+        }
+
+        const data = await response.json();
+        const dmgAsset = data.assets.find(asset => asset.name.endsWith('.dmg'));
+
+        if (dmgAsset) {
+            downloadButtons.forEach(button => {
+                if (button.textContent.includes('Download')) {
+                    button.href = dmgAsset.browser_download_url;
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Error fetching latest release:', error);
+        // Keep default link on error
+    }
+};
+
+// Fetch latest release on page load
+fetchLatestRelease();
+
 // Scroll Animations
 const observerOptions = {
     threshold: 0.1,
@@ -99,6 +134,46 @@ document.addEventListener('DOMContentLoaded', () => {
             observer.observe(element);
         }
     });
+
+    // Sequential stage animation
+    const animateStages = () => {
+        const stages = document.querySelectorAll('.stage');
+        let currentStage = 0;
+
+        const activateStage = () => {
+            // Remove active class from all stages
+            stages.forEach(stage => stage.classList.remove('active'));
+
+            // Add active class to current stage
+            if (stages[currentStage]) {
+                stages[currentStage].classList.add('active');
+            }
+
+            // Move to next stage
+            currentStage = (currentStage + 1) % stages.length;
+        };
+
+        // Initial activation
+        activateStage();
+
+        // Repeat every 2 seconds
+        setInterval(activateStage, 2000);
+    };
+
+    // Start stage animation when demo container is visible
+    const demoObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateStages();
+                demoObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.3 });
+
+    const demoContainer = document.querySelector('.demo-container');
+    if (demoContainer) {
+        demoObserver.observe(demoContainer);
+    }
 });
 
 // Smooth scroll for anchor links

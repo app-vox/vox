@@ -327,14 +327,28 @@ body {
     margin-bottom: var(--spacing-lg);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 640px) {
     .demo-stages {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .demo-stages {
+        grid-template-columns: repeat(4, 1fr);
     }
 }
 
 .stage {
     text-align: center;
+    opacity: 0.4;
+    transform: scale(0.95);
+    transition: all 0.6s ease;
+}
+
+.stage.active {
+    opacity: 1;
+    transform: scale(1);
 }
 
 .stage-icon {
@@ -346,6 +360,22 @@ body {
     margin: 0 auto var(--spacing-sm);
     border-radius: var(--radius-lg);
     transition: all var(--transition-base);
+    position: relative;
+}
+
+.stage.active .stage-icon {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 currentColor;
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 8px transparent;
+    }
 }
 
 .stage-icon.record {
@@ -356,6 +386,11 @@ body {
 .stage-icon.transcribe {
     background-color: rgba(251, 191, 36, 0.1);
     color: #fbbf24;
+}
+
+.stage-icon.enhance {
+    background-color: rgba(168, 85, 247, 0.1);
+    color: #a855f7;
 }
 
 .stage-icon.paste {
