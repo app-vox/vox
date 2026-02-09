@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
 import { ModelRow } from "./ModelRow";
@@ -22,7 +22,7 @@ export function WhisperPanel() {
   const [testing, setTesting] = useState(false);
   const [testStatus, setTestStatus] = useState<{ text: string; type: "info" | "success" | "error" }>({ text: "", type: "info" });
 
-  const refreshModels = async () => {
+  const refreshModels = useCallback(async () => {
     const modelsList = await window.voxApi.models.list();
     setModels(modelsList);
 
@@ -52,11 +52,11 @@ export function WhisperPanel() {
         }
       }
     }
-  };
+  }, [updateConfig, saveConfig]);
 
   useEffect(() => {
     refreshModels();
-  }, []);
+  }, [refreshModels]);
 
   useEffect(() => {
     const cleanup = window.voxApi.models.onDownloadProgress((progress) => {
@@ -71,7 +71,7 @@ export function WhisperPanel() {
       }
     });
     return cleanup;
-  }, [loadConfig]);
+  }, [loadConfig, refreshModels]);
 
   if (!config) return null;
 
