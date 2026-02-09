@@ -1,0 +1,8 @@
+.DS_Store
+.idea/
+build/
+docs/
+ignore/
+node_modules/
+out/
+*.tsbuildinfo
