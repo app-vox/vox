@@ -4,6 +4,7 @@ import { useDebouncedSave } from "../../hooks/use-debounced-save";
 import { FoundryFields } from "./FoundryFields";
 import { BedrockFields } from "./BedrockFields";
 import { OpenAICompatibleFields } from "./OpenAICompatibleFields";
+import { LiteLLMFields } from "./LiteLLMFields";
 import { StatusBox } from "../ui/StatusBox";
 import type { LlmProviderType } from "../../../shared/config";
 import card from "../shared/card.module.scss";
@@ -25,6 +26,7 @@ export function LlmPanel() {
   const providerDefaults: Record<string, { openaiEndpoint: string; openaiModel: string }> = {
     openai: { openaiEndpoint: "https://api.openai.com", openaiModel: "gpt-4o" },
     deepseek: { openaiEndpoint: "https://api.deepseek.com", openaiModel: "deepseek-chat" },
+    litellm: { openaiEndpoint: "http://localhost:4000", openaiModel: "gpt-4o" },
   };
 
   const handleProviderChange = (provider: LlmProviderType) => {
@@ -113,10 +115,13 @@ export function LlmPanel() {
                     <option value="bedrock">AWS Bedrock</option>
                     <option value="openai">OpenAI</option>
                     <option value="deepseek">DeepSeek</option>
+                    <option value="litellm">LiteLLM</option>
                   </select>
                 </div>
 
-                {(config.llm.provider === "openai" || config.llm.provider === "deepseek") ? (
+                {config.llm.provider === "litellm" ? (
+                  <LiteLLMFields />
+                ) : (config.llm.provider === "openai" || config.llm.provider === "deepseek") ? (
                   <OpenAICompatibleFields providerType={config.llm.provider} />
                 ) : config.llm.provider === "bedrock" ? (
                   <BedrockFields />

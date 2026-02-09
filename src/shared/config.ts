@@ -1,6 +1,6 @@
 export type ThemeMode = "light" | "dark" | "system";
 
-export type LlmProviderType = "foundry" | "bedrock" | "openai" | "deepseek";
+export type LlmProviderType = "foundry" | "bedrock" | "openai" | "deepseek" | "litellm";
 
 export interface LlmConfig {
   provider: LlmProviderType;

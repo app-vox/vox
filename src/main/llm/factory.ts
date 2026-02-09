@@ -32,6 +32,7 @@ export function createLlmProvider(config: VoxConfig): LlmProvider {
 
     case "openai":
     case "deepseek":
+    case "litellm":
       return new OpenAICompatibleProvider({
         endpoint: config.llm.openaiEndpoint,
         apiKey: config.llm.openaiApiKey,
