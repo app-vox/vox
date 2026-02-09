@@ -4,7 +4,7 @@ import { type RecordingResult } from "./audio/recorder";
 import { type TranscriptionResult } from "./audio/whisper";
 import { existsSync } from "fs";
 
-export type PipelineStage = "transcribing" | "correcting";
+export type PipelineStage = "transcribing" | "enhancing";
 
 export interface PipelineDeps {
   recorder: {
@@ -166,12 +166,12 @@ export class Pipeline {
 
     let finalText: string;
     try {
-      this.deps.onStage?.("correcting");
+      this.deps.onStage?.("enhancing");
       finalText = await this.deps.llmProvider.correct(rawText);
-      console.log("[Vox] LLM corrected text:", finalText);
+      console.log("[Vox] LLM enhanced text:", finalText);
     } catch (err: unknown) {
       // LLM failed — fall back to raw transcription
-      console.log("[Vox] LLM correction failed, using raw transcription:", err instanceof Error ? err.message : err);
+      console.log("[Vox] LLM enhancement failed, using raw transcription:", err instanceof Error ? err.message : err);
       finalText = rawText;
     }
 

@@ -1,11 +1,11 @@
 import { BrowserWindow, screen } from "electron";
 
-type IndicatorMode = "listening" | "transcribing" | "correcting" | "error" | "canceled";
+type IndicatorMode = "listening" | "transcribing" | "enhancing" | "error" | "canceled";
 
 const LABELS: Record<IndicatorMode, { color: string; text: string; pulse: boolean }> = {
   listening:    { color: "#ff4444", text: "Listening...",    pulse: false },
   transcribing: { color: "#ffaa00", text: "Transcribing...", pulse: true },
-  correcting:   { color: "#44aaff", text: "Correcting...",   pulse: true },
+  enhancing:    { color: "#44aaff", text: "Enhancing...",    pulse: true },
   error:        { color: "#fbbf24", text: "Nothing heard",   pulse: false },
   canceled:     { color: "#fbbf24", text: "Canceled",        pulse: false },
 };

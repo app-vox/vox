@@ -8,7 +8,7 @@ import { transcribe } from "./audio/whisper";
 import { createLlmProvider } from "./llm/factory";
 import { Pipeline } from "./pipeline";
 import { ShortcutManager } from "./shortcuts/manager";
-import { setupTray, setTrayModelState } from "./tray";
+import { setupTray, setTrayModelState, updateTrayConfig } from "./tray";
 import { openHome } from "./windows/home";
 import { registerIpcHandlers } from "./ipc";
 import { isAccessibilityGranted } from "./input/paster";
@@ -41,6 +41,7 @@ function setupPipeline(): void {
 function reloadConfig(): void {
   setupPipeline();
   shortcutManager?.registerShortcutKeys();
+  updateTrayConfig(configManager.load());
 
   const setupChecker = new SetupChecker(modelManager);
   setTrayModelState(setupChecker.hasAnyModel());
@@ -95,6 +96,7 @@ app.whenReady().then(async () => {
     onCancelListening: () => shortcutManager?.cancelRecording(),
   });
   setTrayModelState(setupChecker.hasAnyModel());
+  updateTrayConfig(configManager.load());
 
   if (!app.isPackaged) {
     openHome(reloadConfig);

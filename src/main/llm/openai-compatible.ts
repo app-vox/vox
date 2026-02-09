@@ -20,7 +20,7 @@ export class OpenAICompatibleProvider implements LlmProvider {
 
   async correct(rawText: string): Promise<string> {
     const hasCustom = this.config.customPrompt.includes("ADDITIONAL CUSTOM INSTRUCTIONS");
-    console.log("[OpenAICompatibleProvider] Correcting text, custom prompt:", hasCustom ? "YES" : "NO");
+    console.log("[OpenAICompatibleProvider] Enhancing text, custom prompt:", hasCustom ? "YES" : "NO");
 
     const base = this.config.endpoint.replace(/\/+$/, "");
     const url = `${base}/v1/chat/completions`;

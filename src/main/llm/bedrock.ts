@@ -45,7 +45,7 @@ export class BedrockProvider implements LlmProvider {
 
   async correct(rawText: string): Promise<string> {
     const hasCustom = this.customPrompt.includes("ADDITIONAL CUSTOM INSTRUCTIONS");
-    console.log("[BedrockProvider] Correcting text, custom prompt:", hasCustom ? "YES" : "NO");
+    console.log("[BedrockProvider] Enhancing text, custom prompt:", hasCustom ? "YES" : "NO");
 
     const command = new ConverseCommand({
       modelId: this.modelId,
