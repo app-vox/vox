@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeImage, nativeTheme, systemPreferences, shell, dialog } from "electron";
+import { app, BrowserWindow, ipcMain, nativeImage, nativeTheme, systemPreferences, shell } from "electron";
 import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
 import { type VoxConfig, type WhisperModelSize } from "../shared/config";
@@ -22,6 +22,15 @@ export function registerIpcHandlers(
   ipcMain.handle("config:save", (_event, config: VoxConfig) => {
     configManager.save(config);
     nativeTheme.themeSource = config.theme;
+
+    // Apply launch at login setting (macOS only)
+    if (process.platform === "darwin") {
+      app.setLoginItemSettings({
+        openAtLogin: config.launchAtLogin,
+        openAsHidden: false,
+      });
+    }
+
     // Reload pipeline to apply new config (especially custom prompt changes)
     onConfigChange?.();
   });
