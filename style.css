@@ -320,9 +320,19 @@ body {
     justify-content: center;
 }
 
+.platform-note {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    text-align: center;
+    margin: 0;
+    padding: 0.5rem 0;
+    line-height: var(--line-height-base);
+}
+
 @media (min-width: 640px) {
     .hero-cta {
         flex-direction: row;
+        flex-wrap: wrap;
         max-width: none;
         width: auto;
         align-items: center;
@@ -334,6 +344,11 @@ body {
         min-width: 180px;
         padding-left: 1.5rem;
         padding-right: 1.5rem;
+    }
+
+    .platform-note {
+        flex-basis: 100%;
+        width: 100%;
     }
 }
 
@@ -386,10 +401,10 @@ body {
     position: absolute;
     inset: 0;
     background-image: url('assets/mac-background.png');
-    background-size: cover;
-    background-position: center;
+    background-size: 150%;
+    background-position: 50% 0;
     opacity: 0.15;
-    filter: blur(2px);
+    filter: blur(1px);
     transition: opacity var(--transition-base);
 }
 
@@ -468,15 +483,15 @@ body {
 /* Stage Labels */
 .demo-stages {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--spacing-md);
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-sm);
     margin-bottom: var(--spacing-lg);
 }
 
 @media (min-width: 640px) {
     .demo-stages {
-        grid-template-columns: repeat(2, 1fr);
-        gap: var(--spacing-lg);
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--spacing-md);
     }
 }
 
@@ -501,9 +516,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
-    margin: 0 auto 0.5rem;
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 0.25rem;
     border-radius: var(--radius-md);
     transition: all var(--transition-base);
 }
@@ -512,6 +527,7 @@ body {
     .stage-icon {
         width: 52px;
         height: 52px;
+        margin-bottom: 0.5rem;
     }
 }
 
@@ -540,14 +556,29 @@ body {
 }
 
 .stage-title {
-    font-size: var(--font-size-base);
+    font-size: 0.8125rem;
     font-weight: 600;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.125rem;
+}
+
+@media (min-width: 768px) {
+    .stage-title {
+        font-size: var(--font-size-base);
+        margin-bottom: 0.25rem;
+    }
 }
 
 .stage-description {
-    font-size: var(--font-size-sm);
+    font-size: 0.6875rem;
     color: var(--text-secondary);
+    line-height: 1.3;
+}
+
+@media (min-width: 768px) {
+    .stage-description {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-base);
+    }
 }
 
 .demo-result {
@@ -572,7 +603,8 @@ body {
     border: 2px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 0.75rem 1rem;
-    min-height: 60px;
+    height: 120px;
+    overflow-y: auto;
     font-size: var(--font-size-sm);
     line-height: var(--line-height-relaxed);
     color: var(--text-primary);
