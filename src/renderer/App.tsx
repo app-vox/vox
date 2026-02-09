@@ -6,17 +6,17 @@ import { LlmPanel } from "./components/llm/LlmPanel";
 import { WhisperPanel } from "./components/whisper/WhisperPanel";
 import { ShortcutsPanel } from "./components/shortcuts/ShortcutsPanel";
 import { PermissionsPanel } from "./components/permissions/PermissionsPanel";
-import { AppearancePanel } from "./components/appearance/AppearancePanel";
+import { GeneralPanel } from "./components/general/GeneralPanel";
 import { SaveToast } from "./components/ui/SaveToast";
 import { useSaveToast } from "./hooks/use-save-toast";
 import { useTheme } from "./hooks/use-theme";
 
 const PANELS: Record<string, () => JSX.Element | null> = {
-  llm: LlmPanel,
+  general: GeneralPanel,
   whisper: WhisperPanel,
-  shortcuts: ShortcutsPanel,
+  llm: LlmPanel,
   permissions: PermissionsPanel,
-  appearance: AppearancePanel,
+  shortcuts: ShortcutsPanel,
 };
 
 export function App() {

@@ -1,9 +1,10 @@
-import type { ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
 import type { ThemeMode } from "../../../shared/config";
+import type { UpdateStatus } from "../../../preload/index";
 import card from "../shared/card.module.scss";
-import styles from "./AppearancePanel.module.scss";
+import styles from "./GeneralPanel.module.scss";
 
 const THEME_OPTIONS: { value: ThemeMode; label: string; icon: ReactNode }[] = [
   {
@@ -45,11 +46,42 @@ const THEME_OPTIONS: { value: ThemeMode; label: string; icon: ReactNode }[] = [
   },
 ];
 
-export function AppearancePanel() {
+export function GeneralPanel() {
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const triggerToast = useSaveToast((s) => s.trigger);
+
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+  const [currentVersion, setCurrentVersion] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
+
+  useEffect(() => {
+    window.voxApi.updates.getVersion().then(setCurrentVersion);
+    window.voxApi.updates.getStatus().then((status) => {
+      if (status) setUpdateStatus(status);
+    });
+    window.voxApi.resources.dataUrl("logo.png").then(setLogoUrl);
+  }, []);
+
+  const handleCheckForUpdates = async () => {
+    setChecking(true);
+    setDismissed(false);
+    try {
+      const status = await window.voxApi.updates.check();
+      setUpdateStatus(status);
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const handleDownload = () => {
+    if (updateStatus?.releaseUrl) {
+      window.voxApi.shell.openExternal(updateStatus.releaseUrl);
+    }
+  };
 
   // Detect if running in dev mode
   const isDevMode = import.meta.env.DEV;
@@ -63,7 +95,7 @@ export function AppearancePanel() {
   };
 
   const toggleLaunchAtLogin = async () => {
-    if (isDevMode) return; // Prevent toggle in dev mode
+    if (isDevMode) return;
     updateConfig({ launchAtLogin: !config.launchAtLogin });
     await saveConfig(false);
     triggerToast();
@@ -72,6 +104,8 @@ export function AppearancePanel() {
   const openIssueTracker = () => {
     window.voxApi.shell.openExternal("https://github.com/app-vox/vox/issues");
   };
+
+  const showUpdateBanner = updateStatus?.updateAvailable && !dismissed;
 
   return (
     <>
@@ -123,11 +157,75 @@ export function AppearancePanel() {
       </div>
 
       <div className={card.card}>
-        <div className={card.header}>
-          <h2>Help & Support</h2>
-          <p className={card.description}>Get help or report issues with Vox.</p>
+        <div className={`${card.header} ${styles.aboutHeader}`}>
+          <div>
+            <h2>About</h2>
+            <p className={card.description}>
+              {currentVersion ? `Vox v${currentVersion}` : "Version information and support."}
+            </p>
+          </div>
+          {logoUrl && <img src={logoUrl} alt="Vox" className={styles.aboutLogo} />}
         </div>
         <div className={card.body}>
+          {showUpdateBanner ? (
+            <div className={styles.updateBanner}>
+              <div className={styles.updateBannerContent}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+                <span>
+                  Vox v{updateStatus.latestVersion} is available
+                </span>
+              </div>
+              <div className={styles.updateBannerActions}>
+                <button onClick={handleDownload} className={styles.downloadButton}>
+                  Download
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" y1="14" x2="21" y2="3" />
+                  </svg>
+                </button>
+                <button onClick={() => setDismissed(true)} className={styles.dismissButton} aria-label="Dismiss">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className={styles.updateRow}>
+              <button
+                onClick={handleCheckForUpdates}
+                disabled={checking}
+                className={styles.linkButton}
+              >
+                {checking ? (
+                  <>
+                    <svg className={styles.spinner} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                    </svg>
+                    <span>Checking...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="23 4 23 10 17 10" />
+                      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                    </svg>
+                    <span>Check for Updates</span>
+                  </>
+                )}
+              </button>
+              {updateStatus && !updateStatus.updateAvailable && !checking && (
+                <span className={styles.upToDate}>You're up to date</span>
+              )}
+            </div>
+          )}
+          <div className={styles.aboutDivider} />
           <button onClick={openIssueTracker} className={styles.linkButton}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />

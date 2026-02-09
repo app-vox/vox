@@ -31,6 +31,13 @@ export interface DownloadProgress {
   total: number;
 }
 
+export interface UpdateStatus {
+  updateAvailable: boolean;
+  currentVersion: string;
+  latestVersion: string;
+  releaseUrl: string;
+}
+
 export interface VoxAPI {
   config: {
     load(): Promise<import("../shared/config").VoxConfig>;
@@ -73,6 +80,11 @@ export interface VoxAPI {
   };
   setup: {
     check(): Promise<{ hasAnyModel: boolean; downloadedModels: string[] }>;
+  };
+  updates: {
+    check(): Promise<UpdateStatus>;
+    getStatus(): Promise<UpdateStatus | null>;
+    getVersion(): Promise<string>;
   };
 }
 
@@ -124,6 +136,11 @@ const voxApi: VoxAPI = {
   },
   setup: {
     check: () => ipcRenderer.invoke("setup:check"),
+  },
+  updates: {
+    check: () => ipcRenderer.invoke("updates:check"),
+    getStatus: () => ipcRenderer.invoke("updates:get-status"),
+    getVersion: () => ipcRenderer.invoke("updates:get-version"),
   },
 };
 
