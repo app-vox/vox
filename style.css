@@ -93,60 +93,86 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
-    background-color: var(--bg-primary);
-    border-bottom: 1px solid var(--border-color);
-    backdrop-filter: blur(10px);
-    transition: background-color var(--transition-base), border-color var(--transition-base);
+    background-color: rgba(10, 10, 10, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transition: background-color var(--transition-base);
+}
+
+[data-theme="light"] .header {
+    background-color: rgba(255, 255, 255, 0.8);
 }
 
 .header-content {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 64px;
+    height: 56px;
+    padding: 0 var(--spacing-sm);
+}
+
+@media (min-width: 768px) {
+    .header-content {
+        height: 64px;
+        padding: 0;
+    }
 }
 
 .logo {
     display: flex;
     align-items: center;
-    gap: var(--spacing-xs);
+    gap: 0.5rem;
     text-decoration: none;
     color: var(--text-primary);
     font-weight: 600;
-    font-size: var(--font-size-lg);
+    font-size: 1rem;
     transition: opacity var(--transition-fast);
 }
 
 .logo:hover {
-    opacity: 0.8;
+    opacity: 0.7;
 }
 
 .logo img {
     display: block;
+    width: 28px;
+    height: 28px;
+}
+
+@media (min-width: 768px) {
+    .logo {
+        font-size: var(--font-size-lg);
+    }
+
+    .logo img {
+        width: 32px;
+        height: 32px;
+    }
 }
 
 .header-nav {
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
+    gap: 0.5rem;
 }
 
 .github-stars {
     display: flex;
     align-items: center;
     gap: 0.375rem;
-    padding: 0.375rem 0.75rem;
-    background-color: var(--bg-secondary);
+    padding: 0.375rem 0.625rem;
+    background-color: transparent;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    color: var(--text-primary);
+    color: var(--text-secondary);
     text-decoration: none;
-    font-size: var(--font-size-sm);
+    font-size: 0.8125rem;
     transition: all var(--transition-fast);
 }
 
 .github-stars:hover {
-    border-color: var(--accent);
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
 }
 
 .star-count {
@@ -157,19 +183,19 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     background: transparent;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    color: var(--text-primary);
+    color: var(--text-secondary);
     cursor: pointer;
     transition: all var(--transition-fast);
 }
 
 .theme-toggle:hover {
-    border-color: var(--accent);
-    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
 }
 
 .theme-toggle .sun-icon {
@@ -283,13 +309,27 @@ body {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
-    align-items: center;
+    align-items: stretch;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.hero-cta .btn {
+    width: 100%;
+    justify-content: center;
 }
 
 @media (min-width: 640px) {
     .hero-cta {
         flex-direction: row;
-        justify-content: center;
+        max-width: none;
+        width: auto;
+        align-items: center;
+    }
+
+    .hero-cta .btn {
+        width: auto;
     }
 }
 
