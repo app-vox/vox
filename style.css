@@ -330,6 +330,9 @@ body {
 
     .hero-cta .btn {
         width: auto;
+        min-width: 180px;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
     }
 }
 
