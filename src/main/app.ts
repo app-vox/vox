@@ -53,48 +53,6 @@ app.whenReady().then(async () => {
 
   registerIpcHandlers(configManager, modelManager, reloadConfig);
 
-  // Check if ANY model is already downloaded
-  const availableSizes = modelManager.getAvailableSizes();
-  const hasAnyModel = availableSizes.some(size => modelManager.isModelDownloaded(size));
-
-  // Only auto-download if no models exist
-  if (!hasAnyModel) {
-    const recommendedModel = initialConfig.whisper.model;
-    const modelInfo = modelManager.getModelInfo(recommendedModel);
-    const sizeFormatted = (modelInfo.sizeBytes / 1_000_000).toFixed(0);
-
-    const response = await dialog.showMessageBox({
-      type: "info",
-      title: "Download Whisper Model",
-      message: "Vox needs to download a speech recognition model to work.",
-      detail: `The recommended model is "${recommendedModel}" (~${sizeFormatted}MB).\n\nThis only happens once. Would you like to download it now?`,
-      buttons: ["Download", "Cancel"],
-      defaultId: 0,
-      cancelId: 1,
-    });
-
-    if (response.response === 0) {
-      // User clicked "Download"
-      console.log(`Downloading recommended model: ${recommendedModel}...`);
-      try {
-        await modelManager.download(recommendedModel, (downloaded, total) => {
-          const percent = ((downloaded / total) * 100).toFixed(1);
-          console.log(`Downloading ${recommendedModel}: ${percent}%`);
-        });
-        console.log(`Model ${recommendedModel} downloaded successfully`);
-      } catch (error) {
-        console.error(`Failed to download model ${recommendedModel}:`, error);
-        await dialog.showErrorBox(
-          "Download Failed",
-          `Failed to download the Whisper model. You can try again from Settings.\n\nError: ${error instanceof Error ? error.message : String(error)}`
-        );
-      }
-    } else {
-      // User clicked "Cancel" - just continue without download
-      console.log("User cancelled model download. App will continue without a model.");
-    }
-  }
-
   setupPipeline();
 
   // Check for Accessibility permission and show helpful dialog if not granted

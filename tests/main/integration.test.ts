@@ -87,3 +87,25 @@ describe("Whisper-only mode integration", () => {
     expect(stagesSeen).toEqual(["transcribing", "correcting"]);
   });
 });
+
+describe("App startup without auto-download", () => {
+  it("should not have auto-download code in app.ts", async () => {
+    // This test verifies that the auto-download logic has been removed from app.ts.
+    // Since app.ts runs side effects on import (app.whenReady callback), it's difficult
+    // to test in isolation. Instead, we verify that the problematic code is gone.
+    // The actual behavior is verified through manual testing (Task 13).
+
+    const fs = await import("fs/promises");
+    const path = await import("path");
+    const appSourcePath = path.join(__dirname, "../../src/main/app.ts");
+    const appSource = await fs.readFile(appSourcePath, "utf-8");
+
+    // Verify the auto-download code patterns are not present
+    expect(appSource).not.toContain("Download Whisper Model");
+    expect(appSource).not.toMatch(/modelManager\.download\(/);
+    expect(appSource).not.toMatch(/hasAnyModel/);
+
+    // Verify the conditional model download logic is removed
+    expect(appSource).not.toMatch(/if\s*\(\s*!.*isModelDownloaded/);
+  });
+});

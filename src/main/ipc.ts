@@ -3,6 +3,7 @@ import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
 import { type VoxConfig, type WhisperModelSize } from "../shared/config";
 import { getResourcePath } from "./resources";
+import { SetupChecker } from "./setup/checker";
 
 export function registerIpcHandlers(
   configManager: ConfigManager,
@@ -200,5 +201,15 @@ export function registerIpcHandlers(
 
   ipcMain.handle("shell:open-external", async (_event, url: string) => {
     await shell.openExternal(url);
+  });
+
+  // Setup state check
+  const setupChecker = new SetupChecker(modelManager);
+
+  ipcMain.handle("setup:check", () => {
+    return {
+      hasAnyModel: setupChecker.hasAnyModel(),
+      downloadedModels: setupChecker.getDownloadedModels(),
+    };
   });
 }
