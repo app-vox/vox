@@ -26,7 +26,7 @@ TYPESCRIPT_ES_CONFIG_FILE: eslint.config.mjs
 REPOSITORY_CHECKOV_ARGUMENTS: --skip-check CKV_GHA_7
 
 # kingfisher: exclude .git dir and workflow files (secret references trigger false positives)
-REPOSITORY_KINGFISHER_ARGUMENTS: --exclude-paths .git --exclude-paths .github/workflows
+REPOSITORY_KINGFISHER_ARGUMENTS: --exclude .git --exclude .github/workflows
 
 # Excluded paths
 EXCLUDED_DIRECTORIES:
