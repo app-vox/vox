@@ -80,7 +80,6 @@ export class ShortcutManager {
   private accessibilityWasGranted = false;
   private watchdogTimer: ReturnType<typeof setInterval> | null = null;
   private isInitializing = true;
-  private shouldPaste = true;
 
   constructor(deps: ShortcutManagerDeps) {
     this.deps = deps;
@@ -114,7 +113,6 @@ export class ShortcutManager {
         // Cancel if we're recording (hold/toggle) or processing
         if (state === "hold" || state === "toggle" || state === "processing") {
           console.log("[Vox] Escape pressed, canceling operation");
-          this.shouldPaste = false;
           const pipeline = this.deps.getPipeline();
           pipeline.cancel();
           this.indicator.showCanceled();
@@ -205,7 +203,6 @@ export class ShortcutManager {
     const state = this.stateMachine.getState();
     if (state === "hold" || state === "toggle" || state === "processing") {
       console.log("[Vox] Cancel requested from tray");
-      this.shouldPaste = false;
       const pipeline = this.deps.getPipeline();
       pipeline.cancel();
       this.indicator.showCanceled();
@@ -237,8 +234,9 @@ export class ShortcutManager {
     // briefly disable shortcuts to prevent spurious activations
     this.isInitializing = true;
 
-    // Cancel any ongoing recording to prevent spurious paste events
-    this.shouldPaste = false;
+    // Cancel any ongoing recording to prevent spurious paste events during hot-reload
+    const pipeline = this.deps.getPipeline();
+    pipeline.cancel();
     this.stateMachine.setIdle();
 
     globalShortcut.unregisterAll();
@@ -324,7 +322,6 @@ export class ShortcutManager {
   private onRecordingStart(): void {
     const pipeline = this.deps.getPipeline();
     console.log("[Vox] Recording started");
-    this.shouldPaste = true; // Allow paste for this recording session
     this.indicator.show("listening");
     this.updateTrayState();
     pipeline.startRecording().catch((err: Error) => {
@@ -364,10 +361,8 @@ export class ShortcutManager {
         console.log("[Vox] No valid text to paste, showing error indicator");
         this.indicator.showError();
         console.log("[Vox] Error indicator should now be visible");
-      } else if (!this.shouldPaste) {
-        console.log("[Vox] Recording was canceled, skipping paste");
-        this.indicator.hide();
       } else {
+        // Paste only happens here - after successful pipeline completion with valid text
         console.log("[Vox] Valid text received, proceeding with paste");
         this.indicator.hide();
         await new Promise((r) => setTimeout(r, 200));
@@ -375,6 +370,7 @@ export class ShortcutManager {
         new Notification({ title: "Vox", body: trimmedText }).show();
       }
     } catch (err: unknown) {
+      // Any exception (CanceledError, NoModelError, etc.) prevents paste
       if (err instanceof CanceledError) {
         console.log("[Vox] Operation canceled by user");
         this.indicator.showCanceled();
