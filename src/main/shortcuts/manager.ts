@@ -5,6 +5,7 @@ import { pasteText, isAccessibilityGranted } from "../input/paster";
 import { type Pipeline, CanceledError } from "../pipeline";
 import { ShortcutStateMachine } from "./listener";
 import { IndicatorWindow } from "../indicator";
+import { setTrayListeningState } from "../tray";
 
 /** Map Electron accelerator key names to UiohookKey keycodes. */
 const KEY_TO_UIOHOOK: Record<string, number> = {
@@ -185,7 +186,6 @@ export class ShortcutManager {
   }
 
   private updateTrayState(): void {
-    const { setTrayListeningState } = require("../tray");
     setTrayListeningState(this.isRecording());
   }
 

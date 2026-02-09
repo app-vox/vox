@@ -51,6 +51,9 @@ export function AppearancePanel() {
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const triggerToast = useSaveToast((s) => s.trigger);
 
+  // Detect if running in dev mode
+  const isDevMode = import.meta.env.DEV;
+
   if (!config) return null;
 
   const setTheme = async (theme: ThemeMode) => {
@@ -59,26 +62,61 @@ export function AppearancePanel() {
     triggerToast();
   };
 
+  const toggleLaunchAtLogin = async () => {
+    if (isDevMode) return; // Prevent toggle in dev mode
+    updateConfig({ launchAtLogin: !config.launchAtLogin });
+    await saveConfig(false);
+    triggerToast();
+  };
+
   return (
-    <div className={card.card}>
-      <div className={card.header}>
-        <h2>Theme</h2>
-        <p className={card.description}>Choose your preferred appearance.</p>
-      </div>
-      <div className={card.body}>
-        <div className={styles.segmented}>
-          {THEME_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              className={`${styles.segment} ${config.theme === opt.value ? styles.active : ""}`}
-              onClick={() => setTheme(opt.value)}
-            >
-              {opt.icon}
-              <span>{opt.label}</span>
-            </button>
-          ))}
+    <>
+      <div className={card.card}>
+        <div className={card.header}>
+          <h2>Theme</h2>
+          <p className={card.description}>Choose your preferred appearance.</p>
+        </div>
+        <div className={card.body}>
+          <div className={styles.segmented}>
+            {THEME_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                className={`${styles.segment} ${config.theme === opt.value ? styles.active : ""}`}
+                onClick={() => setTheme(opt.value)}
+              >
+                {opt.icon}
+                <span>{opt.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+
+      <div className={card.card}>
+        <div className={card.header}>
+          <h2>Startup</h2>
+          <p className={card.description}>Control how Vox launches on your system.</p>
+        </div>
+        <div className={card.body}>
+          <label className={`${styles.checkboxRow} ${isDevMode ? styles.disabled : ""}`}>
+            <input
+              type="checkbox"
+              checked={config.launchAtLogin}
+              disabled={isDevMode}
+              onChange={toggleLaunchAtLogin}
+            />
+            <div>
+              <div className={styles.checkboxLabel}>Launch at login</div>
+              <div className={styles.checkboxDesc}>
+                {isDevMode
+                  ? "Disabled in development mode. This feature works only in the production build."
+                  : "Automatically start Vox when you log in to your computer"
+                }
+              </div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </>
   );
 }

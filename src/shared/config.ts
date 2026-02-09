@@ -36,6 +36,7 @@ export interface VoxConfig {
   theme: ThemeMode;
   enableLlmEnhancement: boolean;
   customPrompt: string;
+  launchAtLogin: boolean;
 }
 
 export function createDefaultConfig(): VoxConfig {
@@ -61,5 +62,6 @@ export function createDefaultConfig(): VoxConfig {
     theme: "system",
     enableLlmEnhancement: false,
     customPrompt: "",
+    launchAtLogin: false,
   };
 }
