@@ -41,7 +41,7 @@ export function App() {
     );
   }
 
-  const Panel = PANELS[activeTab] ?? LlmPanel;
+  const Panel = PANELS[activeTab] ?? WhisperPanel;
 
   return (
     <div className="flex flex-col h-full">

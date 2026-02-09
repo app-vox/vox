@@ -15,7 +15,7 @@ interface ConfigState {
 export const useConfigStore = create<ConfigState>((set, get) => ({
   config: null,
   loading: true,
-  activeTab: "llm",
+  activeTab: "whisper",
 
   setActiveTab: (tab) => set({ activeTab: tab }),
 

@@ -38,6 +38,12 @@ export function registerIpcHandlers(
     await modelManager.download(size as WhisperModelSize, (downloaded, total) => {
       _event.sender.send("models:download-progress", { size, downloaded, total });
     });
+
+    // Auto-select the downloaded model
+    const config = configManager.load();
+    config.whisper.modelSize = size as WhisperModelSize;
+    configManager.save(config);
+    onConfigChange?.();
   });
 
   ipcMain.handle("models:cancel-download", (_event, size: string) => {

@@ -79,6 +79,7 @@ export class ShortcutManager {
   private accessibilityWasGranted = false;
   private watchdogTimer: ReturnType<typeof setInterval> | null = null;
   private isInitializing = true;
+  private shouldPaste = true;
 
   constructor(deps: ShortcutManagerDeps) {
     this.deps = deps;
@@ -112,6 +113,7 @@ export class ShortcutManager {
         // Cancel if we're recording (hold/toggle) or processing
         if (state === "hold" || state === "toggle" || state === "processing") {
           console.log("[Vox] Escape pressed, canceling operation");
+          this.shouldPaste = false;
           const pipeline = this.deps.getPipeline();
           pipeline.cancel();
           this.indicator.showCanceled();
@@ -161,6 +163,7 @@ export class ShortcutManager {
     const state = this.stateMachine.getState();
     if (state === "hold" || state === "toggle" || state === "processing") {
       console.log("[Vox] Cancel requested from tray");
+      this.shouldPaste = false;
       const pipeline = this.deps.getPipeline();
       pipeline.cancel();
       this.indicator.showCanceled();
@@ -194,6 +197,7 @@ export class ShortcutManager {
     this.isInitializing = true;
 
     // Cancel any ongoing recording to prevent spurious paste events
+    this.shouldPaste = false;
     this.stateMachine.setIdle();
 
     globalShortcut.unregisterAll();
@@ -259,6 +263,7 @@ export class ShortcutManager {
   private onRecordingStart(): void {
     const pipeline = this.deps.getPipeline();
     console.log("[Vox] Recording started");
+    this.shouldPaste = true; // Allow paste for this recording session
     this.indicator.show("listening");
     this.updateTrayState();
     pipeline.startRecording().catch((err: Error) => {
@@ -284,6 +289,9 @@ export class ShortcutManager {
       if (!trimmedText || trimmedText.length === 0) {
         console.log("[Vox] No valid text to paste, showing error");
         this.indicator.showError();
+      } else if (!this.shouldPaste) {
+        console.log("[Vox] Recording was canceled, skipping paste");
+        this.indicator.hide();
       } else {
         console.log("[Vox] Valid text received, proceeding with paste");
         this.indicator.hide();
