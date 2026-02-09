@@ -37,7 +37,7 @@
   align-items: flex-start;
   gap: 12px;
   cursor: pointer;
-  padding: 4px 0;
+  padding: var(--spacing-1) 0;
 
   input[type="checkbox"] {
     appearance: none;
@@ -103,14 +103,14 @@
 }
 
 .checkboxLabel {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
   margin-bottom: 2px;
 }
 
 .checkboxDesc {
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   color: var(--color-text-tertiary);
   line-height: 1.4;
 }
@@ -119,13 +119,13 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
+  padding: var(--spacing-2) var(--spacing-3);
   background: none;
   border: 1px solid var(--color-border);
   border-radius: 6px;
   color: var(--color-text-primary);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
   transition: all 150ms ease;
 

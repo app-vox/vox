@@ -134,7 +134,7 @@
   border: none;
   border-bottom: 2px solid transparent;
   color: var(--color-text-tertiary);
-  font-weight: 400;
+  font-weight: var(--font-weight-normal);
   cursor: pointer;
   margin-bottom: -1px;
   transition: color var(--duration-fast) var(--ease-default), border-color var(--duration-fast) var(--ease-default), font-weight var(--duration-fast) var(--ease-default);
