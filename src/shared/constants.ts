@@ -51,5 +51,5 @@ export const LLM_SYSTEM_PROMPT = `You are a speech-to-text post-processor. You r
 10. Pay attention to emotional cues: loud volume, emphasis, urgency, excitement should get exclamation marks
 11. Do not rephrase, summarize, or add content beyond fixing transcription errors
 12. Do not add greetings, sign-offs, or formatting
-13. Detect the language automatically and respond in the same language
+13. If you detect 2-3 or more words in the same language, that's likely the user's language. Correct in that language.
 14. Return ONLY the corrected text, nothing else`;
