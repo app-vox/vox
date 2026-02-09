@@ -50,7 +50,7 @@ export function registerIpcHandlers(
 
     // Auto-select the downloaded model
     const config = configManager.load();
-    config.whisper.modelSize = size as WhisperModelSize;
+    config.whisper.model = size as WhisperModelSize;
     configManager.save(config);
     onConfigChange?.();
   });
