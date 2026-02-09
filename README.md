@@ -61,8 +61,6 @@ That's it. Hold `Alt+Space` to start recording.
 ## Requirements
 
 - **macOS** (Apple Silicon or Intel)
-- **sox** — for audio recording (`brew install sox`)
-  > **Note:** sox dependency is temporary and will be removed in a future release
 - **LLM provider** (optional) — for text correction:
   - OpenAI-compatible endpoint with API key
   - Or AWS Bedrock credentials with model access
@@ -120,7 +118,6 @@ If correction fails, raw transcription is used. If transcription is empty (silen
 git clone https://github.com/app-vox/vox.git
 cd vox
 npm install
-brew install sox  # temporary dependency
 ```
 
 ### Run
