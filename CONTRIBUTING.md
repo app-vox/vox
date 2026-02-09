@@ -52,6 +52,17 @@ Keep PRs focused — one feature or fix per PR.
 - Code, comments, and documentation in English
 - No unused imports or variables (enforced by ESLint)
 
+## Dependency management
+
+[Renovate Bot](https://docs.renovatebot.com/) automatically manages npm dependency updates. It creates pull requests for outdated packages, grouped by category (Electron, React, AWS SDK, etc.).
+
+- **Dependency Dashboard**: A GitHub issue tracks all pending, rate-limited, and ignored updates.
+- **Automerge**: Patch updates and low-risk devDependency changes merge automatically when CI passes.
+- **Native modules** (`whisper-node`, `koffi`, `uiohook-napi`): These are never automerged and include a manual testing checklist — verify audio recording, shortcuts, and builds on both arm64 and x64 Mac.
+- **Major updates**: Always require manual review and are separated into individual PRs.
+
+See `renovate.json` for the full configuration.
+
 ## Reporting bugs
 
 Use the [Bug Report](https://github.com/app-vox/vox/issues/new?template=bug_report.md) issue template.

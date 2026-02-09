@@ -1,0 +1,105 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":separateMajorReleases"
+  ],
+  "labels": ["dependencies"],
+  "minimumReleaseAge": "3 days",
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["dependencies", "security", "priority:high"],
+    "automerge": false
+  },
+  "osvVulnerabilityAlerts": true,
+  "packageRules": [
+    {
+      "description": "Automerge patch updates for all packages",
+      "matchUpdateTypes": ["patch", "digest"],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Automerge minor updates for devDependencies",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor"],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Group Electron ecosystem packages",
+      "groupName": "Electron ecosystem",
+      "matchPackageNames": ["electron", "electron-builder", "electron-vite"],
+      "minimumReleaseAge": "7 days",
+      "automerge": false,
+      "labels": ["dependencies", "electron", "needs-testing"]
+    },
+    {
+      "description": "Group AWS SDK packages",
+      "groupName": "AWS SDK",
+      "matchPackagePatterns": ["^@aws-sdk/"]
+    },
+    {
+      "description": "Group React packages",
+      "groupName": "React",
+      "matchPackageNames": ["react", "react-dom", "@types/react", "@types/react-dom"]
+    },
+    {
+      "description": "Group build tools",
+      "groupName": "Build tools",
+      "matchPackageNames": [
+        "vite",
+        "vitest",
+        "typescript",
+        "sass",
+        "tailwindcss"
+      ],
+      "matchPackagePatterns": ["^@vitejs/", "^@tailwindcss/"]
+    },
+    {
+      "description": "Group linters and formatters with automerge",
+      "groupName": "Linters and formatters",
+      "matchPackagePatterns": ["^eslint", "^prettier", "^stylelint"],
+      "matchPackageNames": ["typescript-eslint"],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Automerge type definitions (excluding React types handled by React group)",
+      "groupName": "Type definitions",
+      "matchPackagePatterns": ["^@types/"],
+      "excludePackageNames": ["@types/react", "@types/react-dom"],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Native modules require manual testing on both architectures",
+      "groupName": "Native modules",
+      "matchPackageNames": ["whisper-node", "koffi", "uiohook-napi"],
+      "schedule": ["before 3am on the first day of the month"],
+      "minimumReleaseAge": "7 days",
+      "automerge": false,
+      "labels": ["dependencies", "native-module", "needs-testing"],
+      "prBodyNotes": [
+        "**Native module update — requires manual testing:**",
+        "- [ ] Test on arm64 Mac (Apple Silicon)",
+        "- [ ] Test on x64 Mac (Intel)",
+        "- [ ] Verify audio recording works",
+        "- [ ] Verify shortcuts work",
+        "- [ ] Check DMG build succeeds"
+      ]
+    }
+  ]
+}
