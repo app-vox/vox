@@ -41,7 +41,7 @@ export interface VoxAPI {
     download(size: string): Promise<void>;
     cancelDownload(size: string): Promise<void>;
     delete(size: string): Promise<void>;
-    onDownloadProgress(callback: (progress: DownloadProgress) => void): void;
+    onDownloadProgress(callback: (progress: DownloadProgress) => void): () => void;
   };
   shortcuts: {
     disable(): Promise<void>;
@@ -84,7 +84,9 @@ const voxApi: VoxAPI = {
     cancelDownload: (size) => ipcRenderer.invoke("models:cancel-download", size),
     delete: (size) => ipcRenderer.invoke("models:delete", size),
     onDownloadProgress: (callback) => {
-      ipcRenderer.on("models:download-progress", (_event, progress: DownloadProgress) => callback(progress));
+      const handler = (_event: Electron.IpcRendererEvent, progress: DownloadProgress) => callback(progress);
+      ipcRenderer.on("models:download-progress", handler);
+      return () => ipcRenderer.removeListener("models:download-progress", handler);
     },
   },
   shortcuts: {

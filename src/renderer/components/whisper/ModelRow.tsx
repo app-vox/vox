@@ -28,7 +28,8 @@ export function ModelRow({ model, selected, onSelect }: ModelRowProps) {
         setProgress({ downloaded: p.downloaded, total: p.total });
       }
     };
-    window.voxApi.models.onDownloadProgress(handler);
+    const cleanup = window.voxApi.models.onDownloadProgress(handler);
+    return cleanup;
   }, [model.size]);
 
   useEffect(() => {
