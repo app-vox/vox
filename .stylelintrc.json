@@ -1,0 +1,18 @@
+{
+  "extends": "stylelint-config-standard-scss",
+  "rules": {
+    "custom-property-pattern": null,
+    "selector-class-pattern": null,
+    "scss/dollar-variable-pattern": null,
+    "color-hex-length": "long",
+    "declaration-property-unit-allowed-list": {
+      "border": ["px"],
+      "border-width": ["px"],
+      "border-top": ["px"],
+      "border-right": ["px"],
+      "border-bottom": ["px"],
+      "border-left": ["px"]
+    }
+  },
+  "ignoreFiles": ["**/node_modules/**", "**/dist/**", "**/*.js", "**/*.ts", "**/*.tsx"]
+}
