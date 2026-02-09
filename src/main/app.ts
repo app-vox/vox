@@ -1,4 +1,4 @@
-import { app, nativeTheme, session, dialog } from "electron";
+import { app, nativeTheme, session, dialog, shell } from "electron";
 import * as path from "path";
 import { ConfigManager } from "./config/manager";
 import { createSecretStore } from "./config/secrets";
@@ -11,6 +11,7 @@ import { ShortcutManager } from "./shortcuts/manager";
 import { setupTray } from "./tray";
 import { openHome } from "./windows/home";
 import { registerIpcHandlers } from "./ipc";
+import { isAccessibilityGranted } from "./input/paster";
 
 const configDir = path.join(app.getPath("userData"));
 const modelsDir = path.join(configDir, "models");
@@ -95,6 +96,28 @@ app.whenReady().then(async () => {
   }
 
   setupPipeline();
+
+  // Check for Accessibility permission and show helpful dialog if not granted
+  const hasAccessibility = isAccessibilityGranted();
+  if (!hasAccessibility) {
+    const response = await dialog.showMessageBox({
+      type: "warning",
+      title: "Accessibility Permission Required",
+      message: "Vox needs Accessibility permission to use keyboard shortcuts",
+      detail: "Vox uses global keyboard shortcuts (like Alt+Space) to activate voice recording.\n\nTo enable this feature:\n\n1. Click \"Open System Settings\" below\n2. Find and enable \"Electron\" or \"Vox\" in the Accessibility list\n3. Restart Vox\n\nWithout this permission, you can still use Vox from the menu bar, but keyboard shortcuts won't work.",
+      buttons: ["Open System Settings", "Continue Without Shortcuts"],
+      defaultId: 0,
+      cancelId: 1,
+    });
+
+    if (response.response === 0) {
+      // User clicked "Open System Settings"
+      shell.openExternal("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility");
+      console.log("[Vox] Opening Accessibility settings...");
+    } else {
+      console.log("[Vox] User chose to continue without Accessibility permission");
+    }
+  }
 
   shortcutManager = new ShortcutManager({
     configManager,

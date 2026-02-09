@@ -123,7 +123,48 @@ export class ShortcutManager {
       }
     });
 
-    uIOhook.start();
+    // Check accessibility permission before starting uIOhook
+    const hasAccessibility = isAccessibilityGranted();
+    if (!hasAccessibility) {
+      console.warn("[Vox] Accessibility permission not granted. Keyboard shortcuts will not work.");
+      new Notification({
+        title: "Vox - Accessibility Permission Required",
+        body: "Please grant Accessibility permission in System Settings for keyboard shortcuts to work.",
+      }).show();
+
+      // Still register global shortcuts (they work without accessibility)
+      // but don't start uIOhook to avoid crash
+      this.accessibilityWasGranted = false;
+      this.startAccessibilityWatchdog();
+
+      setTimeout(() => {
+        this.isInitializing = false;
+        console.log("[Vox] Initialization complete (limited mode - no accessibility)");
+      }, 1000);
+      return;
+    }
+
+    // Wrap uIOhook.start() in try-catch to handle potential crashes gracefully
+    try {
+      uIOhook.start();
+      console.log("[Vox] Keyboard hook started successfully");
+    } catch (err: unknown) {
+      console.error("[Vox] Failed to start keyboard hook:", err);
+      new Notification({
+        title: "Vox - Keyboard Hook Failed",
+        body: "Failed to start keyboard shortcuts. Try restarting the app or check Accessibility permissions.",
+      }).show();
+
+      // Continue with limited functionality
+      this.accessibilityWasGranted = false;
+      this.startAccessibilityWatchdog();
+
+      setTimeout(() => {
+        this.isInitializing = false;
+        console.log("[Vox] Initialization complete (limited mode - hook failed)");
+      }, 1000);
+      return;
+    }
 
     this.accessibilityWasGranted = isAccessibilityGranted();
     this.startAccessibilityWatchdog();
@@ -248,12 +289,32 @@ export class ShortcutManager {
 
       if (this.accessibilityWasGranted && !granted) {
         console.warn("[Vox] Accessibility permission revoked — stopping keyboard hook");
-        uIOhook.stop();
+        try {
+          uIOhook.stop();
+        } catch (err: unknown) {
+          console.error("[Vox] Error stopping keyboard hook:", err);
+        }
         globalShortcut.unregisterAll();
+        new Notification({
+          title: "Vox - Accessibility Permission Revoked",
+          body: "Keyboard shortcuts have been disabled. Please re-enable Accessibility permission in System Settings.",
+        }).show();
       } else if (!this.accessibilityWasGranted && granted) {
         console.log("[Vox] Accessibility permission restored — restarting keyboard hook");
-        uIOhook.start();
-        this.registerShortcutKeys();
+        try {
+          uIOhook.start();
+          this.registerShortcutKeys();
+          new Notification({
+            title: "Vox - Shortcuts Enabled",
+            body: "Accessibility permission granted! Keyboard shortcuts are now active.",
+          }).show();
+        } catch (err: unknown) {
+          console.error("[Vox] Failed to restart keyboard hook:", err);
+          new Notification({
+            title: "Vox - Restart Required",
+            body: "Please restart Vox to enable keyboard shortcuts.",
+          }).show();
+        }
       }
 
       this.accessibilityWasGranted = granted;
