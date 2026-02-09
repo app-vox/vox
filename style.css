@@ -332,6 +332,7 @@ body {
 @media (min-width: 640px) {
     .hero-cta {
         flex-direction: row;
+        flex-wrap: wrap;
         max-width: none;
         width: auto;
         align-items: center;
@@ -343,6 +344,11 @@ body {
         min-width: 180px;
         padding-left: 1.5rem;
         padding-right: 1.5rem;
+    }
+
+    .platform-note {
+        flex-basis: 100%;
+        width: 100%;
     }
 }
 
