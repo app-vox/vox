@@ -71,6 +71,9 @@ export interface VoxAPI {
   shell: {
     openExternal(url: string): Promise<void>;
   };
+  setup: {
+    check(): Promise<{ hasAnyModel: boolean; downloadedModels: string[] }>;
+  };
 }
 
 const voxApi: VoxAPI = {
@@ -118,6 +121,9 @@ const voxApi: VoxAPI = {
   },
   shell: {
     openExternal: (url) => ipcRenderer.invoke("shell:open-external", url),
+  },
+  setup: {
+    check: () => ipcRenderer.invoke("setup:check"),
   },
 };
 

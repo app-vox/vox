@@ -2,6 +2,7 @@ import { type LlmProvider } from "./llm/provider";
 import { NoopProvider } from "./llm/noop";
 import { type RecordingResult } from "./audio/recorder";
 import { type TranscriptionResult } from "./audio/whisper";
+import { existsSync } from "fs";
 
 export type PipelineStage = "transcribing" | "correcting";
 
@@ -94,12 +95,22 @@ export class CanceledError extends Error {
   }
 }
 
+export class NoModelError extends Error {
+  constructor() {
+    super("Please configure local model in Settings");
+    this.name = "NoModelError";
+  }
+}
+
 export class Pipeline {
   private readonly deps: PipelineDeps;
   private canceled = false;
 
   constructor(deps: PipelineDeps) {
     this.deps = deps;
+    if (!existsSync(deps.modelPath)) {
+      console.warn("[Pipeline] Model path does not exist:", deps.modelPath);
+    }
   }
 
   cancel(): void {
@@ -107,6 +118,9 @@ export class Pipeline {
   }
 
   async startRecording(): Promise<void> {
+    if (!existsSync(this.deps.modelPath)) {
+      throw new NoModelError();
+    }
     this.canceled = false; // Reset cancel flag on new recording
     await this.deps.recorder.start();
   }

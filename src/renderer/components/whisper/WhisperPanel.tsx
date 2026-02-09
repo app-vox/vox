@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
 import { ModelRow } from "./ModelRow";
@@ -16,18 +16,47 @@ export function WhisperPanel() {
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const loadConfig = useConfigStore((s) => s.loadConfig);
+  const setupComplete = useConfigStore((s) => s.setupComplete);
   const triggerToast = useSaveToast((s) => s.trigger);
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [testing, setTesting] = useState(false);
   const [testStatus, setTestStatus] = useState<{ text: string; type: "info" | "success" | "error" }>({ text: "", type: "info" });
 
-  const refreshModels = () => {
-    window.voxApi.models.list().then(setModels);
-  };
+  const refreshModels = useCallback(async () => {
+    const modelsList = await window.voxApi.models.list();
+    setModels(modelsList);
+
+    // Get fresh config state
+    const currentConfig = useConfigStore.getState().config;
+    if (!currentConfig) return;
+
+    // Check if currently selected model is still downloaded
+    const selectedModel = currentConfig.whisper.model;
+    if (selectedModel) {
+      const stillDownloaded = modelsList.find(
+        (m) => m.size === selectedModel && m.downloaded
+      );
+
+      if (!stillDownloaded) {
+        // Selected model was deleted, auto-select first available
+        const firstAvailable = modelsList.find((m) => m.downloaded);
+
+        if (firstAvailable) {
+          // Auto-select first available downloaded model
+          updateConfig({ whisper: { model: firstAvailable.size as WhisperModelSize } });
+          await saveConfig(false);
+        } else {
+          // No models available, clear selection
+          updateConfig({ whisper: { model: "" as WhisperModelSize } });
+          await saveConfig(false);
+        }
+      }
+    }
+  }, [updateConfig, saveConfig]);
 
   useEffect(() => {
     refreshModels();
-  }, []);
+  }, [refreshModels]);
 
   useEffect(() => {
     const cleanup = window.voxApi.models.onDownloadProgress((progress) => {
@@ -36,11 +65,13 @@ export function WhisperPanel() {
         setTimeout(() => {
           refreshModels();
           loadConfig();
+          // Explicitly check setup state after download
+          useConfigStore.getState().checkSetup();
         }, 100);
       }
     });
     return cleanup;
-  }, [loadConfig]);
+  }, [loadConfig, refreshModels]);
 
   if (!config) return null;
 
@@ -80,9 +111,15 @@ export function WhisperPanel() {
   return (
     <div className={card.card}>
       <div className={card.header}>
-        <h2>Whisper Model</h2>
+        <h2>Local Model (with Whisper)</h2>
         <p className={card.description}>Select the local speech recognition model. Larger models are more accurate but slower.</p>
       </div>
+      {!setupComplete && (
+        <div className={card.warningBanner}>
+          <span style={{ marginRight: "8px" }}>⚠️</span>
+          Please download a model below to get started
+        </div>
+      )}
       <div className={card.body}>
         <div>
           {models.map((model) => (
@@ -91,6 +128,7 @@ export function WhisperPanel() {
               model={model}
               selected={model.size === config.whisper.model}
               onSelect={handleSelect}
+              onDelete={refreshModels}
             />
           ))}
         </div>
@@ -98,7 +136,7 @@ export function WhisperPanel() {
         <div className={form.testSection}>
           <button
             onClick={handleTest}
-            disabled={testing}
+            disabled={testing || !models.some(m => m.downloaded)}
             className={`${btn.btn} ${btn.primary}`}
           >
             <RecordIcon />

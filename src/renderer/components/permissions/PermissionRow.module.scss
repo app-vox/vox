@@ -53,4 +53,14 @@
     color: var(--color-warning);
     background: var(--color-warning-bg-light);
   }
+
+  &.setupBadge {
+    color: #6b7280;
+    background: #f3f4f6;
+
+    :global(.dark) & {
+      color: #9ca3af;
+      background: #374151;
+    }
+  }
 }

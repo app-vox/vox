@@ -12,6 +12,7 @@ export interface TrayCallbacks {
 
 let callbacks: TrayCallbacks | null = null;
 let isListening = false;
+let hasModel = true;
 
 export function setupTray(trayCallbacks: TrayCallbacks): void {
   callbacks = trayCallbacks;
@@ -26,6 +27,11 @@ export function setupTray(trayCallbacks: TrayCallbacks): void {
 
 export function setTrayListeningState(listening: boolean): void {
   isListening = listening;
+  updateTrayMenu();
+}
+
+export function setTrayModelState(modelConfigured: boolean): void {
+  hasModel = modelConfigured;
   updateTrayMenu();
 }
 
@@ -48,12 +54,14 @@ function updateTrayMenu(): void {
         menuTemplate.push({
           label: "✓ Complete Listening",
           click: callbacks.onStopListening,
+          enabled: hasModel,
         });
       }
       if (callbacks.onCancelListening) {
         menuTemplate.push({
           label: "✕ Cancel",
           click: callbacks.onCancelListening,
+          enabled: hasModel,
         });
       }
     }
@@ -64,6 +72,7 @@ function updateTrayMenu(): void {
       menuTemplate.push({
         label: "🎤 Start Listening",
         click: callbacks.onStartListening,
+        enabled: hasModel,
       });
     }
   }

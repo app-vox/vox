@@ -24,7 +24,7 @@ export interface LlmConfig {
 }
 
 export interface WhisperConfig {
-  model: WhisperModelSize;
+  model: WhisperModelSize | "";
 }
 
 export type WhisperModelSize = "tiny" | "base" | "small" | "medium" | "large";

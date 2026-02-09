@@ -7,6 +7,7 @@ interface ModelRowProps {
   model: ModelInfo;
   selected: boolean;
   onSelect: (size: string) => void;
+  onDelete?: () => void;
 }
 
 function formatBytes(bytes: number): string {
@@ -15,7 +16,7 @@ function formatBytes(bytes: number): string {
   return `${(bytes / 1_000_000_000).toFixed(1)} GB`;
 }
 
-export function ModelRow({ model, selected, onSelect }: ModelRowProps) {
+export function ModelRow({ model, selected, onSelect, onDelete }: ModelRowProps) {
   const [downloading, setDownloading] = useState(false);
   const [downloaded, setDownloaded] = useState(model.downloaded);
   const [progress, setProgress] = useState({ downloaded: 0, total: 0 });
@@ -62,6 +63,7 @@ export function ModelRow({ model, selected, onSelect }: ModelRowProps) {
       setConfirmingDelete(false);
       window.voxApi.models.delete(model.size).then(() => {
         setDownloaded(false);
+        onDelete?.();
       });
     } else {
       setConfirmingDelete(true);

@@ -8,10 +8,11 @@ import { transcribe } from "./audio/whisper";
 import { createLlmProvider } from "./llm/factory";
 import { Pipeline } from "./pipeline";
 import { ShortcutManager } from "./shortcuts/manager";
-import { setupTray } from "./tray";
+import { setupTray, setTrayModelState } from "./tray";
 import { openHome } from "./windows/home";
 import { registerIpcHandlers } from "./ipc";
 import { isAccessibilityGranted } from "./input/paster";
+import { SetupChecker } from "./setup/checker";
 
 const configDir = path.join(app.getPath("userData"));
 const modelsDir = path.join(configDir, "models");
@@ -23,7 +24,9 @@ let shortcutManager: ShortcutManager | null = null;
 
 function setupPipeline(): void {
   const config = configManager.load();
-  const modelPath = modelManager.getModelPath(config.whisper.model);
+  const modelPath = config.whisper.model
+    ? modelManager.getModelPath(config.whisper.model)
+    : "";
   const llmProvider = createLlmProvider(config);
 
   pipeline = new Pipeline({
@@ -38,6 +41,9 @@ function setupPipeline(): void {
 function reloadConfig(): void {
   setupPipeline();
   shortcutManager?.registerShortcutKeys();
+
+  const setupChecker = new SetupChecker(modelManager);
+  setTrayModelState(setupChecker.hasAnyModel());
 }
 
 app.whenReady().then(async () => {
@@ -53,51 +59,8 @@ app.whenReady().then(async () => {
 
   registerIpcHandlers(configManager, modelManager, reloadConfig);
 
-  // Check if ANY model is already downloaded
-  const availableSizes = modelManager.getAvailableSizes();
-  const hasAnyModel = availableSizes.some(size => modelManager.isModelDownloaded(size));
-
-  // Only auto-download if no models exist
-  if (!hasAnyModel) {
-    const recommendedModel = initialConfig.whisper.model;
-    const modelInfo = modelManager.getModelInfo(recommendedModel);
-    const sizeFormatted = (modelInfo.sizeBytes / 1_000_000).toFixed(0);
-
-    const response = await dialog.showMessageBox({
-      type: "info",
-      title: "Download Whisper Model",
-      message: "Vox needs to download a speech recognition model to work.",
-      detail: `The recommended model is "${recommendedModel}" (~${sizeFormatted}MB).\n\nThis only happens once. Would you like to download it now?`,
-      buttons: ["Download", "Cancel"],
-      defaultId: 0,
-      cancelId: 1,
-    });
-
-    if (response.response === 0) {
-      // User clicked "Download"
-      console.log(`Downloading recommended model: ${recommendedModel}...`);
-      try {
-        await modelManager.download(recommendedModel, (downloaded, total) => {
-          const percent = ((downloaded / total) * 100).toFixed(1);
-          console.log(`Downloading ${recommendedModel}: ${percent}%`);
-        });
-        console.log(`Model ${recommendedModel} downloaded successfully`);
-      } catch (error) {
-        console.error(`Failed to download model ${recommendedModel}:`, error);
-        await dialog.showErrorBox(
-          "Download Failed",
-          `Failed to download the Whisper model. You can try again from Settings.\n\nError: ${error instanceof Error ? error.message : String(error)}`
-        );
-      }
-    } else {
-      // User clicked "Cancel" - just continue without download
-      console.log("User cancelled model download. App will continue without a model.");
-    }
-  }
-
   setupPipeline();
 
-  // Check for Accessibility permission and show helpful dialog if not granted
   const hasAccessibility = isAccessibilityGranted();
   if (!hasAccessibility) {
     const response = await dialog.showMessageBox({
@@ -111,7 +74,6 @@ app.whenReady().then(async () => {
     });
 
     if (response.response === 0) {
-      // User clicked "Open System Settings"
       shell.openExternal("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility");
       console.log("[Vox] Opening Accessibility settings...");
     } else {
@@ -125,14 +87,15 @@ app.whenReady().then(async () => {
   });
   shortcutManager.start();
 
+  const setupChecker = new SetupChecker(modelManager);
   setupTray({
     onOpenHome: () => openHome(reloadConfig),
     onStartListening: () => shortcutManager?.triggerToggle(),
     onStopListening: () => shortcutManager?.stopAndProcess(),
     onCancelListening: () => shortcutManager?.cancelRecording(),
   });
+  setTrayModelState(setupChecker.hasAnyModel());
 
-  // Open settings window automatically in dev mode
   if (!app.isPackaged) {
     openHome(reloadConfig);
   }
@@ -143,5 +106,5 @@ app.on("will-quit", () => {
 });
 
 app.on("window-all-closed", () => {
-  // Do nothing — keep app running as tray app
+  // Keep app running as tray app
 });

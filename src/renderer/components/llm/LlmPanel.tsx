@@ -15,6 +15,7 @@ export function LlmPanel() {
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
+  const setupComplete = useConfigStore((s) => s.setupComplete);
   const { debouncedSave, flush } = useDebouncedSave(500, true);
   const [testing, setTesting] = useState(false);
   const [testStatus, setTestStatus] = useState<{ text: string; type: "info" | "success" | "error" }>({ text: "", type: "info" });
@@ -22,6 +23,33 @@ export function LlmPanel() {
   const [initialPromptValue, setInitialPromptValue] = useState<string | null>(null);
 
   if (!config) return null;
+
+  if (!setupComplete) {
+    return (
+      <div className={card.card}>
+        <div className={card.header}>
+          <h2>AI Text Correction (LLM)</h2>
+          <p className={card.description}>
+            Improve your transcriptions by automatically fixing grammar, removing filler words, and cleaning up your speech.
+          </p>
+        </div>
+        <div className={card.warningBanner}>
+          Setup required - Download a{" "}
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              useConfigStore.getState().setActiveTab("whisper");
+            }}
+            style={{ color: "inherit", textDecoration: "underline", cursor: "pointer" }}
+          >
+            local model
+          </a>
+          {" "}first to enable AI improvements
+        </div>
+      </div>
+    );
+  }
 
   const providerDefaults: Record<string, { openaiEndpoint: string; openaiModel: string }> = {
     openai: { openaiEndpoint: "https://api.openai.com", openaiModel: "gpt-4o" },

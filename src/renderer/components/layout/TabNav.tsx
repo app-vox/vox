@@ -1,11 +1,13 @@
 import type { ReactNode } from "react";
 import { useConfigStore } from "../../stores/config-store";
+import { WarningBadge } from "../ui/WarningBadge";
 import styles from "./TabNav.module.scss";
 
-const TABS: { id: string; label: string; icon: ReactNode }[] = [
+const TABS: { id: string; label: string; icon: ReactNode; requiresModel?: boolean }[] = [
   {
     id: "whisper",
     label: "Local Model",
+    requiresModel: true,
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
@@ -67,6 +69,7 @@ const TABS: { id: string; label: string; icon: ReactNode }[] = [
 export function TabNav() {
   const activeTab = useConfigStore((s) => s.activeTab);
   const setActiveTab = useConfigStore((s) => s.setActiveTab);
+  const setupComplete = useConfigStore((s) => s.setupComplete);
 
   return (
     <nav className={styles.tabs}>
@@ -77,7 +80,10 @@ export function TabNav() {
           className={`${styles.tab} ${activeTab === tab.id ? styles.active : ""}`}
         >
           {tab.icon}
-          <span>{tab.label}</span>
+          <span>
+            {tab.label}
+            <WarningBadge show={tab.requiresModel === true && !setupComplete} />
+          </span>
         </button>
       ))}
     </nav>

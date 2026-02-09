@@ -34,19 +34,23 @@ Hold a keyboard shortcut, speak, and Vox transcribes your voice locally using [w
 
 Download the latest version from the [releases page](https://github.com/app-vox/vox/releases/latest) and drag `Vox.app` to your Applications folder.
 
-### Grant Permissions
+## First Launch
 
-Vox needs:
-- **Microphone** — for recording (prompted automatically)
-- **Accessibility** — for pasting (System Settings > Privacy & Security > Accessibility)
+When you first launch Vox, you'll need to:
 
-### Configure
+1. **Download a Whisper Model** — Go to Settings > Local Model and download at least one speech recognition model. The "small" model (Recommended) is a good starting point.
 
-1. Open Vox settings from the menu bar icon
-2. **Download a Whisper model** (Whisper tab) — `small` recommended (~460 MB)
-3. **Setup LLM provider** (LLM tab, optional) — Foundry or AWS Bedrock for text correction
+2. **Grant Permissions** — Vox needs:
+   - **Microphone**: Required for voice recording
+   - **Accessibility**: Required for keyboard shortcuts and auto-paste
 
-That's it. Hold `Alt+Space` to start recording.
+3. **Configure Shortcuts** (optional) — Customize keyboard shortcuts in Settings > Shortcuts
+
+4. **Enable AI Improvements** (optional) — Configure LLM provider in Settings > AI Improvements
+
+Vox will guide you through this setup process with visual indicators showing what's incomplete.
+
+Once configured, hold `Alt+Space` to start recording.
 
 ## Features
 

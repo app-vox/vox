@@ -6,16 +6,19 @@ interface ConfigState {
   config: VoxConfig | null;
   loading: boolean;
   activeTab: string;
+  setupComplete: boolean;
   setActiveTab: (tab: string) => void;
   loadConfig: () => Promise<void>;
   updateConfig: (partial: Partial<VoxConfig>) => void;
   saveConfig: (showToast?: boolean) => Promise<void>;
+  checkSetup: () => Promise<void>;
 }
 
 export const useConfigStore = create<ConfigState>((set, get) => ({
   config: null,
   loading: true,
   activeTab: typeof window !== "undefined" ? (localStorage.getItem("vox:activeTab") || "whisper") : "whisper",
+  setupComplete: false,
 
   setActiveTab: (tab) => {
     set({ activeTab: tab });
@@ -27,9 +30,20 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
   loadConfig: async () => {
     set({ loading: true });
     const config = await window.voxApi.config.load();
-    // Restore active tab from localStorage
+
+    // Check setup state
+    const setupState = await window.voxApi.setup.check();
+
+    // Force Whisper tab if setup is incomplete
     const savedTab = typeof window !== "undefined" ? localStorage.getItem("vox:activeTab") : null;
-    set({ config, loading: false, activeTab: savedTab || "whisper" });
+    const activeTab = setupState.hasAnyModel ? (savedTab || "whisper") : "whisper";
+
+    set({
+      config,
+      loading: false,
+      activeTab,
+      setupComplete: setupState.hasAnyModel,
+    });
   },
 
   updateConfig: (partial) => {
@@ -54,5 +68,12 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     if (showToast) {
       useSaveToast.getState().trigger();
     }
+    // Re-check setup state after saving
+    await get().checkSetup();
+  },
+
+  checkSetup: async () => {
+    const setupState = await window.voxApi.setup.check();
+    set({ setupComplete: setupState.hasAnyModel });
   },
 }));
