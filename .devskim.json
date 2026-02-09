@@ -1,0 +1,5 @@
+{
+  "LanguageRuleIgnoreMap": {
+    "json": ["DS197836"]
+  }
+}
