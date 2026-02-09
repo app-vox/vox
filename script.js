@@ -296,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     labels[currentIndex].classList.add('active');
                 }
             } else if (currentIndex === 2) {
-                // Correcting - 1 second (faster)
+                // Enhancing - 1 second (faster)
                 delay = 1000;
                 if (overlays[currentIndex]) {
                     overlays[currentIndex].classList.add('active');
@@ -305,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     labels[currentIndex].classList.add('active');
                 }
 
-                // After correcting, trigger paste with typing
+                // After enhancing, trigger paste with typing
                 setTimeout(() => {
                     overlays.forEach(overlay => overlay.classList.remove('active'));
                     labels.forEach(label => label.classList.remove('active'));
