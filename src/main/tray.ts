@@ -33,7 +33,10 @@ function updateTrayMenu(): void {
   if (!tray || !callbacks) return;
 
   const menuTemplate: Electron.MenuItemConstructorOptions[] = [
-    { label: "Show Vox", click: callbacks.onOpenHome },
+    {
+      label: "👁 Show Settings",
+      click: callbacks.onOpenHome,
+    },
   ];
 
   // Show different options based on recording state
@@ -42,23 +45,35 @@ function updateTrayMenu(): void {
     if (callbacks.onStopListening || callbacks.onCancelListening) {
       menuTemplate.push({ type: "separator" });
       if (callbacks.onStopListening) {
-        menuTemplate.push({ label: "Complete Listening", click: callbacks.onStopListening });
+        menuTemplate.push({
+          label: "✓ Complete Listening",
+          click: callbacks.onStopListening,
+        });
       }
       if (callbacks.onCancelListening) {
-        menuTemplate.push({ label: "Cancel", click: callbacks.onCancelListening });
+        menuTemplate.push({
+          label: "✕ Cancel",
+          click: callbacks.onCancelListening,
+        });
       }
     }
   } else {
     // When idle, show start option
     if (callbacks.onStartListening) {
       menuTemplate.push({ type: "separator" });
-      menuTemplate.push({ label: "Start Listening", click: callbacks.onStartListening });
+      menuTemplate.push({
+        label: "🎤 Start Listening",
+        click: callbacks.onStartListening,
+      });
     }
   }
 
   menuTemplate.push(
     { type: "separator" },
-    { label: "Report Issue", click: () => shell.openExternal("https://github.com/app-vox/vox/issues") },
+    {
+      label: "🐛 Report Issue",
+      click: () => shell.openExternal("https://github.com/app-vox/vox/issues"),
+    },
     { type: "separator" },
     { label: "Quit", click: () => app.quit() }
   );
