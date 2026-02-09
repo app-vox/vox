@@ -86,4 +86,96 @@ describe("Whisper-only mode integration", () => {
     expect(result).toBe("corrected transcription");
     expect(stagesSeen).toEqual(["transcribing", "correcting"]);
   });
+
+  it("should preserve filler words in fast path (Whisper-only mode)", async () => {
+    const config = createDefaultConfig();
+    config.enableLlmEnhancement = false;
+
+    const mockRecorder = {
+      start: vi.fn().mockResolvedValue(undefined),
+      stop: vi.fn().mockResolvedValue({
+        audioBuffer: new Float32Array([0.1, 0.2, 0.3]),
+        sampleRate: 16000,
+      }),
+    };
+
+    const mockTranscribe = vi.fn().mockResolvedValue({
+      text: "um, like, you know, this is a test",
+    });
+
+    const provider = createLlmProvider(config);
+    const pipeline = new Pipeline({
+      recorder: mockRecorder,
+      transcribe: mockTranscribe,
+      llmProvider: provider,
+      modelPath: "/fake/path",
+    });
+
+    await pipeline.startRecording();
+    const result = await pipeline.stopAndProcess();
+
+    expect(result).toBe("um, like, you know, this is a test");
+  });
+
+  it("should preserve single filler word in fast path", async () => {
+    const config = createDefaultConfig();
+    config.enableLlmEnhancement = false;
+
+    const mockRecorder = {
+      start: vi.fn().mockResolvedValue(undefined),
+      stop: vi.fn().mockResolvedValue({
+        audioBuffer: new Float32Array([0.1, 0.2]),
+        sampleRate: 16000,
+      }),
+    };
+
+    const mockTranscribe = vi.fn().mockResolvedValue({
+      text: "um",
+    });
+
+    const provider = createLlmProvider(config);
+    const pipeline = new Pipeline({
+      recorder: mockRecorder,
+      transcribe: mockTranscribe,
+      llmProvider: provider,
+      modelPath: "/fake/path",
+    });
+
+    await pipeline.startRecording();
+    const result = await pipeline.stopAndProcess();
+
+    expect(result).toBe("um");
+  });
+
+  it("should reject true hallucinations even with LLM enabled", async () => {
+    const config = createDefaultConfig();
+    config.enableLlmEnhancement = true;
+    config.llm.endpoint = "https://api.example.com";
+    config.llm.apiKey = "test-key";
+
+    const mockRecorder = {
+      start: vi.fn().mockResolvedValue(undefined),
+      stop: vi.fn().mockResolvedValue({
+        audioBuffer: new Float32Array([0.1, 0.2]),
+        sampleRate: 16000,
+      }),
+    };
+
+    const mockTranscribe = vi.fn().mockResolvedValue({
+      text: "thank you for watching",
+    });
+
+    const provider = createLlmProvider(config);
+    const pipeline = new Pipeline({
+      recorder: mockRecorder,
+      transcribe: mockTranscribe,
+      llmProvider: provider,
+      modelPath: "/fake/path",
+    });
+
+    await pipeline.startRecording();
+    const result = await pipeline.stopAndProcess();
+
+    expect(result).toBe("");
+  });
 });
