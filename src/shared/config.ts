@@ -1,6 +1,6 @@
 export type ThemeMode = "light" | "dark" | "system";
 
-export type LlmProviderType = "foundry" | "bedrock";
+export type LlmProviderType = "foundry" | "bedrock" | "openai" | "deepseek";
 
 export interface LlmConfig {
   provider: LlmProviderType;
@@ -16,6 +16,11 @@ export interface LlmConfig {
   accessKeyId: string;
   secretAccessKey: string;
   modelId: string;
+
+  // OpenAI-compatible fields (OpenAI, DeepSeek)
+  openaiApiKey: string;
+  openaiModel: string;
+  openaiEndpoint: string;
 }
 
 export interface WhisperConfig {
@@ -51,6 +56,9 @@ export function createDefaultConfig(): VoxConfig {
       accessKeyId: "",
       secretAccessKey: "",
       modelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+      openaiApiKey: "",
+      openaiModel: "gpt-4o",
+      openaiEndpoint: "https://api.openai.com",
     },
     whisper: {
       model: "small",

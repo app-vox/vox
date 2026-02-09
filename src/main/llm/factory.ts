@@ -3,6 +3,7 @@ import { type VoxConfig } from "../../shared/config";
 import { LLM_SYSTEM_PROMPT } from "../../shared/constants";
 import { FoundryProvider } from "./foundry";
 import { BedrockProvider } from "./bedrock";
+import { OpenAICompatibleProvider } from "./openai-compatible";
 import { NoopProvider } from "./noop";
 
 export function createLlmProvider(config: VoxConfig): LlmProvider {
@@ -26,6 +27,15 @@ export function createLlmProvider(config: VoxConfig): LlmProvider {
         accessKeyId: config.llm.accessKeyId,
         secretAccessKey: config.llm.secretAccessKey,
         modelId: config.llm.modelId,
+        customPrompt: prompt,
+      });
+
+    case "openai":
+    case "deepseek":
+      return new OpenAICompatibleProvider({
+        endpoint: config.llm.openaiEndpoint,
+        apiKey: config.llm.openaiApiKey,
+        model: config.llm.openaiModel,
         customPrompt: prompt,
       });
 

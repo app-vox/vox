@@ -3,6 +3,7 @@ import { useConfigStore } from "../../stores/config-store";
 import { useDebouncedSave } from "../../hooks/use-debounced-save";
 import { FoundryFields } from "./FoundryFields";
 import { BedrockFields } from "./BedrockFields";
+import { OpenAICompatibleFields } from "./OpenAICompatibleFields";
 import { StatusBox } from "../ui/StatusBox";
 import type { LlmProviderType } from "../../../shared/config";
 import card from "../shared/card.module.scss";
@@ -21,8 +22,18 @@ export function LlmPanel() {
 
   if (!config) return null;
 
+  const providerDefaults: Record<string, { openaiEndpoint: string; openaiModel: string }> = {
+    openai: { openaiEndpoint: "https://api.openai.com", openaiModel: "gpt-4o" },
+    deepseek: { openaiEndpoint: "https://api.deepseek.com", openaiModel: "deepseek-chat" },
+  };
+
   const handleProviderChange = (provider: LlmProviderType) => {
-    updateConfig({ llm: { ...config.llm, provider } });
+    const defaults = providerDefaults[provider];
+    if (defaults) {
+      updateConfig({ llm: { ...config.llm, provider, ...defaults } });
+    } else {
+      updateConfig({ llm: { ...config.llm, provider } });
+    }
     saveConfig(true);
   };
 
@@ -100,10 +111,18 @@ export function LlmPanel() {
                   >
                     <option value="foundry">Microsoft Foundry</option>
                     <option value="bedrock">AWS Bedrock</option>
+                    <option value="openai">OpenAI</option>
+                    <option value="deepseek">DeepSeek</option>
                   </select>
                 </div>
 
-                {config.llm.provider === "bedrock" ? <BedrockFields /> : <FoundryFields />}
+                {(config.llm.provider === "openai" || config.llm.provider === "deepseek") ? (
+                  <OpenAICompatibleFields providerType={config.llm.provider} />
+                ) : config.llm.provider === "bedrock" ? (
+                  <BedrockFields />
+                ) : (
+                  <FoundryFields />
+                )}
 
                 <div className={form.testSection}>
                   <button
