@@ -34,7 +34,18 @@ export function LlmPanel() {
           </p>
         </div>
         <div className={card.warningBanner}>
-          Setup required - Download a Whisper model first to enable AI improvements
+          Setup required - Download a{" "}
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              useConfigStore.getState().setActiveTab("whisper");
+            }}
+            style={{ color: "inherit", textDecoration: "underline", cursor: "pointer" }}
+          >
+            local model
+          </a>
+          {" "}first to enable AI improvements
         </div>
       </div>
     );

@@ -24,7 +24,9 @@ let shortcutManager: ShortcutManager | null = null;
 
 function setupPipeline(): void {
   const config = configManager.load();
-  const modelPath = modelManager.getModelPath(config.whisper.model);
+  const modelPath = config.whisper.model
+    ? modelManager.getModelPath(config.whisper.model)
+    : "";
   const llmProvider = createLlmProvider(config);
 
   pipeline = new Pipeline({

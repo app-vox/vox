@@ -340,7 +340,7 @@ export class ShortcutManager {
         this.updateTrayState();
         new Notification({
           title: "Vox - Setup Required",
-          body: "Download a Whisper model from Settings before recording."
+          body: "Please configure local model in Settings"
         }).show();
       } else {
         new Notification({ title: "Vox", body: `Recording failed: ${err.message}` }).show();

@@ -78,6 +78,6 @@ describe("Pipeline", () => {
       onStage: vi.fn(),
     });
 
-    await expect(pipeline.startRecording()).rejects.toThrow("No Whisper model available");
+    await expect(pipeline.startRecording()).rejects.toThrow("Please configure local model in Settings");
   });
 });

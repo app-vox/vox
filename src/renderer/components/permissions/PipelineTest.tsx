@@ -18,7 +18,7 @@ export function PipelineTest() {
       setTestStatus({ text: "Transcribing...", type: "info" });
       const result = await window.voxApi.pipeline.testTranscribe(recording);
 
-      let output = `Whisper: ${result.rawText || "(empty)"}`;
+      let output = `Local Model: ${result.rawText || "(empty)"}`;
       if (result.correctedText) {
         output += `\nLLM:     ${result.correctedText}`;
         setTestStatus({ text: output, type: "success" });

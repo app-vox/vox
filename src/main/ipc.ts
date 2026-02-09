@@ -101,6 +101,9 @@ export function registerIpcHandlers(
   ipcMain.handle("whisper:test", async (_event, recording: { audioBuffer: number[]; sampleRate: number }) => {
     const { transcribe } = await import("./audio/whisper");
     const config = configManager.load();
+    if (!config.whisper.model) {
+      throw new Error("Please configure local model in Settings");
+    }
     const modelPath = modelManager.getModelPath(config.whisper.model);
     const samples = resampleTo16kHz(new Float32Array(recording.audioBuffer), recording.sampleRate);
     const result = await transcribe(samples, 16000, modelPath);
@@ -112,6 +115,9 @@ export function registerIpcHandlers(
     const { createLlmProvider } = await import("./llm/factory");
 
     const config = configManager.load();
+    if (!config.whisper.model) {
+      throw new Error("Please configure local model in Settings");
+    }
     const modelPath = modelManager.getModelPath(config.whisper.model);
     const samples = resampleTo16kHz(new Float32Array(recording.audioBuffer), recording.sampleRate);
 

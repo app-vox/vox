@@ -97,7 +97,7 @@ export class CanceledError extends Error {
 
 export class NoModelError extends Error {
   constructor() {
-    super("No Whisper model available. Download a model from Settings.");
+    super("Please configure local model in Settings");
     this.name = "NoModelError";
   }
 }
