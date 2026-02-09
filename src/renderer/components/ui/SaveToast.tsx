@@ -9,10 +9,16 @@ interface SaveToastProps {
 
 export function SaveToast({ show, timestamp, onHide }: SaveToastProps) {
   const [visible, setVisible] = useState(false);
+  const [prevTimestamp, setPrevTimestamp] = useState(timestamp);
+
+  // Adjust state during render when a new save occurs (React recommended pattern)
+  if (show && timestamp !== prevTimestamp) {
+    setVisible(true);
+    setPrevTimestamp(timestamp);
+  }
 
   useEffect(() => {
     if (show) {
-      setVisible(true);
       const timer = setTimeout(() => {
         setVisible(false);
         setTimeout(onHide, 300); // Wait for fade out animation

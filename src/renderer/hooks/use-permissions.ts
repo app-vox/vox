@@ -10,8 +10,8 @@ export function usePermissions() {
   }, []);
 
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    window.voxApi.permissions.status().then(setStatus);
+  }, []);
 
   const requestMicrophone = useCallback(async () => {
     await window.voxApi.permissions.requestMicrophone();
