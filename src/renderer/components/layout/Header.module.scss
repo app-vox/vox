@@ -19,10 +19,15 @@
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--letter-spacing-tight);
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
 }
 
 .logo {
   width: var(--size-icon-base);
   height: var(--size-icon-base);
   object-fit: contain;
+  user-drag: none;
+  -webkit-user-drag: none;
 }

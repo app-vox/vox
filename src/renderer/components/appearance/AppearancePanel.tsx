@@ -51,6 +51,9 @@ export function AppearancePanel() {
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const triggerToast = useSaveToast((s) => s.trigger);
 
+  // Detect if running in dev mode
+  const isDevMode = import.meta.env.DEV;
+
   if (!config) return null;
 
   const setTheme = async (theme: ThemeMode) => {
@@ -59,26 +62,87 @@ export function AppearancePanel() {
     triggerToast();
   };
 
+  const toggleLaunchAtLogin = async () => {
+    if (isDevMode) return; // Prevent toggle in dev mode
+    updateConfig({ launchAtLogin: !config.launchAtLogin });
+    await saveConfig(false);
+    triggerToast();
+  };
+
+  const openIssueTracker = () => {
+    window.voxApi.shell.openExternal("https://github.com/app-vox/vox/issues");
+  };
+
   return (
-    <div className={card.card}>
-      <div className={card.header}>
-        <h2>Theme</h2>
-        <p className={card.description}>Choose your preferred appearance.</p>
-      </div>
-      <div className={card.body}>
-        <div className={styles.segmented}>
-          {THEME_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              className={`${styles.segment} ${config.theme === opt.value ? styles.active : ""}`}
-              onClick={() => setTheme(opt.value)}
-            >
-              {opt.icon}
-              <span>{opt.label}</span>
-            </button>
-          ))}
+    <>
+      <div className={card.card}>
+        <div className={card.header}>
+          <h2>Theme</h2>
+          <p className={card.description}>Choose your preferred appearance.</p>
+        </div>
+        <div className={card.body}>
+          <div className={styles.segmented}>
+            {THEME_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                className={`${styles.segment} ${config.theme === opt.value ? styles.active : ""}`}
+                onClick={() => setTheme(opt.value)}
+              >
+                {opt.icon}
+                <span>{opt.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+
+      <div className={card.card}>
+        <div className={card.header}>
+          <h2>Startup</h2>
+          <p className={card.description}>Control how Vox launches on your system.</p>
+        </div>
+        <div className={card.body}>
+          <label className={`${styles.checkboxRow} ${isDevMode ? styles.disabled : ""}`}>
+            <input
+              type="checkbox"
+              checked={config.launchAtLogin}
+              disabled={isDevMode}
+              onChange={toggleLaunchAtLogin}
+            />
+            <div>
+              <div className={styles.checkboxLabel}>Launch at login</div>
+              <div className={styles.checkboxDesc}>
+                {isDevMode
+                  ? "Disabled in development mode. This feature works only in the production build."
+                  : "Automatically start Vox when you log in to your computer"
+                }
+              </div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div className={card.card}>
+        <div className={card.header}>
+          <h2>Help & Support</h2>
+          <p className={card.description}>Get help or report issues with Vox.</p>
+        </div>
+        <div className={card.body}>
+          <button onClick={openIssueTracker} className={styles.linkButton}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span>Report Issue</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </>
   );
 }

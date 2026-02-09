@@ -6,11 +6,74 @@
   }
 
   > label {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
     font-size: var(--font-size-base);
     font-weight: var(--font-weight-medium);
     color: var(--color-text-secondary);
     margin-bottom: var(--spacing-2);
+    cursor: pointer;
+
+    input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: var(--size-icon-sm);
+      height: var(--size-icon-sm);
+      min-width: var(--size-icon-sm);
+      margin: 0;
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: var(--color-bg-input);
+      cursor: pointer;
+      position: relative;
+      transition: all var(--duration-fast) var(--ease-default);
+      flex-shrink: 0;
+
+      &:focus-visible {
+        outline: 2px solid var(--color-border-hover);
+        outline-offset: 2px;
+      }
+
+      &:hover {
+        border-color: var(--color-border-hover);
+        background: var(--color-bg-hover);
+      }
+
+      &:checked {
+        background: var(--color-text-primary);
+        border-color: var(--color-text-primary);
+
+        &::after {
+          content: "";
+          position: absolute;
+          left: var(--spacing-1);
+          top: 1px;
+          width: 3px;
+          height: 7px;
+          border: solid var(--color-bg-root);
+          border-width: 0 2px 2px 0;
+          transform: rotate(45deg);
+        }
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+        border-color: var(--color-border);
+        background: var(--color-bg-input);
+
+        &:hover {
+          border-color: var(--color-border);
+          background: var(--color-bg-input);
+        }
+      }
+    }
+
+    p {
+      margin: 0;
+      line-height: 1;
+    }
   }
 }
 
@@ -89,11 +152,68 @@
 
 .checkboxLabel {
   display: flex;
-  align-items: center;
+  align-items: baseline;
+  gap: var(--spacing-2-5);
+  line-height: 1;
+
+  span {
+    line-height: 1;
+    margin-top: calc(-1 * var(--spacing-1));
+  }
 
   input[type="checkbox"] {
-    width: auto;
-    margin-right: var(--spacing-2);
+    appearance: none;
+    -webkit-appearance: none;
+    width: var(--size-icon-sm);
+    height: var(--size-icon-sm);
+    min-width: var(--size-icon-sm);
+    margin: 0;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-input);
+    cursor: pointer;
+    position: relative;
+    transition: all var(--duration-fast) var(--ease-default);
+    flex-shrink: 0;
+
+    &:focus-visible {
+      outline: 2px solid var(--color-border-hover);
+      outline-offset: 2px;
+    }
+
+    &:hover {
+      border-color: var(--color-border-hover);
+      background: var(--color-bg-hover);
+    }
+
+    &:checked {
+      background: var(--color-text-primary);
+      border-color: var(--color-text-primary);
+
+      &::after {
+        content: "";
+        position: absolute;
+        left: var(--spacing-1);
+        top: 1px;
+        width: 3px;
+        height: 7px;
+        border: solid var(--color-bg-root);
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+      border-color: var(--color-border);
+      background: var(--color-bg-input);
+
+      &:hover {
+        border-color: var(--color-border);
+        background: var(--color-bg-input);
+      }
+    }
   }
 }
 
@@ -102,4 +222,24 @@
   font-size: var(--font-size-sm);
   width: 100%;
   resize: vertical;
+  margin-top: var(--spacing-3);
+  padding: var(--spacing-2-5) var(--spacing-3);
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  transition: border-color var(--duration-fast) var(--ease-default);
+
+  &:hover {
+    border-color: var(--color-border-hover);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-border-focus);
+  }
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
 }

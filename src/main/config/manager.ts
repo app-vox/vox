@@ -35,6 +35,7 @@ export class ConfigManager {
         theme: saved.theme ?? defaults.theme,
         enableLlmEnhancement: saved.enableLlmEnhancement ?? defaults.enableLlmEnhancement,
         customPrompt: saved.customPrompt ?? defaults.customPrompt,
+        launchAtLogin: saved.launchAtLogin ?? defaults.launchAtLogin,
       };
 
       for (const field of SENSITIVE_FIELDS) {

@@ -15,14 +15,21 @@ interface ConfigState {
 export const useConfigStore = create<ConfigState>((set, get) => ({
   config: null,
   loading: true,
-  activeTab: "llm",
+  activeTab: typeof window !== "undefined" ? (localStorage.getItem("vox:activeTab") || "whisper") : "whisper",
 
-  setActiveTab: (tab) => set({ activeTab: tab }),
+  setActiveTab: (tab) => {
+    set({ activeTab: tab });
+    if (typeof window !== "undefined") {
+      localStorage.setItem("vox:activeTab", tab);
+    }
+  },
 
   loadConfig: async () => {
     set({ loading: true });
     const config = await window.voxApi.config.load();
-    set({ config, loading: false });
+    // Restore active tab from localStorage
+    const savedTab = typeof window !== "undefined" ? localStorage.getItem("vox:activeTab") : null;
+    set({ config, loading: false, activeTab: savedTab || "whisper" });
   },
 
   updateConfig: (partial) => {

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useDebouncedSave } from "../../hooks/use-debounced-save";
 import { SecretInput } from "../ui/SecretInput";
@@ -7,12 +8,24 @@ export function BedrockFields() {
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const { debouncedSave, flush } = useDebouncedSave(500, true);
+  const [focusedField, setFocusedField] = useState<{ field: string; value: string } | null>(null);
 
   if (!config) return null;
 
   const update = (field: string, value: string) => {
     updateConfig({ llm: { ...config.llm, [field]: value } });
     debouncedSave();
+  };
+
+  const handleFocus = (field: string, value: string) => {
+    setFocusedField({ field, value });
+  };
+
+  const handleBlur = (field: string, currentValue: string) => {
+    if (focusedField && focusedField.field === field && focusedField.value !== currentValue) {
+      flush();
+    }
+    setFocusedField(null);
   };
 
   return (
@@ -24,7 +37,8 @@ export function BedrockFields() {
           type="text"
           value={config.llm.region || ""}
           onChange={(e) => update("region", e.target.value)}
-          onBlur={flush}
+          onFocus={(e) => handleFocus("region", e.target.value)}
+          onBlur={(e) => handleBlur("region", e.target.value)}
           placeholder="us-east-1"
         />
       </div>
@@ -35,7 +49,8 @@ export function BedrockFields() {
           type="text"
           value={config.llm.profile || ""}
           onChange={(e) => update("profile", e.target.value)}
-          onBlur={flush}
+          onFocus={(e) => handleFocus("profile", e.target.value)}
+          onBlur={(e) => handleBlur("profile", e.target.value)}
           placeholder="default"
         />
         <p className={form.hint}>Optional. Named profile from ~/.aws/credentials. Ignored when Access Key ID is provided.</p>
@@ -46,7 +61,8 @@ export function BedrockFields() {
           id="llm-access-key"
           value={config.llm.accessKeyId || ""}
           onChange={(v) => update("accessKeyId", v)}
-          onBlur={flush}
+          onFocus={() => handleFocus("accessKeyId", config.llm.accessKeyId || "")}
+          onBlur={() => handleBlur("accessKeyId", config.llm.accessKeyId || "")}
           placeholder="Leave empty to use default credentials"
         />
         <p className={form.hint}>Optional. If empty, uses AWS default credential chain (env vars, ~/.aws/credentials, IAM roles).</p>
@@ -57,7 +73,8 @@ export function BedrockFields() {
           id="llm-secret-key"
           value={config.llm.secretAccessKey || ""}
           onChange={(v) => update("secretAccessKey", v)}
-          onBlur={flush}
+          onFocus={() => handleFocus("secretAccessKey", config.llm.secretAccessKey || "")}
+          onBlur={() => handleBlur("secretAccessKey", config.llm.secretAccessKey || "")}
           placeholder="Leave empty to use default credentials"
         />
       </div>
@@ -68,7 +85,8 @@ export function BedrockFields() {
           type="text"
           value={config.llm.modelId || ""}
           onChange={(e) => update("modelId", e.target.value)}
-          onBlur={flush}
+          onFocus={(e) => handleFocus("modelId", e.target.value)}
+          onBlur={(e) => handleBlur("modelId", e.target.value)}
           placeholder="anthropic.claude-3-5-sonnet-20241022-v2:0"
         />
       </div>

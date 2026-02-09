@@ -8,6 +8,9 @@
 
 .tab {
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1-5);
   padding: var(--spacing-3) var(--spacing-4);
   background: none;
   border: none;
@@ -18,12 +21,33 @@
   transition: color var(--duration-fast) var(--ease-default);
   white-space: nowrap;
 
+  &:focus-visible {
+    outline: 2px solid var(--color-border-hover);
+    outline-offset: -2px;
+    border-radius: var(--radius-base);
+  }
+
+  svg {
+    width: var(--size-icon-sm);
+    height: var(--size-icon-sm);
+    opacity: 0.7;
+    transition: opacity var(--duration-fast) var(--ease-default);
+  }
+
   &:hover {
     color: var(--color-text-secondary);
+
+    svg {
+      opacity: 0.85;
+    }
   }
 
   &.active {
     color: var(--color-text-primary);
+
+    svg {
+      opacity: 1;
+    }
 
     &::after {
       content: "";

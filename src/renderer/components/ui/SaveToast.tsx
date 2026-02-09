@@ -3,10 +3,11 @@ import styles from "./SaveToast.module.scss";
 
 interface SaveToastProps {
   show: boolean;
+  timestamp: number;
   onHide: () => void;
 }
 
-export function SaveToast({ show, onHide }: SaveToastProps) {
+export function SaveToast({ show, timestamp, onHide }: SaveToastProps) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -18,7 +19,7 @@ export function SaveToast({ show, onHide }: SaveToastProps) {
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [show, onHide]);
+  }, [show, timestamp, onHide]);
 
   if (!show && !visible) return null;
 

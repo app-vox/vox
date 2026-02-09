@@ -17,6 +17,7 @@ export function LlmPanel() {
   const [testing, setTesting] = useState(false);
   const [testStatus, setTestStatus] = useState<{ text: string; type: "info" | "success" | "error" }>({ text: "", type: "info" });
   const [activeTab, setActiveTab] = useState<"provider" | "prompt">("provider");
+  const [initialPromptValue, setInitialPromptValue] = useState<string | null>(null);
 
   if (!config) return null;
 
@@ -54,7 +55,7 @@ export function LlmPanel() {
       </div>
       <div className={card.body}>
         <div className={form.field}>
-          <label htmlFor="enable-llm-enhancement" className={form.checkboxLabel}>
+          <label htmlFor="enable-llm-enhancement">
             <input
               type="checkbox"
               id="enable-llm-enhancement"
@@ -64,7 +65,7 @@ export function LlmPanel() {
                 saveConfig(true);
               }}
             />
-            Improve My Transcriptions with AI
+            <p>Improve My Transcriptions with AI</p>
           </label>
           <p className={form.hint}>
             When off, you'll get the raw Whisper transcription. When on, AI will fix grammar, remove filler words (um, uh, like), and polish your text.
@@ -120,6 +121,9 @@ export function LlmPanel() {
             {activeTab === "prompt" && (
               <div className={form.field}>
                 <label htmlFor="custom-prompt">Custom Instructions</label>
+                <p className={form.hint}>
+                  Your custom instructions will be added on top of Vox's default behavior (fix grammar, remove filler words, preserve meaning). Leave empty to use only the defaults.
+                </p>
                 <textarea
                   id="custom-prompt"
                   value={config.customPrompt || ""}
@@ -127,14 +131,22 @@ export function LlmPanel() {
                     updateConfig({ customPrompt: e.target.value });
                     debouncedSave();
                   }}
-                  onBlur={flush}
+                  onFocus={() => {
+                    setInitialPromptValue(config.customPrompt || "");
+                  }}
+                  onBlur={() => {
+                    const currentValue = config.customPrompt || "";
+                    const hasChanged = initialPromptValue !== null && initialPromptValue !== currentValue;
+                    if (hasChanged) {
+                      flush();
+                    }
+                    setInitialPromptValue(null);
+                  }}
                   placeholder="Add additional instructions for the AI..."
                   rows={12}
                   className={form.monospaceTextarea}
+                  style={{ resize: "none" }}
                 />
-                <p className={form.hint}>
-                  Your custom instructions will be added on top of Vox's default behavior (fix grammar, remove filler words, preserve meaning). Leave empty to use only the defaults.
-                </p>
               </div>
             )}
           </>

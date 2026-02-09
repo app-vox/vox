@@ -31,3 +31,116 @@
     color: var(--color-text-primary);
   }
 }
+
+.checkboxRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  padding: 4px 0;
+
+  input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    margin-top: 2px;
+    border: 2px solid var(--color-border);
+    border-radius: 4px;
+    background: var(--color-bg-input);
+    cursor: pointer;
+    position: relative;
+    transition: all 150ms ease;
+
+    &:hover {
+      border-color: var(--color-border-hover);
+      background: var(--color-bg-hover);
+    }
+
+    &:checked {
+      background: var(--color-text-primary);
+      border-color: var(--color-text-primary);
+
+      &::after {
+        content: "";
+        position: absolute;
+        left: 5px;
+        top: 2px;
+        width: 4px;
+        height: 8px;
+        border: solid var(--color-bg-root);
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+      border-color: var(--color-border);
+      background: var(--color-bg-input);
+
+      &:hover {
+        border-color: var(--color-border);
+        background: var(--color-bg-input);
+      }
+    }
+  }
+
+  div {
+    flex: 1;
+  }
+
+  &.disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+
+    input[type="checkbox"] {
+      cursor: not-allowed;
+    }
+  }
+}
+
+.checkboxLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
+}
+
+.checkboxDesc {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  line-height: 1.4;
+}
+
+.linkButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 150ms ease;
+
+  &:hover {
+    background: var(--color-bg-hover);
+    border-color: var(--color-border-hover);
+  }
+
+  svg:first-child {
+    color: var(--color-text-secondary);
+  }
+
+  svg:last-child {
+    color: var(--color-text-tertiary);
+    width: 12px;
+    height: 12px;
+  }
+}

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, nativeTheme } from "electron";
+import { app, BrowserWindow, nativeTheme, screen } from "electron";
 import * as path from "path";
 
 let homeWindow: BrowserWindow | null = null;
@@ -9,9 +9,21 @@ export function openHome(onClosed: () => void): void {
     return;
   }
 
+  // Get the display where the cursor currently is
+  const cursorPoint = screen.getCursorScreenPoint();
+  const display = screen.getDisplayNearestPoint(cursorPoint);
+
+  // Calculate centered position on the active display
+  const windowWidth = 740;
+  const windowHeight = 840;
+  const x = Math.round(display.bounds.x + (display.bounds.width - windowWidth) / 2);
+  const y = Math.round(display.bounds.y + (display.bounds.height - windowHeight) / 2);
+
   homeWindow = new BrowserWindow({
-    width: 640,
-    height: 840,
+    width: windowWidth,
+    height: windowHeight,
+    x,
+    y,
     resizable: false,
     title: "Vox",
     titleBarStyle: "hiddenInset",
@@ -28,6 +40,16 @@ export function openHome(onClosed: () => void): void {
     homeWindow.loadURL(process.env["ELECTRON_RENDERER_URL"]);
   } else {
     homeWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
+  }
+
+  // Block reload in production mode
+  if (app.isPackaged) {
+    homeWindow.webContents.on("before-input-event", (event, input) => {
+      if ((input.meta || input.control) && input.key.toLowerCase() === "r") {
+        event.preventDefault();
+        console.log("[Vox] Reload blocked in production mode");
+      }
+    });
   }
 
   homeWindow.on("closed", () => {

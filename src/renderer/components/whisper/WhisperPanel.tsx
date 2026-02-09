@@ -15,14 +15,32 @@ export function WhisperPanel() {
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
+  const loadConfig = useConfigStore((s) => s.loadConfig);
   const triggerToast = useSaveToast((s) => s.trigger);
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [testing, setTesting] = useState(false);
   const [testStatus, setTestStatus] = useState<{ text: string; type: "info" | "success" | "error" }>({ text: "", type: "info" });
 
-  useEffect(() => {
+  const refreshModels = () => {
     window.voxApi.models.list().then(setModels);
+  };
+
+  useEffect(() => {
+    refreshModels();
   }, []);
+
+  useEffect(() => {
+    const cleanup = window.voxApi.models.onDownloadProgress((progress) => {
+      // When download completes (100%), refresh models and config
+      if (progress.downloaded === progress.total && progress.total > 0) {
+        setTimeout(() => {
+          refreshModels();
+          loadConfig();
+        }, 100);
+      }
+    });
+    return cleanup;
+  }, [loadConfig]);
 
   if (!config) return null;
 

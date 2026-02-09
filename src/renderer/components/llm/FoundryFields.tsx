@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useDebouncedSave } from "../../hooks/use-debounced-save";
 import { SecretInput } from "../ui/SecretInput";
@@ -7,12 +8,24 @@ export function FoundryFields() {
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const { debouncedSave, flush } = useDebouncedSave(500, true);
+  const [focusedField, setFocusedField] = useState<{ field: string; value: string } | null>(null);
 
   if (!config) return null;
 
   const update = (field: string, value: string) => {
     updateConfig({ llm: { ...config.llm, [field]: value } });
     debouncedSave();
+  };
+
+  const handleFocus = (field: string, value: string) => {
+    setFocusedField({ field, value });
+  };
+
+  const handleBlur = (field: string, currentValue: string) => {
+    if (focusedField && focusedField.field === field && focusedField.value !== currentValue) {
+      flush();
+    }
+    setFocusedField(null);
   };
 
   return (
@@ -24,7 +37,8 @@ export function FoundryFields() {
           type="url"
           value={config.llm.endpoint}
           onChange={(e) => update("endpoint", e.target.value)}
-          onBlur={flush}
+          onFocus={(e) => handleFocus("endpoint", e.target.value)}
+          onBlur={(e) => handleBlur("endpoint", e.target.value)}
           placeholder="https://your-resource.services.ai.azure.com/anthropic"
         />
       </div>
@@ -34,7 +48,8 @@ export function FoundryFields() {
           id="llm-apikey"
           value={config.llm.apiKey}
           onChange={(v) => update("apiKey", v)}
-          onBlur={flush}
+          onFocus={() => handleFocus("apiKey", config.llm.apiKey)}
+          onBlur={() => handleBlur("apiKey", config.llm.apiKey)}
           placeholder="Enter your API key"
         />
       </div>
@@ -45,7 +60,8 @@ export function FoundryFields() {
           type="text"
           value={config.llm.model}
           onChange={(e) => update("model", e.target.value)}
-          onBlur={flush}
+          onFocus={(e) => handleFocus("model", e.target.value)}
+          onBlur={(e) => handleBlur("model", e.target.value)}
           placeholder="gpt-4o"
         />
       </div>

@@ -25,6 +25,7 @@ export function App() {
   const loadConfig = useConfigStore((s) => s.loadConfig);
   const theme = useConfigStore((s) => s.config?.theme);
   const showToast = useSaveToast((s) => s.show);
+  const toastTimestamp = useSaveToast((s) => s.timestamp);
   const hideToast = useSaveToast((s) => s.hide);
 
   useTheme(theme);
@@ -41,7 +42,7 @@ export function App() {
     );
   }
 
-  const Panel = PANELS[activeTab] ?? LlmPanel;
+  const Panel = PANELS[activeTab] ?? WhisperPanel;
 
   return (
     <div className="flex flex-col h-full">
@@ -50,7 +51,7 @@ export function App() {
       <main className="content">
         <Panel />
       </main>
-      <SaveToast show={showToast} onHide={hideToast} />
+      <SaveToast show={showToast} timestamp={toastTimestamp} onHide={hideToast} />
     </div>
   );
 }

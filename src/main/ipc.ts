@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeImage, nativeTheme, systemPreferences, shell, dialog } from "electron";
+import { app, BrowserWindow, ipcMain, nativeImage, nativeTheme, systemPreferences, shell } from "electron";
 import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
 import { type VoxConfig, type WhisperModelSize } from "../shared/config";
@@ -22,6 +22,15 @@ export function registerIpcHandlers(
   ipcMain.handle("config:save", (_event, config: VoxConfig) => {
     configManager.save(config);
     nativeTheme.themeSource = config.theme;
+
+    // Apply launch at login setting (macOS only)
+    if (process.platform === "darwin") {
+      app.setLoginItemSettings({
+        openAtLogin: config.launchAtLogin,
+        openAsHidden: false,
+      });
+    }
+
     // Reload pipeline to apply new config (especially custom prompt changes)
     onConfigChange?.();
   });
@@ -38,6 +47,12 @@ export function registerIpcHandlers(
     await modelManager.download(size as WhisperModelSize, (downloaded, total) => {
       _event.sender.send("models:download-progress", { size, downloaded, total });
     });
+
+    // Auto-select the downloaded model
+    const config = configManager.load();
+    config.whisper.model = size as WhisperModelSize;
+    configManager.save(config);
+    onConfigChange?.();
   });
 
   ipcMain.handle("models:cancel-download", (_event, size: string) => {
@@ -181,5 +196,9 @@ export function registerIpcHandlers(
     } catch (err: unknown) {
       return { ok: false, error: err instanceof Error ? err.message : String(err), hasAccessibility };
     }
+  });
+
+  ipcMain.handle("shell:open-external", async (_event, url: string) => {
+    await shell.openExternal(url);
   });
 }

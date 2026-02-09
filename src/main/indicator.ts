@@ -6,7 +6,7 @@ const LABELS: Record<IndicatorMode, { color: string; text: string; pulse: boolea
   listening:    { color: "#ff4444", text: "Listening...",    pulse: false },
   transcribing: { color: "#ffaa00", text: "Transcribing...", pulse: true },
   correcting:   { color: "#44aaff", text: "Correcting...",   pulse: true },
-  error:        { color: "#ff6b6b", text: "No audio",        pulse: false },
+  error:        { color: "#fbbf24", text: "Nothing heard",   pulse: false },
   canceled:     { color: "#fbbf24", text: "Canceled",        pulse: false },
 };
 
@@ -15,6 +15,13 @@ function buildHtml(mode: IndicatorMode): string {
   const animation = pulse
     ? "animation: pulse 1s ease-in-out infinite;"
     : "animation: glow 1.5s ease-in-out infinite;";
+
+  const showXIcon = mode === "error" || mode === "canceled";
+  const iconHtml = showXIcon
+    ? `<svg class="icon" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+         <path d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5" stroke="${color}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+       </svg>`
+    : `<div class="dot"></div>`;
 
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><style>
@@ -56,16 +63,21 @@ function buildHtml(mode: IndicatorMode): string {
     flex-shrink: 0;
     ${animation}
   }
+  .icon {
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 8px ${color});
+    ${animation}
+  }
   @keyframes pulse {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.4; transform: scale(0.85); }
   }
   @keyframes glow {
-    0%, 100% { box-shadow: 0 0 8px ${color}; }
-    50% { box-shadow: 0 0 16px ${color}, 0 0 24px ${color}; }
+    0%, 100% { ${showXIcon ? `filter: drop-shadow(0 0 8px ${color});` : `box-shadow: 0 0 8px ${color};`} }
+    50% { ${showXIcon ? `filter: drop-shadow(0 0 16px ${color});` : `box-shadow: 0 0 16px ${color}, 0 0 24px ${color};`} }
   }
 </style></head>
-<body><div class="pill"><div class="dot"></div><span>${text}</span></div></body>
+<body><div class="pill">${iconHtml}<span>${text}</span></div></body>
 </html>`;
 }
 
@@ -73,21 +85,15 @@ export class IndicatorWindow {
   private window: BrowserWindow | null = null;
 
   show(mode: IndicatorMode): void {
+    // Always close existing window to avoid update issues
     if (this.window) {
-      // Update content via JS to avoid loadURL stealing focus
-      const { color, text, pulse } = LABELS[mode];
-      const animation = pulse
-        ? "animation: pulse 1s ease-in-out infinite;"
-        : "animation: glow 1.5s ease-in-out infinite;";
-      this.window.webContents.executeJavaScript(`
-        document.querySelector('.dot').style.cssText = 'width:12px;height:12px;border-radius:50%;background:${color};box-shadow:0 0 8px ${color};${animation}';
-        document.querySelector('span').textContent = '${text}';
-      `).catch(() => {});
-      return;
+      console.log(`[Vox] IndicatorWindow closing existing window before showing mode: ${mode}`);
+      this.window.close();
+      this.window = null;
     }
 
-    // Use compact fixed width for error messages, dynamic for others
-    const estimatedWidth = mode === "error" ? 140 : 180;
+    console.log(`[Vox] IndicatorWindow creating new window for mode: ${mode}`);
+    const estimatedWidth = mode === "error" ? 165 : 180;
 
     this.window = new BrowserWindow({
       width: estimatedWidth,
@@ -124,7 +130,9 @@ export class IndicatorWindow {
   }
 
   showError(durationMs = 3000): void {
+    console.log("[Vox] IndicatorWindow.showError() called");
     this.show("error");
+    console.log("[Vox] IndicatorWindow.show('error') completed");
     setTimeout(() => this.hide(), durationMs);
   }
 

@@ -21,36 +21,39 @@ export interface PipelineDeps {
 }
 
 /**
- * Format enumerated lists with bullet points.
- * Detects numbered lists (1., 2., etc.) and converts to bullet points.
+ * Common hallucinations that Whisper generates with silence or noise.
+ * These are phrases Whisper "hears" when there's no actual speech.
  */
-function formatEnumeratedList(text: string): string {
-  // Match number followed by period/parenthesis/dash at start of line or after newline
-  // Examples: "1. Item", "1) Item", "1 - Item"
-  const numberedListPattern = /(^|[\r\n]+)\s*(\d+)[.)]\s+/g;
-
-  // Count how many numbered items exist
-  const matches = [...text.matchAll(numberedListPattern)];
-  if (matches.length < 2) {
-    return text; // Not a list or only one item
-  }
-
-  // Replace numbered prefixes with bullet points, preserving line breaks
-  const formatted = text.replace(numberedListPattern, (match, lineBreak) => {
-    return `${lineBreak}• `;
-  });
-
-  return formatted;
-}
+const COMMON_HALLUCINATIONS = [
+  // English
+  "thank you", "thanks for watching", "thank you for watching",
+  "bye", "goodbye", "see you", "see you next time",
+  "subscribe", "like and subscribe",
+  // Short filler noise
+  "you", "uh", "um", "hmm", "ah", "oh",
+  // Common YouTube outro phrases
+  "thanks", "bye bye",
+];
 
 /**
  * Detect non-speech Whisper output caused by background noise.
- * Whisper hallucinates in two ways with noise:
+ * Whisper hallucinates in several ways with noise:
  * 1. Repetitive characters/tokens (e.g. "ლლლლლლ")
  * 2. Sound descriptions in brackets/parens (e.g. "(drill whirring)", "[BLANK_AUDIO]")
+ * 3. Common phrases it "hears" in silence (e.g. "thank you", "bye")
+ * 4. Very short transcriptions (likely noise, not speech)
  */
 function isGarbageTranscription(text: string): boolean {
-  if (text.length < 2) return false;
+  const normalized = text.toLowerCase().trim();
+
+  // Reject very short transcriptions (likely noise)
+  if (normalized.length < 5) return true;
+
+  // Check against common hallucinations
+  if (COMMON_HALLUCINATIONS.includes(normalized)) {
+    console.log(`[Vox] Rejected common Whisper hallucination: "${text}"`);
+    return true;
+  }
 
   // Strip bracketed/parenthesized sound descriptions that Whisper generates
   // for non-speech audio, e.g. "(machine whirring)", "[BLANK_AUDIO]", "*music*"
@@ -127,13 +130,16 @@ export class Pipeline {
     }
 
     const rawText = transcription.text.trim();
+    console.log("[Vox] Whisper transcription:", rawText);
 
     if (!rawText || isGarbageTranscription(rawText)) {
+      console.log("[Vox] Transcription rejected as empty or garbage");
       return "";
     }
 
     // Skip LLM correction if using NoopProvider (Whisper-only mode)
     if (this.deps.llmProvider instanceof NoopProvider) {
+      console.log("[Vox] LLM enhancement disabled, using raw transcription");
       return rawText;
     }
 
@@ -145,17 +151,16 @@ export class Pipeline {
     try {
       this.deps.onStage?.("correcting");
       finalText = await this.deps.llmProvider.correct(rawText);
-    } catch {
+      console.log("[Vox] LLM corrected text:", finalText);
+    } catch (err: unknown) {
       // LLM failed — fall back to raw transcription
+      console.log("[Vox] LLM correction failed, using raw transcription:", err instanceof Error ? err.message : err);
       finalText = rawText;
     }
 
     if (this.canceled) {
       throw new CanceledError();
     }
-
-    // Format enumerated lists with bullet points
-    finalText = formatEnumeratedList(finalText);
 
     return finalText;
   }
