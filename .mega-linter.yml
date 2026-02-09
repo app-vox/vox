@@ -5,20 +5,7 @@ APPLY_FIXES: none
 SHOW_ELAPSED_TIME: true
 FILEIO_REPORTER: false
 
-# Linter categories
-ENABLE:
-  - JAVASCRIPT
-  - TYPESCRIPT
-  - JSON
-  - YAML
-  - MARKDOWN
-  - REPOSITORY
-
-DISABLE:
-  - COPYPASTE
-  - SPELL
-
-# Specific linters
+# Enable only the specific linters we want (no broad category enables)
 ENABLE_LINTERS:
   - JAVASCRIPT_ES
   - TYPESCRIPT_ES
