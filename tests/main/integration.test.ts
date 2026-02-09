@@ -95,7 +95,7 @@ describe("Whisper-only mode integration", () => {
     const result = await pipeline.stopAndProcess();
 
     expect(result).toBe("corrected transcription");
-    expect(stagesSeen).toEqual(["transcribing", "correcting"]);
+    expect(stagesSeen).toEqual(["transcribing", "enhancing"]);
   });
 
   it("should preserve filler words in fast path (Whisper-only mode)", async () => {

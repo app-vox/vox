@@ -1,5 +1,6 @@
 import { app, Tray, Menu, nativeImage, shell } from "electron";
 import { getResourcePath } from "./resources";
+import { type VoxConfig, type WhisperModelSize } from "../shared/config";
 
 let tray: Tray | null = null;
 
@@ -13,6 +14,29 @@ export interface TrayCallbacks {
 let callbacks: TrayCallbacks | null = null;
 let isListening = false;
 let hasModel = true;
+let currentConfig: VoxConfig | null = null;
+
+const SPEECH_QUALITY_LABELS: Record<WhisperModelSize, string> = {
+  tiny: "Fastest",
+  base: "Fast",
+  small: "Balanced",
+  medium: "Accurate",
+  large: "Best",
+};
+
+function getActiveModelName(config: VoxConfig): string {
+  switch (config.llm.provider) {
+    case "bedrock":
+      return config.llm.modelId;
+    case "openai":
+    case "deepseek":
+    case "litellm":
+      return config.llm.openaiModel;
+    case "foundry":
+    default:
+      return config.llm.model;
+  }
+}
 
 export function setupTray(trayCallbacks: TrayCallbacks): void {
   callbacks = trayCallbacks;
@@ -35,42 +59,62 @@ export function setTrayModelState(modelConfigured: boolean): void {
   updateTrayMenu();
 }
 
+export function updateTrayConfig(config: VoxConfig): void {
+  currentConfig = config;
+  updateTrayMenu();
+}
+
 function updateTrayMenu(): void {
   if (!tray || !callbacks) return;
 
   const menuTemplate: Electron.MenuItemConstructorOptions[] = [
     {
-      label: "👁 Show Settings",
+      label: "Show Vox",
       click: callbacks.onOpenHome,
     },
   ];
 
+  // Status section
+  if (currentConfig) {
+    menuTemplate.push(
+      { type: "separator" },
+      {
+        label: `Speech: ${currentConfig.whisper.model ? SPEECH_QUALITY_LABELS[currentConfig.whisper.model] : "No model"}`,
+        enabled: false,
+      },
+      {
+        label: currentConfig.enableLlmEnhancement
+          ? `AI Enhancement: ${getActiveModelName(currentConfig)}`
+          : "AI Enhancement: Off",
+        enabled: false,
+      },
+    );
+  }
+
   // Show different options based on recording state
   if (isListening) {
-    // When recording, show stop and cancel options
     if (callbacks.onStopListening || callbacks.onCancelListening) {
       menuTemplate.push({ type: "separator" });
       if (callbacks.onStopListening) {
         menuTemplate.push({
-          label: "✓ Complete Listening",
+          label: "Complete Listening",
           click: callbacks.onStopListening,
           enabled: hasModel,
         });
       }
       if (callbacks.onCancelListening) {
         menuTemplate.push({
-          label: "✕ Cancel",
+          label: "Cancel",
           click: callbacks.onCancelListening,
           enabled: hasModel,
         });
       }
     }
   } else {
-    // When idle, show start option
     if (callbacks.onStartListening) {
       menuTemplate.push({ type: "separator" });
       menuTemplate.push({
-        label: "🎤 Start Listening",
+        label: "Start Listening",
         click: callbacks.onStartListening,
         enabled: hasModel,
       });
@@ -80,7 +124,7 @@ function updateTrayMenu(): void {
   menuTemplate.push(
     { type: "separator" },
     {
-      label: "🐛 Report Issue",
+      label: "Report Issue",
       click: () => shell.openExternal("https://github.com/app-vox/vox/issues"),
     },
     { type: "separator" },

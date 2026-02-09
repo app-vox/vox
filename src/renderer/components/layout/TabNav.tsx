@@ -6,7 +6,7 @@ import styles from "./TabNav.module.scss";
 const TABS: { id: string; label: string; icon: ReactNode; requiresModel?: boolean }[] = [
   {
     id: "whisper",
-    label: "Local Model",
+    label: "Speech",
     requiresModel: true,
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -19,7 +19,7 @@ const TABS: { id: string; label: string; icon: ReactNode; requiresModel?: boolea
   },
   {
     id: "llm",
-    label: "AI Improvements",
+    label: "AI Enhancement",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 2L2 7l10 5 10-5-10-5z" />

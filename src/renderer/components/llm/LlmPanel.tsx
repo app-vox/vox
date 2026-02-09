@@ -89,9 +89,9 @@ export function LlmPanel() {
   return (
     <div className={card.card}>
       <div className={card.header}>
-        <h2>AI Text Correction (with LLM)</h2>
+        <h2>AI Enhancement</h2>
         <p className={card.description}>
-          Improve your transcriptions by automatically fixing grammar, removing filler words, and cleaning up your speech.
+          Enhance your transcriptions by automatically fixing grammar, removing filler words, and cleaning up your speech.
         </p>
       </div>
       <div className={card.body}>
@@ -106,10 +106,10 @@ export function LlmPanel() {
                 saveConfig(true);
               }}
             />
-            <p>Improve My Transcriptions with AI</p>
+            <p>Enhance My Transcriptions with AI</p>
           </label>
           <p className={form.hint}>
-            When off, you'll get the raw Whisper transcription. When on, AI will fix grammar, remove filler words (um, uh, like), and polish your text.
+            When off, you'll get the raw Whisper transcription. When on, AI will enhance your text by fixing grammar and removing filler words.
           </p>
         </div>
 

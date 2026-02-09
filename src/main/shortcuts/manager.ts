@@ -174,7 +174,7 @@ export class ShortcutManager {
     }, 1000);
   }
 
-  showIndicator(mode: "listening" | "transcribing" | "correcting" | "error"): void {
+  showIndicator(mode: "listening" | "transcribing" | "enhancing" | "error"): void {
     this.indicator.show(mode);
   }
 
