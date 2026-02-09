@@ -14,7 +14,10 @@ function applyTheme(theme: ThemeMode, systemIsDark: boolean) {
 
 export function useTheme(theme: ThemeMode | undefined) {
   const themeRef = useRef(theme);
-  themeRef.current = theme;
+
+  useEffect(() => {
+    themeRef.current = theme;
+  }, [theme]);
 
   // Apply theme whenever it changes
   useEffect(() => {
