@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { SetupChecker } from "../../../src/main/setup/checker";
 import { ModelManager } from "../../../src/main/models/manager";
+import { type WhisperModelSize } from "../../../src/shared/config";
 
 vi.mock("../../../src/main/models/manager");
 
@@ -14,7 +15,7 @@ describe("SetupChecker", () => {
   });
 
   it("should detect when no models are downloaded", () => {
-    vi.spyOn(modelManager, "getAvailableSizes").mockReturnValue(["tiny", "base", "small"] as any);
+    vi.spyOn(modelManager, "getAvailableSizes").mockReturnValue(["tiny", "base", "small"] as WhisperModelSize[]);
     vi.spyOn(modelManager, "isModelDownloaded").mockReturnValue(false);
 
     const result = checker.hasAnyModel();
@@ -23,7 +24,7 @@ describe("SetupChecker", () => {
   });
 
   it("should detect when at least one model is downloaded", () => {
-    vi.spyOn(modelManager, "getAvailableSizes").mockReturnValue(["tiny", "base", "small"] as any);
+    vi.spyOn(modelManager, "getAvailableSizes").mockReturnValue(["tiny", "base", "small"] as WhisperModelSize[]);
     vi.spyOn(modelManager, "isModelDownloaded")
       .mockReturnValueOnce(false)
       .mockReturnValueOnce(true)
@@ -35,7 +36,7 @@ describe("SetupChecker", () => {
   });
 
   it("should return list of downloaded model sizes", () => {
-    vi.spyOn(modelManager, "getAvailableSizes").mockReturnValue(["tiny", "base", "small"] as any);
+    vi.spyOn(modelManager, "getAvailableSizes").mockReturnValue(["tiny", "base", "small"] as WhisperModelSize[]);
     vi.spyOn(modelManager, "isModelDownloaded")
       .mockReturnValueOnce(false)
       .mockReturnValueOnce(true)
