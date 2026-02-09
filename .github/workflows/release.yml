@@ -53,17 +53,9 @@ jobs:
           echo "Bumped $CURRENT -> $NEW_VERSION (${{ inputs.release_type }})"
 
   build:
-    name: Build (${{ matrix.arch }})
+    name: Build
     needs: version
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      fail-fast: true
-      matrix:
-        include:
-          - arch: arm64
-            runner: macos-latest
-          - arch: x64
-            runner: macos-13
+    runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -141,7 +133,7 @@ jobs:
           APPLE_API_KEY: ~/private_keys/AuthKey_${{ secrets.APPLE_API_KEY_ID }}.p8
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER_ID }}
-        run: npx electron-builder --mac dmg zip --${{ matrix.arch }} --publish never
+        run: npx electron-builder --mac dmg zip --arm64 --publish never
 
       - name: Clean up keychain
         if: always()
@@ -153,18 +145,17 @@ jobs:
       - name: Rename artifacts
         run: |
           VERSION="${{ needs.version.outputs.version }}"
-          ARCH="${{ matrix.arch }}"
 
           DMG=$(find out -name "*.dmg" -type f | head -1)
           ZIP=$(find out -name "*.zip" -type f | head -1)
 
-          mv "$DMG" "out/Vox-${VERSION}-mac-${ARCH}.dmg"
-          mv "$ZIP" "out/Vox-${VERSION}-mac-${ARCH}.zip"
+          mv "$DMG" "out/Vox-${VERSION}-mac-arm64.dmg"
+          mv "$ZIP" "out/Vox-${VERSION}-mac-arm64.zip"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: vox-${{ needs.version.outputs.version }}-mac-${{ matrix.arch }}
+          name: vox-${{ needs.version.outputs.version }}-mac-arm64
           path: |
             out/*.dmg
             out/*.zip
@@ -210,8 +201,6 @@ jobs:
           # Create stable-named copies for the latest release
           cp "release/Vox-${VERSION}-mac-arm64.dmg" "release/Vox-mac-arm64.dmg"
           cp "release/Vox-${VERSION}-mac-arm64.zip" "release/Vox-mac-arm64.zip"
-          cp "release/Vox-${VERSION}-mac-x64.dmg"   "release/Vox-mac-x64.dmg"
-          cp "release/Vox-${VERSION}-mac-x64.zip"    "release/Vox-mac-x64.zip"
 
           ls -lh release/
 
@@ -240,9 +229,7 @@ jobs:
             --title "Vox $TAG" \
             --generate-notes \
             "release/Vox-${VERSION}-mac-arm64.dmg" \
-            "release/Vox-${VERSION}-mac-arm64.zip" \
-            "release/Vox-${VERSION}-mac-x64.dmg" \
-            "release/Vox-${VERSION}-mac-x64.zip"
+            "release/Vox-${VERSION}-mac-arm64.zip"
 
           echo "Versioned release created: $TAG"
 
@@ -271,15 +258,9 @@ jobs:
           **Apple Silicon (M1/M2/M3/M4):**
           - [Vox-mac-arm64.dmg](https://github.com/app-vox/vox/releases/download/latest/Vox-mac-arm64.dmg)
           - [Vox-mac-arm64.zip](https://github.com/app-vox/vox/releases/download/latest/Vox-mac-arm64.zip)
-
-          **Intel:**
-          - [Vox-mac-x64.dmg](https://github.com/app-vox/vox/releases/download/latest/Vox-mac-x64.dmg)
-          - [Vox-mac-x64.zip](https://github.com/app-vox/vox/releases/download/latest/Vox-mac-x64.zip)
           NOTES
           )" \
             release/Vox-mac-arm64.dmg \
-            release/Vox-mac-arm64.zip \
-            release/Vox-mac-x64.dmg \
-            release/Vox-mac-x64.zip
+            release/Vox-mac-arm64.zip
 
           echo "Latest release updated"
