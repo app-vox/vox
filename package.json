@@ -5,7 +5,7 @@
   "main": "out/main/index.js",
   "engines": {
     "node": "25.*.*",
-    "npm": "11.6.2"
+    "npm": "11.9.0"
   },
   "scripts": {
     "build": "electron-vite build",
