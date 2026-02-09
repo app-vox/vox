@@ -10,15 +10,11 @@ Hold a keyboard shortcut, speak, and Vox transcribes your voice locally using [w
 
 ## Demo
 
-<table>
-<tr>
-<td align="center">
+<div align="center">
 
 ![Vox Demo](docs/images/demo.gif)
 
-</td>
-</tr>
-</table>
+</div>
 
 > ⚠️ **Platform Support**
 > Vox currently runs on **macOS** (Apple Silicon and Intel). Cross-platform support for Windows and Linux is planned for future releases.
