@@ -1,0 +1,38 @@
+# MegaLinter configuration
+# https://megalinter.io/latest/configuration/
+---
+APPLY_FIXES: none
+SHOW_ELAPSED_TIME: true
+FILEIO_REPORTER: false
+
+# Linter categories
+ENABLE:
+  - JAVASCRIPT
+  - TYPESCRIPT
+  - JSON
+  - YAML
+  - MARKDOWN
+  - REPOSITORY
+
+DISABLE:
+  - COPYPASTE
+  - SPELL
+
+# Use project ESLint config
+JAVASCRIPT_ES_CONFIG_FILE: eslint.config.mjs
+TYPESCRIPT_ES_CONFIG_FILE: eslint.config.mjs
+
+# checkov: skip CKV_GHA_7 (workflow_dispatch inputs are intentional in release.yml)
+REPOSITORY_CHECKOV_ARGUMENTS: --skip-check CKV_GHA_7
+
+# kingfisher: exclude .git dir and workflow files (secret references trigger false positives)
+REPOSITORY_KINGFISHER_ARGUMENTS: --exclude .git --exclude .github/workflows
+
+# Excluded paths
+EXCLUDED_DIRECTORIES:
+  - node_modules
+  - out
+  - dist
+  - .git
+  - resources
+  - .worktrees

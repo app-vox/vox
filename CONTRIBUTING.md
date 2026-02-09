@@ -25,7 +25,7 @@ npm test
 
 Use [Conventional Commits](https://www.conventionalcommits.org/) format:
 
-```
+```text
 type(scope): description
 ```
 
@@ -45,6 +45,23 @@ Examples:
 5. Open a pull request against `main`
 
 Keep PRs focused — one feature or fix per PR.
+
+## Code quality & security
+
+[MegaLinter](https://megalinter.io) runs automatically on every pull request and push to `main`. It is a **required check** — PRs cannot merge if it fails.
+
+### What it checks
+
+- **Security**: secret detection (Gitleaks, Secretlint), vulnerability scanning (Trivy)
+- **Code quality**: ESLint (JS/TS), JSON validation, YAML linting, Markdown linting
+
+### Running locally
+
+```bash
+npx mega-linter-runner --flavor javascript
+```
+
+Reports are saved to the `megalinter-reports/` directory (git-ignored).
 
 ## Code style
 
