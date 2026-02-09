@@ -42,7 +42,6 @@ function reloadConfig(): void {
   setupPipeline();
   shortcutManager?.registerShortcutKeys();
 
-  // Update tray menu state based on model availability
   const setupChecker = new SetupChecker(modelManager);
   setTrayModelState(setupChecker.hasAnyModel());
 }
@@ -62,7 +61,6 @@ app.whenReady().then(async () => {
 
   setupPipeline();
 
-  // Check for Accessibility permission and show helpful dialog if not granted
   const hasAccessibility = isAccessibilityGranted();
   if (!hasAccessibility) {
     const response = await dialog.showMessageBox({
@@ -76,7 +74,6 @@ app.whenReady().then(async () => {
     });
 
     if (response.response === 0) {
-      // User clicked "Open System Settings"
       shell.openExternal("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility");
       console.log("[Vox] Opening Accessibility settings...");
     } else {
@@ -90,7 +87,6 @@ app.whenReady().then(async () => {
   });
   shortcutManager.start();
 
-  // Initialize tray model state
   const setupChecker = new SetupChecker(modelManager);
   setupTray({
     onOpenHome: () => openHome(reloadConfig),
@@ -100,7 +96,6 @@ app.whenReady().then(async () => {
   });
   setTrayModelState(setupChecker.hasAnyModel());
 
-  // Open settings window automatically in dev mode
   if (!app.isPackaged) {
     openHome(reloadConfig);
   }
@@ -111,5 +106,5 @@ app.on("will-quit", () => {
 });
 
 app.on("window-all-closed", () => {
-  // Do nothing — keep app running as tray app
+  // Keep app running as tray app
 });
