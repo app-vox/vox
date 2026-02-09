@@ -287,8 +287,9 @@ export class ShortcutManager {
 
       // Only paste if we have valid, non-empty text from the transcript
       if (!trimmedText || trimmedText.length === 0) {
-        console.log("[Vox] No valid text to paste, showing error");
+        console.log("[Vox] No valid text to paste, showing error indicator");
         this.indicator.showError();
+        console.log("[Vox] Error indicator should now be visible");
       } else if (!this.shouldPaste) {
         console.log("[Vox] Recording was canceled, skipping paste");
         this.indicator.hide();

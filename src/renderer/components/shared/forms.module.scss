@@ -6,11 +6,74 @@
   }
 
   > label {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 13px;
     font-weight: 500;
     color: var(--color-text-secondary);
     margin-bottom: 8px;
+    cursor: pointer;
+
+    input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      min-width: 16px;
+      margin: 0;
+      border: 2px solid var(--color-border);
+      border-radius: 3px;
+      background: var(--color-bg-input);
+      cursor: pointer;
+      position: relative;
+      transition: all 150ms ease;
+      flex-shrink: 0;
+
+      &:focus-visible {
+        outline: 2px solid var(--color-border-hover);
+        outline-offset: 2px;
+      }
+
+      &:hover {
+        border-color: var(--color-border-hover);
+        background: var(--color-bg-hover);
+      }
+
+      &:checked {
+        background: var(--color-text-primary);
+        border-color: var(--color-text-primary);
+
+        &::after {
+          content: "";
+          position: absolute;
+          left: 4px;
+          top: 1px;
+          width: 3px;
+          height: 7px;
+          border: solid var(--color-bg-root);
+          border-width: 0 2px 2px 0;
+          transform: rotate(45deg);
+        }
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+        border-color: var(--color-border);
+        background: var(--color-bg-input);
+
+        &:hover {
+          border-color: var(--color-border);
+          background: var(--color-bg-input);
+        }
+      }
+    }
+
+    p {
+      margin: 0;
+      line-height: 1;
+    }
   }
 }
 
@@ -89,24 +152,34 @@
 
 .checkboxLabel {
   display: flex;
-  align-items: center;
-  line-height: 1.5;
+  align-items: baseline;
+  gap: 10px;
+  line-height: 1;
+
+  span {
+    line-height: 1;
+    margin-top: -4px;
+  }
 
   input[type="checkbox"] {
     appearance: none;
     -webkit-appearance: none;
-    width: 18px;
-    height: 18px;
-    min-width: 18px;
-    margin-right: 8px;
-    margin-top: 0;
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    margin: 0;
     border: 2px solid var(--color-border);
-    border-radius: 4px;
+    border-radius: 3px;
     background: var(--color-bg-input);
     cursor: pointer;
     position: relative;
     transition: all 150ms ease;
     flex-shrink: 0;
+
+    &:focus-visible {
+      outline: 2px solid var(--color-border-hover);
+      outline-offset: 2px;
+    }
 
     &:hover {
       border-color: var(--color-border-hover);
@@ -120,10 +193,10 @@
       &::after {
         content: "";
         position: absolute;
-        left: 5px;
-        top: 2px;
-        width: 4px;
-        height: 8px;
+        left: 4px;
+        top: 1px;
+        width: 3px;
+        height: 7px;
         border: solid var(--color-bg-root);
         border-width: 0 2px 2px 0;
         transform: rotate(45deg);
@@ -149,4 +222,24 @@
   font-size: 12px;
   width: 100%;
   resize: vertical;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text-primary);
+  transition: border-color 150ms ease;
+
+  &:hover {
+    border-color: var(--color-border-hover);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-border-focus);
+  }
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
 }

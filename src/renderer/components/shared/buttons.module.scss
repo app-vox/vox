@@ -11,6 +11,11 @@
   transition: background 150ms ease, opacity 150ms ease;
   outline: none;
 
+  &:focus-visible {
+    outline: 2px solid var(--color-border-hover);
+    outline-offset: 2px;
+  }
+
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;

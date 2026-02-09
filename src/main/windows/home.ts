@@ -42,6 +42,16 @@ export function openHome(onClosed: () => void): void {
     homeWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
   }
 
+  // Block reload in production mode
+  if (app.isPackaged) {
+    homeWindow.webContents.on("before-input-event", (event, input) => {
+      if ((input.meta || input.control) && input.key.toLowerCase() === "r") {
+        event.preventDefault();
+        console.log("[Vox] Reload blocked in production mode");
+      }
+    });
+  }
+
   homeWindow.on("closed", () => {
     homeWindow = null;
     onClosed();

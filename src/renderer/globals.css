@@ -75,6 +75,17 @@
   box-sizing: border-box;
 }
 
+/* ---- Focus styles ---- */
+
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-border-hover);
+  outline-offset: 2px;
+}
+
 html, body, #root {
   height: 100%;
   background: var(--color-bg-root);
