@@ -43,6 +43,7 @@ const detectOS = () => {
 const updateDownloadButton = () => {
     const downloadBtn = document.getElementById('download-btn');
     const downloadText = document.getElementById('download-text');
+    const platformNote = document.getElementById('platform-note');
     const { os } = detectOS();
 
     // Enable download for any macOS
@@ -52,6 +53,11 @@ const updateDownloadButton = () => {
         downloadBtn.style.cursor = 'not-allowed';
         downloadBtn.style.opacity = '0.6';
         downloadText.textContent = 'Coming Soon';
+
+        // Show platform note
+        if (platformNote) {
+            platformNote.style.display = 'block';
+        }
 
         // Set appropriate tooltip message
         let tooltipMessage = '';
@@ -302,6 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // After correcting, trigger paste with typing
                 setTimeout(() => {
                     overlays.forEach(overlay => overlay.classList.remove('active'));
+                    labels.forEach(label => label.classList.remove('active'));
                     if (labels[3]) {
                         labels[3].classList.add('active');
                     }
