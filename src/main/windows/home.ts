@@ -5,6 +5,7 @@ let homeWindow: BrowserWindow | null = null;
 
 export function openHome(onClosed: () => void): void {
   if (homeWindow) {
+    homeWindow.show();
     homeWindow.focus();
     return;
   }
@@ -14,8 +15,10 @@ export function openHome(onClosed: () => void): void {
   const display = screen.getDisplayNearestPoint(cursorPoint);
 
   // Calculate centered position on the active display
-  const windowWidth = 740;
-  const windowHeight = 840;
+  const WINDOW_WIDTH = 700;
+  const WINDOW_HEIGHT = 840;
+  const windowWidth = WINDOW_WIDTH;
+  const windowHeight = WINDOW_HEIGHT;
   const x = Math.round(display.bounds.x + (display.bounds.width - windowWidth) / 2);
   const y = Math.round(display.bounds.y + (display.bounds.height - windowHeight) / 2);
 
