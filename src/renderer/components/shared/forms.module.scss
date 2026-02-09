@@ -90,10 +90,57 @@
 .checkboxLabel {
   display: flex;
   align-items: center;
+  line-height: 1.5;
 
   input[type="checkbox"] {
-    width: auto;
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
     margin-right: 8px;
+    margin-top: 0;
+    border: 2px solid var(--color-border);
+    border-radius: 4px;
+    background: var(--color-bg-input);
+    cursor: pointer;
+    position: relative;
+    transition: all 150ms ease;
+    flex-shrink: 0;
+
+    &:hover {
+      border-color: var(--color-border-hover);
+      background: var(--color-bg-hover);
+    }
+
+    &:checked {
+      background: var(--color-text-primary);
+      border-color: var(--color-text-primary);
+
+      &::after {
+        content: "";
+        position: absolute;
+        left: 5px;
+        top: 2px;
+        width: 4px;
+        height: 8px;
+        border: solid var(--color-bg-root);
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+      border-color: var(--color-border);
+      background: var(--color-bg-input);
+
+      &:hover {
+        border-color: var(--color-border);
+        background: var(--color-bg-input);
+      }
+    }
   }
 }
 

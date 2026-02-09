@@ -14,7 +14,7 @@ export function openHome(onClosed: () => void): void {
   const display = screen.getDisplayNearestPoint(cursorPoint);
 
   // Calculate centered position on the active display
-  const windowWidth = 640;
+  const windowWidth = 740;
   const windowHeight = 840;
   const x = Math.round(display.bounds.x + (display.bounds.width - windowWidth) / 2);
   const y = Math.round(display.bounds.y + (display.bounds.height - windowHeight) / 2);
