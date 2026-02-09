@@ -2,7 +2,7 @@ import { globalShortcut, ipcMain, Notification } from "electron";
 import { uIOhook, UiohookKey } from "uiohook-napi";
 import { type ConfigManager } from "../config/manager";
 import { pasteText, isAccessibilityGranted } from "../input/paster";
-import { type Pipeline, CanceledError } from "../pipeline";
+import { type Pipeline, CanceledError, NoModelError } from "../pipeline";
 import { ShortcutStateMachine } from "./listener";
 import { IndicatorWindow } from "../indicator";
 import { setTrayListeningState } from "../tray";
@@ -331,7 +331,20 @@ export class ShortcutManager {
       console.error("[Vox] Recording failed:", err.message);
       this.indicator.hide();
       this.updateTrayState();
-      new Notification({ title: "Vox", body: `Recording failed: ${err.message}` }).show();
+
+      if (err instanceof NoModelError) {
+        // When no model is configured, show error and immediately cancel
+        // No need to wait for Escape - the error itself cancels the operation
+        this.indicator.showError(3000, "Please configure local model");
+        this.stateMachine.setIdle();
+        this.updateTrayState();
+        new Notification({
+          title: "Vox - Setup Required",
+          body: "Download a Whisper model from Settings before recording."
+        }).show();
+      } else {
+        new Notification({ title: "Vox", body: `Recording failed: ${err.message}` }).show();
+      }
     });
   }
 

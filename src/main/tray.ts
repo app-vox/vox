@@ -12,6 +12,7 @@ export interface TrayCallbacks {
 
 let callbacks: TrayCallbacks | null = null;
 let isListening = false;
+let hasModel = true;
 
 export function setupTray(trayCallbacks: TrayCallbacks): void {
   callbacks = trayCallbacks;
@@ -29,6 +30,11 @@ export function setTrayListeningState(listening: boolean): void {
   updateTrayMenu();
 }
 
+export function setTrayModelState(modelConfigured: boolean): void {
+  hasModel = modelConfigured;
+  updateTrayMenu();
+}
+
 function updateTrayMenu(): void {
   if (!tray || !callbacks) return;
 
@@ -42,17 +48,17 @@ function updateTrayMenu(): void {
     if (callbacks.onStopListening || callbacks.onCancelListening) {
       menuTemplate.push({ type: "separator" });
       if (callbacks.onStopListening) {
-        menuTemplate.push({ label: "Complete Listening", click: callbacks.onStopListening });
+        menuTemplate.push({ label: "Complete Listening", click: callbacks.onStopListening, enabled: hasModel });
       }
       if (callbacks.onCancelListening) {
-        menuTemplate.push({ label: "Cancel", click: callbacks.onCancelListening });
+        menuTemplate.push({ label: "Cancel", click: callbacks.onCancelListening, enabled: hasModel });
       }
     }
   } else {
     // When idle, show start option
     if (callbacks.onStartListening) {
       menuTemplate.push({ type: "separator" });
-      menuTemplate.push({ label: "Start Listening", click: callbacks.onStartListening });
+      menuTemplate.push({ label: "Start Listening", click: callbacks.onStartListening, enabled: hasModel });
     }
   }
 

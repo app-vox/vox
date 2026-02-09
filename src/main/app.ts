@@ -8,10 +8,11 @@ import { transcribe } from "./audio/whisper";
 import { createLlmProvider } from "./llm/factory";
 import { Pipeline } from "./pipeline";
 import { ShortcutManager } from "./shortcuts/manager";
-import { setupTray } from "./tray";
+import { setupTray, setTrayModelState } from "./tray";
 import { openHome } from "./windows/home";
 import { registerIpcHandlers } from "./ipc";
 import { isAccessibilityGranted } from "./input/paster";
+import { SetupChecker } from "./setup/checker";
 
 const configDir = path.join(app.getPath("userData"));
 const modelsDir = path.join(configDir, "models");
@@ -38,6 +39,10 @@ function setupPipeline(): void {
 function reloadConfig(): void {
   setupPipeline();
   shortcutManager?.registerShortcutKeys();
+
+  // Update tray menu state based on model availability
+  const setupChecker = new SetupChecker(modelManager);
+  setTrayModelState(setupChecker.hasAnyModel());
 }
 
 app.whenReady().then(async () => {
@@ -83,12 +88,15 @@ app.whenReady().then(async () => {
   });
   shortcutManager.start();
 
+  // Initialize tray model state
+  const setupChecker = new SetupChecker(modelManager);
   setupTray({
     onOpenHome: () => openHome(reloadConfig),
     onStartListening: () => shortcutManager?.triggerToggle(),
     onStopListening: () => shortcutManager?.stopAndProcess(),
     onCancelListening: () => shortcutManager?.cancelRecording(),
   });
+  setTrayModelState(setupChecker.hasAnyModel());
 
   // Open settings window automatically in dev mode
   if (!app.isPackaged) {

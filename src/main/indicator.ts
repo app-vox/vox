@@ -129,11 +129,108 @@ export class IndicatorWindow {
     });
   }
 
-  showError(durationMs = 3000): void {
+  showError(durationMs = 3000, customText?: string): void {
     console.log("[Vox] IndicatorWindow.showError() called");
-    this.show("error");
-    console.log("[Vox] IndicatorWindow.show('error') completed");
+    if (customText) {
+      this.showCustomError(customText, durationMs);
+    } else {
+      this.show("error");
+      setTimeout(() => this.hide(), durationMs);
+    }
+  }
+
+  private showCustomError(text: string, durationMs: number): void {
+    if (this.window) {
+      this.window.close();
+      this.window = null;
+    }
+
+    const estimatedWidth = Math.max(220, text.length * 8);
+    this.window = new BrowserWindow({
+      width: estimatedWidth,
+      height: 48,
+      frame: false,
+      transparent: true,
+      hasShadow: false,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      resizable: false,
+      focusable: false,
+      show: false,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+      },
+    });
+
+    this.window.setIgnoreMouseEvents(true);
+    this.window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+
+    const cursorPoint = screen.getCursorScreenPoint();
+    const display = screen.getDisplayNearestPoint(cursorPoint);
+    const x = Math.round(display.bounds.x + display.bounds.width / 2 - estimatedWidth / 2);
+    this.window.setPosition(x, display.bounds.y + 20);
+
+    const html = this.buildCustomErrorHtml(text);
+    this.window.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+
+    this.window.once("ready-to-show", () => {
+      this.window?.showInactive();
+    });
+
     setTimeout(() => this.hide(), durationMs);
+  }
+
+  private buildCustomErrorHtml(text: string): string {
+    const color = "#fbbf24";
+    return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    background: transparent;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background: rgba(25, 25, 25, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.1px;
+    white-space: nowrap;
+  }
+  .icon {
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 8px ${color});
+    animation: glow 1.5s ease-in-out infinite;
+  }
+  @keyframes glow {
+    0%, 100% { filter: drop-shadow(0 0 8px ${color}); }
+    50% { filter: drop-shadow(0 0 16px ${color}); }
+  }
+</style></head>
+<body><div class="pill">
+  <svg class="icon" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5" stroke="${color}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <span>${text}</span>
+</div></body>
+</html>`;
   }
 
   showCanceled(durationMs = 1500): void {

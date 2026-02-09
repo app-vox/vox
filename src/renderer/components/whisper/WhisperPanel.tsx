@@ -37,6 +37,8 @@ export function WhisperPanel() {
         setTimeout(() => {
           refreshModels();
           loadConfig();
+          // Explicitly check setup state after download
+          useConfigStore.getState().checkSetup();
         }, 100);
       }
     });
