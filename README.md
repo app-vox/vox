@@ -1,222 +1,145 @@
 # Vox
 
-Open-source macOS voice-to-text app with local Whisper transcription and LLM-powered correction.
+Open-source voice-to-text app with local Whisper transcription and AI-powered correction.
 
 [![CI](https://github.com/app-vox/vox/actions/workflows/ci.yml/badge.svg)](https://github.com/app-vox/vox/actions/workflows/ci.yml)
 [![Release](https://github.com/app-vox/vox/actions/workflows/release.yml/badge.svg)](https://github.com/app-vox/vox/actions/workflows/release.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-## About
+Hold a keyboard shortcut, speak, and Vox transcribes your voice locally using [whisper.cpp](https://github.com/ggerganov/whisper.cpp), optionally corrects it with AI, and pastes the text into your active app.
 
-Vox is a macOS menu bar app that converts speech to text. Hold a keyboard shortcut, speak, and Vox records your voice, transcribes it locally using [whisper.cpp](https://github.com/ggerganov/whisper.cpp), sends the raw transcription through an LLM to fix grammar and remove filler words, then pastes the corrected text directly into your active application.
+## Demo
 
-Transcription runs entirely on-device. Only the text correction step calls an external LLM provider.
+![Vox Demo](docs/images/demo.gif)
 
-## How It Works
+> ⚠️ **Platform Support**
+> Vox currently runs on **macOS** (Apple Silicon and Intel). Cross-platform support for Windows and Linux is planned for future releases.
 
-```
-  Hold shortcut     Local whisper.cpp     LLM correction      Auto-paste
-  ┌──────────┐      ┌──────────────┐      ┌─────────────┐     ┌──────────┐
-  │  Record  │ ───> │  Transcribe  │ ───> │   Correct   │ ──> │  Paste   │
-  │  (sox)   │      │  (on-device) │      │  (optional)  │     │ (Cmd+V)  │
-  └──────────┘      └──────────────┘      └─────────────┘     └──────────┘
-```
+## Table of Contents
 
-A floating indicator pill shows the current stage (Listening, Transcribing, Correcting) so you always know what Vox is doing.
+- [Quick Start](#quick-start)
+- [Features](#features)
+- [Requirements](#requirements)
+- [Configuration](#configuration)
+- [Usage](#usage)
+- [Development](#development)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Quick Start
+
+Download the latest version from the [releases page](https://github.com/app-vox/vox/releases/latest) and drag `Vox.app` to your Applications folder.
+
+### Grant Permissions
+
+Vox needs:
+- **Microphone** — for recording (prompted automatically)
+- **Accessibility** — for pasting (System Settings > Privacy & Security > Accessibility)
+
+### Configure
+
+1. Open Vox settings from the menu bar icon
+2. **Download a Whisper model** (Whisper tab) — `small` recommended (~460 MB)
+3. **Setup LLM provider** (LLM tab, optional) — Foundry or AWS Bedrock for text correction
+
+That's it. Hold `Alt+Space` to start recording.
 
 ## Features
 
-- **Local transcription** — Powered by whisper.cpp, no audio leaves your machine
-- **LLM correction** — Fixes speech recognition errors, removes filler words, corrects grammar
-- **Two recording modes** — Hold-to-record or toggle on/off
-- **Auto-paste** — Transcribed text is pasted directly into the focused app via simulated Cmd+V
-- **Configurable shortcuts** — Customize hold and toggle key combinations
-- **Multiple Whisper models** — Choose from tiny (~75 MB) to large (~3 GB) based on your accuracy/speed needs
-- **Multiple LLM providers** — Foundry (OpenAI-compatible) or AWS Bedrock
-- **Menu bar app** — Runs as a tray icon, no dock clutter
-- **Light/dark/system theme** — Settings UI follows your macOS appearance preference
+- **Local transcription** — Powered by whisper.cpp, audio stays on your device
+- **AI correction** — Removes filler words and fixes grammar (optional)
+- **Hold or toggle modes** — Press-and-hold or toggle recording on/off
+- **Auto-paste** — Text appears in your focused app via Cmd+V
+- **Multiple models** — Choose speed vs accuracy (tiny to large)
+- **Multiple LLM providers** — OpenAI-compatible or AWS Bedrock
+- **Menu bar app** — Runs quietly in the background
 
 ## Requirements
 
 - **macOS** (Apple Silicon or Intel)
-- **Node.js** >= 22
 - **sox** — for audio recording (`brew install sox`)
-- **LLM provider** — one of:
-  - An OpenAI-compatible API endpoint (Foundry)
-  - AWS Bedrock credentials with access to a supported model
+  > **Note:** sox dependency is temporary and will be removed in a future release
+- **LLM provider** (optional) — for text correction:
+  - OpenAI-compatible endpoint with API key
+  - Or AWS Bedrock credentials with model access
 
-## Getting Started
+## Configuration
 
-### Install dependencies
+### Whisper Models
 
-```bash
-brew install sox
-git clone https://github.com/app-vox/vox.git
-cd vox
-npm install
-```
+Download at least one model from the Whisper tab:
 
-### Run in development mode
+| Model  | Size    | Speed  | Accuracy |
+|--------|---------|--------|----------|
+| tiny   | ~75 MB  | Fastest| Lower    |
+| base   | ~140 MB | Fast   | Decent   |
+| small  | ~460 MB | Good   | Good     |
+| medium | ~1.5 GB | Slow   | Better   |
+| large  | ~3 GB   | Slowest| Best     |
 
-```bash
-npm run dev
-```
-
-This starts electron-vite in dev mode with hot reload for the renderer.
-
-### Grant permissions
-
-Vox requires two macOS permissions:
-
-1. **Microphone** — for recording audio (prompted automatically)
-2. **Accessibility** — for simulating Cmd+V paste (must be granted manually in System Settings > Privacy & Security > Accessibility)
-
-The Settings window has a Permissions tab that shows the status of each permission.
-
-### Configure an LLM provider
-
-Open the Vox settings window from the tray icon and configure your LLM provider in the LLM tab:
+### LLM Provider
 
 **Foundry (OpenAI-compatible)**
-- Endpoint URL (e.g. `https://your-endpoint.com`)
+- Endpoint URL
 - API key
-- Model name (e.g. `gpt-4o`)
+- Model name (e.g., `gpt-4o`)
 
 **AWS Bedrock**
 - AWS region
-- Authentication: explicit access key + secret, named AWS profile, or default credential chain
-- Model ID (e.g. `anthropic.claude-3-5-sonnet-20241022-v2:0`)
+- Credentials (access key, profile, or default chain)
+- Model ID (e.g., `anthropic.claude-3-5-sonnet-20241022-v2:0`)
 
-### Download a Whisper model
+### Shortcuts
 
-In the Whisper tab of settings, download at least one model. The **small** model (~460 MB) is recommended as a good balance of speed and accuracy.
-
-| Model  | Size   | Description                              |
-|--------|--------|------------------------------------------|
-| tiny   | ~75 MB | Fastest, lower accuracy                  |
-| base   | ~140 MB| Light, decent accuracy                   |
-| small  | ~460 MB| Good balance, recommended                |
-| medium | ~1.5 GB| Better accuracy, needs decent hardware   |
-| large  | ~3 GB  | Best accuracy, significant resources     |
+Customize keyboard shortcuts in the Shortcuts tab:
+- **Hold mode** (default: `Alt+Space`)
+- **Toggle mode** (default: `Alt+Shift+Space`)
 
 ## Usage
 
-Once configured, Vox runs in the background as a menu bar icon.
+Once configured, Vox runs as a menu bar icon.
 
-- **Hold mode** (default: `Alt+Space`) — Hold the shortcut to record, release to transcribe and paste
-- **Toggle mode** (default: `Alt+Shift+Space`) — Press once to start recording, press again to stop
+Press your shortcut to record. The floating indicator shows:
+- **Red** — Recording
+- **Yellow** — Transcribing
+- **Blue** — Correcting (if LLM enabled)
 
-The floating indicator shows the current state:
-- **Red dot** — Listening (recording)
-- **Yellow dot** — Transcribing (whisper.cpp running)
-- **Blue dot** — Correcting (LLM processing)
+Release (hold mode) or press again (toggle mode) to stop. Text is pasted automatically.
 
-If the LLM correction fails, Vox falls back to the raw transcription. If whisper.cpp produces no usable text (background noise, silence), nothing is pasted.
+If correction fails, raw transcription is used. If transcription is empty (silence/noise), nothing is pasted.
 
-## Building
+## Development
 
-### Production build
-
-```bash
-npm run dist
-```
-
-This compiles the Electron app and packages it with electron-builder. The build is code-signed and notarized using your local keychain profile.
-
-### Install locally
+### Setup
 
 ```bash
-make release
+git clone https://github.com/app-vox/vox.git
+cd vox
+npm install
+brew install sox  # temporary dependency
 ```
 
-This builds, removes any existing `/Applications/Vox.app`, and installs the new build.
+### Run
 
-### Release workflow
-
-The project includes a manually-triggered GitHub Actions workflow that builds, signs, notarizes, and publishes a GitHub Release with DMG and zip artifacts.
-
-To trigger a release:
-
-1. Go to **Actions > Release** in the GitHub repo
-2. Click **Run workflow**
-3. Optionally enter a version tag (e.g., `v1.0.0`) or leave blank to use the version from `package.json`
-4. Enable **Dry run** to test the build without creating a release
-
-The workflow requires GitHub secrets for the Apple Developer ID certificate and App Store Connect API key. See [docs/release-workflow-setup.md](docs/release-workflow-setup.md) for setup instructions.
-
-## Scripts
-
-| Command           | Description                              |
-|-------------------|------------------------------------------|
-| `npm run dev`     | Start in development mode with hot reload|
-| `npm run build`   | Build the Electron app                   |
-| `npm run start`   | Preview the built app                    |
-| `npm run dist`    | Build + package with electron-builder    |
-| `npm run typecheck` | Run TypeScript type checking           |
-| `npm run lint`    | Run ESLint                               |
-| `npm test`        | Run tests with Vitest                    |
-| `npm run test:watch` | Run tests in watch mode               |
-
-## Project Structure
-
-```
-src/
-├── main/                  # Electron main process
-│   ├── app.ts             # Entry point, app lifecycle
-│   ├── pipeline.ts        # Record → Transcribe → Correct pipeline
-│   ├── audio/
-│   │   ├── recorder.ts    # Audio recording via sox
-│   │   └── whisper.ts     # whisper.cpp transcription
-│   ├── llm/
-│   │   ├── provider.ts    # LLM provider interface
-│   │   ├── factory.ts     # Provider factory
-│   │   ├── foundry.ts     # OpenAI-compatible provider
-│   │   └── bedrock.ts     # AWS Bedrock provider
-│   ├── input/
-│   │   └── paster.ts      # Clipboard + Cmd+V simulation via CoreGraphics FFI
-│   ├── shortcuts/
-│   │   ├── manager.ts     # Global shortcut registration
-│   │   └── listener.ts    # Hold/toggle state machine
-│   ├── config/            # JSON config persistence
-│   ├── models/            # Whisper model download/management
-│   ├── indicator.ts       # Floating status pill window
-│   ├── tray.ts            # Menu bar tray icon
-│   └── windows/           # BrowserWindow management
-├── preload/               # Electron preload (context bridge)
-├── renderer/              # React UI (settings window)
-│   ├── components/        # UI panels (LLM, Whisper, Shortcuts, Permissions, Appearance)
-│   ├── hooks/             # Custom React hooks
-│   ├── stores/            # Zustand state management
-│   └── utils/             # Renderer utilities
-├── shared/                # Types and constants shared between main/renderer
-└── types/                 # Module type declarations
+```bash
+npm run dev     # Development with hot reload
+npm test        # Run tests
+npm run dist    # Build production app
 ```
 
-## Tech Stack
-
-- [Electron](https://www.electronjs.org/) + [electron-vite](https://electron-vite.org/) — Desktop app framework and build tooling
-- [React](https://react.dev/) + [Zustand](https://zustand.docs.pmnd.rs/) — Settings UI and state management
-- [Tailwind CSS](https://tailwindcss.com/) — Styling
-- [TypeScript](https://www.typescriptlang.org/) — Type safety
-- [whisper-node](https://github.com/ChetanXpro/whisper-node) / [whisper.cpp](https://github.com/ggerganov/whisper.cpp) — Local speech-to-text
-- [koffi](https://koffi.dev/) — FFI for macOS CoreGraphics (paste simulation)
-- [uiohook-napi](https://github.com/SergioRt1/uiohook-napi) — Global keyboard hook for shortcut detection
-- [AWS SDK](https://aws.amazon.com/sdk-for-javascript/) — Bedrock LLM provider
-- [Vitest](https://vitest.dev/) — Testing framework
-- [ESLint](https://eslint.org/) — Linting
+Built with Electron, React, TypeScript, and whisper.cpp.
 
 ## Contributing
 
-Contributions are welcome. To get started:
+Contributions welcome! To contribute:
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feat/my-feature`)
-3. Make your changes
-4. Run checks: `npm run typecheck && npm run lint && npm test`
-5. Commit using [Conventional Commits](https://www.conventionalcommits.org/) format (e.g. `feat(audio): add noise gate`)
-6. Open a pull request
+1. Fork and create a feature branch
+2. Make your changes
+3. Run `npm run typecheck && npm run lint && npm test`
+4. Commit with [Conventional Commits](https://www.conventionalcommits.org/) (e.g., `feat(audio): add noise gate`)
+5. Open a pull request
 
-CI runs typecheck, lint, test, and build on every pull request.
+⚠️ See more details in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
