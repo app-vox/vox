@@ -66,19 +66,21 @@ export class ModelManager {
         response.headers.get("content-length") || info.sizeBytes,
       );
       const reader = response.body!.getReader();
-      const chunks: Uint8Array[] = [];
       let downloaded = 0;
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        chunks.push(value);
-        downloaded += value.length;
-        onProgress?.(downloaded, contentLength);
+      // Stream to file instead of buffering in memory
+      const fileHandle = fs.openSync(destPath, "w");
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          fs.writeSync(fileHandle, value);
+          downloaded += value.length;
+          onProgress?.(downloaded, contentLength);
+        }
+      } finally {
+        fs.closeSync(fileHandle);
       }
-
-      const buffer = Buffer.concat(chunks);
-      fs.writeFileSync(destPath, buffer);
 
       return destPath;
     } finally {

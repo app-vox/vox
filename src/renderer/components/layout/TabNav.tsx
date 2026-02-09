@@ -2,8 +2,8 @@ import { useConfigStore } from "../../stores/config-store";
 import styles from "./TabNav.module.scss";
 
 const TABS = [
-  { id: "llm", label: "LLM Provider" },
-  { id: "whisper", label: "Whisper Model" },
+  { id: "whisper", label: "Local Model" },
+  { id: "llm", label: "AI Improvement" },
   { id: "shortcuts", label: "Shortcuts" },
   { id: "permissions", label: "Permissions" },
   { id: "appearance", label: "Appearance" },

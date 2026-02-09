@@ -120,6 +120,9 @@ export function LlmPanel() {
             {activeTab === "prompt" && (
               <div className={form.field}>
                 <label htmlFor="custom-prompt">Custom Instructions</label>
+                <p className={form.hint}>
+                  Your custom instructions will be added on top of Vox's default behavior (fix grammar, remove filler words, preserve meaning). Leave empty to use only the defaults.
+                </p>
                 <textarea
                   id="custom-prompt"
                   value={config.customPrompt || ""}
@@ -131,10 +134,8 @@ export function LlmPanel() {
                   placeholder="Add additional instructions for the AI..."
                   rows={12}
                   className={form.monospaceTextarea}
+                  style={{ resize: "none" }}
                 />
-                <p className={form.hint}>
-                  Your custom instructions will be added on top of Vox's default behavior (fix grammar, remove filler words, preserve meaning). Leave empty to use only the defaults.
-                </p>
               </div>
             )}
           </>
