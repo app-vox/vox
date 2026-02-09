@@ -19,3 +19,6 @@ build/*.provisionprofile
 open-source-audit.md
 docs/plans/
 **ignore**
+
+# Git worktrees
+.worktrees/
