@@ -15,6 +15,10 @@ out/
 *.key
 build/*.provisionprofile
 
+# MegaLinter local reports
+megalinter-reports/
+mega-linter.log
+
 # Local notes and plans
 open-source-audit.md
 docs/plans/

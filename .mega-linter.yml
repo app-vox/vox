@@ -1,0 +1,43 @@
+# MegaLinter configuration
+# https://megalinter.io/latest/configuration/
+---
+APPLY_FIXES: none
+SHOW_ELAPSED_TIME: true
+FILEIO_REPORTER: false
+
+# Linter categories
+ENABLE:
+  - JAVASCRIPT
+  - TYPESCRIPT
+  - JSON
+  - YAML
+  - MARKDOWN
+  - REPOSITORY
+
+DISABLE:
+  - COPYPASTE
+  - SPELL
+
+# Specific linters
+ENABLE_LINTERS:
+  - JAVASCRIPT_ES
+  - TYPESCRIPT_ES
+  - JSON_JSONLINT
+  - YAML_YAMLLINT
+  - MARKDOWN_MARKDOWNLINT
+  - REPOSITORY_SECRETLINT
+  - REPOSITORY_GITLEAKS
+  - REPOSITORY_TRIVY
+
+# Use project ESLint config
+JAVASCRIPT_ES_CONFIG_FILE: eslint.config.mjs
+TYPESCRIPT_ES_CONFIG_FILE: eslint.config.mjs
+
+# Excluded paths
+EXCLUDED_DIRECTORIES:
+  - node_modules
+  - out
+  - dist
+  - .git
+  - resources
+  - .worktrees
