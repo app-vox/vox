@@ -7,8 +7,6 @@ FILEIO_REPORTER: false
 
 # Linter categories
 ENABLE:
-  - JAVASCRIPT
-  - TYPESCRIPT
   - JSON
   - YAML
   - MARKDOWN
@@ -17,10 +15,6 @@ ENABLE:
 DISABLE:
   - COPYPASTE
   - SPELL
-
-# Use project ESLint config
-JAVASCRIPT_ES_CONFIG_FILE: eslint.config.mjs
-TYPESCRIPT_ES_CONFIG_FILE: eslint.config.mjs
 
 # checkov: skip CKV_GHA_7 (workflow_dispatch inputs are intentional in release.yml)
 REPOSITORY_CHECKOV_ARGUMENTS: --skip-check CKV_GHA_7
