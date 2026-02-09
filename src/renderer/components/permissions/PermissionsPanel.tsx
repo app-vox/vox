@@ -8,6 +8,7 @@ import card from "../shared/card.module.scss";
 
 export function PermissionsPanel() {
   const activeTab = useConfigStore((s) => s.activeTab);
+  const setupComplete = useConfigStore((s) => s.setupComplete);
   const { status, refresh, requestMicrophone, requestAccessibility } = usePermissions();
   const [requestingMic, setRequestingMic] = useState(false);
 
@@ -49,6 +50,7 @@ export function PermissionsPanel() {
             buttonText="Grant Access"
             onRequest={handleMicRequest}
             requesting={requestingMic}
+            setupRequired={!setupComplete}
           />
           <PermissionRow
             icon={<LockIcon />}
@@ -57,6 +59,7 @@ export function PermissionsPanel() {
             granted={accGranted}
             buttonText="Open Settings"
             onRequest={requestAccessibility}
+            setupRequired={!setupComplete}
           />
         </div>
       </div>

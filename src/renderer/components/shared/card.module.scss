@@ -30,3 +30,18 @@
 .body {
   padding: var(--spacing-5) var(--spacing-6) var(--spacing-6);
 }
+
+.warningBanner {
+  padding: var(--spacing-3) var(--spacing-6);
+  background-color: #fef3c7;
+  color: #92400e;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+
+  :global(.dark) & {
+    background-color: #422006;
+    color: #fbbf24;
+  }
+}

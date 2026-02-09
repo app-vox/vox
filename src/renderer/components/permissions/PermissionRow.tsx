@@ -11,6 +11,7 @@ interface PermissionRowProps {
   buttonText: string;
   onRequest: () => void;
   requesting?: boolean;
+  setupRequired?: boolean;
 }
 
 export function PermissionRow({
@@ -22,6 +23,7 @@ export function PermissionRow({
   buttonText,
   onRequest,
   requesting,
+  setupRequired = false,
 }: PermissionRowProps) {
   return (
     <div className={styles.row}>
@@ -33,7 +35,9 @@ export function PermissionRow({
         </div>
       </div>
       <div className={styles.action}>
-        {granted ? (
+        {setupRequired ? (
+          <span className={`${styles.badge} ${styles.setupBadge}`}>Setup Required</span>
+        ) : granted ? (
           <span className={`${styles.badge} ${styles.granted}`}>Granted</span>
         ) : (
           <>

@@ -16,6 +16,7 @@ export function WhisperPanel() {
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const loadConfig = useConfigStore((s) => s.loadConfig);
+  const setupComplete = useConfigStore((s) => s.setupComplete);
   const triggerToast = useSaveToast((s) => s.trigger);
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [testing, setTesting] = useState(false);
@@ -83,6 +84,11 @@ export function WhisperPanel() {
         <h2>Whisper Model</h2>
         <p className={card.description}>Select the local speech recognition model. Larger models are more accurate but slower.</p>
       </div>
+      {!setupComplete && (
+        <div className={card.warningBanner}>
+          Setup incomplete - Download a Whisper model to continue
+        </div>
+      )}
       <div className={card.body}>
         <div>
           {models.map((model) => (
