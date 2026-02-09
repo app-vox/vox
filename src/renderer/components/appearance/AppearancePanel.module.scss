@@ -70,3 +70,33 @@
   color: var(--color-text-tertiary);
   line-height: 1.4;
 }
+
+.linkButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 150ms ease;
+
+  &:hover {
+    background: var(--color-bg-hover);
+    border-color: var(--color-border-hover);
+  }
+
+  svg:first-child {
+    color: var(--color-text-secondary);
+  }
+
+  svg:last-child {
+    color: var(--color-text-tertiary);
+    width: 12px;
+    height: 12px;
+  }
+}

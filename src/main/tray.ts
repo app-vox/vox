@@ -1,4 +1,4 @@
-import { app, Tray, Menu, nativeImage } from "electron";
+import { app, Tray, Menu, nativeImage, shell } from "electron";
 import { getResourcePath } from "./resources";
 
 let tray: Tray | null = null;
@@ -57,6 +57,8 @@ function updateTrayMenu(): void {
   }
 
   menuTemplate.push(
+    { type: "separator" },
+    { label: "Report Issue", click: () => shell.openExternal("https://github.com/app-vox/vox/issues") },
     { type: "separator" },
     { label: "Quit", click: () => app.quit() }
   );
