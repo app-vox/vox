@@ -29,6 +29,15 @@ const TABS: { id: string; label: string; icon: ReactNode; requiresModel?: boolea
     ),
   },
   {
+    id: "permissions",
+    label: "Permissions",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </svg>
+    ),
+  },
+  {
     id: "shortcuts",
     label: "Shortcuts",
     icon: (
@@ -42,15 +51,6 @@ const TABS: { id: string; label: string; icon: ReactNode; requiresModel?: boolea
         <path d="M12 12h.01" />
         <path d="M16 12h.01" />
         <path d="M7 16h10" />
-      </svg>
-    ),
-  },
-  {
-    id: "permissions",
-    label: "Permissions",
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       </svg>
     ),
   },
