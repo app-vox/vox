@@ -89,7 +89,7 @@ export function LlmPanel() {
   return (
     <div className={card.card}>
       <div className={card.header}>
-        <h2>AI Text Correction (LLM)</h2>
+        <h2>AI Text Correction (with LLM)</h2>
         <p className={card.description}>
           Improve your transcriptions by automatically fixing grammar, removing filler words, and cleaning up your speech.
         </p>

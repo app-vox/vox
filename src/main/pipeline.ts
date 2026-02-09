@@ -126,6 +126,7 @@ export class Pipeline {
   }
 
   async stopAndProcess(): Promise<string> {
+    const processingStartTime = performance.now();
     const recording = await this.deps.recorder.stop();
 
     if (this.canceled) {
@@ -146,15 +147,17 @@ export class Pipeline {
     const rawText = transcription.text.trim();
     console.log("[Vox] Whisper transcription:", rawText);
 
+    // Skip garbage detection when LLM enhancement is disabled (Whisper-only mode)
+    if (this.deps.llmProvider instanceof NoopProvider) {
+      const processingTime = (performance.now() - processingStartTime).toFixed(1);
+      console.log(`[Vox] LLM enhancement disabled (${processingTime}ms), returning raw transcription`);
+      if (!rawText) return "";
+      return rawText;
+    }
+
     if (!rawText || isGarbageTranscription(rawText)) {
       console.log("[Vox] Transcription rejected as empty or garbage");
       return "";
-    }
-
-    // Skip LLM correction if using NoopProvider (Whisper-only mode)
-    if (this.deps.llmProvider instanceof NoopProvider) {
-      console.log("[Vox] LLM enhancement disabled, using raw transcription");
-      return rawText;
     }
 
     if (this.canceled) {
@@ -175,6 +178,9 @@ export class Pipeline {
     if (this.canceled) {
       throw new CanceledError();
     }
+
+    const totalTime = (performance.now() - processingStartTime).toFixed(1);
+    console.log(`[Vox] Total processing time: ${totalTime}ms`);
 
     return finalText;
   }
