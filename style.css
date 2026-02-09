@@ -326,6 +326,7 @@ body {
         max-width: none;
         width: auto;
         align-items: center;
+        justify-content: center;
     }
 
     .hero-cta .btn {
