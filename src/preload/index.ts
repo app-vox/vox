@@ -68,6 +68,9 @@ export interface VoxAPI {
     getSystemDark(): Promise<boolean>;
     onSystemThemeChanged(callback: (isDark: boolean) => void): void;
   };
+  shell: {
+    openExternal(url: string): Promise<void>;
+  };
 }
 
 const voxApi: VoxAPI = {
@@ -110,6 +113,9 @@ const voxApi: VoxAPI = {
     onSystemThemeChanged: (callback) => {
       ipcRenderer.on("theme:system-changed", (_event, isDark: boolean) => callback(isDark));
     },
+  },
+  shell: {
+    openExternal: (url) => ipcRenderer.invoke("shell:open-external", url),
   },
 };
 

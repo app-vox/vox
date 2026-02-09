@@ -197,4 +197,8 @@ export function registerIpcHandlers(
       return { ok: false, error: err instanceof Error ? err.message : String(err), hasAccessibility };
     }
   });
+
+  ipcMain.handle("shell:open-external", async (_event, url: string) => {
+    await shell.openExternal(url);
+  });
 }
