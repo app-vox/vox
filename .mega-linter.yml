@@ -15,10 +15,22 @@ ENABLE_LINTERS:
   - REPOSITORY_SECRETLINT
   - REPOSITORY_GITLEAKS
   - REPOSITORY_TRIVY
+  - REPOSITORY_CHECKOV
+  - REPOSITORY_DEVSKIM
+  - REPOSITORY_KINGFISHER
 
 # Use project ESLint config
 JAVASCRIPT_ES_CONFIG_FILE: eslint.config.mjs
 TYPESCRIPT_ES_CONFIG_FILE: eslint.config.mjs
+
+# checkov: skip CKV_GHA_7 (workflow_dispatch inputs are intentional in release.yml)
+REPOSITORY_CHECKOV_ARGUMENTS: --skip-check CKV_GHA_7
+
+# devskim: exclude package-lock.json (integrity hashes trigger false positives)
+REPOSITORY_DEVSKIM_FILTER_REGEX_EXCLUDE: "package-lock\\.json"
+
+# kingfisher: exclude .git dir and workflow files (secret references trigger false positives)
+REPOSITORY_KINGFISHER_ARGUMENTS: --git-history=none --exclude-paths .git --exclude-paths .github/workflows
 
 # Excluded paths
 EXCLUDED_DIRECTORIES:
