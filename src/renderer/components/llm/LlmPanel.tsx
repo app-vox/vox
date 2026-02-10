@@ -211,12 +211,12 @@ export function LlmPanel() {
                     💡 Example Instructions
                   </summary>
                   <ul style={{ margin: "0", paddingLeft: "20px", lineHeight: "1.7" }}>
-                    <li>💼 <strong>Professional:</strong> "Use professional business language"</li>
-                    <li>🎩 <strong>Formal:</strong> "Use formal language and avoid contractions"</li>
-                    <li>😎 <strong>Casual:</strong> "Keep it super casual and conversational"</li>
-                    <li>😂 <strong>Funny:</strong> "Add humor and make it entertaining while keeping the meaning"</li>
-                    <li>✨ <strong>With Emojis:</strong> "Add relevant emojis to make the text more expressive"</li>
-                    <li>⚡ <strong>Concise:</strong> "Make it as brief as possible without losing meaning"</li>
+                    <li><strong>Professional:</strong> "Use professional business language"</li>
+                    <li><strong>Formal:</strong> "Use formal language and avoid contractions"</li>
+                    <li><strong>Casual:</strong> "Keep it super casual and conversational"</li>
+                    <li><strong>Funny:</strong> "Add humor and make it entertaining while keeping the meaning"</li>
+                    <li><strong>With Emojis:</strong> "Add relevant emojis throughout the text to make it more expressive"</li>
+                    <li><strong>Concise:</strong> "Make it as brief as possible without losing meaning"</li>
                   </ul>
                 </details>
               </div>
