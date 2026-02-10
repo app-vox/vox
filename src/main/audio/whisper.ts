@@ -44,8 +44,8 @@ function runWhisper(modelPath: string, filePath: string): Promise<string> {
         "-l", "auto",
         "-m", modelPath,
         "-f", filePath,
-        "--best-of", "10",        // More candidates for better accuracy (default: 5)
-        "--beam-size", "10",      // Larger beam search (default: 5)
+        "--best-of", "5",         // Keep default (max = 8 for most models)
+        "--beam-size", "5",       // Keep default (safe across all models)
         "--entropy-thold", "2.0", // Lower threshold = more conservative (default: 2.4)
       ],
       { cwd: WHISPER_CPP_DIR, timeout: 30000 },
