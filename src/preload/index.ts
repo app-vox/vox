@@ -31,11 +31,13 @@ export interface DownloadProgress {
   total: number;
 }
 
-export interface UpdateStatus {
-  updateAvailable: boolean;
+export interface UpdateState {
+  status: "idle" | "checking" | "available" | "downloading" | "ready" | "error";
   currentVersion: string;
   latestVersion: string;
   releaseUrl: string;
+  downloadProgress: number;
+  error: string;
 }
 
 export interface VoxAPI {
@@ -82,9 +84,11 @@ export interface VoxAPI {
     check(): Promise<{ hasAnyModel: boolean; downloadedModels: string[] }>;
   };
   updates: {
-    check(): Promise<UpdateStatus>;
-    getStatus(): Promise<UpdateStatus | null>;
+    check(): Promise<void>;
+    getState(): Promise<UpdateState>;
     getVersion(): Promise<string>;
+    quitAndInstall(): Promise<void>;
+    onStateChanged(callback: (state: UpdateState) => void): () => void;
   };
 }
 
@@ -139,8 +143,14 @@ const voxApi: VoxAPI = {
   },
   updates: {
     check: () => ipcRenderer.invoke("updates:check"),
-    getStatus: () => ipcRenderer.invoke("updates:get-status"),
+    getState: () => ipcRenderer.invoke("updates:get-state"),
     getVersion: () => ipcRenderer.invoke("updates:get-version"),
+    quitAndInstall: () => ipcRenderer.invoke("updates:quit-and-install"),
+    onStateChanged: (callback) => {
+      const handler = (_event: Electron.IpcRendererEvent, state: UpdateState) => callback(state);
+      ipcRenderer.on("updates:state-changed", handler);
+      return () => ipcRenderer.removeListener("updates:state-changed", handler);
+    },
   },
 };
 

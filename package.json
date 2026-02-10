@@ -50,6 +50,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.985.0",
+    "electron-updater": "^6.7.3",
     "koffi": "^2.15.1",
     "uiohook-napi": "^1.5.4",
     "whisper-node": "^1.1.1"
@@ -64,7 +65,10 @@
     "afterSign": "build/notarize.cjs",
     "mac": {
       "category": "public.app-category.productivity",
-      "target": "dir",
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "provisioningProfile": "build/Vox_Profile.provisionprofile",
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
@@ -102,6 +106,11 @@
     ],
     "extraResources": [
       "resources/**/*"
-    ]
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "app-vox",
+      "repo": "vox"
+    }
   }
 }

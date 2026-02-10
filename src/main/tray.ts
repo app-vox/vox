@@ -1,7 +1,7 @@
 import { app, Tray, Menu, nativeImage, shell } from "electron";
 import { getResourcePath } from "./resources";
 import { type VoxConfig, type WhisperModelSize } from "../shared/config";
-import { getLastUpdateStatus } from "./updater";
+import { getUpdateState, quitAndInstall } from "./updater";
 
 let tray: Tray | null = null;
 
@@ -123,13 +123,29 @@ export function updateTrayMenu(): void {
   }
 
   // Update notification
-  const updateStatus = getLastUpdateStatus();
-  if (updateStatus?.updateAvailable) {
+  const updateState = getUpdateState();
+  if (updateState.status === "ready") {
     menuTemplate.push(
       { type: "separator" },
       {
-        label: `Update to v${updateStatus.latestVersion}`,
-        click: () => shell.openExternal(updateStatus.releaseUrl),
+        label: `Restart to Update (v${updateState.latestVersion})`,
+        click: () => quitAndInstall(),
+      },
+    );
+  } else if (updateState.status === "downloading") {
+    menuTemplate.push(
+      { type: "separator" },
+      {
+        label: "Downloading Update...",
+        enabled: false,
+      },
+    );
+  } else if (updateState.status === "available") {
+    menuTemplate.push(
+      { type: "separator" },
+      {
+        label: `Update to v${updateState.latestVersion}`,
+        click: () => shell.openExternal(updateState.releaseUrl),
       },
     );
   }

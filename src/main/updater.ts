@@ -1,45 +1,42 @@
-import { app } from "electron";
-import * as fs from "fs";
-import * as path from "path";
+import { app, BrowserWindow } from "electron";
+import { autoUpdater, type UpdateInfo, type ProgressInfo } from "electron-updater";
 
-export interface UpdateStatus {
-  updateAvailable: boolean;
+export interface UpdateState {
+  status: "idle" | "checking" | "available" | "downloading" | "ready" | "error";
   currentVersion: string;
   latestVersion: string;
   releaseUrl: string;
+  downloadProgress: number;
+  error: string;
 }
 
-interface UpdateCheckData {
-  lastCheckTimestamp: number;
+let state: UpdateState = {
+  status: "idle",
+  currentVersion: "",
+  latestVersion: "",
+  releaseUrl: "",
+  downloadProgress: 0,
+  error: "",
+};
+
+let onStateChangeCallback: (() => void) | null = null;
+
+function setState(patch: Partial<UpdateState>): void {
+  state = { ...state, ...patch };
+  broadcastState();
+  onStateChangeCallback?.();
 }
 
-const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
+function broadcastState(): void {
+  for (const win of BrowserWindow.getAllWindows()) {
+    win.webContents.send("updates:state-changed", state);
+  }
+}
+
+// --- Dev mode fallback (manual GitHub API check) ---
+
 const GITHUB_RELEASES_URL = "https://api.github.com/repos/app-vox/vox/releases?per_page=10";
 const SEMVER_TAG_RE = /^v?\d+\.\d+\.\d+$/;
-const CHECK_FILE = "update-check.json";
-
-let cachedStatus: UpdateStatus | null = null;
-
-function getCheckFilePath(): string {
-  return path.join(app.getPath("userData"), CHECK_FILE);
-}
-
-function readCheckData(): UpdateCheckData {
-  try {
-    const data = fs.readFileSync(getCheckFilePath(), "utf-8");
-    return JSON.parse(data);
-  } catch {
-    return { lastCheckTimestamp: 0 };
-  }
-}
-
-function writeCheckData(data: UpdateCheckData): void {
-  try {
-    fs.writeFileSync(getCheckFilePath(), JSON.stringify(data));
-  } catch {
-    // Silently ignore write errors
-  }
-}
 
 function compareVersions(current: string, latest: string): number {
   const a = current.split(".").map(Number);
@@ -51,15 +48,9 @@ function compareVersions(current: string, latest: string): number {
   return 0;
 }
 
-export async function checkForUpdates(force = false): Promise<UpdateStatus> {
+async function devCheckForUpdates(): Promise<void> {
   const currentVersion = app.getVersion();
-
-  if (!force) {
-    const checkData = readCheckData();
-    if (Date.now() - checkData.lastCheckTimestamp < COOLDOWN_MS && cachedStatus) {
-      return cachedStatus;
-    }
-  }
+  setState({ status: "checking", currentVersion });
 
   try {
     const response = await fetch(GITHUB_RELEASES_URL, {
@@ -70,44 +61,116 @@ export async function checkForUpdates(force = false): Promise<UpdateStatus> {
       throw new Error(`GitHub API returned ${response.status}`);
     }
 
-    const releases = (await response.json()) as { tag_name: string; html_url: string; draft: boolean; prerelease: boolean }[];
+    const releases = (await response.json()) as {
+      tag_name: string;
+      html_url: string;
+      draft: boolean;
+      prerelease: boolean;
+    }[];
 
-    // Find the first release with a semver tag (skip "latest" and other non-version tags)
     const latest = releases.find(
       (r) => !r.draft && !r.prerelease && SEMVER_TAG_RE.test(r.tag_name),
     );
 
     if (latest) {
       const latestVersion = latest.tag_name.replace(/^v/, "");
-      cachedStatus = {
-        updateAvailable: compareVersions(currentVersion, latestVersion) > 0,
+      const hasUpdate = compareVersions(currentVersion, latestVersion) > 0;
+      setState({
+        status: hasUpdate ? "available" : "idle",
         currentVersion,
         latestVersion,
         releaseUrl: latest.html_url,
-      };
+      });
     } else {
-      cachedStatus = {
-        updateAvailable: false,
+      setState({
+        status: "idle",
         currentVersion,
         latestVersion: currentVersion,
         releaseUrl: "https://github.com/app-vox/vox/releases",
-      };
+      });
     }
-
-    writeCheckData({ lastCheckTimestamp: Date.now() });
-  } catch {
-    // Network errors should not disrupt the app
-    cachedStatus = cachedStatus ?? {
-      updateAvailable: false,
+  } catch (err: unknown) {
+    setState({
+      status: "error",
       currentVersion,
-      latestVersion: currentVersion,
-      releaseUrl: "https://github.com/app-vox/vox/releases/latest",
-    };
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
-
-  return cachedStatus;
 }
 
-export function getLastUpdateStatus(): UpdateStatus | null {
-  return cachedStatus;
+// --- Production mode (electron-updater) ---
+
+function setupAutoUpdater(): void {
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on("checking-for-update", () => {
+    setState({ status: "checking" });
+  });
+
+  autoUpdater.on("update-available", (info: UpdateInfo) => {
+    setState({
+      status: "available",
+      latestVersion: info.version,
+      releaseUrl: `https://github.com/app-vox/vox/releases/tag/v${info.version}`,
+    });
+  });
+
+  autoUpdater.on("update-not-available", () => {
+    setState({ status: "idle" });
+  });
+
+  autoUpdater.on("download-progress", (progress: ProgressInfo) => {
+    setState({
+      status: "downloading",
+      downloadProgress: Math.round(progress.percent),
+    });
+  });
+
+  autoUpdater.on("update-downloaded", (info: UpdateInfo) => {
+    setState({
+      status: "ready",
+      latestVersion: info.version,
+      downloadProgress: 100,
+    });
+  });
+
+  autoUpdater.on("error", (err: Error) => {
+    setState({
+      status: "error",
+      error: err.message,
+    });
+  });
+}
+
+// --- Public API ---
+
+export function initAutoUpdater(onStateChange?: () => void): void {
+  onStateChangeCallback = onStateChange ?? null;
+  state.currentVersion = app.getVersion();
+
+  if (app.isPackaged) {
+    setupAutoUpdater();
+    autoUpdater.checkForUpdates();
+  } else {
+    devCheckForUpdates();
+  }
+}
+
+export async function checkForUpdates(): Promise<void> {
+  if (app.isPackaged) {
+    await autoUpdater.checkForUpdates();
+  } else {
+    await devCheckForUpdates();
+  }
+}
+
+export function getUpdateState(): UpdateState {
+  return state;
+}
+
+export function quitAndInstall(): void {
+  if (app.isPackaged) {
+    autoUpdater.quitAndInstall();
+  }
 }
