@@ -10,6 +10,12 @@ exports.default = async function notarize(context) {
     return;
   }
 
+  // Skip notarization for local dev builds
+  if (process.env.SKIP_NOTARIZE) {
+    console.log("  • skipping notarization (SKIP_NOTARIZE is set)");
+    return;
+  }
+
   const appPath = path.join(
     context.appOutDir,
     `${context.packager.appInfo.productFilename}.app`
