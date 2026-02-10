@@ -58,6 +58,7 @@ jobs:
 
       - name: Minify JavaScript
         run: |
+          terser i18n.js -o dist/i18n.js -c -m
           terser script.js -o dist/script.js -c -m
 
       - name: Copy assets
