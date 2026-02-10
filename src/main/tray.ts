@@ -1,6 +1,7 @@
 import { app, Tray, Menu, nativeImage, shell } from "electron";
 import { getResourcePath } from "./resources";
 import { type VoxConfig, type WhisperModelSize } from "../shared/config";
+import { getLastUpdateStatus } from "./updater";
 
 let tray: Tray | null = null;
 
@@ -64,7 +65,7 @@ export function updateTrayConfig(config: VoxConfig): void {
   updateTrayMenu();
 }
 
-function updateTrayMenu(): void {
+export function updateTrayMenu(): void {
   if (!tray || !callbacks) return;
 
   const menuTemplate: Electron.MenuItemConstructorOptions[] = [
@@ -119,6 +120,18 @@ function updateTrayMenu(): void {
         enabled: hasModel,
       });
     }
+  }
+
+  // Update notification
+  const updateStatus = getLastUpdateStatus();
+  if (updateStatus?.updateAvailable) {
+    menuTemplate.push(
+      { type: "separator" },
+      {
+        label: `Update to v${updateStatus.latestVersion}`,
+        click: () => shell.openExternal(updateStatus.releaseUrl),
+      },
+    );
   }
 
   menuTemplate.push(

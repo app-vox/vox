@@ -8,7 +8,8 @@ import { transcribe } from "./audio/whisper";
 import { createLlmProvider } from "./llm/factory";
 import { Pipeline } from "./pipeline";
 import { ShortcutManager } from "./shortcuts/manager";
-import { setupTray, setTrayModelState, updateTrayConfig } from "./tray";
+import { setupTray, setTrayModelState, updateTrayConfig, updateTrayMenu } from "./tray";
+import { checkForUpdates } from "./updater";
 import { openHome } from "./windows/home";
 import { registerIpcHandlers } from "./ipc";
 import { isAccessibilityGranted } from "./input/paster";
@@ -97,6 +98,9 @@ app.whenReady().then(async () => {
   });
   setTrayModelState(setupChecker.hasAnyModel());
   updateTrayConfig(configManager.load());
+
+  // Check for updates on startup (respects 24h cooldown)
+  checkForUpdates().then(() => updateTrayMenu());
 
   if (!app.isPackaged) {
     openHome(reloadConfig);

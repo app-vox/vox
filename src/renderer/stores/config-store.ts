@@ -2,6 +2,11 @@ import { create } from "zustand";
 import type { VoxConfig } from "../../shared/config";
 import { useSaveToast } from "../hooks/use-save-toast";
 
+function migrateActiveTab(tab: string | null): string | null {
+  if (tab === "appearance") return "general";
+  return tab;
+}
+
 interface ConfigState {
   config: VoxConfig | null;
   loading: boolean;
@@ -17,7 +22,7 @@ interface ConfigState {
 export const useConfigStore = create<ConfigState>((set, get) => ({
   config: null,
   loading: true,
-  activeTab: typeof window !== "undefined" ? (localStorage.getItem("vox:activeTab") || "whisper") : "whisper",
+  activeTab: typeof window !== "undefined" ? (migrateActiveTab(localStorage.getItem("vox:activeTab")) || "general") : "general",
   setupComplete: false,
 
   setActiveTab: (tab) => {
@@ -35,8 +40,8 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     const setupState = await window.voxApi.setup.check();
 
     // Force Whisper tab if setup is incomplete
-    const savedTab = typeof window !== "undefined" ? localStorage.getItem("vox:activeTab") : null;
-    const activeTab = setupState.hasAnyModel ? (savedTab || "whisper") : "whisper";
+    const savedTab = typeof window !== "undefined" ? migrateActiveTab(localStorage.getItem("vox:activeTab")) : null;
+    const activeTab = setupState.hasAnyModel ? (savedTab || "general") : "whisper";
 
     set({
       config,

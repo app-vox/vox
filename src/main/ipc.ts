@@ -4,6 +4,7 @@ import { ModelManager } from "./models/manager";
 import { type VoxConfig, type WhisperModelSize } from "../shared/config";
 import { getResourcePath } from "./resources";
 import { SetupChecker } from "./setup/checker";
+import { checkForUpdates, getLastUpdateStatus } from "./updater";
 
 export function registerIpcHandlers(
   configManager: ConfigManager,
@@ -218,4 +219,9 @@ export function registerIpcHandlers(
       downloadedModels: setupChecker.getDownloadedModels(),
     };
   });
+
+  // Update checks
+  ipcMain.handle("updates:check", () => checkForUpdates(true));
+  ipcMain.handle("updates:get-status", () => getLastUpdateStatus());
+  ipcMain.handle("updates:get-version", () => app.getVersion());
 }
