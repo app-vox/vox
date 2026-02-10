@@ -183,7 +183,7 @@ export function LlmPanel() {
                 <p className={form.hint}>
                   Your custom instructions will be added on top of Vox's default behavior (fix grammar, remove filler words, preserve meaning). Leave empty to use only the defaults.
                 </p>
-                <details style={{ marginBottom: "12px", fontSize: "13px", color: "var(--text-secondary)" }}>
+                <details style={{ marginTop: "16px", marginBottom: "12px", fontSize: "13px", color: "var(--text-secondary)" }}>
                   <summary style={{ cursor: "pointer", marginBottom: "8px", fontWeight: 500 }}>
                     💡 Example Instructions
                   </summary>
