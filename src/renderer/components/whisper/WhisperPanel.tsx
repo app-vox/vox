@@ -26,11 +26,9 @@ export function WhisperPanel() {
     const modelsList = await window.voxApi.models.list();
     setModels(modelsList);
 
-    // Get fresh config state
     const currentConfig = useConfigStore.getState().config;
     if (!currentConfig) return;
 
-    // Check if currently selected model is still downloaded
     const selectedModel = currentConfig.whisper.model;
     if (selectedModel) {
       const stillDownloaded = modelsList.find(
@@ -38,15 +36,12 @@ export function WhisperPanel() {
       );
 
       if (!stillDownloaded) {
-        // Selected model was deleted, auto-select first available
         const firstAvailable = modelsList.find((m) => m.downloaded);
 
         if (firstAvailable) {
-          // Auto-select first available downloaded model
           updateConfig({ whisper: { model: firstAvailable.size as WhisperModelSize } });
           await saveConfig(false);
         } else {
-          // No models available, clear selection
           updateConfig({ whisper: { model: "" as WhisperModelSize } });
           await saveConfig(false);
         }
@@ -60,12 +55,10 @@ export function WhisperPanel() {
 
   useEffect(() => {
     const cleanup = window.voxApi.models.onDownloadProgress((progress) => {
-      // When download completes (100%), refresh models and config
       if (progress.downloaded === progress.total && progress.total > 0) {
         setTimeout(() => {
           refreshModels();
           loadConfig();
-          // Explicitly check setup state after download
           useConfigStore.getState().checkSetup();
         }, 100);
       }
@@ -76,13 +69,11 @@ export function WhisperPanel() {
   if (!config) return null;
 
   const handleSelect = async (size: string) => {
-    // Only allow selection of downloaded models
     const selectedModel = models.find((m) => m.size === size);
     if (!selectedModel?.downloaded) {
       return;
     }
 
-    // Update config and save
     updateConfig({ whisper: { model: size as WhisperModelSize } });
     await saveConfig(false);
     triggerToast();
@@ -140,9 +131,9 @@ export function WhisperPanel() {
             className={`${btn.btn} ${btn.primary}`}
           >
             <RecordIcon />
-            Test Whisper
+            Test Local Model
           </button>
-          <p className={form.hint}>Records 5 seconds of audio and runs it through the selected model.</p>
+          <p className={form.hint}>Records 5 seconds of audio and transcribes it using the selected local model. Local models run entirely on your device, ensuring your audio never leaves your computer for maximum privacy.</p>
           <StatusBox text={testStatus.text} type={testStatus.type} />
         </div>
       </div>

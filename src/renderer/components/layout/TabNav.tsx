@@ -80,7 +80,7 @@ export function TabNav() {
   const isConfigured = (type?: "speech" | "permissions" | "ai-enhancement") => {
     if (!type) return false;
     if (type === "speech") return setupComplete;
-    if (type === "permissions") return permissionStatus?.accessibility === true && permissionStatus?.microphone === true;
+    if (type === "permissions") return permissionStatus?.accessibility === true && permissionStatus?.microphone === "granted";
     if (type === "ai-enhancement") return config?.enableLlmEnhancement === true;
     return false;
   };
