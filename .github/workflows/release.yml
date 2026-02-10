@@ -255,8 +255,11 @@ jobs:
           git tag -f latest
           git push origin latest
 
-          # Create the latest release with stable-name assets
+          # Create the latest release as a prerelease so electron-updater
+          # skips it and resolves to the versioned release (which has
+          # matching file names for latest-mac.yml).
           gh release create latest \
+            --prerelease \
             --title "Vox Latest ($TAG)" \
             --notes "$(cat <<'NOTES'
           This release always points to the latest version. Current: **$TAG**
