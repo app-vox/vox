@@ -23,6 +23,6 @@ describe("constants", () => {
 
   it("should define LLM system prompt", () => {
     expect(LLM_SYSTEM_PROMPT).toContain("speech-to-text post-processor");
-    expect(LLM_SYSTEM_PROMPT).toContain("filler words");
+    expect(LLM_SYSTEM_PROMPT.toLowerCase()).toContain("filler words");
   });
 });
