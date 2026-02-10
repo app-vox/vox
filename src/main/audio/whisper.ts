@@ -47,6 +47,7 @@ function runWhisper(modelPath: string, filePath: string): Promise<string> {
         "--best-of", "5",         // Keep default (max = 8 for most models)
         "--beam-size", "5",       // Keep default (safe across all models)
         "--entropy-thold", "2.0", // Lower threshold = more conservative (default: 2.4)
+        "--prompt", "Transcribe exactly as spoken. Audio may contain multiple languages mixed together.",
       ],
       { cwd: WHISPER_CPP_DIR, timeout: 30000 },
       (error, stdout, stderr) => {
