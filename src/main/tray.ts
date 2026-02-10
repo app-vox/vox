@@ -43,7 +43,9 @@ export function setupTray(trayCallbacks: TrayCallbacks): void {
   callbacks = trayCallbacks;
 
   const iconPath = getResourcePath("trayIcon.png");
-  const icon = nativeImage.createFromPath(iconPath);
+  let icon = nativeImage.createFromPath(iconPath);
+  // Resize to 18x18 to provide better vertical alignment in macOS menu bar
+  icon = icon.resize({ width: 18, height: 18 });
   icon.setTemplateImage(true);
   tray = new Tray(icon);
 
