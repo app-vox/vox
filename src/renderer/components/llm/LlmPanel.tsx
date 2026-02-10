@@ -183,6 +183,20 @@ export function LlmPanel() {
                 <p className={form.hint}>
                   Your custom instructions will be added on top of Vox's default behavior (fix grammar, remove filler words, preserve meaning). Leave empty to use only the defaults.
                 </p>
+                <details style={{ marginBottom: "12px", fontSize: "13px", color: "var(--text-secondary)" }}>
+                  <summary style={{ cursor: "pointer", marginBottom: "8px", fontWeight: 500 }}>
+                    💡 Example Instructions
+                  </summary>
+                  <ul style={{ margin: "0", paddingLeft: "20px", lineHeight: "1.6" }}>
+                    <li><strong>Formal:</strong> "Use formal language and avoid contractions"</li>
+                    <li><strong>Casual:</strong> "Keep it casual and conversational"</li>
+                    <li><strong>Professional:</strong> "Use professional business language"</li>
+                    <li><strong>Polite:</strong> "Use polite and respectful language"</li>
+                    <li><strong>Humorous:</strong> "Add light humor where appropriate"</li>
+                    <li><strong>Technical:</strong> "Preserve all technical terms exactly as spoken"</li>
+                    <li><strong>Brevity:</strong> "Make the text as concise as possible"</li>
+                  </ul>
+                </details>
                 <textarea
                   id="custom-prompt"
                   value={config.customPrompt || ""}

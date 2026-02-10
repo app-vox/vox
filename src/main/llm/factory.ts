@@ -15,11 +15,11 @@ export function createLlmProvider(config: VoxConfig): LlmProvider {
     return new NoopProvider();
   }
 
-  // Append custom prompt AFTER default system prompt (only if custom is not empty)
+  // Append custom prompt at the END with CRITICAL emphasis (only if custom is not empty)
   const customPrompt = config.customPrompt?.trim();
   const hasCustomPrompt = !!customPrompt;
   const prompt = customPrompt
-    ? `${LLM_SYSTEM_PROMPT}\n\nADDITIONAL CUSTOM INSTRUCTIONS:\n${customPrompt}`
+    ? `${LLM_SYSTEM_PROMPT}\n\nCRITICAL: PLEASE FOLLOW THESE ADDITIONAL RULES:\n\n${customPrompt}\n\nThese additional rules take priority and must be followed strictly.`
     : LLM_SYSTEM_PROMPT;
 
   console.log("[LLM Factory] Creating provider:", config.llm.provider);
