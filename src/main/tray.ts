@@ -25,18 +25,68 @@ const SPEECH_QUALITY_LABELS: Record<WhisperModelSize, string> = {
   large: "Best",
 };
 
+function simplifyModelName(fullName: string): string {
+  // Extract meaningful parts from complex model names
+  // Examples:
+  // "anthropic.claude-3-5-sonnet-20241022-v2:0" -> "claude-3-5-sonnet-v2"
+  // "gpt-4-turbo-2024-04-09" -> "gpt-4-turbo"
+  // "meta.llama3-70b-instruct-v1:0" -> "llama3-70b-v1"
+
+  // Remove common prefixes (provider namespaces)
+  let simplified = fullName
+    .replace(/^(anthropic\.|meta\.|amazon\.|cohere\.|mistral\.|ai21\.)/, "")
+    .replace(/^(local\.|remote\.)/, "");
+
+  // Extract core model name and version
+  // Pattern: keep model family, size, and version; remove date/release ID
+  const patterns = [
+    // Claude pattern: claude-X-Y-sonnet-YYYYMMDD-vN:0 -> claude-X-Y-sonnet-vN
+    /^(claude-\d+-\d+-\w+)-\d{8}-(v\d+):\d+$/,
+    // GPT pattern: gpt-X-variant-YYYY-MM-DD -> gpt-X-variant
+    /^(gpt-\d+(?:-\w+)?)-\d{4}-\d{2}-\d{2}$/,
+    // Llama pattern: llamaX-XXb-instruct-vN:0 -> llamaX-XXb-vN
+    /^(llama\d+-\d+b)(?:-\w+)?-(v\d+):\d+$/,
+    // Generic pattern with version: model-name-vN:0 -> model-name-vN
+    /^(.+)-(v\d+):\d+$/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = simplified.match(pattern);
+    if (match) {
+      // Reconstruct without date/release ID
+      if (match[2]) {
+        return `${match[1]}-${match[2]}`;
+      }
+      return match[1];
+    }
+  }
+
+  // Fallback: remove trailing version identifiers and dates
+  simplified = simplified
+    .replace(/:\d+$/, "") // Remove trailing :0
+    .replace(/-\d{8}$/, "") // Remove trailing date YYYYMMDD
+    .replace(/-\d{4}-\d{2}-\d{2}$/, ""); // Remove trailing date YYYY-MM-DD
+
+  return simplified;
+}
+
 function getActiveModelName(config: VoxConfig): string {
+  let fullName: string;
   switch (config.llm.provider) {
     case "bedrock":
-      return config.llm.modelId;
+      fullName = config.llm.modelId;
+      break;
     case "openai":
     case "deepseek":
     case "litellm":
-      return config.llm.openaiModel;
+      fullName = config.llm.openaiModel;
+      break;
     case "foundry":
     default:
-      return config.llm.model;
+      fullName = config.llm.model;
+      break;
   }
+  return simplifyModelName(fullName);
 }
 
 export function setupTray(trayCallbacks: TrayCallbacks): void {

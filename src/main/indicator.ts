@@ -93,11 +93,11 @@ export class IndicatorWindow {
     }
 
     console.log(`[Vox] IndicatorWindow creating new window for mode: ${mode}`);
-    const estimatedWidth = mode === "error" ? 165 : 180;
+    const estimatedWidth = mode === "error" ? 150 : 165;
 
     this.window = new BrowserWindow({
       width: estimatedWidth,
-      height: 48,
+      height: 42,
       frame: false,
       transparent: true,
       hasShadow: false,
@@ -119,7 +119,7 @@ export class IndicatorWindow {
     const cursorPoint = screen.getCursorScreenPoint();
     const display = screen.getDisplayNearestPoint(cursorPoint);
     const x = Math.round(display.bounds.x + display.bounds.width / 2 - estimatedWidth / 2);
-    this.window.setPosition(x, display.bounds.y + 20);
+    this.window.setPosition(x, display.bounds.y + 24);
 
     this.window.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(buildHtml(mode))}`);
 
@@ -145,10 +145,10 @@ export class IndicatorWindow {
       this.window = null;
     }
 
-    const estimatedWidth = Math.max(220, text.length * 8);
+    const estimatedWidth = Math.max(200, text.length * 7.5);
     this.window = new BrowserWindow({
       width: estimatedWidth,
-      height: 48,
+      height: 42,
       frame: false,
       transparent: true,
       hasShadow: false,
@@ -169,7 +169,7 @@ export class IndicatorWindow {
     const cursorPoint = screen.getCursorScreenPoint();
     const display = screen.getDisplayNearestPoint(cursorPoint);
     const x = Math.round(display.bounds.x + display.bounds.width / 2 - estimatedWidth / 2);
-    this.window.setPosition(x, display.bounds.y + 20);
+    this.window.setPosition(x, display.bounds.y + 24);
 
     const html = this.buildCustomErrorHtml(text);
     this.window.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);

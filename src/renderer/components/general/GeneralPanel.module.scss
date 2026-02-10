@@ -124,6 +124,55 @@
   margin: var(--spacing-4) 0;
 }
 
+.statusMessage {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--spacing-3);
+}
+
+.aboutButtons {
+  display: flex;
+  gap: var(--spacing-3);
+}
+
+.aboutButton {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: var(--spacing-2) var(--spacing-3);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 150ms ease;
+  min-width: 0;
+
+  &:hover:not(:disabled) {
+    background: var(--color-bg-hover);
+    border-color: var(--color-border-hover);
+    color: var(--color-text-primary);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  span {
+    flex-shrink: 1;
+    min-width: 0;
+  }
+}
+
 .segmented {
   display: inline-flex;
   background: var(--color-bg-input);

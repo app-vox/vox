@@ -70,6 +70,6 @@ export function createDefaultConfig(): VoxConfig {
     theme: "system",
     enableLlmEnhancement: false,
     customPrompt: "",
-    launchAtLogin: false,
+    launchAtLogin: true,
   };
 }
