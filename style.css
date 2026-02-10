@@ -214,6 +214,105 @@ body {
     display: none;
 }
 
+/* Language Switcher */
+.language-switcher {
+    position: relative;
+}
+
+.language-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    min-width: 60px;
+    height: 36px;
+    padding: 0 0.5rem;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.language-toggle:hover {
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
+}
+
+.language-toggle svg {
+    flex-shrink: 0;
+}
+
+#current-language {
+    font-size: 0.75rem;
+    letter-spacing: 0.025em;
+}
+
+.language-menu {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    min-width: 200px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 0.5rem;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: all var(--transition-base);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+}
+
+[data-theme="light"] .language-menu {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.language-menu.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.language-menu button {
+    display: block;
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    text-align: left;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.language-menu button:hover {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.language-menu button.active {
+    background-color: var(--accent);
+    color: white;
+}
+
+.language-menu button.active:hover {
+    background-color: var(--accent-hover);
+}
+
+@media (max-width: 767px) {
+    .language-menu {
+        min-width: 180px;
+        left: -0.5rem;
+    }
+}
+
 /* Buttons */
 .btn {
     display: inline-flex;

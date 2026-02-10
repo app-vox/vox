@@ -47,6 +47,18 @@
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="apple-touch-icon" href="assets/favicon.png">
 
+    <!-- Language alternatives for SEO -->
+    <link rel="alternate" hreflang="en" href="https://app-vox.github.io/vox/" />
+    <link rel="alternate" hreflang="pt-BR" href="https://app-vox.github.io/vox/" />
+    <link rel="alternate" hreflang="pt-PT" href="https://app-vox.github.io/vox/" />
+    <link rel="alternate" hreflang="es" href="https://app-vox.github.io/vox/" />
+    <link rel="alternate" hreflang="fr" href="https://app-vox.github.io/vox/" />
+    <link rel="alternate" hreflang="de" href="https://app-vox.github.io/vox/" />
+    <link rel="alternate" hreflang="it" href="https://app-vox.github.io/vox/" />
+    <link rel="alternate" hreflang="ru" href="https://app-vox.github.io/vox/" />
+    <link rel="alternate" hreflang="tr" href="https://app-vox.github.io/vox/" />
+    <link rel="alternate" hreflang="x-default" href="https://app-vox.github.io/vox/" />
+
     <!-- Stylesheet -->
     <link rel="stylesheet" href="style.css">
 
@@ -92,6 +104,26 @@
                     <span>Vox</span>
                 </a>
                 <nav class="header-nav">
+                    <div class="language-switcher">
+                        <button class="language-toggle" id="language-toggle" aria-label="Select language">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="10" cy="10" r="8"/>
+                                <path d="M2 10h16M10 2a15.3 15.3 0 014 8 15.3 15.3 0 01-4 8 15.3 15.3 0 01-4-8 15.3 15.3 0 014-8z"/>
+                            </svg>
+                            <span id="current-language">EN</span>
+                        </button>
+                        <div class="language-menu" id="language-menu">
+                            <button data-lang="en">English (en)</button>
+                            <button data-lang="pt-BR">Português (pt-BR)</button>
+                            <button data-lang="pt-PT">Português (pt-PT)</button>
+                            <button data-lang="es">Español (es)</button>
+                            <button data-lang="fr">Français (fr)</button>
+                            <button data-lang="de">Deutsch (de)</button>
+                            <button data-lang="it">Italiano (it)</button>
+                            <button data-lang="ru">Русский (ru)</button>
+                            <button data-lang="tr">Türkçe (tr)</button>
+                        </div>
+                    </div>
                     <a href="https://github.com/app-vox/vox" class="github-stars" id="github-stars" target="_blank" rel="noopener noreferrer">
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
                             <path d="M8 0.198c-4.418 0-8 3.582-8 8 0 3.535 2.292 6.533 5.47 7.59.4.075.547-.172.547-.385 0-.19-.007-.693-.01-1.36-2.226.483-2.695-1.073-2.695-1.073-.364-.924-.89-1.17-.89-1.17-.725-.496.056-.486.056-.486.803.056 1.225.824 1.225.824.714 1.223 1.873.87 2.33.665.072-.517.279-.87.508-1.07-1.777-.2-3.644-.888-3.644-3.953 0-.873.31-1.587.823-2.147-.09-.202-.36-1.015.07-2.117 0 0 .67-.215 2.2.82.64-.178 1.32-.266 2-.27.68.004 1.36.092 2 .27 1.52-1.035 2.19-.82 2.19-.82.43 1.102.16 1.915.08 2.117.51.56.82 1.274.82 2.147 0 3.073-1.87 3.75-3.65 3.947.28.24.54.73.54 1.48 0 1.07-.01 1.93-.01 2.19 0 .21.14.46.55.38C13.71 14.53 16 11.53 16 8c0-4.418-3.582-8-8-8z"/>
@@ -119,8 +151,8 @@
             <div class="container">
                 <div class="hero-content">
                     <h1 class="hero-title">
-                        Voice to text.<br>
-                        <span class="text-accent">Secure. Accurate. Free.</span>
+                        <span data-i18n="hero.title">Voice to text.</span><br>
+                        <span class="text-accent" data-i18n="hero.titleAccent">Secure. Accurate. Free.</span>
                     </h1>
                     <div class="hero-cta">
                         <a href="https://github.com/app-vox/vox/releases/download/latest/Vox-mac-arm64.dmg" class="btn btn-primary" id="download-btn" target="_blank" rel="noopener noreferrer">
@@ -128,39 +160,39 @@
                                 <path d="M8.75 1.75a.75.75 0 00-1.5 0v5.69L5.03 5.22a.75.75 0 00-1.06 1.06l3.5 3.5a.75.75 0 001.06 0l3.5-3.5a.75.75 0 00-1.06-1.06L8.75 7.44V1.75z"/>
                                 <path d="M2.5 9.5a.75.75 0 01.75.75v2.5c0 .138.112.25.25.25h8.5a.25.25 0 00.25-.25v-2.5a.75.75 0 011.5 0v2.5A1.75 1.75 0 0112 15H4a1.75 1.75 0 01-1.75-1.75v-2.5a.75.75 0 01.75-.75z"/>
                             </svg>
-                            <span id="download-text">Download for macOS</span>
+                            <span id="download-text" data-i18n="hero.downloadButton">Download for macOS</span>
                         </a>
-                        <p class="platform-note" id="platform-note" style="display: none;">
+                        <p class="platform-note" id="platform-note" data-i18n="hero.platformNote" style="display: none;">
                             Currently available for macOS. Windows and Linux support coming soon.
                         </p>
-                        <a href="https://github.com/app-vox/vox" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">Star on GitHub</a>
+                        <a href="https://github.com/app-vox/vox" class="btn btn-secondary" target="_blank" rel="noopener noreferrer" data-i18n="hero.starButton">Star on GitHub</a>
                     </div>
                 </div>
 
                 <!-- Demo Visual -->
                 <div class="demo-container">
-                    <div class="demo-header">How it works</div>
+                    <div class="demo-header" data-i18n="hero.demoHeader">How it works</div>
 
                     <!-- Animated Status Overlays -->
                     <div class="demo-overlay-container">
                         <div class="demo-background"></div>
                         <div class="status-overlay" data-status="listening">
                             <div class="status-dot status-dot-red"></div>
-                            <span class="status-text">Listening...</span>
+                            <span class="status-text" data-i18n="demo.listening">Listening...</span>
                         </div>
                         <div class="status-overlay" data-status="transcribing">
                             <div class="status-dot status-dot-yellow"></div>
-                            <span class="status-text">Transcribing...</span>
+                            <span class="status-text" data-i18n="demo.transcribing">Transcribing...</span>
                         </div>
                         <div class="status-overlay" data-status="enhancing">
                             <div class="status-dot status-dot-blue"></div>
-                            <span class="status-text">Enhancing...</span>
+                            <span class="status-text" data-i18n="demo.enhancing">Enhancing...</span>
                         </div>
                     </div>
 
                     <!-- Result Field (above stages) -->
                     <div class="demo-result">
-                        <div class="demo-result-label">Result</div>
+                        <div class="demo-result-label" data-i18n="demo.resultLabel">Result</div>
                         <div class="demo-input-field">
                             <span class="typed-text"></span><span class="typing-cursor"></span>
                         </div>
@@ -177,8 +209,8 @@
                                     <circle cx="12" cy="12" r="8"/>
                                 </svg>
                             </div>
-                            <h3 class="stage-title">Record</h3>
-                            <p class="stage-description">Press hotkey to record</p>
+                            <h3 class="stage-title" data-i18n="demo.stages.record.title">Record</h3>
+                            <p class="stage-description" data-i18n="demo.stages.record.description">Press hotkey to record</p>
                         </div>
                         <div class="stage-label">
                             <div class="stage-icon transcribe">
@@ -186,8 +218,8 @@
                                     <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
                                 </svg>
                             </div>
-                            <h3 class="stage-title">Transcribe</h3>
-                            <p class="stage-description">Whisper processes locally</p>
+                            <h3 class="stage-title" data-i18n="demo.stages.transcribe.title">Transcribe</h3>
+                            <p class="stage-description" data-i18n="demo.stages.transcribe.description">Whisper processes locally</p>
                         </div>
                         <div class="stage-label">
                             <div class="stage-icon enhance">
@@ -196,8 +228,8 @@
                                     <circle cx="12" cy="12" r="9"/>
                                 </svg>
                             </div>
-                            <h3 class="stage-title">AI Enhancement</h3>
-                            <p class="stage-description">Optional enhancement</p>
+                            <h3 class="stage-title" data-i18n="demo.stages.enhance.title">AI Enhancement</h3>
+                            <p class="stage-description" data-i18n="demo.stages.enhance.description">Optional enhancement</p>
                         </div>
                         <div class="stage-label">
                             <div class="stage-icon paste">
@@ -205,8 +237,8 @@
                                     <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                                 </svg>
                             </div>
-                            <h3 class="stage-title">Paste</h3>
-                            <p class="stage-description">Clean text, ready to use</p>
+                            <h3 class="stage-title" data-i18n="demo.stages.paste.title">Paste</h3>
+                            <p class="stage-description" data-i18n="demo.stages.paste.description">Clean text, ready to use</p>
                         </div>
                     </div>
                 </div>
@@ -222,14 +254,14 @@
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                         </svg>
                     </div>
-                    <h2 class="privacy-title">Your voice stays on your device</h2>
-                    <p class="privacy-description">
+                    <h2 class="privacy-title" data-i18n="privacy.title">Your voice stays on your device</h2>
+                    <p class="privacy-description" data-i18n="privacy.description">
                         Transcription runs entirely on your computer using Whisper. Optionally, the resulting text can be sent to an LLM for enhancement — your audio never leaves your device.
                     </p>
                     <div class="privacy-features">
-                        <span class="feature-pill">Local processing</span>
-                        <span class="feature-pill">No cloud audio</span>
-                        <span class="feature-pill">Open source</span>
+                        <span class="feature-pill" data-i18n="privacy.features.local">Local processing</span>
+                        <span class="feature-pill" data-i18n="privacy.features.noCloud">No cloud audio</span>
+                        <span class="feature-pill" data-i18n="privacy.features.openSource">Open source</span>
                     </div>
                 </div>
             </div>
@@ -240,19 +272,20 @@
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
-                <p class="footer-text">Built by the open-source community</p>
+                <p class="footer-text" data-i18n="footer.builtBy">Built by the open-source community</p>
                 <nav class="footer-nav">
-                    <a href="https://github.com/app-vox/vox/blob/main/README.md" target="_blank" rel="noopener noreferrer">Docs</a>
+                    <a href="https://github.com/app-vox/vox/blob/main/README.md" target="_blank" rel="noopener noreferrer" data-i18n="footer.docs">Docs</a>
                     <span class="separator">•</span>
-                    <a href="https://github.com/app-vox/vox" target="_blank" rel="noopener noreferrer">GitHub</a>
+                    <a href="https://github.com/app-vox/vox" target="_blank" rel="noopener noreferrer" data-i18n="footer.github">GitHub</a>
                     <span class="separator">•</span>
-                    <a href="https://github.com/app-vox/vox/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>
+                    <a href="https://github.com/app-vox/vox/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" data-i18n="footer.license">MIT License</a>
                 </nav>
             </div>
         </div>
     </footer>
 
     <!-- Scripts -->
+    <script src="i18n.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
