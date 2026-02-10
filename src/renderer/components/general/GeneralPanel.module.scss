@@ -124,15 +124,16 @@
   margin: var(--spacing-4) 0;
 }
 
-.updateSection {
+.aboutActions {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2);
+  gap: var(--spacing-3);
 }
 
-.updateButton {
+.aboutButton {
+  flex: 1;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   padding: var(--spacing-2) var(--spacing-3);
   background: none;
@@ -143,7 +144,6 @@
   font-weight: var(--font-weight-medium);
   cursor: pointer;
   transition: all 150ms ease;
-  width: 100%;
 
   &:hover:not(:disabled) {
     background: var(--color-bg-hover);
@@ -161,9 +161,14 @@
   }
 
   span {
-    flex: 1;
-    text-align: left;
+    white-space: nowrap;
   }
+}
+
+.updateStatus {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--spacing-2);
 }
 
 .segmented {

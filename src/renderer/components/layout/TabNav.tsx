@@ -4,7 +4,7 @@ import { WarningBadge } from "../ui/WarningBadge";
 import { usePermissions } from "../../hooks/use-permissions";
 import styles from "./TabNav.module.scss";
 
-const TABS: { id: string; label: string; icon: ReactNode; requiresModel?: boolean; checkConfigured?: "speech" | "permissions" }[] = [
+const TABS: { id: string; label: string; icon: ReactNode; requiresModel?: boolean; checkConfigured?: "speech" | "permissions" | "ai-enhancement" }[] = [
   {
     id: "whisper",
     label: "Speech",
@@ -22,6 +22,7 @@ const TABS: { id: string; label: string; icon: ReactNode; requiresModel?: boolea
   {
     id: "llm",
     label: "AI Enhancement",
+    checkConfigured: "ai-enhancement",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 2L2 7l10 5 10-5-10-5z" />
@@ -73,12 +74,14 @@ export function TabNav() {
   const activeTab = useConfigStore((s) => s.activeTab);
   const setActiveTab = useConfigStore((s) => s.setActiveTab);
   const setupComplete = useConfigStore((s) => s.setupComplete);
-  const permissions = usePermissions();
+  const config = useConfigStore((s) => s.config);
+  const { status: permissionStatus } = usePermissions();
 
-  const isConfigured = (type?: "speech" | "permissions") => {
+  const isConfigured = (type?: "speech" | "permissions" | "ai-enhancement") => {
     if (!type) return false;
     if (type === "speech") return setupComplete;
-    if (type === "permissions") return permissions.accessibility && permissions.microphone;
+    if (type === "permissions") return permissionStatus?.accessibility === true && permissionStatus?.microphone === true;
+    if (type === "ai-enhancement") return config?.enableLlmEnhancement === true;
     return false;
   };
 
