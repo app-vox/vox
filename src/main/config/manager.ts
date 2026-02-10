@@ -20,7 +20,7 @@ export class ConfigManager {
   }
 
   load(): VoxConfig {
-    const defaults = createDefaultConfig(app.isPackaged);
+    const defaults = createDefaultConfig(app?.isPackaged ?? false);
 
     if (!fs.existsSync(this.configPath)) {
       return defaults;

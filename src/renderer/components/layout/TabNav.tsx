@@ -4,7 +4,7 @@ import { WarningBadge } from "../ui/WarningBadge";
 import { usePermissions } from "../../hooks/use-permissions";
 import styles from "./TabNav.module.scss";
 
-const TABS: { id: string; label: string; icon: ReactNode; requiresModel?: boolean; checkConfigured?: "speech" | "permissions" | "ai-enhancement" }[] = [
+const TABS: { id: string; label: string; icon: ReactNode; requiresModel?: boolean; requiresPermissions?: boolean; checkConfigured?: "speech" | "permissions" | "ai-enhancement" }[] = [
   {
     id: "whisper",
     label: "Speech",
@@ -44,6 +44,7 @@ const TABS: { id: string; label: string; icon: ReactNode; requiresModel?: boolea
   {
     id: "permissions",
     label: "Permissions",
+    requiresPermissions: true,
     checkConfigured: "permissions",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -85,6 +86,10 @@ export function TabNav() {
     return false;
   };
 
+  const needsPermissions = () => {
+    return permissionStatus?.accessibility !== true || permissionStatus?.microphone !== "granted";
+  };
+
   return (
     <nav className={styles.tabs}>
       {TABS.map((tab) => (
@@ -96,7 +101,7 @@ export function TabNav() {
           {tab.icon}
           <span>
             {tab.label}
-            <WarningBadge show={tab.requiresModel === true && !setupComplete} />
+            <WarningBadge show={(tab.requiresModel === true && !setupComplete) || (tab.requiresPermissions === true && needsPermissions())} />
             {isConfigured(tab.checkConfigured) && (
               <svg
                 className={styles.checkmark}
