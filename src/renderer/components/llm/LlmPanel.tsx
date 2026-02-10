@@ -210,14 +210,13 @@ export function LlmPanel() {
                   <summary style={{ cursor: "pointer", marginBottom: "8px", fontWeight: 500 }}>
                     💡 Example Instructions
                   </summary>
-                  <ul style={{ margin: "0", paddingLeft: "20px", lineHeight: "1.6" }}>
-                    <li><strong>Formal:</strong> "Use formal language and avoid contractions"</li>
-                    <li><strong>Casual:</strong> "Keep it casual and conversational"</li>
-                    <li><strong>Professional:</strong> "Use professional business language"</li>
-                    <li><strong>Polite:</strong> "Use polite and respectful language"</li>
-                    <li><strong>Humorous:</strong> "Add light humor where appropriate"</li>
-                    <li><strong>Technical:</strong> "Preserve all technical terms exactly as spoken"</li>
-                    <li><strong>Brevity:</strong> "Make the text as concise as possible"</li>
+                  <ul style={{ margin: "0", paddingLeft: "20px", lineHeight: "1.7" }}>
+                    <li>💼 <strong>Professional:</strong> "Use professional business language"</li>
+                    <li>🎩 <strong>Formal:</strong> "Use formal language and avoid contractions"</li>
+                    <li>😎 <strong>Casual:</strong> "Keep it super casual and conversational"</li>
+                    <li>😂 <strong>Funny:</strong> "Add humor and make it entertaining while keeping the meaning"</li>
+                    <li>✨ <strong>With Emojis:</strong> "Add relevant emojis to make the text more expressive"</li>
+                    <li>⚡ <strong>Concise:</strong> "Make it as brief as possible without losing meaning"</li>
                   </ul>
                 </details>
               </div>
