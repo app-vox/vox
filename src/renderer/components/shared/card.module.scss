@@ -31,6 +31,22 @@
   padding: var(--spacing-5) var(--spacing-6) var(--spacing-6);
 }
 
+.learnMore {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  font-size: var(--font-size-sm);
+  color: var(--color-primary);
+  text-decoration: none;
+  margin-top: var(--spacing-2);
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+  }
+}
+
 .warningBanner {
   padding: var(--spacing-3) var(--spacing-6);
   background-color: #fffbeb;

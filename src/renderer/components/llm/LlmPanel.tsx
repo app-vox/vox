@@ -93,6 +93,14 @@ export function LlmPanel() {
         <p className={card.description}>
           Enhance your transcriptions by automatically fixing grammar, removing filler words, and cleaning up your speech.
         </p>
+        <a
+          href="https://github.com/app-vox/vox?tab=readme-ov-file#configuration"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={card.learnMore}
+        >
+          Learn more →
+        </a>
       </div>
       <div className={card.body}>
         <div className={form.field}>
