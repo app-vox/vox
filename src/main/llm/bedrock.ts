@@ -45,7 +45,14 @@ export class BedrockProvider implements LlmProvider {
 
   async correct(rawText: string): Promise<string> {
     const hasCustom = this.customPrompt.includes("ADDITIONAL CUSTOM INSTRUCTIONS");
+    const isDev = process.env.NODE_ENV === "development";
+
     console.log("[BedrockProvider] Enhancing text, custom prompt:", hasCustom ? "YES" : "NO");
+    if (isDev) {
+      console.log("[BedrockProvider] [DEV] Raw text length:", rawText.length);
+      console.log("[BedrockProvider] [DEV] Raw text:", rawText);
+      console.log("[BedrockProvider] [DEV] System prompt:", this.customPrompt);
+    }
 
     const command = new ConverseCommand({
       modelId: this.modelId,
@@ -57,10 +64,15 @@ export class BedrockProvider implements LlmProvider {
         },
       ],
       inferenceConfig: {
-        temperature: 0.3,
+        temperature: 0.1,
         maxTokens: 4096,
       },
     });
+
+    if (isDev) {
+      console.log("[BedrockProvider] [DEV] Model ID:", this.modelId);
+      console.log("[BedrockProvider] [DEV] Temperature: 0.1");
+    }
 
     const response: ConverseCommandOutput = await this.client.send(command);
 
@@ -72,6 +84,13 @@ export class BedrockProvider implements LlmProvider {
       throw new Error("LLM returned no text content");
     }
 
-    return textBlock.text.trim();
+    const correctedText = textBlock.text.trim();
+    console.log("[BedrockProvider] Enhanced text:", correctedText);
+    if (isDev) {
+      console.log("[BedrockProvider] [DEV] Enhanced text length:", correctedText.length);
+      console.log("[BedrockProvider] [DEV] Character diff:", correctedText.length - rawText.length);
+    }
+
+    return correctedText;
   }
 }

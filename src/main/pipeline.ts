@@ -127,10 +127,17 @@ export class Pipeline {
 
   async stopAndProcess(): Promise<string> {
     const processingStartTime = performance.now();
+    const isDev = process.env.NODE_ENV === "development";
     const recording = await this.deps.recorder.stop();
 
     if (this.canceled) {
       throw new CanceledError();
+    }
+
+    console.log("[Vox] ========== Starting Transcription Pipeline ==========");
+    if (isDev) {
+      console.log("[Vox] [DEV] Audio buffer length:", recording.audioBuffer.length);
+      console.log("[Vox] [DEV] Sample rate:", recording.sampleRate);
     }
 
     this.deps.onStage?.("transcribing");
@@ -146,19 +153,27 @@ export class Pipeline {
 
     const rawText = transcription.text.trim();
     console.log("[Vox] Whisper transcription:", rawText);
+    if (isDev) {
+      console.log("[Vox] [DEV] Raw text length:", rawText.length);
+      console.log("[Vox] [DEV] LLM provider type:", this.deps.llmProvider.constructor.name);
+    }
 
     // Skip garbage detection when LLM enhancement is disabled (Whisper-only mode)
     if (this.deps.llmProvider instanceof NoopProvider) {
       const processingTime = (performance.now() - processingStartTime).toFixed(1);
       console.log(`[Vox] LLM enhancement disabled (${processingTime}ms), returning raw transcription`);
+      console.log("[Vox] ========== Pipeline Complete (Whisper-only) ==========");
       if (!rawText) return "";
       return rawText;
     }
 
+    console.log("[Vox] LLM enhancement enabled, checking for garbage...");
     if (!rawText || isGarbageTranscription(rawText)) {
       console.log("[Vox] Transcription rejected as empty or garbage");
+      console.log("[Vox] ========== Pipeline Complete (Rejected) ==========");
       return "";
     }
+    console.log("[Vox] Transcription passed garbage check, sending to LLM...");
 
     if (this.canceled) {
       throw new CanceledError();
@@ -169,6 +184,14 @@ export class Pipeline {
       this.deps.onStage?.("enhancing");
       finalText = await this.deps.llmProvider.correct(rawText);
       console.log("[Vox] LLM enhanced text:", finalText);
+      if (isDev) {
+        console.log("[Vox] [DEV] Enhanced text length:", finalText.length);
+        console.log("[Vox] [DEV] Text changed:", rawText !== finalText);
+        if (rawText !== finalText) {
+          console.log("[Vox] [DEV] Original words:", rawText.split(/\s+/).length);
+          console.log("[Vox] [DEV] Enhanced words:", finalText.split(/\s+/).length);
+        }
+      }
     } catch (err: unknown) {
       // LLM failed — fall back to raw transcription
       console.log("[Vox] LLM enhancement failed, using raw transcription:", err instanceof Error ? err.message : err);
@@ -181,6 +204,7 @@ export class Pipeline {
 
     const totalTime = (performance.now() - processingStartTime).toFixed(1);
     console.log(`[Vox] Total processing time: ${totalTime}ms`);
+    console.log("[Vox] ========== Pipeline Complete ==========");
 
     return finalText;
   }

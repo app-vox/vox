@@ -7,16 +7,27 @@ import { OpenAICompatibleProvider } from "./openai-compatible";
 import { NoopProvider } from "./noop";
 
 export function createLlmProvider(config: VoxConfig): LlmProvider {
+  const isDev = process.env.NODE_ENV === "development";
+
   // If LLM enhancement is disabled, return no-op provider
   if (!config.enableLlmEnhancement) {
+    console.log("[LLM Factory] LLM enhancement is disabled, using NoopProvider");
     return new NoopProvider();
   }
 
   // Append custom prompt AFTER default system prompt (only if custom is not empty)
   const customPrompt = config.customPrompt?.trim();
+  const hasCustomPrompt = !!customPrompt;
   const prompt = customPrompt
     ? `${LLM_SYSTEM_PROMPT}\n\nADDITIONAL CUSTOM INSTRUCTIONS:\n${customPrompt}`
     : LLM_SYSTEM_PROMPT;
+
+  console.log("[LLM Factory] Creating provider:", config.llm.provider);
+  console.log("[LLM Factory] Custom prompt:", hasCustomPrompt ? "YES" : "NO");
+  if (isDev && hasCustomPrompt) {
+    console.log("[LLM Factory] [DEV] Custom prompt content:", customPrompt);
+    console.log("[LLM Factory] [DEV] Full system prompt length:", prompt.length);
+  }
 
   // Otherwise route to configured provider
   switch (config.llm.provider) {

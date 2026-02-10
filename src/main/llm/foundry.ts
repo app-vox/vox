@@ -20,10 +20,31 @@ export class FoundryProvider implements LlmProvider {
 
   async correct(rawText: string): Promise<string> {
     const hasCustom = this.config.customPrompt.includes("ADDITIONAL CUSTOM INSTRUCTIONS");
+    const isDev = process.env.NODE_ENV === "development";
+
     console.log("[FoundryProvider] Enhancing text, custom prompt:", hasCustom ? "YES" : "NO");
+    if (isDev) {
+      console.log("[FoundryProvider] [DEV] Raw text length:", rawText.length);
+      console.log("[FoundryProvider] [DEV] Raw text:", rawText);
+      console.log("[FoundryProvider] [DEV] System prompt:", this.config.customPrompt);
+    }
 
     const base = this.config.endpoint.replace(/\/+$/, "");
     const url = `${base}/v1/messages`;
+
+    const requestBody = {
+      model: this.config.model,
+      system: this.config.customPrompt,
+      messages: [
+        { role: "user", content: rawText },
+      ],
+      temperature: 0.1,
+      max_tokens: 4096,
+    };
+
+    if (isDev) {
+      console.log("[FoundryProvider] [DEV] Request body:", JSON.stringify(requestBody, null, 2));
+    }
 
     const response = await fetch(url, {
       method: "POST",
@@ -32,15 +53,7 @@ export class FoundryProvider implements LlmProvider {
         "Authorization": `Bearer ${this.config.apiKey}`,
         "anthropic-version": "2023-06-01",
       },
-      body: JSON.stringify({
-        model: this.config.model,
-        system: this.config.customPrompt,
-        messages: [
-          { role: "user", content: rawText },
-        ],
-        temperature: 0.3,
-        max_tokens: 4096,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
@@ -53,6 +66,14 @@ export class FoundryProvider implements LlmProvider {
     if (!textBlock) {
       throw new Error("LLM returned no text content");
     }
-    return textBlock.text.trim();
+
+    const correctedText = textBlock.text.trim();
+    console.log("[FoundryProvider] Enhanced text:", correctedText);
+    if (isDev) {
+      console.log("[FoundryProvider] [DEV] Enhanced text length:", correctedText.length);
+      console.log("[FoundryProvider] [DEV] Character diff:", correctedText.length - rawText.length);
+    }
+
+    return correctedText;
   }
 }
