@@ -40,7 +40,14 @@ function runWhisper(modelPath: string, filePath: string): Promise<string> {
   return new Promise((resolve, reject) => {
     execFile(
       WHISPER_BIN,
-      ["-l", "auto", "-m", modelPath, "-f", filePath],
+      [
+        "-l", "auto",
+        "-m", modelPath,
+        "-f", filePath,
+        "--best-of", "10",        // More candidates for better accuracy (default: 5)
+        "--beam-size", "10",      // Larger beam search (default: 5)
+        "--entropy-thold", "2.0", // Lower threshold = more conservative (default: 2.4)
+      ],
       { cwd: WHISPER_CPP_DIR, timeout: 30000 },
       (error, stdout, stderr) => {
         if (error) {
