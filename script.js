@@ -52,7 +52,7 @@ const updateDownloadButton = () => {
         downloadBtn.removeAttribute('href');
         downloadBtn.style.cursor = 'not-allowed';
         downloadBtn.style.opacity = '0.6';
-        downloadText.textContent = 'Coming Soon';
+        downloadText.textContent = window.i18n.t('platform.comingSoon');
 
         // Show platform note
         if (platformNote) {
@@ -62,11 +62,11 @@ const updateDownloadButton = () => {
         // Set appropriate tooltip message
         let tooltipMessage = '';
         if (os === 'windows' || os === 'linux') {
-            tooltipMessage = 'Currently available for macOS only. Windows and Linux support coming soon.';
+            tooltipMessage = window.i18n.t('platform.windowsLinuxSoon');
         } else if (os === 'ios') {
-            tooltipMessage = 'Currently available for macOS only. iOS support coming soon.';
+            tooltipMessage = window.i18n.t('platform.iosSoon');
         } else {
-            tooltipMessage = 'Currently available for macOS only.';
+            tooltipMessage = window.i18n.t('platform.macOnly');
         }
 
         downloadBtn.setAttribute('title', tooltipMessage);
@@ -78,10 +78,47 @@ const updateDownloadButton = () => {
     }
 };
 
-// Initialize OS detection on page load
-document.addEventListener('DOMContentLoaded', () => {
-    updateDownloadButton();
-});
+// Language Switcher Initialization
+const initLanguageSwitcher = () => {
+    const toggle = document.getElementById('language-toggle');
+    const menu = document.getElementById('language-menu');
+    const menuButtons = menu.querySelectorAll('button');
+
+    // Toggle menu visibility
+    toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        menu.classList.toggle('active');
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!toggle.contains(e.target) && !menu.contains(e.target)) {
+            menu.classList.remove('active');
+        }
+    });
+
+    // Handle language selection
+    menuButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const lang = button.getAttribute('data-lang');
+            window.i18n.setLanguage(lang);
+            menu.classList.remove('active');
+
+            // Update download button with new language
+            updateDownloadButton();
+        });
+    });
+
+    // Close menu on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && menu.classList.contains('active')) {
+            menu.classList.remove('active');
+            toggle.focus();
+        }
+    });
+};
+
+// Consolidated initialization - will be merged with animation code below
 
 // Theme Toggle
 const themeToggle = document.getElementById('theme-toggle');
@@ -206,8 +243,19 @@ const observer = new IntersectionObserver((entries) => {
     });
 }, observerOptions);
 
-// Observe elements for fade-in animation
+// Main initialization on page load
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. Initialize i18n first
+    const preferredLang = window.i18n.detectLanguage();
+    window.i18n.setLanguage(preferredLang);
+
+    // 2. Initialize language switcher
+    initLanguageSwitcher();
+
+    // 3. Update download button based on OS
+    updateDownloadButton();
+
+    // 4. Observe elements for fade-in animation
     const elementsToAnimate = [
         '.hero-content',
         '.demo-container',
@@ -221,18 +269,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Sequential status overlay animation
+    // 5. Sequential status overlay animation
     const animateStatusOverlays = () => {
         const overlays = document.querySelectorAll('.status-overlay');
         const labels = document.querySelectorAll('.stage-label');
         const inputField = document.querySelector('.demo-input-field');
         const typedText = document.querySelector('.typed-text');
         const cursor = document.querySelector('.typing-cursor');
-        const fullText = "Hey team, let's sync up tomorrow at 10 AM to discuss the new feature rollout. I'll share the design specs beforehand.";
 
         let currentIndex = 0;
         let typingTimeout;
         let cycleTimeout;
+
+        // Helper to get current translated text
+        const getFullText = () => {
+            return window.i18n && window.i18n.t
+                ? window.i18n.t('demo.sampleText')
+                : "Hey team, let's sync up tomorrow at 10 AM to discuss the new feature rollout. I'll share the design specs beforehand.";
+        };
 
         const typeText = (text, element, callback) => {
             element.textContent = '';
@@ -313,7 +367,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         labels[3].classList.add('active');
                     }
                     // Typing takes ~3s + 1s display = 4s total
-                    typeText(fullText, typedText, () => {
+                    // Get translated text dynamically
+                    typeText(getFullText(), typedText, () => {
                         // After typing finishes and 1s display, move to next
                         cycleTimeout = setTimeout(() => {
                             currentIndex = (currentIndex + 1) % overlays.length;
