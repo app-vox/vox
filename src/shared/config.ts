@@ -44,7 +44,7 @@ export interface VoxConfig {
   launchAtLogin: boolean;
 }
 
-export function createDefaultConfig(): VoxConfig {
+export function createDefaultConfig(isProduction = false): VoxConfig {
   return {
     llm: {
       provider: "foundry",
@@ -70,6 +70,6 @@ export function createDefaultConfig(): VoxConfig {
     theme: "system",
     enableLlmEnhancement: false,
     customPrompt: "",
-    launchAtLogin: true,
+    launchAtLogin: isProduction,
   };
 }

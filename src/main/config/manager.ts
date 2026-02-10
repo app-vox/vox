@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
+import { app } from "electron";
 import { type VoxConfig, type LlmConfig, createDefaultConfig } from "../../shared/config";
 
 export interface SecretStore {
@@ -19,7 +20,7 @@ export class ConfigManager {
   }
 
   load(): VoxConfig {
-    const defaults = createDefaultConfig();
+    const defaults = createDefaultConfig(app.isPackaged);
 
     if (!fs.existsSync(this.configPath)) {
       return defaults;

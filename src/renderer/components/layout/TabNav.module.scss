@@ -31,6 +31,7 @@
   span {
     display: flex;
     align-items: center;
+    gap: 4px;
   }
 
   svg {
@@ -65,4 +66,10 @@
       background: var(--color-text-primary);
     }
   }
+}
+
+.checkmark {
+  color: var(--color-success);
+  opacity: 0.8;
+  flex-shrink: 0;
 }

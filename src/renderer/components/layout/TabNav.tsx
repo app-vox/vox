@@ -1,13 +1,15 @@
 import type { ReactNode } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { WarningBadge } from "../ui/WarningBadge";
+import { usePermissions } from "../../hooks/use-permissions";
 import styles from "./TabNav.module.scss";
 
-const TABS: { id: string; label: string; icon: ReactNode; requiresModel?: boolean }[] = [
+const TABS: { id: string; label: string; icon: ReactNode; requiresModel?: boolean; checkConfigured?: "speech" | "permissions" }[] = [
   {
     id: "whisper",
     label: "Speech",
     requiresModel: true,
+    checkConfigured: "speech",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
@@ -41,6 +43,7 @@ const TABS: { id: string; label: string; icon: ReactNode; requiresModel?: boolea
   {
     id: "permissions",
     label: "Permissions",
+    checkConfigured: "permissions",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -70,6 +73,14 @@ export function TabNav() {
   const activeTab = useConfigStore((s) => s.activeTab);
   const setActiveTab = useConfigStore((s) => s.setActiveTab);
   const setupComplete = useConfigStore((s) => s.setupComplete);
+  const permissions = usePermissions();
+
+  const isConfigured = (type?: "speech" | "permissions") => {
+    if (!type) return false;
+    if (type === "speech") return setupComplete;
+    if (type === "permissions") return permissions.accessibility && permissions.microphone;
+    return false;
+  };
 
   return (
     <nav className={styles.tabs}>
@@ -83,6 +94,24 @@ export function TabNav() {
           <span>
             {tab.label}
             <WarningBadge show={tab.requiresModel === true && !setupComplete} />
+            {isConfigured(tab.checkConfigured) && (
+              <svg
+                className={styles.checkmark}
+                width="12"
+                height="12"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M13.5 4.5L6 12L2.5 8.5"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            )}
           </span>
         </button>
       ))}
