@@ -19,7 +19,7 @@ export function createLlmProvider(config: VoxConfig): LlmProvider {
   const customPrompt = config.customPrompt?.trim();
   const hasCustomPrompt = !!customPrompt;
   const prompt = customPrompt
-    ? `${LLM_SYSTEM_PROMPT}\n\nCRITICAL: PLEASE FOLLOW THESE ADDITIONAL RULES:\n\n${customPrompt}\n\nThese additional rules take priority and must be followed strictly.`
+    ? `${LLM_SYSTEM_PROMPT}\n\n${"*".repeat(70)}\nEXTREMELY IMPORTANT - YOU MUST FOLLOW THESE CUSTOM INSTRUCTIONS\n${"*".repeat(70)}\n\nThe user has provided specific custom instructions below. It is of CRITICAL importance that you consider and apply these instructions. These custom rules take ABSOLUTE PRIORITY over default behavior.\n\nCUSTOM INSTRUCTIONS:\n\n${customPrompt}\n\n${"*".repeat(70)}\nThese custom instructions are MANDATORY and must be followed strictly.\n${"*".repeat(70)}`
     : LLM_SYSTEM_PROMPT;
 
   console.log("[LLM Factory] Creating provider:", config.llm.provider);
