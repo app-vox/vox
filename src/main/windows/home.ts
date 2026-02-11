@@ -1,4 +1,4 @@
-import { app, BrowserWindow, nativeTheme, screen } from "electron";
+import { app, BrowserWindow, Menu, nativeTheme, screen } from "electron";
 import * as path from "path";
 
 let homeWindow: BrowserWindow | null = null;
@@ -54,6 +54,22 @@ export function openHome(onClosed: () => void): void {
       }
     });
   }
+
+  // Enable context menu for editable elements
+  homeWindow.webContents.on("context-menu", (_event, params) => {
+    if (params.isEditable || params.selectionText) {
+      const menu = Menu.buildFromTemplate([
+        { role: "undo", enabled: params.editFlags.canUndo },
+        { role: "redo", enabled: params.editFlags.canRedo },
+        { type: "separator" },
+        { role: "cut", enabled: params.editFlags.canCut },
+        { role: "copy", enabled: params.editFlags.canCopy },
+        { role: "paste", enabled: params.editFlags.canPaste },
+        { role: "selectAll", enabled: params.editFlags.canSelectAll },
+      ]);
+      menu.popup();
+    }
+  });
 
   homeWindow.on("closed", () => {
     homeWindow = null;

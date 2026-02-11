@@ -229,6 +229,8 @@
   border-radius: var(--radius-md);
   color: var(--color-text-primary);
   transition: border-color var(--duration-fast) var(--ease-default);
+  user-select: text;
+  -webkit-user-select: text;
 
   &:hover {
     border-color: var(--color-border-hover);

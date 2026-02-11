@@ -262,6 +262,8 @@ input[type="text"] {
   font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, monospace;
   transition: border-color 150ms ease;
   outline: none;
+  user-select: text;
+  -webkit-user-select: text;
 
   &:hover { border-color: var(--color-border-hover); }
   &:focus { border-color: var(--color-border-focus); }

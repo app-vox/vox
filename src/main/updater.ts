@@ -37,6 +37,10 @@ function broadcastState(): void {
 
 const GITHUB_RELEASES_URL = "https://api.github.com/repos/app-vox/vox/releases?per_page=10";
 const SEMVER_TAG_RE = /^v?\d+\.\d+\.\d+$/;
+const CACHE_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+
+let lastCheckTime = 0;
+let cachedResult: { latestVersion: string; releaseUrl: string } | null = null;
 
 function compareVersions(current: string, latest: string): number {
   const a = current.split(".").map(Number);
@@ -50,6 +54,20 @@ function compareVersions(current: string, latest: string): number {
 
 async function devCheckForUpdates(): Promise<void> {
   const currentVersion = app.getVersion();
+  const now = Date.now();
+
+  // Use cached result if available and fresh
+  if (cachedResult && now - lastCheckTime < CACHE_DURATION_MS) {
+    const hasUpdate = compareVersions(currentVersion, cachedResult.latestVersion) > 0;
+    setState({
+      status: hasUpdate ? "available" : "idle",
+      currentVersion,
+      latestVersion: cachedResult.latestVersion,
+      releaseUrl: cachedResult.releaseUrl,
+    });
+    return;
+  }
+
   setState({ status: "checking", currentVersion });
 
   try {
@@ -58,7 +76,22 @@ async function devCheckForUpdates(): Promise<void> {
     });
 
     if (!response.ok) {
-      throw new Error(`GitHub API returned ${response.status}`);
+      // On rate limit, use cached result if available
+      if (response.status === 403 && cachedResult) {
+        const hasUpdate = compareVersions(currentVersion, cachedResult.latestVersion) > 0;
+        setState({
+          status: hasUpdate ? "available" : "idle",
+          currentVersion,
+          latestVersion: cachedResult.latestVersion,
+          releaseUrl: cachedResult.releaseUrl,
+        });
+        return;
+      }
+
+      const errorMessage = response.status === 403
+        ? "GitHub API rate limit exceeded"
+        : `GitHub API returned ${response.status}`;
+      throw new Error(errorMessage);
     }
 
     const releases = (await response.json()) as {
@@ -75,6 +108,14 @@ async function devCheckForUpdates(): Promise<void> {
     if (latest) {
       const latestVersion = latest.tag_name.replace(/^v/, "");
       const hasUpdate = compareVersions(currentVersion, latestVersion) > 0;
+
+      // Update cache
+      cachedResult = {
+        latestVersion,
+        releaseUrl: latest.html_url,
+      };
+      lastCheckTime = now;
+
       setState({
         status: hasUpdate ? "available" : "idle",
         currentVersion,
