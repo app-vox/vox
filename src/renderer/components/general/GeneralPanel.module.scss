@@ -131,20 +131,24 @@
 }
 
 .aboutActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-3);
+  align-items: start;
+}
+
+.aboutButtons {
+  display: contents;
+}
+
+.checkForUpdatesCol {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--spacing-2);
 }
 
-.aboutButtons {
-  display: flex;
-  gap: var(--spacing-3);
-  width: 100%;
-}
-
 .aboutButton {
-  flex: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -158,6 +162,7 @@
   font-weight: var(--font-weight-medium);
   cursor: pointer;
   transition: all 150ms ease;
+  width: 100%;
 
   &:hover:not(:disabled) {
     background: var(--color-bg-hover);
@@ -183,8 +188,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 20px;
-  width: 100%;
+  min-height: 18px;
 }
 
 .segmented {
