@@ -456,10 +456,16 @@ body {
     background-color: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-xl);
-    padding: var(--spacing-lg);
+    padding: 1rem;
     max-width: 900px;
     margin: 0 auto;
     transition: all var(--transition-base);
+}
+
+@media (min-width: 640px) {
+    .demo-container {
+        padding: 1.5rem;
+    }
 }
 
 @media (min-width: 768px) {
@@ -658,6 +664,8 @@ body {
     font-size: 0.8125rem;
     font-weight: 600;
     margin-bottom: 0.125rem;
+    word-break: break-word;
+    hyphens: auto;
 }
 
 @media (min-width: 768px) {
@@ -671,6 +679,8 @@ body {
     font-size: 0.6875rem;
     color: var(--text-secondary);
     line-height: 1.3;
+    word-break: break-word;
+    hyphens: auto;
 }
 
 @media (min-width: 768px) {
