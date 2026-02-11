@@ -16,7 +16,7 @@ export function ScrollButtons({ containerRef }: ScrollButtonsProps) {
     const updateScrollButtons = () => {
       const { scrollTop, scrollHeight, clientHeight } = container;
       setShowTop(scrollTop > 20);
-      setShowBottom(scrollTop + clientHeight < scrollHeight - 20);
+      setShowBottom(scrollTop + clientHeight < scrollHeight - 50);
     };
 
     updateScrollButtons();
