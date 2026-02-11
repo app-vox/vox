@@ -55,7 +55,6 @@ export function openHome(onClosed: () => void): void {
     });
   }
 
-  // Enable context menu for editable elements
   homeWindow.webContents.on("context-menu", (_event, params) => {
     if (params.isEditable || params.selectionText) {
       const menu = Menu.buildFromTemplate([

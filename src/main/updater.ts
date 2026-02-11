@@ -37,7 +37,7 @@ function broadcastState(): void {
 
 const GITHUB_RELEASES_URL = "https://api.github.com/repos/app-vox/vox/releases?per_page=10";
 const SEMVER_TAG_RE = /^v?\d+\.\d+\.\d+$/;
-const CACHE_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+const CACHE_DURATION_MS = 15 * 60 * 1000;
 
 let lastCheckTime = 0;
 let cachedResult: { latestVersion: string; releaseUrl: string } | null = null;
@@ -56,7 +56,6 @@ async function devCheckForUpdates(): Promise<void> {
   const currentVersion = app.getVersion();
   const now = Date.now();
 
-  // Use cached result if available and fresh
   if (cachedResult && now - lastCheckTime < CACHE_DURATION_MS) {
     const hasUpdate = compareVersions(currentVersion, cachedResult.latestVersion) > 0;
     setState({
@@ -76,7 +75,6 @@ async function devCheckForUpdates(): Promise<void> {
     });
 
     if (!response.ok) {
-      // On rate limit, use cached result if available
       if (response.status === 403 && cachedResult) {
         const hasUpdate = compareVersions(currentVersion, cachedResult.latestVersion) > 0;
         setState({
@@ -109,7 +107,6 @@ async function devCheckForUpdates(): Promise<void> {
       const latestVersion = latest.tag_name.replace(/^v/, "");
       const hasUpdate = compareVersions(currentVersion, latestVersion) > 0;
 
-      // Update cache
       cachedResult = {
         latestVersion,
         releaseUrl: latest.html_url,
