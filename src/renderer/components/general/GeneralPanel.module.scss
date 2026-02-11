@@ -132,7 +132,15 @@
 
 .aboutActions {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.aboutButtons {
+  display: flex;
   gap: var(--spacing-3);
+  width: 100%;
 }
 
 .aboutButton {
@@ -175,8 +183,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: var(--spacing-2);
   min-height: 20px;
+  width: 100%;
 }
 
 .segmented {

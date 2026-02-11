@@ -34,7 +34,8 @@
     gap: 4px;
   }
 
-  svg {
+  > svg:first-child {
+    position: relative;
     width: var(--size-icon-sm);
     height: var(--size-icon-sm);
     opacity: 0.7;
@@ -69,7 +70,11 @@
 }
 
 .checkmark {
-  color: var(--color-success);
-  opacity: 0.8;
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  color: var(--color-checkmark);
+  background: var(--color-bg-root);
+  border-radius: 50%;
   flex-shrink: 0;
 }

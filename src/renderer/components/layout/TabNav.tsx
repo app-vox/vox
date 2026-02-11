@@ -98,28 +98,31 @@ export function TabNav() {
           onClick={() => setActiveTab(tab.id)}
           className={`${styles.tab} ${activeTab === tab.id ? styles.active : ""}`}
         >
-          {tab.icon}
-          <span>
-            {tab.label}
-            <WarningBadge show={(tab.requiresModel === true && !setupComplete) || (tab.requiresPermissions === true && needsPermissions())} />
+          <div style={{ position: 'relative' }}>
+            {tab.icon}
             {isConfigured(tab.checkConfigured) && (
               <svg
                 className={styles.checkmark}
-                width="8"
-                height="8"
+                width="10"
+                height="10"
                 viewBox="0 0 16 16"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
               >
+                <circle cx="8" cy="8" r="8" fill="currentColor" />
                 <path
-                  d="M13.5 4.5L6 12L2.5 8.5"
-                  stroke="currentColor"
-                  strokeWidth="2"
+                  d="M11 5L7 10L5 8"
+                  stroke="white"
+                  strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
               </svg>
             )}
+          </div>
+          <span>
+            {tab.label}
+            <WarningBadge show={(tab.requiresModel === true && !setupComplete) || (tab.requiresPermissions === true && needsPermissions())} />
           </span>
         </button>
       ))}

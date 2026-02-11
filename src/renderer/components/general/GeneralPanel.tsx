@@ -228,50 +228,52 @@ export function GeneralPanel() {
           ) : (
             <>
               <div className={styles.aboutActions}>
-                <button
-                  onClick={handleCheckForUpdates}
-                  disabled={checking}
-                  className={styles.aboutButton}
-                >
+                <div className={styles.aboutButtons}>
+                  <button
+                    onClick={handleCheckForUpdates}
+                    disabled={checking}
+                    className={styles.aboutButton}
+                  >
+                    {checking ? (
+                      <>
+                        <svg className={styles.spinner} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                        </svg>
+                        <span>Checking...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="23 4 23 10 17 10" />
+                          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                        </svg>
+                        <span>Check for Updates</span>
+                      </>
+                    )}
+                  </button>
+                  <button onClick={openIssueTracker} className={styles.aboutButton}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    <span>Report Issue</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                  </button>
+                </div>
+                <div className={styles.updateStatus}>
                   {checking ? (
-                    <>
-                      <svg className={styles.spinner} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                      </svg>
-                      <span>Checking...</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="23 4 23 10 17 10" />
-                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-                      </svg>
-                      <span>Check for Updates</span>
-                    </>
-                  )}
-                </button>
-                <button onClick={openIssueTracker} className={styles.aboutButton}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
-                  <span>Report Issue</span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                    <polyline points="15 3 21 3 21 9" />
-                    <line x1="10" y1="14" x2="21" y2="3" />
-                  </svg>
-                </button>
-              </div>
-              <div className={styles.updateStatus}>
-                {checking ? (
-                  <span className={styles.updateChecking}>Checking for updates...</span>
-                ) : status === "idle" && updateState ? (
-                  <span className={styles.upToDate}>You're up to date</span>
-                ) : status === "error" && updateState?.error ? (
-                  <span className={styles.updateError}>{updateState.error}</span>
-                ) : null}
+                    <span className={styles.updateChecking}>Checking for updates...</span>
+                  ) : status === "idle" && updateState ? (
+                    <span className={styles.upToDate}>You're up to date</span>
+                  ) : status === "error" && updateState?.error ? (
+                    <span className={styles.updateError}>{updateState.error}</span>
+                  ) : null}
+                </div>
               </div>
             </>
           )}

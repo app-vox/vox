@@ -1,4 +1,4 @@
-import { useEffect, type JSX } from "react";
+import { useEffect, useRef, type JSX } from "react";
 import { useConfigStore } from "./stores/config-store";
 import { Header } from "./components/layout/Header";
 import { TabNav } from "./components/layout/TabNav";
@@ -8,6 +8,7 @@ import { ShortcutsPanel } from "./components/shortcuts/ShortcutsPanel";
 import { PermissionsPanel } from "./components/permissions/PermissionsPanel";
 import { GeneralPanel } from "./components/general/GeneralPanel";
 import { SaveToast } from "./components/ui/SaveToast";
+import { ScrollButtons } from "./components/ui/ScrollButtons";
 import { useSaveToast } from "./hooks/use-save-toast";
 import { useTheme } from "./hooks/use-theme";
 
@@ -27,6 +28,7 @@ export function App() {
   const showToast = useSaveToast((s) => s.show);
   const toastTimestamp = useSaveToast((s) => s.timestamp);
   const hideToast = useSaveToast((s) => s.hide);
+  const contentRef = useRef<HTMLElement>(null);
 
   useTheme(theme);
 
@@ -48,10 +50,11 @@ export function App() {
     <div className="flex flex-col h-full">
       <Header />
       <TabNav />
-      <main className="content">
+      <main className="content" ref={contentRef}>
         <Panel />
       </main>
       <SaveToast show={showToast} timestamp={toastTimestamp} onHide={hideToast} />
+      <ScrollButtons containerRef={contentRef} />
     </div>
   );
 }

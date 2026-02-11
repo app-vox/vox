@@ -13,8 +13,8 @@ export function openHome(onClosed: () => void): void {
   const cursorPoint = screen.getCursorScreenPoint();
   const display = screen.getDisplayNearestPoint(cursorPoint);
 
-  const WINDOW_WIDTH = 715;
-  const WINDOW_HEIGHT = 775;
+  const WINDOW_WIDTH = 700;
+  const WINDOW_HEIGHT = 770;
   const windowWidth = WINDOW_WIDTH;
   const windowHeight = WINDOW_HEIGHT;
   const x = Math.round(display.bounds.x + (display.bounds.width - windowWidth) / 2);
