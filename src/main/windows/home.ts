@@ -49,6 +49,17 @@ export function openHome(onClosed: () => void): void {
         event.preventDefault();
         console.log("[Vox] Reload blocked in production mode");
       }
+      if (input.key === "F12" ||
+          ((input.meta || input.control) && input.shift && input.key.toLowerCase() === "i") ||
+          (input.meta && input.alt && input.key.toLowerCase() === "i")) {
+        event.preventDefault();
+        console.log("[Vox] DevTools blocked in production mode");
+      }
+    });
+
+    homeWindow.webContents.on("devtools-opened", () => {
+      homeWindow?.webContents.closeDevTools();
+      console.log("[Vox] DevTools closed in production mode");
     });
   }
 
