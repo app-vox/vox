@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useConfigStore } from "../../stores/config-store";
 import styles from "./ScrollButtons.module.scss";
 
 interface ScrollButtonsProps {
@@ -8,6 +9,7 @@ interface ScrollButtonsProps {
 export function ScrollButtons({ containerRef }: ScrollButtonsProps) {
   const [showTop, setShowTop] = useState(false);
   const [showBottom, setShowBottom] = useState(false);
+  const activeTab = useConfigStore((s) => s.activeTab);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -27,7 +29,7 @@ export function ScrollButtons({ containerRef }: ScrollButtonsProps) {
       container.removeEventListener("scroll", updateScrollButtons);
       window.removeEventListener("resize", updateScrollButtons);
     };
-  }, [containerRef]);
+  }, [containerRef, activeTab]);
 
   const scrollToTop = () => {
     containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
