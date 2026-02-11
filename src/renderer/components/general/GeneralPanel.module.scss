@@ -91,6 +91,12 @@
   font-weight: var(--font-weight-medium);
 }
 
+.updateChecking {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  font-weight: var(--font-weight-medium);
+}
+
 .updateError {
   font-size: var(--font-size-sm);
   color: var(--color-error);
@@ -168,7 +174,9 @@
 .updateStatus {
   display: flex;
   justify-content: center;
+  align-items: center;
   margin-top: var(--spacing-2);
+  min-height: 20px;
 }
 
 .segmented {

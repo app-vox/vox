@@ -264,16 +264,15 @@ export function GeneralPanel() {
                   </svg>
                 </button>
               </div>
-              {status === "idle" && updateState && !checking && (
-                <div className={styles.updateStatus}>
+              <div className={styles.updateStatus}>
+                {checking ? (
+                  <span className={styles.updateChecking}>Checking for updates...</span>
+                ) : status === "idle" && updateState ? (
                   <span className={styles.upToDate}>You're up to date</span>
-                </div>
-              )}
-              {status === "error" && updateState?.error && (
-                <div className={styles.updateStatus}>
+                ) : status === "error" && updateState?.error ? (
                   <span className={styles.updateError}>{updateState.error}</span>
-                </div>
-              )}
+                ) : null}
+              </div>
             </>
           )}
         </div>
