@@ -2,7 +2,7 @@
   display: flex;
   justify-content: center;
   gap: 0;
-  padding: 0 var(--spacing-6);
+  padding: 0 var(--spacing-3);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-bg-root);
 }
@@ -31,9 +31,11 @@
   span {
     display: flex;
     align-items: center;
+    gap: 4px;
   }
 
-  svg {
+  > svg:first-child {
+    position: relative;
     width: var(--size-icon-sm);
     height: var(--size-icon-sm);
     opacity: 0.7;
@@ -65,4 +67,14 @@
       background: var(--color-text-primary);
     }
   }
+}
+
+.checkmark {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  color: var(--color-checkmark);
+  background: var(--color-bg-root);
+  border-radius: 50%;
+  flex-shrink: 0;
 }

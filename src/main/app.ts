@@ -99,18 +99,19 @@ app.whenReady().then(async () => {
   setTrayModelState(setupChecker.hasAnyModel());
   updateTrayConfig(configManager.load());
 
-  // Initialize auto-updater (checks on startup, updates tray on state change)
   initAutoUpdater(() => updateTrayMenu());
 
-  if (!app.isPackaged) {
+  if (!app.isPackaged || !setupChecker.hasAnyModel()) {
     openHome(reloadConfig);
   }
+});
+
+app.on("activate", () => {
+  openHome(reloadConfig);
 });
 
 app.on("will-quit", () => {
   shortcutManager?.stop();
 });
 
-app.on("window-all-closed", () => {
-  // Keep app running as tray app
-});
+app.on("window-all-closed", () => {});

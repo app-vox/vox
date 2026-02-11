@@ -1,0 +1,35 @@
+.scrollButton {
+  position: fixed;
+  right: var(--spacing-3);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-default);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 15%);
+  z-index: 100;
+
+  &:hover {
+    background: var(--color-bg-hover);
+    border-color: var(--color-border-hover);
+    color: var(--color-text-primary);
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+.scrollTop {
+  top: 122px;
+}
+
+.scrollBottom {
+  bottom: var(--spacing-3);
+}

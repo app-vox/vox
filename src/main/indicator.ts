@@ -39,12 +39,12 @@ function buildHtml(mode: IndicatorMode): string {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    padding: 12px 20px;
+    gap: 9px;
+    padding: 10px 18px;
     background: rgba(25, 25, 25, 0.95);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-radius: 24px;
+    border-radius: 20px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
@@ -93,11 +93,11 @@ export class IndicatorWindow {
     }
 
     console.log(`[Vox] IndicatorWindow creating new window for mode: ${mode}`);
-    const estimatedWidth = mode === "error" ? 165 : 180;
+    const estimatedWidth = mode === "error" ? 155 : 170;
 
     this.window = new BrowserWindow({
       width: estimatedWidth,
-      height: 48,
+      height: 50,
       frame: false,
       transparent: true,
       hasShadow: false,
@@ -145,10 +145,10 @@ export class IndicatorWindow {
       this.window = null;
     }
 
-    const estimatedWidth = Math.max(220, text.length * 8);
+    const estimatedWidth = Math.max(205, text.length * 7.5);
     this.window = new BrowserWindow({
       width: estimatedWidth,
-      height: 48,
+      height: 50,
       frame: false,
       transparent: true,
       hasShadow: false,
@@ -199,12 +199,12 @@ export class IndicatorWindow {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    padding: 12px 20px;
+    gap: 9px;
+    padding: 10px 18px;
     background: rgba(25, 25, 25, 0.95);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-radius: 24px;
+    border-radius: 20px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;

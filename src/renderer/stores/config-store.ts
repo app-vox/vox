@@ -39,9 +39,8 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     // Check setup state
     const setupState = await window.voxApi.setup.check();
 
-    // Force Whisper tab if setup is incomplete
-    const savedTab = typeof window !== "undefined" ? migrateActiveTab(localStorage.getItem("vox:activeTab")) : null;
-    const activeTab = setupState.hasAnyModel ? (savedTab || "general") : "whisper";
+    // Always default to General tab
+    const activeTab = "general";
 
     set({
       config,

@@ -62,6 +62,12 @@
   font-weight: var(--font-weight-medium);
 }
 
+.technicalName {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-tertiary);
+}
+
 .desc {
   color: var(--color-text-tertiary);
   margin-left: var(--spacing-1);

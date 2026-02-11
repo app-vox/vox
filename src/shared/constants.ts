@@ -4,6 +4,7 @@ export interface WhisperModelInfo {
   url: string;
   sizeBytes: number;
   description: string;
+  label: string;
 }
 
 export const WHISPER_MODELS: Record<string, WhisperModelInfo> = {
@@ -11,26 +12,31 @@ export const WHISPER_MODELS: Record<string, WhisperModelInfo> = {
     url: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin",
     sizeBytes: 75_000_000,
     description: "Fastest, lower accuracy (~75MB)",
+    label: "Fastest",
   },
   base: {
     url: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin",
     sizeBytes: 140_000_000,
     description: "Light, decent accuracy (~140MB)",
+    label: "Fast",
   },
   small: {
     url: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin",
     sizeBytes: 460_000_000,
     description: "Good balance, recommended (~460MB)",
+    label: "Balanced",
   },
   medium: {
     url: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin",
     sizeBytes: 1_500_000_000,
     description: "Better accuracy, needs decent hardware (~1.5GB)",
+    label: "Accurate",
   },
   large: {
     url: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin",
     sizeBytes: 3_000_000_000,
     description: "Best accuracy, significant resources (~3GB)",
+    label: "Best",
   },
 };
 

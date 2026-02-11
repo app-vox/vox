@@ -367,7 +367,6 @@ export class ShortcutManager {
         this.indicator.hide();
         await new Promise((r) => setTimeout(r, 200));
         pasteText(trimmedText);
-        new Notification({ title: "Vox", body: trimmedText }).show();
       }
     } catch (err: unknown) {
       // Any exception (CanceledError, NoModelError, etc.) prevents paste

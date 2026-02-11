@@ -25,18 +25,81 @@ const SPEECH_QUALITY_LABELS: Record<WhisperModelSize, string> = {
   large: "Best",
 };
 
+function simplifyModelName(fullName: string): string {
+  // Extract meaningful parts from complex model names
+  // Examples:
+  // "global.anthropic.claude-sonnet-4-5-20250929-v1" -> "claude-sonnet-4.5"
+  // "anthropic.claude-3-5-sonnet-20241022-v2:0" -> "claude-3.5-sonnet"
+  // "gpt-4-turbo-2024-04-09" -> "gpt-4-turbo"
+  // "meta.llama3-70b-instruct-v1:0" -> "llama3-70b"
+
+  // Remove common prefixes (provider namespaces and routing)
+  let simplified = fullName
+    .replace(/^(global\.|local\.|remote\.)/, "")
+    .replace(/^(anthropic\.|meta\.|amazon\.|cohere\.|mistral\.|ai21\.)/, "");
+
+  // Extract core model name and simplify
+  const patterns = [
+    // Claude pattern: claude-sonnet-X-Y-YYYYMMDD-vN -> claude-sonnet-X.Y
+    /^claude-(\w+)-(\d+)-(\d+)-\d{8}-v\d+$/,
+    // Claude pattern old: claude-X-Y-sonnet-YYYYMMDD-vN:0 -> claude-X.Y-sonnet
+    /^claude-(\d+)-(\d+)-(\w+)-\d{8}-v\d+:?\d*$/,
+    // GPT pattern: gpt-X-variant-YYYY-MM-DD -> gpt-X-variant
+    /^(gpt-\d+(?:-\w+)?)-\d{4}-\d{2}-\d{2}$/,
+    // Llama pattern: llamaX-XXb-instruct-vN:0 -> llamaX-XXb
+    /^(llama\d+-\d+b)(?:-\w+)?-v\d+:?\d*$/,
+  ];
+
+  // Try specific patterns
+  let match = simplified.match(patterns[0]);
+  if (match) {
+    // claude-sonnet-4-5 -> claude-sonnet-4.5
+    return `claude-${match[1]}-${match[2]}.${match[3]}`;
+  }
+
+  match = simplified.match(patterns[1]);
+  if (match) {
+    // claude-3-5-sonnet -> claude-3.5-sonnet
+    return `claude-${match[1]}.${match[2]}-${match[3]}`;
+  }
+
+  match = simplified.match(patterns[2]);
+  if (match) {
+    return match[1];
+  }
+
+  match = simplified.match(patterns[3]);
+  if (match) {
+    return match[1];
+  }
+
+  // Fallback: remove trailing version identifiers and dates
+  simplified = simplified
+    .replace(/:\d+$/, "") // Remove trailing :0
+    .replace(/-v\d+$/, "") // Remove trailing -vN
+    .replace(/-\d{8}$/, "") // Remove trailing date YYYYMMDD
+    .replace(/-\d{4}-\d{2}-\d{2}$/, ""); // Remove trailing date YYYY-MM-DD
+
+  return simplified;
+}
+
 function getActiveModelName(config: VoxConfig): string {
+  let fullName: string;
   switch (config.llm.provider) {
     case "bedrock":
-      return config.llm.modelId;
+      fullName = config.llm.modelId;
+      break;
     case "openai":
     case "deepseek":
     case "litellm":
-      return config.llm.openaiModel;
+      fullName = config.llm.openaiModel;
+      break;
     case "foundry":
     default:
-      return config.llm.model;
+      fullName = config.llm.model;
+      break;
   }
+  return simplifyModelName(fullName);
 }
 
 export function setupTray(trayCallbacks: TrayCallbacks): void {

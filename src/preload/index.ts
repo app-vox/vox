@@ -7,7 +7,7 @@ export interface AudioRecording {
 
 export interface ModelInfo {
   size: string;
-  info: { description: string; sizeBytes: number };
+  info: { description: string; sizeBytes: number; label: string };
   downloaded: boolean;
 }
 

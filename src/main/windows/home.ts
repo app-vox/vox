@@ -10,13 +10,11 @@ export function openHome(onClosed: () => void): void {
     return;
   }
 
-  // Get the display where the cursor currently is
   const cursorPoint = screen.getCursorScreenPoint();
   const display = screen.getDisplayNearestPoint(cursorPoint);
 
-  // Calculate centered position on the active display
   const WINDOW_WIDTH = 700;
-  const WINDOW_HEIGHT = 840;
+  const WINDOW_HEIGHT = 770;
   const windowWidth = WINDOW_WIDTH;
   const windowHeight = WINDOW_HEIGHT;
   const x = Math.round(display.bounds.x + (display.bounds.width - windowWidth) / 2);
@@ -35,6 +33,7 @@ export function openHome(onClosed: () => void): void {
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false,
+      devTools: !app.isPackaged,
       preload: path.join(__dirname, "../preload/index.js"),
     },
   });
@@ -45,7 +44,6 @@ export function openHome(onClosed: () => void): void {
     homeWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
   }
 
-  // Block reload in production mode
   if (app.isPackaged) {
     homeWindow.webContents.on("before-input-event", (event, input) => {
       if ((input.meta || input.control) && input.key.toLowerCase() === "r") {

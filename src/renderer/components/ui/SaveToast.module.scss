@@ -16,6 +16,10 @@
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
 
+  svg {
+    color: var(--color-checkmark);
+  }
+
   &.visible {
     opacity: 1;
   }
