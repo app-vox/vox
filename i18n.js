@@ -5,14 +5,14 @@
 const translations = {
   'en': {
     meta: {
-      title: 'Vox - Voice to Text. Secure. Accurate. Free.',
-      description: 'Free open-source voice-to-text app. Local Whisper transcription with optional LLM enhancement. 100% private - your audio never leaves your device. Available for macOS, with Windows and Linux support coming soon.',
-      keywords: 'voice to text, speech recognition, whisper, transcription, macos, apple silicon, open source, privacy, local processing, dictation, voice input, menu bar app, free transcription',
-      ogTitle: 'Vox - Voice to text. Secure. Accurate. Free.',
-      ogDescription: '100% free and open-source. Local Whisper transcription with optional LLM enhancement using your own API keys. Your audio never leaves your device.',
-      ogImageAlt: 'Vox - Voice to text. Secure. Accurate. Free.',
-      twitterTitle: 'Vox - Voice to text. Secure. Accurate. Free.',
-      twitterDescription: '100% free and open-source voice-to-text app with local Whisper transcription and optional LLM enhancement.'
+      title: 'Vox - Your Voice to Text. Secure. Accurate. Free.',
+      description: 'Free open-source voice-to-text app. Designed for personal dictation and note-taking. Works completely offline with optional AI optimization. Available for macOS, with Windows and Linux support coming soon.',
+      keywords: 'voice to text, speech recognition, personal dictation, transcription, macos, apple silicon, open source, privacy, local processing, dictation, voice input, menu bar app, free transcription, offline',
+      ogTitle: 'Vox - Your voice to text. Secure. Accurate. Free.',
+      ogDescription: '100% free and open-source. Designed for personal dictation and note-taking. Works completely offline on your computer with optional AI optimization.',
+      ogImageAlt: 'Vox - Your voice to text. Secure. Accurate. Free.',
+      twitterTitle: 'Vox - Your voice to text. Secure. Accurate. Free.',
+      twitterDescription: '100% free and open-source voice-to-text app. Designed for personal dictation and note-taking with optional AI optimization.'
     },
     header: {
       logoAlt: 'Vox Homepage',
@@ -20,7 +20,7 @@ const translations = {
       themeToggle: 'Toggle theme'
     },
     hero: {
-      title: 'Voice to text.',
+      title: 'Your voice to text.',
       titleAccent: 'Secure. Accurate. Free.',
       downloadButton: 'Download for macOS',
       platformNote: 'Currently available for macOS. Windows and Linux support coming soon.',
@@ -54,7 +54,7 @@ const translations = {
     },
     privacy: {
       title: 'Your voice stays on your device',
-      description: 'Transcription runs entirely on your computer using Whisper. Optionally, the resulting text can be sent to an LLM for enhancement — your audio never leaves your device.',
+      description: 'Designed for personal dictation and note-taking. Transcription runs entirely on your device - only the optional AI enhancement connects online.',
       features: {
         local: 'Local processing',
         noCloud: 'No cloud audio',
@@ -91,7 +91,7 @@ const translations = {
       themeToggle: 'Alternar tema'
     },
     hero: {
-      title: 'Voz para texto.',
+      title: 'Sua voz para texto.',
       titleAccent: 'Seguro. Preciso. Grátis.',
       downloadButton: 'Baixar para macOS',
       platformNote: 'Atualmente disponível para macOS. Suporte para Windows e Linux em breve.',
@@ -125,7 +125,7 @@ const translations = {
     },
     privacy: {
       title: 'Sua voz fica no seu dispositivo',
-      description: 'A transcrição roda inteiramente no seu computador usando Whisper. Opcionalmente, o texto resultante pode ser enviado para um LLM para aprimoramento — seu áudio nunca sai do seu dispositivo.',
+      description: 'Projetado para ditado pessoal e anotações. A transcrição roda inteiramente no seu dispositivo - apenas o aprimoramento opcional de IA conecta online.',
       features: {
         local: 'Processamento local',
         noCloud: 'Sem áudio na nuvem',
@@ -162,7 +162,7 @@ const translations = {
       themeToggle: 'Alternar tema'
     },
     hero: {
-      title: 'Voz para texto.',
+      title: 'A sua voz para texto.',
       titleAccent: 'Seguro. Preciso. Gratuito.',
       downloadButton: 'Descarregar para macOS',
       platformNote: 'Atualmente disponível para macOS. Suporte para Windows e Linux em breve.',
@@ -196,7 +196,7 @@ const translations = {
     },
     privacy: {
       title: 'A sua voz fica no seu dispositivo',
-      description: 'A transcrição corre inteiramente no seu computador usando Whisper. Opcionalmente, o texto resultante pode ser enviado para um LLM para melhoria — o seu áudio nunca sai do seu dispositivo.',
+      description: 'Projetado para ditado pessoal e anotações. A transcrição corre inteiramente no seu dispositivo - apenas a melhoria opcional de IA conecta online.',
       features: {
         local: 'Processamento local',
         noCloud: 'Sem áudio na nuvem',
@@ -233,7 +233,7 @@ const translations = {
       themeToggle: 'Cambiar tema'
     },
     hero: {
-      title: 'Voz a texto.',
+      title: 'Tu voz a texto.',
       titleAccent: 'Seguro. Preciso. Gratis.',
       downloadButton: 'Descargar para macOS',
       platformNote: 'Actualmente disponible para macOS. Soporte para Windows y Linux próximamente.',
@@ -267,7 +267,7 @@ const translations = {
     },
     privacy: {
       title: 'Tu voz permanece en tu dispositivo',
-      description: 'La transcripción se ejecuta completamente en tu computadora usando Whisper. Opcionalmente, el texto resultante puede enviarse a un LLM para mejorarlo — tu audio nunca sale de tu dispositivo.',
+      description: 'Diseñado para dictado personal y toma de notas. La transcripción se ejecuta completamente en tu dispositivo - solo la mejora opcional de IA se conecta en línea.',
       features: {
         local: 'Procesamiento local',
         noCloud: 'Sin audio en la nube',
@@ -304,7 +304,7 @@ const translations = {
       themeToggle: 'Basculer le thème'
     },
     hero: {
-      title: 'Voix vers texte.',
+      title: 'Votre voix vers texte.',
       titleAccent: 'Sécurisé. Précis. Gratuit.',
       downloadButton: 'Télécharger pour macOS',
       platformNote: 'Actuellement disponible pour macOS. Support Windows et Linux bientôt.',
@@ -338,7 +338,7 @@ const translations = {
     },
     privacy: {
       title: 'Votre voix reste sur votre appareil',
-      description: 'La transcription s\'exécute entièrement sur votre ordinateur en utilisant Whisper. En option, le texte résultant peut être envoyé à un LLM pour amélioration — votre audio ne quitte jamais votre appareil.',
+      description: 'Conçu pour la dictée personnelle et la prise de notes. La transcription s\'exécute entièrement sur votre appareil - seule l\'amélioration IA optionnelle se connecte en ligne.',
       features: {
         local: 'Traitement local',
         noCloud: 'Pas d\'audio dans le cloud',
@@ -375,7 +375,7 @@ const translations = {
       themeToggle: 'Design umschalten'
     },
     hero: {
-      title: 'Sprache zu Text.',
+      title: 'Ihre Stimme zu Text.',
       titleAccent: 'Sicher. Genau. Kostenlos.',
       downloadButton: 'Für macOS herunterladen',
       platformNote: 'Derzeit für macOS verfügbar. Windows- und Linux-Unterstützung in Kürze.',
@@ -409,7 +409,7 @@ const translations = {
     },
     privacy: {
       title: 'Ihre Stimme bleibt auf Ihrem Gerät',
-      description: 'Die Transkription läuft vollständig auf Ihrem Computer mit Whisper. Optional kann der resultierende Text zur Verbesserung an ein LLM gesendet werden — Ihr Audio verlässt niemals Ihr Gerät.',
+      description: 'Entwickelt für persönliche Diktate und Notizen. Die Transkription läuft vollständig auf Ihrem Gerät - nur die optionale KI-Verbesserung verbindet sich online.',
       features: {
         local: 'Lokale Verarbeitung',
         noCloud: 'Kein Cloud-Audio',
@@ -446,7 +446,7 @@ const translations = {
       themeToggle: 'Cambia tema'
     },
     hero: {
-      title: 'Voce a testo.',
+      title: 'La tua voce a testo.',
       titleAccent: 'Sicuro. Accurato. Gratuito.',
       downloadButton: 'Scarica per macOS',
       platformNote: 'Attualmente disponibile per macOS. Supporto Windows e Linux in arrivo.',
@@ -480,7 +480,7 @@ const translations = {
     },
     privacy: {
       title: 'La tua voce rimane sul tuo dispositivo',
-      description: 'La trascrizione viene eseguita interamente sul tuo computer usando Whisper. Facoltativamente, il testo risultante può essere inviato a un LLM per il miglioramento — il tuo audio non lascia mai il tuo dispositivo.',
+      description: 'Progettato per dettatura personale e presa di appunti. La trascrizione viene eseguita interamente sul tuo dispositivo - solo il miglioramento IA opzionale si connette online.',
       features: {
         local: 'Elaborazione locale',
         noCloud: 'Nessun audio nel cloud',
@@ -517,7 +517,7 @@ const translations = {
       themeToggle: 'Переключить тему'
     },
     hero: {
-      title: 'Голос в текст.',
+      title: 'Ваш голос в текст.',
       titleAccent: 'Безопасно. Точно. Бесплатно.',
       downloadButton: 'Скачать для macOS',
       platformNote: 'В настоящее время доступно для macOS. Поддержка Windows и Linux скоро.',
@@ -551,7 +551,7 @@ const translations = {
     },
     privacy: {
       title: 'Ваш голос остаётся на вашем устройстве',
-      description: 'Транскрипция выполняется полностью на вашем компьютере с использованием Whisper. Дополнительно результирующий текст может быть отправлен в LLM для улучшения — ваш аудио никогда не покидает ваше устройство.',
+      description: 'Разработано для личной диктовки и заметок. Транскрипция выполняется полностью на вашем устройстве - только опциональное улучшение ИИ подключается онлайн.',
       features: {
         local: 'Локальная обработка',
         noCloud: 'Нет аудио в облаке',
@@ -588,7 +588,7 @@ const translations = {
       themeToggle: 'Temayı değiştir'
     },
     hero: {
-      title: 'Ses den metne.',
+      title: 'Sesiniz metne.',
       titleAccent: 'Güvenli. Doğru. Ücretsiz.',
       downloadButton: 'macOS için indir',
       platformNote: 'Şu anda macOS için mevcut. Windows ve Linux desteği yakında.',
@@ -622,7 +622,7 @@ const translations = {
     },
     privacy: {
       title: 'Sesiniz cihazınızda kalır',
-      description: 'Transkripsiyon tamamen bilgisayarınızda Whisper kullanarak çalışır. İsteğe bağlı olarak, sonuç metni iyileştirme için bir LLM\'ye gönderilebilir — sesiniz asla cihazınızdan ayrılmaz.',
+      description: 'Kişisel dikte ve not alma için tasarlandı. Transkripsiyon tamamen cihazınızda çalışır - yalnızca isteğe bağlı yapay zeka iyileştirmesi çevrimiçi bağlanır.',
       features: {
         local: 'Yerel işleme',
         noCloud: 'Bulutta ses yok',
