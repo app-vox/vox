@@ -5,6 +5,7 @@ import {
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromIni } from "@aws-sdk/credential-provider-ini";
 import { type LlmProvider } from "./provider";
+import { logLlmRequest, logLlmResponse } from "./logging";
 
 export interface BedrockConfig {
   region: string;
@@ -44,15 +45,9 @@ export class BedrockProvider implements LlmProvider {
   }
 
   async correct(rawText: string): Promise<string> {
-    const hasCustom = this.customPrompt.includes("ADDITIONAL CUSTOM INSTRUCTIONS");
     const isDev = process.env.NODE_ENV === "development";
 
-    console.log("[BedrockProvider] Enhancing text, custom prompt:", hasCustom ? "YES" : "NO");
-    if (isDev) {
-      console.log("[BedrockProvider] [DEV] Raw text length:", rawText.length);
-      console.log("[BedrockProvider] [DEV] Raw text:", rawText);
-      console.log("[BedrockProvider] [DEV] System prompt:", this.customPrompt);
-    }
+    logLlmRequest("BedrockProvider", rawText, this.customPrompt);
 
     const command = new ConverseCommand({
       modelId: this.modelId,
@@ -85,11 +80,7 @@ export class BedrockProvider implements LlmProvider {
     }
 
     const correctedText = textBlock.text.trim();
-    console.log("[BedrockProvider] Enhanced text:", correctedText);
-    if (isDev) {
-      console.log("[BedrockProvider] [DEV] Enhanced text length:", correctedText.length);
-      console.log("[BedrockProvider] [DEV] Character diff:", correctedText.length - rawText.length);
-    }
+    logLlmResponse("BedrockProvider", rawText, correctedText);
 
     return correctedText;
   }

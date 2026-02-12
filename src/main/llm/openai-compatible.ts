@@ -1,4 +1,5 @@
 import { type LlmProvider } from "./provider";
+import { logLlmRequest, logLlmResponse } from "./logging";
 
 export interface OpenAICompatibleConfig {
   endpoint: string;
@@ -19,15 +20,9 @@ export class OpenAICompatibleProvider implements LlmProvider {
   }
 
   async correct(rawText: string): Promise<string> {
-    const hasCustom = this.config.customPrompt.includes("ADDITIONAL CUSTOM INSTRUCTIONS");
     const isDev = process.env.NODE_ENV === "development";
 
-    console.log("[OpenAICompatibleProvider] Enhancing text, custom prompt:", hasCustom ? "YES" : "NO");
-    if (isDev) {
-      console.log("[OpenAICompatibleProvider] [DEV] Raw text length:", rawText.length);
-      console.log("[OpenAICompatibleProvider] [DEV] Raw text:", rawText);
-      console.log("[OpenAICompatibleProvider] [DEV] System prompt:", this.config.customPrompt);
-    }
+    logLlmRequest("OpenAICompatibleProvider", rawText, this.config.customPrompt);
 
     const base = this.config.endpoint.replace(/\/+$/, "");
     const url = `${base}/v1/chat/completions`;
@@ -67,11 +62,7 @@ export class OpenAICompatibleProvider implements LlmProvider {
     }
 
     const correctedText = content.trim();
-    console.log("[OpenAICompatibleProvider] Enhanced text:", correctedText);
-    if (isDev) {
-      console.log("[OpenAICompatibleProvider] [DEV] Enhanced text length:", correctedText.length);
-      console.log("[OpenAICompatibleProvider] [DEV] Character diff:", correctedText.length - rawText.length);
-    }
+    logLlmResponse("OpenAICompatibleProvider", rawText, correctedText);
 
     return correctedText;
   }

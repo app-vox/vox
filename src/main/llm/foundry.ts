@@ -1,4 +1,5 @@
 import { type LlmProvider } from "./provider";
+import { logLlmRequest, logLlmResponse } from "./logging";
 
 export interface FoundryConfig {
   endpoint: string;
@@ -19,15 +20,9 @@ export class FoundryProvider implements LlmProvider {
   }
 
   async correct(rawText: string): Promise<string> {
-    const hasCustom = this.config.customPrompt.includes("ADDITIONAL CUSTOM INSTRUCTIONS");
     const isDev = process.env.NODE_ENV === "development";
 
-    console.log("[FoundryProvider] Enhancing text, custom prompt:", hasCustom ? "YES" : "NO");
-    if (isDev) {
-      console.log("[FoundryProvider] [DEV] Raw text length:", rawText.length);
-      console.log("[FoundryProvider] [DEV] Raw text:", rawText);
-      console.log("[FoundryProvider] [DEV] System prompt:", this.config.customPrompt);
-    }
+    logLlmRequest("FoundryProvider", rawText, this.config.customPrompt);
 
     const base = this.config.endpoint.replace(/\/+$/, "");
     const url = `${base}/v1/messages`;
@@ -68,11 +63,7 @@ export class FoundryProvider implements LlmProvider {
     }
 
     const correctedText = textBlock.text.trim();
-    console.log("[FoundryProvider] Enhanced text:", correctedText);
-    if (isDev) {
-      console.log("[FoundryProvider] [DEV] Enhanced text length:", correctedText.length);
-      console.log("[FoundryProvider] [DEV] Character diff:", correctedText.length - rawText.length);
-    }
+    logLlmResponse("FoundryProvider", rawText, correctedText);
 
     return correctedText;
   }
