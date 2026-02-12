@@ -45,8 +45,8 @@ function runWhisper(modelPath: string, filePath: string): Promise<string> {
         "-l", "auto",
         "-m", modelPath,
         "-f", filePath,
-        "--best-of", "5",         // Keep default (max = 8 for most models)
-        "--beam-size", "5",       // Keep default (safe across all models)
+        "--best-of", "5",         // Greedy default (whisper.cpp max decoders = 8)
+        "--beam-size", "5",       // Enable beam search (greedy is the CLI default)
         "--entropy-thold", "2.0", // Lower threshold = more conservative (default: 2.4)
         "--prompt", WHISPER_PROMPT,
       ],
