@@ -6,6 +6,7 @@ export interface FoundryConfig {
   apiKey: string;
   model: string;
   customPrompt: string;
+  hasCustomPrompt: boolean;
 }
 
 interface AnthropicResponse {
@@ -22,7 +23,7 @@ export class FoundryProvider implements LlmProvider {
   async correct(rawText: string): Promise<string> {
     const isDev = process.env.NODE_ENV === "development";
 
-    logLlmRequest("FoundryProvider", rawText, this.config.customPrompt);
+    logLlmRequest("FoundryProvider", rawText, this.config.customPrompt, this.config.hasCustomPrompt);
 
     const base = this.config.endpoint.replace(/\/+$/, "");
     const url = `${base}/v1/messages`;

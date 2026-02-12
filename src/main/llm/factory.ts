@@ -37,6 +37,7 @@ export function createLlmProvider(config: VoxConfig): LlmProvider {
         secretAccessKey: config.llm.secretAccessKey,
         modelId: config.llm.modelId,
         customPrompt: prompt,
+        hasCustomPrompt,
       });
 
     case "openai":
@@ -47,6 +48,7 @@ export function createLlmProvider(config: VoxConfig): LlmProvider {
         apiKey: config.llm.openaiApiKey,
         model: config.llm.openaiModel,
         customPrompt: prompt,
+        hasCustomPrompt,
       });
 
     case "foundry":
@@ -56,6 +58,7 @@ export function createLlmProvider(config: VoxConfig): LlmProvider {
         apiKey: config.llm.apiKey,
         model: config.llm.model,
         customPrompt: prompt,
+        hasCustomPrompt,
       });
   }
 }

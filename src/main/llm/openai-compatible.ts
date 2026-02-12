@@ -6,6 +6,7 @@ export interface OpenAICompatibleConfig {
   apiKey: string;
   model: string;
   customPrompt: string;
+  hasCustomPrompt: boolean;
 }
 
 interface ChatCompletionResponse {
@@ -22,7 +23,7 @@ export class OpenAICompatibleProvider implements LlmProvider {
   async correct(rawText: string): Promise<string> {
     const isDev = process.env.NODE_ENV === "development";
 
-    logLlmRequest("OpenAICompatibleProvider", rawText, this.config.customPrompt);
+    logLlmRequest("OpenAICompatibleProvider", rawText, this.config.customPrompt, this.config.hasCustomPrompt);
 
     const base = this.config.endpoint.replace(/\/+$/, "");
     const url = `${base}/v1/chat/completions`;

@@ -4,10 +4,9 @@ export function logLlmRequest(
   providerName: string,
   rawText: string,
   customPrompt: string,
+  hasCustomPrompt: boolean,
 ): void {
-  const hasCustom = customPrompt.includes("EXTREMELY IMPORTANT");
-
-  console.log(`[${providerName}] Enhancing text, custom prompt:`, hasCustom ? "YES" : "NO");
+  console.log(`[${providerName}] Enhancing text, custom prompt:`, hasCustomPrompt ? "YES" : "NO");
   if (isDev) {
     console.log(`[${providerName}] [DEV] Raw text length:`, rawText.length);
     console.log(`[${providerName}] [DEV] Raw text:`, rawText);
