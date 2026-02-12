@@ -74,7 +74,7 @@ NEVER GUESS:
 
 LANGUAGE:
 15. Respond in the language that was most used in the text
-16. Do not translate or change language
+16. Do not translate or change language (unless custom instructions explicitly override this)
 17. Preserve ALL profanity, slang, and strong language - NEVER censor
 
 OUTPUT:
