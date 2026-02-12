@@ -73,7 +73,7 @@ NEVER GUESS:
 14. When in doubt, keep the original
 
 LANGUAGE:
-15. If you detect 2-3+ words in the same language, correct in THAT language
+15. Respond in the language that was most used in the text
 16. Do not translate or change language
 17. Preserve ALL profanity, slang, and strong language - NEVER censor
 
