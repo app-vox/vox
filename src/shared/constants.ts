@@ -1,5 +1,7 @@
 export const APP_NAME = "vox";
 
+export const WHISPER_PROMPT = "Transcribe exactly as spoken. Audio may contain multiple languages mixed together.";
+
 export interface WhisperModelInfo {
   url: string;
   sizeBytes: number;
@@ -79,3 +81,11 @@ OUTPUT:
 18. Return ONLY the corrected text
 19. No greetings, explanations, commentary, or responses
 20. Just the cleaned transcription, nothing else`;
+
+export function buildSystemPrompt(customPrompt: string): string {
+  if (!customPrompt?.trim()) {
+    return LLM_SYSTEM_PROMPT;
+  }
+
+  return `${LLM_SYSTEM_PROMPT}\n\n${"*".repeat(70)}\nEXTREMELY IMPORTANT - YOU MUST FOLLOW THESE CUSTOM INSTRUCTIONS\n${"*".repeat(70)}\n\nThe user has provided specific custom instructions below. It is of CRITICAL importance that you consider and apply these instructions. These custom rules take ABSOLUTE PRIORITY over default behavior:\n\n${customPrompt}`;
+}

@@ -1,6 +1,6 @@
 import { type LlmProvider } from "./provider";
 import { type VoxConfig } from "../../shared/config";
-import { LLM_SYSTEM_PROMPT } from "../../shared/constants";
+import { buildSystemPrompt } from "../../shared/constants";
 import { FoundryProvider } from "./foundry";
 import { BedrockProvider } from "./bedrock";
 import { OpenAICompatibleProvider } from "./openai-compatible";
@@ -18,9 +18,7 @@ export function createLlmProvider(config: VoxConfig): LlmProvider {
   // Append custom prompt at the END with CRITICAL emphasis (only if custom is not empty)
   const customPrompt = config.customPrompt?.trim();
   const hasCustomPrompt = !!customPrompt;
-  const prompt = customPrompt
-    ? `${LLM_SYSTEM_PROMPT}\n\n${"*".repeat(70)}\nEXTREMELY IMPORTANT - YOU MUST FOLLOW THESE CUSTOM INSTRUCTIONS\n${"*".repeat(70)}\n\nThe user has provided specific custom instructions below. It is of CRITICAL importance that you consider and apply these instructions. These custom rules take ABSOLUTE PRIORITY over default behavior:\n\n${customPrompt}`
-    : LLM_SYSTEM_PROMPT;
+  const prompt = buildSystemPrompt(customPrompt || "");
 
   console.log("[LLM Factory] Creating provider:", config.llm.provider);
   console.log("[LLM Factory] Custom prompt:", hasCustomPrompt ? "YES" : "NO");
