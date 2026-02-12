@@ -152,10 +152,12 @@ export class Pipeline {
     }
 
     const rawText = transcription.text.trim();
-    console.log("[Vox] Whisper transcription:", rawText);
     if (isDev) {
+      console.log("[Vox] Whisper transcription:", rawText);
       console.log("[Vox] [DEV] Raw text length:", rawText.length);
       console.log("[Vox] [DEV] LLM provider type:", this.deps.llmProvider.constructor.name);
+    } else {
+      console.log("[Vox] Whisper transcription:", `${rawText.slice(0, 40)}...`, `(${rawText.length})`);
     }
 
     // Skip garbage detection when LLM enhancement is disabled (Whisper-only mode)
@@ -183,14 +185,16 @@ export class Pipeline {
     try {
       this.deps.onStage?.("enhancing");
       finalText = await this.deps.llmProvider.correct(rawText);
-      console.log("[Vox] LLM enhanced text:", finalText);
       if (isDev) {
+        console.log("[Vox] LLM enhanced text:", finalText);
         console.log("[Vox] [DEV] Enhanced text length:", finalText.length);
         console.log("[Vox] [DEV] Text changed:", rawText !== finalText);
         if (rawText !== finalText) {
           console.log("[Vox] [DEV] Original words:", rawText.split(/\s+/).length);
           console.log("[Vox] [DEV] Enhanced words:", finalText.split(/\s+/).length);
         }
+      } else {
+        console.log("[Vox] LLM enhanced text:", `${finalText.slice(0, 40)}...`, `(${finalText.length})`);
       }
     } catch (err: unknown) {
       // LLM failed — fall back to raw transcription
