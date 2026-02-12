@@ -206,11 +206,11 @@ export function LlmPanel() {
                   className={form.monospaceTextarea}
                   style={{ resize: "none" }}
                 />
-                <details style={{ marginTop: "12px", fontSize: "13px", color: "var(--text-secondary)" }}>
-                  <summary style={{ cursor: "pointer", marginBottom: "8px", fontWeight: 500 }}>
+                <details className={form.exampleDetails}>
+                  <summary>
                     💡 Example Instructions
                   </summary>
-                  <ul style={{ margin: "0", paddingLeft: "20px", lineHeight: "1.7" }}>
+                  <ul>
                     <li><strong>Professional:</strong> "Use professional business language"</li>
                     <li><strong>Formal:</strong> "Use formal language and avoid contractions"</li>
                     <li><strong>Casual:</strong> "Keep it super casual and conversational"</li>
