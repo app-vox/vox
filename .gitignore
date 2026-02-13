@@ -26,3 +26,4 @@ docs/plans/
 
 # Git worktrees
 .worktrees/
+vox-fix-whisper-vs-llm-flow/
