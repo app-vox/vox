@@ -3,7 +3,7 @@ import { execFile } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
-import { WHISPER_PROMPT } from "../../shared/constants";
+import { buildWhisperPrompt } from "../../shared/constants";
 
 export interface TranscriptionResult {
   text: string;
@@ -18,7 +18,8 @@ const WHISPER_BIN = path.join(WHISPER_CPP_DIR, "main");
 export async function transcribe(
   audioBuffer: Float32Array,
   sampleRate: number,
-  modelPath: string
+  modelPath: string,
+  dictionary: string[] = []
 ): Promise<TranscriptionResult> {
   const tempPath = path.join(os.tmpdir(), `vox-recording-${Date.now()}.wav`);
 
@@ -26,7 +27,8 @@ export async function transcribe(
     const wavBuffer = encodeWav(audioBuffer, sampleRate);
     fs.writeFileSync(tempPath, wavBuffer);
 
-    const stdout = await runWhisper(modelPath, tempPath);
+    const prompt = buildWhisperPrompt(dictionary);
+    const stdout = await runWhisper(modelPath, tempPath, prompt);
     const text = parseWhisperOutput(stdout);
 
     return { text };
@@ -37,7 +39,7 @@ export async function transcribe(
   }
 }
 
-function runWhisper(modelPath: string, filePath: string): Promise<string> {
+function runWhisper(modelPath: string, filePath: string, prompt: string): Promise<string> {
   return new Promise((resolve, reject) => {
     execFile(
       WHISPER_BIN,
@@ -48,7 +50,7 @@ function runWhisper(modelPath: string, filePath: string): Promise<string> {
         "--best-of", "5",         // Greedy default (whisper.cpp max decoders = 8)
         "--beam-size", "5",       // Enable beam search (greedy is the CLI default)
         "--entropy-thold", "2.0", // Lower threshold = more conservative (default: 2.4)
-        "--prompt", WHISPER_PROMPT,
+        "--prompt", prompt,
       ],
       { cwd: WHISPER_CPP_DIR, timeout: 30000 },
       (error, stdout, stderr) => {
