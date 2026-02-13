@@ -94,6 +94,7 @@ export interface VoxAPI {
     get(params: { offset: number; limit: number }): Promise<{ entries: import("../shared/types").TranscriptionEntry[]; total: number }>;
     search(params: { query: string; offset: number; limit: number }): Promise<{ entries: import("../shared/types").TranscriptionEntry[]; total: number }>;
     clear(): Promise<void>;
+    onEntryAdded(callback: () => void): void;
   };
   navigation: {
     onNavigateTab(callback: (tab: string) => void): void;
@@ -167,6 +168,9 @@ const voxApi: VoxAPI = {
     get: (params) => ipcRenderer.invoke("history:get", params),
     search: (params) => ipcRenderer.invoke("history:search", params),
     clear: () => ipcRenderer.invoke("history:clear"),
+    onEntryAdded: (callback) => {
+      ipcRenderer.on("history:entry-added", () => callback());
+    },
   },
   navigation: {
     onNavigateTab: (callback) => {

@@ -140,7 +140,7 @@ export function updateTrayMenu(): void {
       click: callbacks.onOpenHome,
     },
     {
-      label: "Transcription History",
+      label: "Transcriptions",
       click: () => callbacks?.onOpenHistory?.(),
     },
   ];

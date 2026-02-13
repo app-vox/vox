@@ -60,6 +60,9 @@ function setupPipeline(): void {
           llmProvider: config.enableLlmEnhancement ? config.llm.provider : undefined,
           llmModel: config.enableLlmEnhancement ? getLlmModelName(config) : undefined,
         });
+        for (const win of BrowserWindow.getAllWindows()) {
+          win.webContents.send("history:entry-added");
+        }
       } catch (err) {
         console.error("[Vox] Failed to save transcription to history:", err);
       }

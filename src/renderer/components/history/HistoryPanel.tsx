@@ -81,6 +81,14 @@ export function HistoryPanel() {
     fetchPage();
   }, [reset, fetchPage]);
 
+  // Auto-refresh when a new transcription is added
+  useEffect(() => {
+    window.voxApi.history.onEntryAdded(() => {
+      reset();
+      fetchPage();
+    });
+  }, [reset, fetchPage]);
+
   // Infinite scroll via IntersectionObserver
   useEffect(() => {
     const sentinel = sentinelRef.current;

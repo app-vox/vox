@@ -5,7 +5,7 @@
 
 .searchIcon {
   position: absolute;
-  left: var(--spacing-3);
+  right: var(--spacing-3);
   top: 50%;
   transform: translateY(-50%);
   color: var(--color-text-tertiary);
@@ -14,7 +14,7 @@
 
 .searchInput {
   width: 100%;
-  padding: var(--spacing-2) var(--spacing-3) var(--spacing-2) var(--spacing-8);
+  padding: var(--spacing-2) var(--spacing-8) var(--spacing-2) var(--spacing-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-base);
   background: var(--color-bg-root);
