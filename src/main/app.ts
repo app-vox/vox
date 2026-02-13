@@ -1,4 +1,4 @@
-import { app, nativeTheme, session, dialog, shell } from "electron";
+import { app, BrowserWindow, nativeTheme, session, dialog, shell } from "electron";
 import * as path from "path";
 import { ConfigManager } from "./config/manager";
 import { createSecretStore } from "./config/secrets";
