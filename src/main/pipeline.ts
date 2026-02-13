@@ -20,6 +20,11 @@ export interface PipelineDeps {
   llmProvider: LlmProvider;
   modelPath: string;
   onStage?: (stage: PipelineStage) => void;
+  onComplete?: (result: {
+    text: string;
+    originalText: string;
+    audioDurationMs: number;
+  }) => void;
 }
 
 /**
@@ -172,6 +177,8 @@ export class Pipeline {
       console.log(`[Vox] LLM enhancement disabled (${processingTime}ms), returning raw transcription`);
       console.log("[Vox] ========== Pipeline Complete (Whisper-only) ==========");
       if (!rawText) return "";
+      const audioDurationMs = Math.round((recording.audioBuffer.length / recording.sampleRate) * 1000);
+      this.deps.onComplete?.({ text: rawText, originalText: rawText, audioDurationMs });
       return rawText;
     }
 
@@ -216,6 +223,8 @@ export class Pipeline {
     console.log(`[Vox] Total processing time: ${totalTime}ms`);
     console.log("[Vox] ========== Pipeline Complete ==========");
 
+    const audioDurationMs = Math.round((recording.audioBuffer.length / recording.sampleRate) * 1000);
+    this.deps.onComplete?.({ text: finalText, originalText: rawText, audioDurationMs });
     return finalText;
   }
 }

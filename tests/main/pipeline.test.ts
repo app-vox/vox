@@ -80,4 +80,68 @@ describe("Pipeline", () => {
 
     await expect(pipeline.startRecording()).rejects.toThrow("Please configure local model in Settings");
   });
+
+  it("should call onComplete with text, originalText, and audioDurationMs on success", async () => {
+    const onComplete = vi.fn();
+
+    const pipeline = new Pipeline({
+      recorder: mockRecorder,
+      transcribe: mockTranscribe,
+      llmProvider: mockProvider,
+      modelPath: "/models/ggml-small.bin",
+      onComplete,
+    });
+
+    await pipeline.startRecording();
+    await pipeline.stopAndProcess();
+
+    expect(onComplete).toHaveBeenCalledWith({
+      text: "corrected text",
+      originalText: "raw transcription",
+      audioDurationMs: expect.any(Number),
+    });
+  });
+
+  it("should not call onComplete when transcription is empty", async () => {
+    const onComplete = vi.fn();
+    const emptyTranscribe = vi.fn().mockResolvedValue({ text: "" });
+
+    const pipeline = new Pipeline({
+      recorder: mockRecorder,
+      transcribe: emptyTranscribe,
+      llmProvider: mockProvider,
+      modelPath: "/models/ggml-small.bin",
+      onComplete,
+    });
+
+    await pipeline.startRecording();
+    await pipeline.stopAndProcess();
+
+    expect(onComplete).not.toHaveBeenCalled();
+  });
+
+  it("should not call onComplete when operation is canceled", async () => {
+    const onComplete = vi.fn();
+
+    const pipeline = new Pipeline({
+      recorder: {
+        start: vi.fn(),
+        stop: vi.fn().mockResolvedValue({
+          audioBuffer: new Float32Array([0.1, 0.2]),
+          sampleRate: 16000,
+        }),
+        cancel: vi.fn(),
+      },
+      transcribe: mockTranscribe,
+      llmProvider: mockProvider,
+      modelPath: "/models/ggml-small.bin",
+      onComplete,
+    });
+
+    await pipeline.startRecording();
+    await pipeline.cancel();
+
+    await expect(pipeline.stopAndProcess()).rejects.toThrow("Operation was canceled");
+    expect(onComplete).not.toHaveBeenCalled();
+  });
 });
