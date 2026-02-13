@@ -1,0 +1,47 @@
+# Vox Development Guidelines
+
+## i18n: No Hardcoded User-Facing Strings
+
+All user-facing text in the Vox app MUST use the i18n system. Never write hardcoded strings in components or main process code.
+
+### Renderer (React components)
+
+```tsx
+import { useT } from "../../i18n-context";
+
+export function MyComponent() {
+  const t = useT();
+  return <h2>{t("section.key")}</h2>;
+}
+```
+
+For dynamic values: `t("key", { param: value })`
+
+### Main process (tray, dialogs, indicator, notifications)
+
+```typescript
+import { t } from "../shared/i18n";
+
+new Notification({ title: t("notification.title"), body: t("notification.body") });
+```
+
+### Adding new translations
+
+1. Add the English key to `src/shared/i18n/locales/en.json`
+2. Add the same key with translated values to ALL other locale files: `pt-BR.json`, `pt-PT.json`, `es.json`, `fr.json`, `de.json`, `it.json`, `ru.json`, `tr.json`
+3. Every locale file must have the exact same set of keys
+4. Run `npx vitest run tests/shared/i18n.test.ts` to verify
+
+### Key naming convention
+
+Use dot notation: `section.subsection.key`
+
+Sections: `general.`, `whisper.`, `llm.`, `permissions.`, `shortcuts.`, `tray.`, `indicator.`, `dialog.`, `ui.`, `model.`, `notification.`, `error.`
+
+### What NOT to translate
+
+- Log messages (`console.log`)
+- Model names and provider names (OpenAI, DeepSeek, AWS Bedrock, etc.)
+- Technical identifiers (CSS classes, IPC channels, config keys)
+- Transcribed speech content
+- User-entered content (custom prompts)
