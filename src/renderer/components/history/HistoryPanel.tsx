@@ -94,13 +94,14 @@ export function HistoryPanel() {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
 
+    const scrollRoot = sentinel.closest(".content");
     const observer = new IntersectionObserver(
       (intersections) => {
         if (intersections[0].isIntersecting && hasMore && !loading) {
           fetchPage();
         }
       },
-      { threshold: 0.1 },
+      { root: scrollRoot, threshold: 0.1 },
     );
 
     observer.observe(sentinel);

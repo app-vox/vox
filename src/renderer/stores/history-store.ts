@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { TranscriptionEntry } from "../../shared/types";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 interface HistoryState {
   entries: TranscriptionEntry[];
