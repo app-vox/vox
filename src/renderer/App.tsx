@@ -13,6 +13,7 @@ import { SaveToast } from "./components/ui/SaveToast";
 import { ScrollButtons } from "./components/ui/ScrollButtons";
 import { useSaveToast } from "./hooks/use-save-toast";
 import { useTheme } from "./hooks/use-theme";
+import { I18nProvider } from "./i18n-context";
 
 const PANELS: Record<string, () => JSX.Element | null> = {
   general: GeneralPanel,
@@ -57,14 +58,16 @@ export function App() {
   const Panel = PANELS[activeTab] ?? WhisperPanel;
 
   return (
-    <div className="flex flex-col h-full">
-      <Header />
-      <TabNav />
-      <main className="content" ref={contentRef}>
-        <Panel />
-      </main>
-      <SaveToast show={showToast} timestamp={toastTimestamp} onHide={hideToast} />
-      <ScrollButtons containerRef={contentRef} />
-    </div>
+    <I18nProvider>
+      <div className="flex flex-col h-full">
+        <Header />
+        <TabNav />
+        <main className="content" ref={contentRef}>
+          <Panel />
+        </main>
+        <SaveToast show={showToast} timestamp={toastTimestamp} onHide={hideToast} />
+        <ScrollButtons containerRef={contentRef} />
+      </div>
+    </I18nProvider>
   );
 }
