@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useDebouncedSave } from "../../hooks/use-debounced-save";
+import { useT } from "../../i18n-context";
 import { SecretInput } from "../ui/SecretInput";
 import form from "../shared/forms.module.scss";
 
 export function FoundryFields() {
+  const t = useT();
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const { debouncedSave, flush } = useDebouncedSave(500, true);
@@ -31,7 +33,7 @@ export function FoundryFields() {
   return (
     <>
       <div className={form.field}>
-        <label htmlFor="llm-endpoint">Endpoint</label>
+        <label htmlFor="llm-endpoint">{t("llm.foundry.endpoint")}</label>
         <input
           id="llm-endpoint"
           type="url"
@@ -43,18 +45,18 @@ export function FoundryFields() {
         />
       </div>
       <div className={form.field}>
-        <label htmlFor="llm-apikey">API Key</label>
+        <label htmlFor="llm-apikey">{t("llm.foundry.apiKey")}</label>
         <SecretInput
           id="llm-apikey"
           value={config.llm.apiKey}
           onChange={(v) => update("apiKey", v)}
           onFocus={() => handleFocus("apiKey", config.llm.apiKey)}
           onBlur={() => handleBlur("apiKey", config.llm.apiKey)}
-          placeholder="Enter your API key"
+          placeholder={t("llm.foundry.apiKeyPlaceholder")}
         />
       </div>
       <div className={form.field}>
-        <label htmlFor="llm-model">Model</label>
+        <label htmlFor="llm-model">{t("llm.foundry.model")}</label>
         <input
           id="llm-model"
           type="text"

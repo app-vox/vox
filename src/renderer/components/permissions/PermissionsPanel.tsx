@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { usePermissions } from "../../hooks/use-permissions";
+import { useT } from "../../i18n-context";
 import { PermissionRow } from "./PermissionRow";
 import { PipelineTest } from "./PipelineTest";
 import { MicIcon, LockIcon } from "../ui/icons";
 import card from "../shared/card.module.scss";
 
 export function PermissionsPanel() {
+  const t = useT();
   const activeTab = useConfigStore((s) => s.activeTab);
   const setupComplete = useConfigStore((s) => s.setupComplete);
   const { status, refresh, requestMicrophone, requestAccessibility } = usePermissions();
@@ -37,27 +39,27 @@ export function PermissionsPanel() {
     <>
       <div className={card.card}>
         <div className={card.header}>
-          <h2>System Permissions</h2>
-          <p className={card.description}>Vox requires these macOS permissions to function properly.</p>
+          <h2>{t("permissions.title")}</h2>
+          <p className={card.description}>{t("permissions.description")}</p>
         </div>
         <div className={card.body}>
           <PermissionRow
             icon={<MicIcon />}
-            name="Microphone"
-            description="Required for voice recording"
+            name={t("permissions.microphone")}
+            description={t("permissions.microphoneDesc")}
             granted={micGranted}
-            statusText={status?.microphone === "denied" ? "Denied" : undefined}
-            buttonText="Grant Access"
+            statusText={status?.microphone === "denied" ? t("permissions.denied") : undefined}
+            buttonText={t("permissions.grantAccess")}
             onRequest={handleMicRequest}
             requesting={requestingMic}
             setupRequired={!setupComplete}
           />
           <PermissionRow
             icon={<LockIcon />}
-            name="Accessibility"
-            description="Required for auto-paste (Cmd+V simulation)"
+            name={t("permissions.accessibility")}
+            description={t("permissions.accessibilityDesc")}
             granted={accGranted}
-            buttonText="Open Settings"
+            buttonText={t("permissions.openSettings")}
             onRequest={requestAccessibility}
             setupRequired={!setupComplete}
           />

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useT } from "../../i18n-context";
 import styles from "./PermissionRow.module.scss";
 import btn from "../shared/buttons.module.scss";
 
@@ -25,6 +26,8 @@ export function PermissionRow({
   requesting,
   setupRequired = false,
 }: PermissionRowProps) {
+  const t = useT();
+
   return (
     <div className={styles.row}>
       <div className={styles.info}>
@@ -36,20 +39,20 @@ export function PermissionRow({
       </div>
       <div className={styles.action}>
         {setupRequired ? (
-          <span className={`${styles.badge} ${styles.setupBadge}`}>Setup Required</span>
+          <span className={`${styles.badge} ${styles.setupBadge}`}>{t("permissions.setupRequired")}</span>
         ) : granted ? (
-          <span className={`${styles.badge} ${styles.granted}`}>Granted</span>
+          <span className={`${styles.badge} ${styles.granted}`}>{t("permissions.granted")}</span>
         ) : (
           <>
             <span className={`${styles.badge} ${styles.missing}`}>
-              {statusText || "Not Granted"}
+              {statusText || t("permissions.notGranted")}
             </span>
             <button
               onClick={onRequest}
               disabled={requesting}
               className={`${btn.btn} ${btn.secondary} ${btn.sm}`}
             >
-              {requesting ? "Requesting..." : buttonText}
+              {requesting ? t("permissions.requesting") : buttonText}
             </button>
           </>
         )}

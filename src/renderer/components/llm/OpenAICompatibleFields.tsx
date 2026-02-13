@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useDebouncedSave } from "../../hooks/use-debounced-save";
+import { useT } from "../../i18n-context";
 import { SecretInput } from "../ui/SecretInput";
 import form from "../shared/forms.module.scss";
 
@@ -10,6 +11,7 @@ const PROVIDER_DEFAULTS: Record<string, { endpoint: string; model: string }> = {
 };
 
 export function OpenAICompatibleFields({ providerType }: { providerType: "openai" | "deepseek" }) {
+  const t = useT();
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const { debouncedSave, flush } = useDebouncedSave(500, true);
@@ -38,18 +40,18 @@ export function OpenAICompatibleFields({ providerType }: { providerType: "openai
   return (
     <>
       <div className={form.field}>
-        <label htmlFor="llm-openai-apikey">API Key</label>
+        <label htmlFor="llm-openai-apikey">{t("llm.openai.apiKey")}</label>
         <SecretInput
           id="llm-openai-apikey"
           value={config.llm.openaiApiKey || ""}
           onChange={(v) => update("openaiApiKey", v)}
           onFocus={() => handleFocus("openaiApiKey", config.llm.openaiApiKey || "")}
           onBlur={() => handleBlur("openaiApiKey", config.llm.openaiApiKey || "")}
-          placeholder="Enter your API key"
+          placeholder={t("llm.openai.apiKeyPlaceholder")}
         />
       </div>
       <div className={form.field}>
-        <label htmlFor="llm-openai-model">Model</label>
+        <label htmlFor="llm-openai-model">{t("llm.openai.model")}</label>
         <input
           id="llm-openai-model"
           type="text"
@@ -61,7 +63,7 @@ export function OpenAICompatibleFields({ providerType }: { providerType: "openai
         />
       </div>
       <div className={form.field}>
-        <label htmlFor="llm-openai-endpoint">Endpoint</label>
+        <label htmlFor="llm-openai-endpoint">{t("llm.openai.endpoint")}</label>
         <input
           id="llm-openai-endpoint"
           type="url"
@@ -72,7 +74,7 @@ export function OpenAICompatibleFields({ providerType }: { providerType: "openai
           placeholder={defaults.endpoint}
         />
         <p className={form.hint}>
-          Pre-filled for {providerType === "openai" ? "OpenAI" : "DeepSeek"}. Change only if using a custom endpoint.
+          {t("llm.openai.endpointHint", { provider: providerType === "openai" ? "OpenAI" : "DeepSeek" })}
         </p>
       </div>
     </>

@@ -1,10 +1,12 @@
 import { useConfigStore } from "../../stores/config-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
+import { useT } from "../../i18n-context";
 import { ShortcutRecorder } from "./ShortcutRecorder";
 import card from "../shared/card.module.scss";
 import btn from "../shared/buttons.module.scss";
 
 export function ShortcutsPanel() {
+  const t = useT();
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
@@ -33,20 +35,20 @@ export function ShortcutsPanel() {
   return (
     <div className={card.card}>
       <div className={card.header}>
-        <h2>Keyboard Shortcuts</h2>
-        <p className={card.description}>Configure the keyboard shortcuts for voice recording. Click a field and press your desired key combination.</p>
+        <h2>{t("shortcuts.title")}</h2>
+        <p className={card.description}>{t("shortcuts.description")}</p>
       </div>
       <div className={card.body}>
         <ShortcutRecorder
-          label="Hold mode"
-          hint="Hold to record, release to stop."
+          label={t("shortcuts.holdMode")}
+          hint={t("shortcuts.holdHint")}
           value={config.shortcuts.hold}
           otherValue={config.shortcuts.toggle}
           onChange={setHold}
         />
         <ShortcutRecorder
-          label="Toggle mode"
-          hint="Press once to start, press again to stop."
+          label={t("shortcuts.toggleMode")}
+          hint={t("shortcuts.toggleHint")}
           value={config.shortcuts.toggle}
           otherValue={config.shortcuts.hold}
           onChange={setToggle}
@@ -56,7 +58,7 @@ export function ShortcutsPanel() {
           className={`${btn.btn} ${btn.secondary} ${btn.sm}`}
           style={{ marginTop: 8 }}
         >
-          Restore Defaults
+          {t("shortcuts.restoreDefaults")}
         </button>
       </div>
     </div>

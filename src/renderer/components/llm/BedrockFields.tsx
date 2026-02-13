@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useDebouncedSave } from "../../hooks/use-debounced-save";
+import { useT } from "../../i18n-context";
 import { SecretInput } from "../ui/SecretInput";
 import form from "../shared/forms.module.scss";
 
 export function BedrockFields() {
+  const t = useT();
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const { debouncedSave, flush } = useDebouncedSave(500, true);
@@ -31,7 +33,7 @@ export function BedrockFields() {
   return (
     <>
       <div className={form.field}>
-        <label htmlFor="llm-region">Region</label>
+        <label htmlFor="llm-region">{t("llm.bedrock.region")}</label>
         <input
           id="llm-region"
           type="text"
@@ -43,7 +45,7 @@ export function BedrockFields() {
         />
       </div>
       <div className={form.field}>
-        <label htmlFor="llm-profile">AWS Profile</label>
+        <label htmlFor="llm-profile">{t("llm.bedrock.profile")}</label>
         <input
           id="llm-profile"
           type="text"
@@ -53,33 +55,33 @@ export function BedrockFields() {
           onBlur={(e) => handleBlur("profile", e.target.value)}
           placeholder="default"
         />
-        <p className={form.hint}>Optional. Named profile from ~/.aws/credentials. Ignored when Access Key ID is provided.</p>
+        <p className={form.hint}>{t("llm.bedrock.profileHint")}</p>
       </div>
       <div className={form.field}>
-        <label htmlFor="llm-access-key">Access Key ID</label>
+        <label htmlFor="llm-access-key">{t("llm.bedrock.accessKeyId")}</label>
         <SecretInput
           id="llm-access-key"
           value={config.llm.accessKeyId || ""}
           onChange={(v) => update("accessKeyId", v)}
           onFocus={() => handleFocus("accessKeyId", config.llm.accessKeyId || "")}
           onBlur={() => handleBlur("accessKeyId", config.llm.accessKeyId || "")}
-          placeholder="Leave empty to use default credentials"
+          placeholder={t("llm.bedrock.accessKeyPlaceholder")}
         />
-        <p className={form.hint}>Optional. If empty, uses AWS default credential chain (env vars, ~/.aws/credentials, IAM roles).</p>
+        <p className={form.hint}>{t("llm.bedrock.accessKeyHint")}</p>
       </div>
       <div className={form.field}>
-        <label htmlFor="llm-secret-key">Secret Access Key</label>
+        <label htmlFor="llm-secret-key">{t("llm.bedrock.secretAccessKey")}</label>
         <SecretInput
           id="llm-secret-key"
           value={config.llm.secretAccessKey || ""}
           onChange={(v) => update("secretAccessKey", v)}
           onFocus={() => handleFocus("secretAccessKey", config.llm.secretAccessKey || "")}
           onBlur={() => handleBlur("secretAccessKey", config.llm.secretAccessKey || "")}
-          placeholder="Leave empty to use default credentials"
+          placeholder={t("llm.bedrock.accessKeyPlaceholder")}
         />
       </div>
       <div className={form.field}>
-        <label htmlFor="llm-model-id">Model ID</label>
+        <label htmlFor="llm-model-id">{t("llm.bedrock.modelId")}</label>
         <input
           id="llm-model-id"
           type="text"

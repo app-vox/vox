@@ -1,10 +1,11 @@
 import type { ReactNode } from "react";
 import { useConfigStore } from "../../stores/config-store";
+import { useT } from "../../i18n-context";
 import { WarningBadge } from "../ui/WarningBadge";
 import { usePermissions } from "../../hooks/use-permissions";
 import styles from "./TabNav.module.scss";
 
-const TABS: { id: string; label: string; icon: ReactNode; requiresModel?: boolean; requiresPermissions?: boolean; checkConfigured?: "speech" | "permissions" | "ai-enhancement" }[] = [
+const TABS: { id: string; icon: ReactNode; requiresModel?: boolean; requiresPermissions?: boolean; checkConfigured?: "speech" | "permissions" | "ai-enhancement" }[] = [
   {
     id: "history",
     label: "Transcriptions",
@@ -17,7 +18,6 @@ const TABS: { id: string; label: string; icon: ReactNode; requiresModel?: boolea
   },
   {
     id: "whisper",
-    label: "Speech",
     requiresModel: true,
     checkConfigured: "speech",
     icon: (
@@ -31,7 +31,6 @@ const TABS: { id: string; label: string; icon: ReactNode; requiresModel?: boolea
   },
   {
     id: "llm",
-    label: "AI Enhancement",
     checkConfigured: "ai-enhancement",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -53,7 +52,6 @@ const TABS: { id: string; label: string; icon: ReactNode; requiresModel?: boolea
   },
   {
     id: "general",
-    label: "General",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="3" />
@@ -63,7 +61,6 @@ const TABS: { id: string; label: string; icon: ReactNode; requiresModel?: boolea
   },
   {
     id: "permissions",
-    label: "Permissions",
     requiresPermissions: true,
     checkConfigured: "permissions",
     icon: (
@@ -74,7 +71,6 @@ const TABS: { id: string; label: string; icon: ReactNode; requiresModel?: boolea
   },
   {
     id: "shortcuts",
-    label: "Shortcuts",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="4" width="20" height="16" rx="2" />
@@ -92,11 +88,20 @@ const TABS: { id: string; label: string; icon: ReactNode; requiresModel?: boolea
 ];
 
 export function TabNav() {
+  const t = useT();
   const activeTab = useConfigStore((s) => s.activeTab);
   const setActiveTab = useConfigStore((s) => s.setActiveTab);
   const setupComplete = useConfigStore((s) => s.setupComplete);
   const config = useConfigStore((s) => s.config);
   const { status: permissionStatus } = usePermissions();
+
+  const tabLabels: Record<string, string> = {
+    whisper: t("tabs.speech"),
+    llm: t("tabs.aiEnhancement"),
+    general: t("tabs.general"),
+    permissions: t("tabs.permissions"),
+    shortcuts: t("tabs.shortcuts"),
+  };
 
   const isConfigured = (type?: "speech" | "permissions" | "ai-enhancement") => {
     if (!type) return false;
@@ -141,7 +146,7 @@ export function TabNav() {
             )}
           </div>
           <span>
-            {tab.label}
+            {tabLabels[tab.id]}
             <WarningBadge show={(tab.requiresModel === true && !setupComplete) || (tab.requiresPermissions === true && needsPermissions())} />
           </span>
         </button>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useDebouncedSave } from "../../hooks/use-debounced-save";
+import { useT } from "../../i18n-context";
 import { SecretInput } from "../ui/SecretInput";
 import form from "../shared/forms.module.scss";
 
@@ -10,6 +11,7 @@ const DEFAULTS = {
 };
 
 export function LiteLLMFields() {
+  const t = useT();
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const { debouncedSave, flush } = useDebouncedSave(500, true);
@@ -36,7 +38,7 @@ export function LiteLLMFields() {
   return (
     <>
       <div className={form.field}>
-        <label htmlFor="llm-litellm-endpoint">Endpoint</label>
+        <label htmlFor="llm-litellm-endpoint">{t("llm.litellm.endpoint")}</label>
         <input
           id="llm-litellm-endpoint"
           type="url"
@@ -47,25 +49,25 @@ export function LiteLLMFields() {
           placeholder={DEFAULTS.endpoint}
         />
         <p className={form.hint}>
-          URL of your LiteLLM proxy instance (e.g., http://localhost:4000).
+          {t("llm.litellm.endpointHint")}
         </p>
       </div>
       <div className={form.field}>
-        <label htmlFor="llm-litellm-apikey">API Key</label>
+        <label htmlFor="llm-litellm-apikey">{t("llm.litellm.apiKey")}</label>
         <SecretInput
           id="llm-litellm-apikey"
           value={config.llm.openaiApiKey || ""}
           onChange={(v) => update("openaiApiKey", v)}
           onFocus={() => handleFocus("openaiApiKey", config.llm.openaiApiKey || "")}
           onBlur={() => handleBlur("openaiApiKey", config.llm.openaiApiKey || "")}
-          placeholder="Optional — depends on your LiteLLM setup"
+          placeholder={t("llm.litellm.apiKeyPlaceholder")}
         />
         <p className={form.hint}>
-          Only required if your LiteLLM proxy is configured with authentication.
+          {t("llm.litellm.apiKeyHint")}
         </p>
       </div>
       <div className={form.field}>
-        <label htmlFor="llm-litellm-model">Model</label>
+        <label htmlFor="llm-litellm-model">{t("llm.litellm.model")}</label>
         <input
           id="llm-litellm-model"
           type="text"
@@ -76,8 +78,7 @@ export function LiteLLMFields() {
           placeholder={DEFAULTS.model}
         />
         <p className={form.hint}>
-          LiteLLM uses the format <code>provider/model</code> for provider-specific models:
-          {" "}gpt-4o, azure/gpt-4, bedrock/claude-3, anthropic/claude-3-5-sonnet, cohere/command-r-plus.
+          {t("llm.litellm.modelHint")}
         </p>
       </div>
     </>

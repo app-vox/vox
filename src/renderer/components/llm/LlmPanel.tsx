@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useDebouncedSave } from "../../hooks/use-debounced-save";
+import { useT } from "../../i18n-context";
 import { FoundryFields } from "./FoundryFields";
 import { BedrockFields } from "./BedrockFields";
 import { OpenAICompatibleFields } from "./OpenAICompatibleFields";
@@ -12,6 +13,7 @@ import form from "../shared/forms.module.scss";
 import buttons from "../shared/buttons.module.scss";
 
 export function LlmPanel() {
+  const t = useT();
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
@@ -28,13 +30,13 @@ export function LlmPanel() {
     return (
       <div className={card.card}>
         <div className={card.header}>
-          <h2>AI Text Correction (LLM)</h2>
+          <h2>{t("llm.setupTitle")}</h2>
           <p className={card.description}>
-            Improve your transcriptions by automatically fixing grammar, removing filler words, and cleaning up your speech.
+            {t("llm.setupDescription")}
           </p>
         </div>
         <div className={card.warningBanner}>
-          Setup required - Download a{" "}
+          {t("llm.setupRequired")}{" "}
           <a
             href="#"
             onClick={(e) => {
@@ -43,9 +45,9 @@ export function LlmPanel() {
             }}
             style={{ color: "inherit", textDecoration: "underline", cursor: "pointer" }}
           >
-            local model
+            {t("llm.setupLocalModel")}
           </a>
-          {" "}first to enable AI improvements
+          {" "}{t("llm.setupSuffix")}
         </div>
       </div>
     );
@@ -69,18 +71,18 @@ export function LlmPanel() {
 
   const handleTest = async () => {
     setTesting(true);
-    setTestStatus({ text: "Testing connection...", type: "info" });
+    setTestStatus({ text: t("llm.testingConnection"), type: "info" });
     await saveConfig();
 
     try {
       const result = await window.voxApi.llm.test();
       if (result.ok) {
-        setTestStatus({ text: "Connection successful", type: "success" });
+        setTestStatus({ text: t("llm.connectionSuccessful"), type: "success" });
       } else {
-        setTestStatus({ text: `Connection failed: ${result.error}`, type: "error" });
+        setTestStatus({ text: t("llm.connectionFailed", { error: result.error ?? "" }), type: "error" });
       }
     } catch (err: unknown) {
-      setTestStatus({ text: `Connection failed: ${err instanceof Error ? err.message : String(err)}`, type: "error" });
+      setTestStatus({ text: t("llm.connectionFailed", { error: err instanceof Error ? err.message : String(err) }), type: "error" });
     } finally {
       setTesting(false);
     }
@@ -89,16 +91,16 @@ export function LlmPanel() {
   return (
     <div className={card.card}>
       <div className={card.header}>
-        <h2>AI Enhancement</h2>
+        <h2>{t("llm.title")}</h2>
         <p className={card.description}>
-          Enhance your transcriptions by automatically fixing grammar, removing filler words, and cleaning up your speech.
+          {t("llm.description")}
         </p>
         <button
           type="button"
           onClick={() => window.voxApi.shell.openExternal("https://github.com/app-vox/vox?tab=readme-ov-file#configuration")}
           className={card.learnMore}
         >
-          Learn more →
+          {t("llm.learnMore")}
         </button>
       </div>
       <div className={card.body}>
@@ -113,10 +115,10 @@ export function LlmPanel() {
                 saveConfig(true);
               }}
             />
-            <p>Enhance My Transcriptions with AI</p>
+            <p>{t("llm.enableCheckbox")}</p>
           </label>
           <p className={form.hint}>
-            When off, you'll get the raw Whisper transcription. When on, AI will enhance your text by fixing grammar and removing filler words.
+            {t("llm.enableHint")}
           </p>
         </div>
 
@@ -127,20 +129,20 @@ export function LlmPanel() {
                 onClick={() => setActiveTab("provider")}
                 className={`${form.inlineTab} ${activeTab === "provider" ? form.active : ""}`}
               >
-                Provider
+                {t("llm.providerTab")}
               </button>
               <button
                 onClick={() => setActiveTab("prompt")}
                 className={`${form.inlineTab} ${activeTab === "prompt" ? form.active : ""}`}
               >
-                Custom Prompt
+                {t("llm.customPromptTab")}
               </button>
             </div>
 
             {activeTab === "provider" && (
               <>
                 <div className={form.field}>
-                  <label htmlFor="llm-provider">Provider</label>
+                  <label htmlFor="llm-provider">{t("llm.providerLabel")}</label>
                   <select
                     id="llm-provider"
                     value={config.llm.provider || "foundry"}
@@ -170,7 +172,7 @@ export function LlmPanel() {
                     disabled={testing}
                     className={`${buttons.btn} ${buttons.primary}`}
                   >
-                    Test Connection
+                    {t("llm.testConnection")}
                   </button>
                   <StatusBox text={testStatus.text} type={testStatus.type} />
                 </div>
@@ -179,9 +181,9 @@ export function LlmPanel() {
 
             {activeTab === "prompt" && (
               <div className={form.field}>
-                <label htmlFor="custom-prompt">Custom Instructions</label>
+                <label htmlFor="custom-prompt">{t("llm.customInstructions")}</label>
                 <p className={form.hint}>
-                  Your custom instructions will be added on top of Vox's default behavior (fix grammar, remove filler words, preserve meaning). Leave empty to use only the defaults.
+                  {t("llm.customInstructionsHint")}
                 </p>
                 <textarea
                   id="custom-prompt"
@@ -201,7 +203,7 @@ export function LlmPanel() {
                     }
                     setInitialPromptValue(null);
                   }}
-                  placeholder="Add additional instructions for the AI..."
+                  placeholder={t("llm.customInstructionsPlaceholder")}
                   rows={12}
                   className={form.monospaceTextarea}
                   style={{ resize: "none" }}

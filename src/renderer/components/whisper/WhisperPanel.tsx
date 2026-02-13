@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
+import { useT } from "../../i18n-context";
 import { ModelRow } from "./ModelRow";
 import { StatusBox } from "../ui/StatusBox";
 import { RecordIcon } from "../ui/icons";
@@ -12,6 +13,7 @@ import btn from "../shared/buttons.module.scss";
 import form from "../shared/forms.module.scss";
 
 export function WhisperPanel() {
+  const t = useT();
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
@@ -81,19 +83,19 @@ export function WhisperPanel() {
 
   const handleTest = async () => {
     setTesting(true);
-    setTestStatus({ text: "Recording for 5 seconds...", type: "info" });
+    setTestStatus({ text: t("whisper.recording"), type: "info" });
     await saveConfig();
 
     try {
       const recording = await recordAudio(5);
-      setTestStatus({ text: "Transcribing...", type: "info" });
+      setTestStatus({ text: t("whisper.transcribing"), type: "info" });
       const text = await window.voxApi.whisper.test(recording);
       setTestStatus({
-        text: text || "(no speech detected)",
+        text: text || t("whisper.noSpeech"),
         type: text ? "success" : "info",
       });
     } catch (err: unknown) {
-      setTestStatus({ text: `Test failed: ${err instanceof Error ? err.message : String(err)}`, type: "error" });
+      setTestStatus({ text: t("whisper.testFailed", { error: err instanceof Error ? err.message : String(err) }), type: "error" });
     } finally {
       setTesting(false);
     }
@@ -102,13 +104,13 @@ export function WhisperPanel() {
   return (
     <div className={card.card}>
       <div className={card.header}>
-        <h2>Local Model (with Whisper)</h2>
-        <p className={card.description}>Select the local speech recognition model. Larger models are more accurate but slower.</p>
+        <h2>{t("whisper.title")}</h2>
+        <p className={card.description}>{t("whisper.description")}</p>
       </div>
       {!setupComplete && (
         <div className={card.warningBanner}>
-          <span style={{ marginRight: "8px" }}>⚠️</span>
-          Please download a model below to get started
+          <span style={{ marginRight: "8px" }}>&#x26A0;&#xFE0F;</span>
+          {t("whisper.downloadPrompt")}
         </div>
       )}
       <div className={card.body}>
@@ -131,9 +133,9 @@ export function WhisperPanel() {
             className={`${btn.btn} ${btn.primary}`}
           >
             <RecordIcon />
-            Test Local Model
+            {t("whisper.testButton")}
           </button>
-          <p className={form.hint}>Records 5 seconds of audio and transcribes it using the selected local model. Local models run entirely on your device, ensuring your audio never leaves your computer for maximum privacy.</p>
+          <p className={form.hint}>{t("whisper.testHint")}</p>
           <StatusBox text={testStatus.text} type={testStatus.type} />
         </div>
       </div>

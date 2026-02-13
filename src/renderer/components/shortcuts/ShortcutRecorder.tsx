@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useT } from "../../i18n-context";
 import styles from "./ShortcutRecorder.module.scss";
 import form from "../shared/forms.module.scss";
 
@@ -9,7 +10,6 @@ const CODE_TO_KEY: Record<string, string> = {
   Minus: "-", Equal: "=", BracketLeft: "[", BracketRight: "]",
   Backslash: "\\", Semicolon: ";", Quote: "'", Comma: ",", Period: ".", Slash: "/",
   Backquote: "`",
-  // Media keys (Fn+F1-F12 on Mac often produce these)
   BrightnessDown: "BrightnessDown", BrightnessUp: "BrightnessUp",
   AudioVolumeDown: "AudioVolumeDown", AudioVolumeUp: "AudioVolumeUp", AudioVolumeMute: "AudioVolumeMute",
   MediaPlayPause: "MediaPlayPause", MediaStop: "MediaStop",
@@ -47,6 +47,7 @@ interface ShortcutRecorderProps {
 }
 
 export function ShortcutRecorder({ label, hint, value, otherValue, onChange }: ShortcutRecorderProps) {
+  const t = useT();
   const [recording, setRecording] = useState(false);
   const [previewParts, setPreviewParts] = useState<string[]>([]);
   const [conflict, setConflict] = useState(false);
@@ -74,7 +75,6 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange }: S
       e.preventDefault();
       e.stopPropagation();
 
-      // Debug: Log EVERYTHING about the key event
       console.log("=".repeat(80));
       console.log("[ShortcutRecorder] KEY PRESSED - COMPLETE EVENT DETAILS:");
       console.log("  e.key:", e.key);
@@ -103,18 +103,11 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange }: S
       if (e.altKey) modifiers.push("Alt");
       if (e.shiftKey) modifiers.push("Shift");
 
-      // Try to detect Fn key through various methods:
-      // 1. Direct detection via key/code
       const isFnDirect = e.key === "Fn" || e.code === "Fn" || e.keyCode === 63;
-
-      // 2. Fn+F1-F12 often produce F13-F24 on Mac
       const isFnBasedKey = e.code.startsWith("F") && parseInt(e.code.substring(1)) > 12;
-
-      // 3. Media keys (Fn+F1-F12 mapped to brightness/volume)
       const isMediaKey = e.code.includes("Media") || e.code.includes("Audio") ||
                          e.code.includes("Brightness") || e.code.includes("Launch");
 
-      // If we detect Fn key, add it as a modifier
       if (isFnDirect) {
         modifiers.push("Fn");
         console.log("[ShortcutRecorder] ✓ Fn key detected directly!");
@@ -124,10 +117,8 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange }: S
         console.log("[ShortcutRecorder] ✓ Fn-based key detected (F13-F24 or media key)");
       }
 
-      // If it's just Fn key pressed alone (or with other modifiers)
       if (isFnDirect) {
         setPreviewParts(modifiers);
-        // If there are other modifiers with Fn, show them. Otherwise just show Fn.
         if (modifiers.length === 1 && modifiers[0] === "Fn") {
           console.log("[ShortcutRecorder] Fn key alone pressed - waiting for main key");
         }
@@ -139,10 +130,8 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange }: S
         return;
       }
 
-      // Try to get the key from code, or fallback to key property
       let mainKey = CODE_TO_KEY[e.code];
 
-      // If code doesn't match, try the key property (catches media keys)
       if (!mainKey && e.key) {
         mainKey = CODE_TO_KEY[e.key] || e.key;
       }
@@ -218,7 +207,7 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange }: S
           ))}
         </span>
         {recording && previewParts.length === 0 && (
-          <span className={styles.placeholder}>Press shortcut...</span>
+          <span className={styles.placeholder}>{t("shortcuts.pressShortcut")}</span>
         )}
       </div>
       <p className={form.hint}>{hint}</p>

@@ -1,3 +1,4 @@
+import { useT } from "../../i18n-context";
 import styles from "./WarningBadge.module.scss";
 
 interface WarningBadgeProps {
@@ -5,10 +6,12 @@ interface WarningBadgeProps {
 }
 
 export function WarningBadge({ show }: WarningBadgeProps) {
+  const t = useT();
+
   if (!show) return null;
 
   return (
-    <span className={styles.badge} title="Setup incomplete">
+    <span className={styles.badge} title={t("ui.setupIncomplete")}>
       !
     </span>
   );
