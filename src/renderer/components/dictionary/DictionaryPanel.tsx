@@ -31,8 +31,7 @@ export function DictionaryPanel() {
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const [inputValue, setInputValue] = useState("");
-  const [showImportExport, setShowImportExport] = useState(false);
-  const [importValue, setImportValue] = useState("");
+  const [copied, setCopied] = useState(false);
 
   if (!config) return null;
 
@@ -40,12 +39,19 @@ export function DictionaryPanel() {
   const sorted = [...dictionary].sort((a, b) => a.localeCompare(b));
   const budget = getWhisperTermBudget(dictionary);
 
-  const addTerm = (term: string) => {
-    const trimmed = term.trim();
-    if (!trimmed) return;
-    if (dictionary.some((t) => t.toLowerCase() === trimmed.toLowerCase())) return;
-    updateConfig({ dictionary: [...dictionary, trimmed] });
-    saveConfig(true);
+  const addTerms = (input: string) => {
+    const terms = input
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+    if (terms.length === 0) return;
+
+    const existing = new Set(dictionary.map((t) => t.toLowerCase()));
+    const newTerms = terms.filter((t) => !existing.has(t.toLowerCase()));
+    if (newTerms.length > 0) {
+      updateConfig({ dictionary: [...dictionary, ...newTerms] });
+      saveConfig(true);
+    }
     setInputValue("");
   };
 
@@ -57,26 +63,14 @@ export function DictionaryPanel() {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      addTerm(inputValue);
+      addTerms(inputValue);
     }
   };
 
-  const handleImport = () => {
-    const terms = importValue
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean);
-    const existing = new Set(dictionary.map((t) => t.toLowerCase()));
-    const newTerms = terms.filter((t) => !existing.has(t.toLowerCase()));
-    if (newTerms.length > 0) {
-      updateConfig({ dictionary: [...dictionary, ...newTerms] });
-      saveConfig(true);
-    }
-    setImportValue("");
-  };
-
-  const handleExport = () => {
+  const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(dictionary.join(", "));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -104,17 +98,28 @@ export function DictionaryPanel() {
             placeholder="Type a word or phrase..."
           />
           <button
-            onClick={() => addTerm(inputValue)}
+            onClick={() => addTerms(inputValue)}
             disabled={!inputValue.trim()}
             className={`${buttons.btn} ${buttons.primary}`}
           >
             Add
           </button>
         </div>
+        <p className={form.hint}>
+          Use commas to add multiple terms at once, e.g. "Kubernetes, Zustand, FFmpeg"
+        </p>
 
         {sorted.length > 0 && (
           <>
-            <div className={styles.count}>{sorted.length} {sorted.length === 1 ? "entry" : "entries"}</div>
+            <div className={styles.listHeader}>
+              <span className={styles.count}>{sorted.length} {sorted.length === 1 ? "entry" : "entries"}</span>
+              <button
+                onClick={handleCopyToClipboard}
+                className={`${buttons.btn} ${buttons.secondary} ${buttons.sm}`}
+              >
+                {copied ? "Copied!" : "Copy to Clipboard"}
+              </button>
+            </div>
             <div className={styles.entryList}>
               {sorted.map((term) => (
                 <div key={term} className={styles.entry}>
@@ -140,42 +145,6 @@ export function DictionaryPanel() {
             No entries yet. Add words like names, technical terms, or acronyms that are often misheard.
           </div>
         )}
-
-        <details
-          className={form.exampleDetails}
-          open={showImportExport}
-          onToggle={(e) => setShowImportExport((e.target as HTMLDetailsElement).open)}
-        >
-          <summary>Import / Export</summary>
-          <div style={{ marginTop: "var(--spacing-3)" }}>
-            <div className={styles.addRow}>
-              <textarea
-                value={importValue}
-                onChange={(e) => setImportValue(e.target.value)}
-                placeholder="Paste comma-separated terms..."
-                rows={3}
-                className={form.monospaceTextarea}
-                style={{ resize: "none", marginTop: 0 }}
-              />
-            </div>
-            <div style={{ display: "flex", gap: "var(--spacing-2)" }}>
-              <button
-                onClick={handleImport}
-                disabled={!importValue.trim()}
-                className={`${buttons.btn} ${buttons.primary} ${buttons.sm}`}
-              >
-                Import
-              </button>
-              <button
-                onClick={handleExport}
-                disabled={dictionary.length === 0}
-                className={`${buttons.btn} ${buttons.secondary} ${buttons.sm}`}
-              >
-                Copy to Clipboard
-              </button>
-            </div>
-          </div>
-        </details>
       </div>
     </div>
   );
