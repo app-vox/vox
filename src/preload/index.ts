@@ -105,6 +105,9 @@ export interface VoxAPI {
   indicator: {
     cancelRecording(): Promise<void>;
   };
+  i18n: {
+    getSystemLocale(): Promise<string>;
+  };
 }
 
 const voxApi: VoxAPI = {
@@ -185,6 +188,9 @@ const voxApi: VoxAPI = {
   },
   indicator: {
     cancelRecording: () => ipcRenderer.invoke("indicator:cancel-recording"),
+  },
+  i18n: {
+    getSystemLocale: () => ipcRenderer.invoke("i18n:system-locale"),
   },
 };
 

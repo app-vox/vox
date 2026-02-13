@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { t as translate, setLanguage, resolveSystemLanguage } from "../shared/i18n";
 import type { SupportedLanguage } from "../shared/config";
 import { useConfigStore } from "./stores/config-store";
@@ -23,17 +23,21 @@ export function useLanguage() {
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const configLanguage = useConfigStore((s) => s.config?.language ?? "system");
+  const [resolvedLanguage, setResolvedLanguage] = useState<SupportedLanguage>("en");
 
-  const resolvedLanguage = useMemo<SupportedLanguage>(() => {
-    let lang: SupportedLanguage;
-    if (configLanguage === "system") {
-      const systemLocale = navigator.language || "en";
-      lang = resolveSystemLanguage(systemLocale);
-    } else {
-      lang = configLanguage;
+  useEffect(() => {
+    async function resolve() {
+      let lang: SupportedLanguage;
+      if (configLanguage === "system") {
+        const systemLocale = await window.voxApi.i18n.getSystemLocale();
+        lang = resolveSystemLanguage(systemLocale);
+      } else {
+        lang = configLanguage;
+      }
+      setLanguage(lang);
+      setResolvedLanguage(lang);
     }
-    setLanguage(lang);
-    return lang;
+    resolve();
   }, [configLanguage]);
 
   return (

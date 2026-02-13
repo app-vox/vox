@@ -244,4 +244,8 @@ export function registerIpcHandlers(
   ipcMain.handle("clipboard:write", (_event, text: string) => {
     clipboard.writeText(text);
   });
+
+  ipcMain.handle("i18n:system-locale", () => {
+    return app.getLocale();
+  });
 }
