@@ -101,10 +101,17 @@ export function buildWhisperPrompt(dictionary: string[]): string {
   return `${cleanTerms}${separator}${WHISPER_PROMPT}`;
 }
 
-export function buildSystemPrompt(customPrompt: string): string {
-  if (!customPrompt?.trim()) {
-    return LLM_SYSTEM_PROMPT;
+export function buildSystemPrompt(customPrompt: string, dictionary: string[] = []): string {
+  let prompt = LLM_SYSTEM_PROMPT;
+
+  if (dictionary.length > 0) {
+    const terms = dictionary.map(t => `"${t}"`).join(", ");
+    prompt += `\n\nDICTIONARY - PRESERVE THESE TERMS EXACTLY:\nThe user has defined these terms. If the transcription contains misspellings or variations of these terms, correct them to match exactly: ${terms}`;
   }
 
-  return `${LLM_SYSTEM_PROMPT}\n\n${"*".repeat(70)}\nEXTREMELY IMPORTANT - YOU MUST FOLLOW THESE CUSTOM INSTRUCTIONS\n${"*".repeat(70)}\n\nThe user has provided specific custom instructions below. It is of CRITICAL importance that you consider and apply these instructions. These custom rules take ABSOLUTE PRIORITY over default behavior:\n\n${customPrompt}`;
+  if (!customPrompt?.trim()) {
+    return prompt;
+  }
+
+  return `${prompt}\n\n${"*".repeat(70)}\nEXTREMELY IMPORTANT - YOU MUST FOLLOW THESE CUSTOM INSTRUCTIONS\n${"*".repeat(70)}\n\nThe user has provided specific custom instructions below. It is of CRITICAL importance that you consider and apply these instructions. These custom rules take ABSOLUTE PRIORITY over default behavior:\n\n${customPrompt}`;
 }

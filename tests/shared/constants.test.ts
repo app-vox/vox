@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { WHISPER_MODELS, APP_NAME, LLM_SYSTEM_PROMPT, buildWhisperPrompt, WHISPER_PROMPT } from "../../src/shared/constants";
+import { WHISPER_MODELS, APP_NAME, LLM_SYSTEM_PROMPT, buildWhisperPrompt, WHISPER_PROMPT, buildSystemPrompt } from "../../src/shared/constants";
 
 describe("constants", () => {
   it("should define all whisper model sizes with URLs and sizes", () => {
@@ -50,5 +50,38 @@ describe("buildWhisperPrompt", () => {
     const termsSection = result.slice(0, result.indexOf(`. ${WHISPER_PROMPT}`));
     expect(termsSection).not.toMatch(/,\s*$/);
     expect(termsSection).toMatch(/\w$/);
+  });
+});
+
+describe("buildSystemPrompt", () => {
+  it("should return base prompt with empty custom prompt and empty dictionary", () => {
+    expect(buildSystemPrompt("", [])).toBe(LLM_SYSTEM_PROMPT);
+  });
+
+  it("should append dictionary terms when provided", () => {
+    const result = buildSystemPrompt("", ["Kubernetes", "Zustand"]);
+    expect(result).toContain("DICTIONARY");
+    expect(result).toContain('"Kubernetes"');
+    expect(result).toContain('"Zustand"');
+  });
+
+  it("should include both dictionary and custom prompt", () => {
+    const result = buildSystemPrompt("Be formal", ["Kubernetes"]);
+    expect(result).toContain("DICTIONARY");
+    expect(result).toContain('"Kubernetes"');
+    expect(result).toContain("Be formal");
+  });
+
+  it("should place dictionary before custom prompt", () => {
+    const result = buildSystemPrompt("Be formal", ["Kubernetes"]);
+    const dictIndex = result.indexOf("DICTIONARY");
+    const customIndex = result.indexOf("Be formal");
+    expect(dictIndex).toBeLessThan(customIndex);
+  });
+
+  it("should not include dictionary section when array is empty", () => {
+    const result = buildSystemPrompt("Be formal", []);
+    expect(result).not.toContain("DICTIONARY");
+    expect(result).toContain("Be formal");
   });
 });
