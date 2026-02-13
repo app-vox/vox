@@ -50,6 +50,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.985.0",
+    "electron-store": "^11.0.2",
     "electron-updater": "^6.7.3",
     "koffi": "^2.15.1",
     "uiohook-napi": "^1.5.4",
