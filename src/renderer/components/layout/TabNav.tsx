@@ -109,10 +109,10 @@ export function TabNav() {
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <circle cx="8" cy="8" r="8" fill="currentColor" />
+                <circle cx="8" cy="8" r="8" fill="var(--color-text-primary)" />
                 <path
                   d="M11 5L7 10L5 8"
-                  stroke="white"
+                  stroke="var(--color-bg-root)"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"

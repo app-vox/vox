@@ -107,7 +107,12 @@ app.whenReady().then(async () => {
 });
 
 app.on("activate", () => {
-  openHome(reloadConfig);
+  const visibleWindows = BrowserWindow.getAllWindows().filter(win =>
+    win.isVisible() && !win.isDestroyed() && win.getTitle() === "Vox"
+  );
+  if (visibleWindows.length === 0) {
+    openHome(reloadConfig);
+  }
 });
 
 app.on("will-quit", () => {

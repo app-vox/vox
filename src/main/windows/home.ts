@@ -53,6 +53,12 @@ export function openHome(onClosed: () => void): void {
     });
   }
 
+  homeWindow.webContents.on("before-input-event", (event, input) => {
+    if ((input.meta || input.control) && (input.key === "=" || input.key === "-" || input.key === "0" || input.key === "+" || input.key === "_")) {
+      event.preventDefault();
+    }
+  });
+
   homeWindow.webContents.on("context-menu", (_event, params) => {
     if (params.isEditable || params.selectionText) {
       const menu = Menu.buildFromTemplate([

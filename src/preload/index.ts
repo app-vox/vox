@@ -90,6 +90,9 @@ export interface VoxAPI {
     quitAndInstall(): Promise<void>;
     onStateChanged(callback: (state: UpdateState) => void): () => void;
   };
+  indicator: {
+    cancelRecording(): Promise<void>;
+  };
 }
 
 const voxApi: VoxAPI = {
@@ -152,6 +155,13 @@ const voxApi: VoxAPI = {
       return () => ipcRenderer.removeListener("updates:state-changed", handler);
     },
   },
+  indicator: {
+    cancelRecording: () => ipcRenderer.invoke("indicator:cancel-recording"),
+  },
 };
 
 contextBridge.exposeInMainWorld("voxApi", voxApi);
+
+contextBridge.exposeInMainWorld("electronAPI", {
+  cancelRecording: () => ipcRenderer.invoke("indicator:cancel-recording"),
+});

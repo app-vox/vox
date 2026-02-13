@@ -21,11 +21,21 @@ export function SaveToast({ show, timestamp, onHide }: SaveToastProps) {
     if (show) {
       const timer = setTimeout(() => {
         setVisible(false);
-        setTimeout(onHide, 300); // Wait for fade out animation
+        setTimeout(onHide, 300);
       }, 2000);
       return () => clearTimeout(timer);
     }
   }, [show, timestamp, onHide]);
+
+  useEffect(() => {
+    if (show && visible) {
+      const failsafe = setTimeout(() => {
+        setVisible(false);
+        onHide();
+      }, 5000);
+      return () => clearTimeout(failsafe);
+    }
+  }, [show, visible, onHide]);
 
   if (!show && !visible) return null;
 

@@ -57,6 +57,8 @@ async function devCheckForUpdates(): Promise<void> {
   const now = Date.now();
 
   if (cachedResult && now - lastCheckTime < CACHE_DURATION_MS) {
+    setState({ status: "checking", currentVersion });
+    await new Promise(resolve => setTimeout(resolve, 800));
     const hasUpdate = compareVersions(currentVersion, cachedResult.latestVersion) > 0;
     setState({
       status: hasUpdate ? "available" : "idle",

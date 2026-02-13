@@ -10,6 +10,7 @@ export interface PipelineDeps {
   recorder: {
     start(): Promise<void>;
     stop(): Promise<RecordingResult>;
+    cancel(): Promise<void>;
   };
   transcribe(
     audioBuffer: Float32Array,
@@ -113,8 +114,13 @@ export class Pipeline {
     }
   }
 
-  cancel(): void {
+  async cancel(): Promise<void> {
     this.canceled = true;
+    try {
+      await this.deps.recorder.cancel();
+    } catch (err) {
+      console.error("[Pipeline] Error canceling recorder:", err);
+    }
   }
 
   async startRecording(): Promise<void> {

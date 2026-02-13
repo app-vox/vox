@@ -96,6 +96,28 @@ export class AudioRecorder {
     };
   }
 
+  async cancel(): Promise<void> {
+    if (!this.recording || !this.win || this.win.isDestroyed()) {
+      return;
+    }
+    try {
+      await this.win.webContents.executeJavaScript(`
+        (async () => {
+          if (window._recProcessor) window._recProcessor.disconnect();
+          if (window._recStream) window._recStream.getTracks().forEach(t => t.stop());
+          if (window._recCtx) await window._recCtx.close();
+          window._recChunks = null;
+          window._recStream = null;
+          window._recCtx = null;
+          window._recProcessor = null;
+        })()
+      `);
+    } catch (err) {
+      console.error("[Recorder] Error during cancel:", err);
+    }
+    this.recording = false;
+  }
+
   dispose(): void {
     if (this.win && !this.win.isDestroyed()) {
       this.win.destroy();

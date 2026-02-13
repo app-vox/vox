@@ -106,17 +106,18 @@ export class ShortcutManager {
       }
     });
 
-    // Register Escape key listener for cancellation
     uIOhook.on("keydown", (e) => {
-      if (e.keycode === UiohookKey.Escape) {
+      if (e.keycode === UiohookKey.Escape && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
         const state = this.stateMachine.getState();
-        // Cancel if we're recording (hold/toggle) or processing
         if (state === "hold" || state === "toggle" || state === "processing") {
           console.log("[Vox] Escape pressed, canceling operation");
           const pipeline = this.deps.getPipeline();
-          pipeline.cancel();
+          pipeline.cancel().catch((err) => {
+            console.error("[Vox] Error during cancel:", err);
+          });
           this.indicator.showCanceled();
           this.stateMachine.setIdle();
+          this.updateTrayState();
         }
       }
     });
@@ -198,13 +199,14 @@ export class ShortcutManager {
     }
   }
 
-  /** Cancel recording without processing */
   cancelRecording(): void {
     const state = this.stateMachine.getState();
     if (state === "hold" || state === "toggle" || state === "processing") {
-      console.log("[Vox] Cancel requested from tray");
+      console.log("[Vox] Cancel requested");
       const pipeline = this.deps.getPipeline();
-      pipeline.cancel();
+      pipeline.cancel().catch((err) => {
+        console.error("[Vox] Error during cancel:", err);
+      });
       this.indicator.showCanceled();
       this.stateMachine.setIdle();
       this.updateTrayState();
@@ -279,6 +281,10 @@ export class ShortcutManager {
     ipcMain.handle("shortcuts:enable", () => {
       this.registerShortcutKeys();
     });
+
+    ipcMain.handle("indicator:cancel-recording", () => {
+      this.cancelRecording();
+    });
   }
 
   private startAccessibilityWatchdog(): void {
@@ -322,6 +328,7 @@ export class ShortcutManager {
   private onRecordingStart(): void {
     const pipeline = this.deps.getPipeline();
     console.log("[Vox] Recording started");
+    this.indicator.hide();
     this.indicator.show("listening");
     this.updateTrayState();
     pipeline.startRecording().catch((err: Error) => {
