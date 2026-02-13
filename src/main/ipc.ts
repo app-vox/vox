@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeImage, nativeTheme, systemPreferences, shell } from "electron";
+import { app, BrowserWindow, clipboard, ipcMain, nativeImage, nativeTheme, systemPreferences, shell } from "electron";
 import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
 import { HistoryManager } from "./history/manager";
@@ -239,5 +239,9 @@ export function registerIpcHandlers(
 
   ipcMain.handle("history:clear", () => {
     historyManager.clear();
+  });
+
+  ipcMain.handle("clipboard:write", (_event, text: string) => {
+    clipboard.writeText(text);
   });
 }

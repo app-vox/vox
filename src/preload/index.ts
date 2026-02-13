@@ -77,6 +77,9 @@ export interface VoxAPI {
     getSystemDark(): Promise<boolean>;
     onSystemThemeChanged(callback: (isDark: boolean) => void): void;
   };
+  clipboard: {
+    write(text: string): Promise<void>;
+  };
   shell: {
     openExternal(url: string): Promise<void>;
   };
@@ -146,6 +149,9 @@ const voxApi: VoxAPI = {
     onSystemThemeChanged: (callback) => {
       ipcRenderer.on("theme:system-changed", (_event, isDark: boolean) => callback(isDark));
     },
+  },
+  clipboard: {
+    write: (text) => ipcRenderer.invoke("clipboard:write", text),
   },
   shell: {
     openExternal: (url) => ipcRenderer.invoke("shell:open-external", url),
