@@ -1,7 +1,8 @@
 import { app, Tray, Menu, nativeImage, shell } from "electron";
 import { getResourcePath } from "./resources";
-import { type VoxConfig, type WhisperModelSize } from "../shared/config";
+import { type VoxConfig } from "../shared/config";
 import { getUpdateState, quitAndInstall } from "./updater";
+import { t } from "../shared/i18n";
 
 let tray: Tray | null = null;
 
@@ -17,14 +18,6 @@ let callbacks: TrayCallbacks | null = null;
 let isListening = false;
 let hasModel = true;
 let currentConfig: VoxConfig | null = null;
-
-const SPEECH_QUALITY_LABELS: Record<WhisperModelSize, string> = {
-  tiny: "Fastest",
-  base: "Fast",
-  small: "Balanced",
-  medium: "Accurate",
-  large: "Best",
-};
 
 function simplifyModelName(fullName: string): string {
   // Extract meaningful parts from complex model names
@@ -136,7 +129,7 @@ export function updateTrayMenu(): void {
 
   const menuTemplate: Electron.MenuItemConstructorOptions[] = [
     {
-      label: "Show Vox",
+      label: t("tray.showVox"),
       click: callbacks.onOpenHome,
     },
     {
@@ -150,13 +143,15 @@ export function updateTrayMenu(): void {
     menuTemplate.push(
       { type: "separator" },
       {
-        label: `Speech: ${currentConfig.whisper.model ? SPEECH_QUALITY_LABELS[currentConfig.whisper.model] : "No model"}`,
+        label: currentConfig.whisper.model
+          ? t("tray.speech", { quality: t("whisper.quality." + currentConfig.whisper.model) })
+          : t("tray.speechNoModel"),
         enabled: false,
       },
       {
         label: currentConfig.enableLlmEnhancement
-          ? `AI Enhancement: ${getActiveModelName(currentConfig)}`
-          : "AI Enhancement: Off",
+          ? t("tray.aiEnhancement", { model: getActiveModelName(currentConfig) })
+          : t("tray.aiEnhancementOff"),
         enabled: false,
       },
     );
@@ -168,14 +163,14 @@ export function updateTrayMenu(): void {
       menuTemplate.push({ type: "separator" });
       if (callbacks.onStopListening) {
         menuTemplate.push({
-          label: "Complete Listening",
+          label: t("tray.completeListening"),
           click: callbacks.onStopListening,
           enabled: hasModel,
         });
       }
       if (callbacks.onCancelListening) {
         menuTemplate.push({
-          label: "Cancel",
+          label: t("tray.cancel"),
           click: callbacks.onCancelListening,
           enabled: hasModel,
         });
@@ -185,7 +180,7 @@ export function updateTrayMenu(): void {
     if (callbacks.onStartListening) {
       menuTemplate.push({ type: "separator" });
       menuTemplate.push({
-        label: "Start Listening",
+        label: t("tray.startListening"),
         click: callbacks.onStartListening,
         enabled: hasModel,
       });
@@ -198,7 +193,7 @@ export function updateTrayMenu(): void {
     menuTemplate.push(
       { type: "separator" },
       {
-        label: `Restart to Update (v${updateState.latestVersion})`,
+        label: t("tray.restartToUpdate", { version: updateState.latestVersion }),
         click: () => quitAndInstall(),
       },
     );
@@ -206,7 +201,7 @@ export function updateTrayMenu(): void {
     menuTemplate.push(
       { type: "separator" },
       {
-        label: "Downloading Update...",
+        label: t("tray.downloadingUpdate"),
         enabled: false,
       },
     );
@@ -214,7 +209,7 @@ export function updateTrayMenu(): void {
     menuTemplate.push(
       { type: "separator" },
       {
-        label: `Update to v${updateState.latestVersion}`,
+        label: t("tray.updateTo", { version: updateState.latestVersion }),
         click: () => shell.openExternal(updateState.releaseUrl),
       },
     );
@@ -223,11 +218,11 @@ export function updateTrayMenu(): void {
   menuTemplate.push(
     { type: "separator" },
     {
-      label: "Report Issue ↗",
+      label: t("tray.reportIssue"),
       click: () => shell.openExternal("https://github.com/app-vox/vox/issues"),
     },
     { type: "separator" },
-    { label: "Quit", click: () => app.quit() }
+    { label: t("tray.quit"), click: () => app.quit() }
   );
 
   const contextMenu = Menu.buildFromTemplate(menuTemplate);

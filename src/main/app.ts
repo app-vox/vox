@@ -16,6 +16,7 @@ import { isAccessibilityGranted } from "./input/paster";
 import { SetupChecker } from "./setup/checker";
 import { HistoryManager } from "./history/manager";
 import { type VoxConfig } from "../shared/config";
+import { t, setLanguage, resolveSystemLanguage } from "../shared/i18n";
 
 const configDir = path.join(app.getPath("userData"));
 const modelsDir = path.join(configDir, "models");
@@ -72,9 +73,16 @@ function setupPipeline(): void {
 }
 
 function reloadConfig(): void {
+  const config = configManager.load();
+
+  const lang = config.language === "system"
+    ? resolveSystemLanguage(app.getLocale())
+    : config.language;
+  setLanguage(lang);
+
   setupPipeline();
   shortcutManager?.registerShortcutKeys();
-  updateTrayConfig(configManager.load());
+  updateTrayConfig(config);
 
   const setupChecker = new SetupChecker(modelManager);
   setTrayModelState(setupChecker.hasAnyModel());
@@ -91,6 +99,12 @@ app.whenReady().then(async () => {
   const initialConfig = configManager.load();
   nativeTheme.themeSource = initialConfig.theme;
 
+  const systemLocale = app.getLocale();
+  const lang = initialConfig.language === "system"
+    ? resolveSystemLanguage(systemLocale)
+    : initialConfig.language;
+  setLanguage(lang);
+
   registerIpcHandlers(configManager, modelManager, historyManager, reloadConfig);
 
   setupPipeline();
@@ -100,10 +114,10 @@ app.whenReady().then(async () => {
   if (!hasAccessibility) {
     const response = await dialog.showMessageBox({
       type: "warning",
-      title: "Accessibility Permission Required",
-      message: "Vox needs Accessibility permission to use keyboard shortcuts",
-      detail: "Vox uses global keyboard shortcuts (like Alt+Space) to activate voice recording.\n\nTo enable this feature:\n\n1. Click \"Open System Settings\" below\n2. Find and enable \"Electron\" or \"Vox\" in the Accessibility list\n3. Restart Vox\n\nWithout this permission, you can still use Vox from the menu bar, but keyboard shortcuts won't work.",
-      buttons: ["Open System Settings", "Continue Without Shortcuts"],
+      title: t("dialog.accessibilityTitle"),
+      message: t("dialog.accessibilityMessage"),
+      detail: t("dialog.accessibilityDetail"),
+      buttons: [t("dialog.openSystemSettings"), t("dialog.continueWithoutShortcuts")],
       defaultId: 0,
       cancelId: 1,
     });

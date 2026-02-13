@@ -1,17 +1,27 @@
 import { BrowserWindow, screen } from "electron";
+import { t } from "../shared/i18n";
 
 type IndicatorMode = "listening" | "transcribing" | "enhancing" | "error" | "canceled";
 
-const LABELS: Record<IndicatorMode, { color: string; text: string; pulse: boolean }> = {
-  listening:    { color: "#ff4444", text: "Listening...",    pulse: false },
-  transcribing: { color: "#ffaa00", text: "Transcribing...", pulse: true },
-  enhancing:    { color: "#44aaff", text: "Enhancing...",    pulse: true },
-  error:        { color: "#fbbf24", text: "Nothing heard",   pulse: false },
-  canceled:     { color: "#fbbf24", text: "Canceled",        pulse: false },
+const INDICATOR_KEYS: Record<IndicatorMode, string> = {
+  listening: "indicator.listening",
+  transcribing: "indicator.transcribing",
+  enhancing: "indicator.enhancing",
+  error: "indicator.nothingHeard",
+  canceled: "indicator.canceled",
+};
+
+const INDICATOR_STYLES: Record<IndicatorMode, { color: string; pulse: boolean }> = {
+  listening:    { color: "#ff4444", pulse: false },
+  transcribing: { color: "#ffaa00", pulse: true },
+  enhancing:    { color: "#44aaff", pulse: true },
+  error:        { color: "#fbbf24", pulse: false },
+  canceled:     { color: "#fbbf24", pulse: false },
 };
 
 function buildHtml(mode: IndicatorMode): string {
-  const { color, text, pulse } = LABELS[mode];
+  const { color, pulse } = INDICATOR_STYLES[mode];
+  const text = t(INDICATOR_KEYS[mode]);
   const animation = pulse
     ? "animation: pulse 1s ease-in-out infinite;"
     : "animation: glow 1.5s ease-in-out infinite;";
