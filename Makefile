@@ -1,4 +1,4 @@
-.PHONY: release run build build-dev install uninstall
+.PHONY: release run dev build build-dev install uninstall
 
 release: build uninstall install
 
@@ -20,3 +20,6 @@ uninstall:
 
 run:
 	npm run start
+
+dev:
+	npm run dev
