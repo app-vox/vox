@@ -6,7 +6,7 @@ import buttons from "../shared/buttons.module.scss";
 import styles from "./DictionaryPanel.module.scss";
 
 const WHISPER_PROMPT_MAX_CHARS = 896;
-const BASE_PROMPT_OVERHEAD = 80;
+const BASE_PROMPT_OVERHEAD = 84; // WHISPER_PROMPT length (82) + separator ". " (2)
 
 function getWhisperTermBudget(dictionary: string[]): { fits: number; total: number; overLimit: boolean } {
   const total = dictionary.length;
