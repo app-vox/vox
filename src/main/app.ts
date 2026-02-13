@@ -14,14 +14,28 @@ import { openHome } from "./windows/home";
 import { registerIpcHandlers } from "./ipc";
 import { isAccessibilityGranted } from "./input/paster";
 import { SetupChecker } from "./setup/checker";
+import { HistoryManager } from "./history/manager";
+import { type VoxConfig } from "../shared/config";
 
 const configDir = path.join(app.getPath("userData"));
 const modelsDir = path.join(configDir, "models");
 const configManager = new ConfigManager(configDir, createSecretStore());
 const modelManager = new ModelManager(modelsDir);
+const historyManager = new HistoryManager();
 
 let pipeline: Pipeline | null = null;
 let shortcutManager: ShortcutManager | null = null;
+
+function getLlmModelName(config: VoxConfig): string {
+  switch (config.llm.provider) {
+    case "bedrock": return config.llm.modelId;
+    case "openai":
+    case "deepseek":
+    case "litellm": return config.llm.openaiModel;
+    case "foundry":
+    default: return config.llm.model;
+  }
+}
 
 function setupPipeline(): void {
   const config = configManager.load();
@@ -36,6 +50,20 @@ function setupPipeline(): void {
     llmProvider,
     modelPath,
     onStage: (stage) => shortcutManager?.showIndicator(stage),
+    onComplete: (result) => {
+      try {
+        historyManager.add({
+          ...result,
+          wordCount: result.text.split(/\s+/).filter(Boolean).length,
+          whisperModel: config.whisper.model || "unknown",
+          llmEnhanced: config.enableLlmEnhancement,
+          llmProvider: config.enableLlmEnhancement ? config.llm.provider : undefined,
+          llmModel: config.enableLlmEnhancement ? getLlmModelName(config) : undefined,
+        });
+      } catch (err) {
+        console.error("[Vox] Failed to save transcription to history:", err);
+      }
+    },
   });
 }
 
@@ -59,9 +87,10 @@ app.whenReady().then(async () => {
   const initialConfig = configManager.load();
   nativeTheme.themeSource = initialConfig.theme;
 
-  registerIpcHandlers(configManager, modelManager, reloadConfig);
+  registerIpcHandlers(configManager, modelManager, historyManager, reloadConfig);
 
   setupPipeline();
+  historyManager.cleanup();
 
   const hasAccessibility = isAccessibilityGranted();
   if (!hasAccessibility) {

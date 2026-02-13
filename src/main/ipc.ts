@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, nativeImage, nativeTheme, systemPreferences, shell } from "electron";
 import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
+import { HistoryManager } from "./history/manager";
 import { type VoxConfig, type WhisperModelSize } from "../shared/config";
 import { getResourcePath } from "./resources";
 import { SetupChecker } from "./setup/checker";
@@ -9,6 +10,7 @@ import { checkForUpdates, getUpdateState, quitAndInstall } from "./updater";
 export function registerIpcHandlers(
   configManager: ConfigManager,
   modelManager: ModelManager,
+  historyManager: HistoryManager,
   onConfigChange?: () => void
 ): void {
   ipcMain.handle("resources:data-url", (_event, ...segments: string[]) => {
@@ -225,4 +227,17 @@ export function registerIpcHandlers(
   ipcMain.handle("updates:get-state", () => getUpdateState());
   ipcMain.handle("updates:get-version", () => app.getVersion());
   ipcMain.handle("updates:quit-and-install", () => quitAndInstall());
+
+  // History
+  ipcMain.handle("history:get", (_event, params: { offset: number; limit: number }) => {
+    return historyManager.get(params.offset, params.limit);
+  });
+
+  ipcMain.handle("history:search", (_event, params: { query: string; offset: number; limit: number }) => {
+    return historyManager.search(params.query, params.offset, params.limit);
+  });
+
+  ipcMain.handle("history:clear", () => {
+    historyManager.clear();
+  });
 }
