@@ -1,4 +1,4 @@
-import { BrowserWindow, screen, ipcMain } from "electron";
+import { BrowserWindow, screen } from "electron";
 
 type IndicatorMode = "listening" | "transcribing" | "enhancing" | "error" | "canceled";
 
