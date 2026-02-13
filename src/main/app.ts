@@ -121,6 +121,7 @@ app.whenReady().then(async () => {
   const setupChecker = new SetupChecker(modelManager);
   setupTray({
     onOpenHome: () => openHome(reloadConfig),
+    onOpenHistory: () => openHome(reloadConfig, "history"),
     onStartListening: () => shortcutManager?.triggerToggle(),
     onStopListening: () => shortcutManager?.stopAndProcess(),
     onCancelListening: () => shortcutManager?.cancelRecording(),

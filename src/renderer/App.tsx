@@ -38,6 +38,12 @@ export function App() {
     loadConfig();
   }, [loadConfig]);
 
+  useEffect(() => {
+    window.voxApi.navigation.onNavigateTab((tab) => {
+      useConfigStore.getState().setActiveTab(tab);
+    });
+  }, []);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full text-text-secondary text-sm">

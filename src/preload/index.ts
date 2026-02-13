@@ -95,6 +95,9 @@ export interface VoxAPI {
     search(params: { query: string; offset: number; limit: number }): Promise<{ entries: import("../shared/types").TranscriptionEntry[]; total: number }>;
     clear(): Promise<void>;
   };
+  navigation: {
+    onNavigateTab(callback: (tab: string) => void): void;
+  };
   indicator: {
     cancelRecording(): Promise<void>;
   };
@@ -164,6 +167,11 @@ const voxApi: VoxAPI = {
     get: (params) => ipcRenderer.invoke("history:get", params),
     search: (params) => ipcRenderer.invoke("history:search", params),
     clear: () => ipcRenderer.invoke("history:clear"),
+  },
+  navigation: {
+    onNavigateTab: (callback) => {
+      ipcRenderer.on("navigate-tab", (_event, tab: string) => callback(tab));
+    },
   },
   indicator: {
     cancelRecording: () => ipcRenderer.invoke("indicator:cancel-recording"),

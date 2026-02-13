@@ -7,6 +7,7 @@ let tray: Tray | null = null;
 
 export interface TrayCallbacks {
   onOpenHome: () => void;
+  onOpenHistory?: () => void;
   onStartListening?: () => void;
   onStopListening?: () => void;
   onCancelListening?: () => void;
@@ -137,6 +138,10 @@ export function updateTrayMenu(): void {
     {
       label: "Show Vox",
       click: callbacks.onOpenHome,
+    },
+    {
+      label: "Transcription History",
+      click: () => callbacks?.onOpenHistory?.(),
     },
   ];
 

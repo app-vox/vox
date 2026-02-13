@@ -3,10 +3,13 @@ import * as path from "path";
 
 let homeWindow: BrowserWindow | null = null;
 
-export function openHome(onClosed: () => void): void {
+export function openHome(onClosed: () => void, initialTab?: string): void {
   if (homeWindow) {
     homeWindow.show();
     homeWindow.focus();
+    if (initialTab) {
+      homeWindow.webContents.send("navigate-tab", initialTab);
+    }
     return;
   }
 
@@ -42,6 +45,12 @@ export function openHome(onClosed: () => void): void {
     homeWindow.loadURL(process.env["ELECTRON_RENDERER_URL"]);
   } else {
     homeWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
+  }
+
+  if (initialTab) {
+    homeWindow.webContents.once("did-finish-load", () => {
+      homeWindow?.webContents.send("navigate-tab", initialTab);
+    });
   }
 
   if (app.isPackaged) {
