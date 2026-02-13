@@ -106,7 +106,7 @@ export function DictionaryPanel() {
           </button>
         </div>
         <p className={form.hint}>
-          Use commas to add multiple terms at once, e.g. "Kubernetes, Zustand, FFmpeg"
+          Use commas to add multiple terms at once, e.g. "John, Project Alpha, Zoom"
         </p>
 
         {sorted.length > 0 && (
@@ -142,7 +142,7 @@ export function DictionaryPanel() {
 
         {sorted.length === 0 && (
           <div className={styles.emptyState}>
-            No entries yet. Add words like names, technical terms, or acronyms that are often misheard.
+            No entries yet. Add names, places, or any words that are often misheard during transcription.
           </div>
         )}
       </div>
