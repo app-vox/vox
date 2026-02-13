@@ -90,6 +90,11 @@ export interface VoxAPI {
     quitAndInstall(): Promise<void>;
     onStateChanged(callback: (state: UpdateState) => void): () => void;
   };
+  history: {
+    get(params: { offset: number; limit: number }): Promise<{ entries: import("../shared/types").TranscriptionEntry[]; total: number }>;
+    search(params: { query: string; offset: number; limit: number }): Promise<{ entries: import("../shared/types").TranscriptionEntry[]; total: number }>;
+    clear(): Promise<void>;
+  };
   indicator: {
     cancelRecording(): Promise<void>;
   };
@@ -154,6 +159,11 @@ const voxApi: VoxAPI = {
       ipcRenderer.on("updates:state-changed", handler);
       return () => ipcRenderer.removeListener("updates:state-changed", handler);
     },
+  },
+  history: {
+    get: (params) => ipcRenderer.invoke("history:get", params),
+    search: (params) => ipcRenderer.invoke("history:search", params),
+    clear: () => ipcRenderer.invoke("history:clear"),
   },
   indicator: {
     cancelRecording: () => ipcRenderer.invoke("indicator:cancel-recording"),
