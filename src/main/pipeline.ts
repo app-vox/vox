@@ -3,6 +3,7 @@ import { NoopProvider } from "./llm/noop";
 import { type RecordingResult } from "./audio/recorder";
 import { type TranscriptionResult } from "./audio/whisper";
 import { existsSync } from "fs";
+import { t } from "../shared/i18n";
 
 export type PipelineStage = "transcribing" | "enhancing";
 
@@ -105,7 +106,7 @@ export class CanceledError extends Error {
 
 export class NoModelError extends Error {
   constructor() {
-    super("Please configure local model in Settings");
+    super(t("error.noModel"));
     this.name = "NoModelError";
   }
 }

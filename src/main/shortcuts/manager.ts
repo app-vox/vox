@@ -6,6 +6,7 @@ import { type Pipeline, CanceledError, NoModelError } from "../pipeline";
 import { ShortcutStateMachine } from "./listener";
 import { IndicatorWindow } from "../indicator";
 import { setTrayListeningState } from "../tray";
+import { t } from "../../shared/i18n";
 
 /** Map Electron accelerator key names to UiohookKey keycodes. */
 const KEY_TO_UIOHOOK: Record<string, number> = {
@@ -127,8 +128,8 @@ export class ShortcutManager {
     if (!hasAccessibility) {
       console.warn("[Vox] Accessibility permission not granted. Keyboard shortcuts will not work.");
       new Notification({
-        title: "Vox - Accessibility Permission Required",
-        body: "Please grant Accessibility permission in System Settings for keyboard shortcuts to work.",
+        title: t("notification.accessibilityRequired.title"),
+        body: t("notification.accessibilityRequired.body"),
       }).show();
 
       // Still register global shortcuts (they work without accessibility)
@@ -150,8 +151,8 @@ export class ShortcutManager {
     } catch (err: unknown) {
       console.error("[Vox] Failed to start keyboard hook:", err);
       new Notification({
-        title: "Vox - Keyboard Hook Failed",
-        body: "Failed to start keyboard shortcuts. Try restarting the app or check Accessibility permissions.",
+        title: t("notification.hookFailed.title"),
+        body: t("notification.hookFailed.body"),
       }).show();
 
       // Continue with limited functionality
@@ -300,8 +301,8 @@ export class ShortcutManager {
         }
         globalShortcut.unregisterAll();
         new Notification({
-          title: "Vox - Accessibility Permission Revoked",
-          body: "Keyboard shortcuts have been disabled. Please re-enable Accessibility permission in System Settings.",
+          title: t("notification.accessibilityRevoked.title"),
+          body: t("notification.accessibilityRevoked.body"),
         }).show();
       } else if (!this.accessibilityWasGranted && granted) {
         console.log("[Vox] Accessibility permission restored — restarting keyboard hook");
@@ -309,14 +310,14 @@ export class ShortcutManager {
           uIOhook.start();
           this.registerShortcutKeys();
           new Notification({
-            title: "Vox - Shortcuts Enabled",
-            body: "Accessibility permission granted! Keyboard shortcuts are now active.",
+            title: t("notification.shortcutsEnabled.title"),
+            body: t("notification.shortcutsEnabled.body"),
           }).show();
         } catch (err: unknown) {
           console.error("[Vox] Failed to restart keyboard hook:", err);
           new Notification({
-            title: "Vox - Restart Required",
-            body: "Please restart Vox to enable keyboard shortcuts.",
+            title: t("notification.restartRequired.title"),
+            body: t("notification.restartRequired.body"),
           }).show();
         }
       }
@@ -339,15 +340,15 @@ export class ShortcutManager {
       if (err instanceof NoModelError) {
         // When no model is configured, show error and immediately cancel
         // No need to wait for Escape - the error itself cancels the operation
-        this.indicator.showError(3000, "Please configure local model");
+        this.indicator.showError(3000, t("notification.setupRequired.indicator"));
         this.stateMachine.setIdle();
         this.updateTrayState();
         new Notification({
-          title: "Vox - Setup Required",
-          body: "Please configure local model in Settings"
+          title: t("notification.setupRequired.title"),
+          body: t("notification.setupRequired.body"),
         }).show();
       } else {
-        new Notification({ title: "Vox", body: `Recording failed: ${err.message}` }).show();
+        new Notification({ title: "Vox", body: t("notification.recordingFailed", { error: err.message }) }).show();
       }
     });
   }

@@ -173,5 +173,23 @@
   "dialog.accessibilityMessage": "Vox necessita del permesso di accessibilit\u00e0 per usare le scorciatoie da tastiera",
   "dialog.accessibilityDetail": "Vox usa scorciatoie da tastiera globali (come Alt+Space) per attivare la registrazione vocale.\n\nPer abilitare questa funzione:\n\n1. Fai clic su \"Apri impostazioni di sistema\" qui sotto\n2. Trova e abilita \"Electron\" o \"Vox\" nell'elenco Accessibilit\u00e0\n3. Riavvia Vox\n\nSenza questo permesso, puoi comunque usare Vox dalla barra dei menu, ma le scorciatoie da tastiera non funzioneranno.",
   "dialog.openSystemSettings": "Apri impostazioni di sistema",
-  "dialog.continueWithoutShortcuts": "Continua senza scorciatoie"
+  "dialog.continueWithoutShortcuts": "Continua senza scorciatoie",
+
+  "notification.accessibilityRequired.title": "Vox - Permesso di accessibilità necessario",
+  "notification.accessibilityRequired.body": "Concedi il permesso di accessibilità nelle Impostazioni di sistema per abilitare le scorciatoie da tastiera.",
+  "notification.hookFailed.title": "Vox - Hook tastiera fallito",
+  "notification.hookFailed.body": "Impossibile avviare le scorciatoie da tastiera. Prova a riavviare Vox.",
+  "notification.accessibilityRevoked.title": "Vox - Permesso di accessibilità revocato",
+  "notification.accessibilityRevoked.body": "Le scorciatoie da tastiera sono state disabilitate. Riattiva il permesso di accessibilità per ripristinarle.",
+  "notification.shortcutsEnabled.title": "Vox - Scorciatoie attivate",
+  "notification.shortcutsEnabled.body": "Permesso di accessibilità concesso! Le scorciatoie da tastiera sono ora attive.",
+  "notification.restartRequired.title": "Vox - Riavvio necessario",
+  "notification.restartRequired.body": "Riavvia Vox per applicare le modifiche alle scorciatoie da tastiera.",
+  "notification.setupRequired.title": "Vox - Configurazione necessaria",
+  "notification.setupRequired.body": "Configura il modello locale nelle Impostazioni",
+  "notification.setupRequired.indicator": "Configura il modello locale",
+  "notification.recordingFailed": "Registrazione fallita: {error}",
+  "notification.pasteFailed": "Incollaggio automatico fallito: {error}. Il testo è negli appunti.",
+  "notification.copiedToClipboard": "{text}...Copiato — premi Cmd+V per incollare.",
+  "error.noModel": "Configura il modello locale nelle Impostazioni"
 }

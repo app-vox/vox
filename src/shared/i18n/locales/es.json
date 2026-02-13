@@ -173,5 +173,23 @@
   "dialog.accessibilityMessage": "Vox necesita el permiso de Accesibilidad para usar atajos de teclado",
   "dialog.accessibilityDetail": "Vox usa atajos de teclado globales (como Alt+Space) para activar la grabaci\u00f3n de voz.\n\nPara habilitar esta funci\u00f3n:\n\n1. Haz clic en \"Abrir Ajustes del Sistema\" a continuaci\u00f3n\n2. Encuentra y activa \"Electron\" o \"Vox\" en la lista de Accesibilidad\n3. Reinicia Vox\n\nSin este permiso, a\u00fan puedes usar Vox desde la barra de men\u00fas, pero los atajos de teclado no funcionar\u00e1n.",
   "dialog.openSystemSettings": "Abrir Ajustes del Sistema",
-  "dialog.continueWithoutShortcuts": "Continuar Sin Atajos"
+  "dialog.continueWithoutShortcuts": "Continuar Sin Atajos",
+
+  "notification.accessibilityRequired.title": "Vox - Permiso de Accesibilidad Necesario",
+  "notification.accessibilityRequired.body": "Conceda el permiso de Accesibilidad en Ajustes del Sistema para activar los atajos de teclado.",
+  "notification.hookFailed.title": "Vox - Fallo en el Hook de Teclado",
+  "notification.hookFailed.body": "No se pudieron iniciar los atajos de teclado. Intente reiniciar Vox.",
+  "notification.accessibilityRevoked.title": "Vox - Permiso de Accesibilidad Revocado",
+  "notification.accessibilityRevoked.body": "Los atajos de teclado han sido desactivados. Reactive el permiso de Accesibilidad para restaurarlos.",
+  "notification.shortcutsEnabled.title": "Vox - Atajos Activados",
+  "notification.shortcutsEnabled.body": "¡Permiso de Accesibilidad concedido! Los atajos de teclado están activos.",
+  "notification.restartRequired.title": "Vox - Reinicio Necesario",
+  "notification.restartRequired.body": "Reinicie Vox para que los cambios en los atajos de teclado surtan efecto.",
+  "notification.setupRequired.title": "Vox - Configuración Necesaria",
+  "notification.setupRequired.body": "Configure el modelo local en Ajustes",
+  "notification.setupRequired.indicator": "Configure el modelo local",
+  "notification.recordingFailed": "Error en la grabación: {error}",
+  "notification.pasteFailed": "Error al pegar automáticamente: {error}. El texto está en su portapapeles.",
+  "notification.copiedToClipboard": "{text}...Copiado — presione Cmd+V para pegar.",
+  "error.noModel": "Configure el modelo local en Ajustes"
 }

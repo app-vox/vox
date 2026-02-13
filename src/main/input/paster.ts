@@ -1,4 +1,5 @@
 import { clipboard, Notification } from "electron";
+import { t } from "../../shared/i18n";
 
 // CoreGraphics constants
 const kCGEventSourceStateHIDSystemState = 1;
@@ -81,13 +82,13 @@ export function pasteText(text: string): void {
       const msg = err instanceof Error ? err.message : String(err);
       new Notification({
         title: "Vox",
-        body: `Auto-paste failed: ${msg.slice(0, 120)}. Text is on your clipboard.`,
+        body: t("notification.pasteFailed", { error: msg.slice(0, 120) }),
       }).show();
     }
   } else {
     new Notification({
       title: "Vox",
-      body: `${text.slice(0, 100)}${text.length > 100 ? "..." : ""}\nCopied — press Cmd+V to paste.`,
+      body: t("notification.copiedToClipboard", { text: text.slice(0, 100) }),
     }).show();
   }
 }

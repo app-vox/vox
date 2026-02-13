@@ -4,7 +4,6 @@
   "tabs.general": "General",
   "tabs.permissions": "Permissions",
   "tabs.shortcuts": "Shortcuts",
-
   "general.theme.title": "Theme",
   "general.theme.description": "Choose your preferred appearance.",
   "general.theme.light": "Light",
@@ -30,7 +29,6 @@
   "general.about.readyToInstall": "Vox v{version} is ready to install",
   "general.about.downloading": "Downloading Vox v{version}... {progress}%",
   "general.about.available": "Vox v{version} is available",
-
   "whisper.title": "Local Model (with Whisper)",
   "whisper.description": "Select the local speech recognition model. Larger models are more accurate but slower.",
   "whisper.downloadPrompt": "Please download a model below to get started",
@@ -55,13 +53,11 @@
   "whisper.quality.small": "Balanced",
   "whisper.quality.medium": "Accurate",
   "whisper.quality.large": "Best",
-
   "model.downloaded": "Downloaded",
   "model.download": "Download",
   "model.confirmDelete": "Confirm?",
   "model.cancelDownload": "Cancel download",
   "model.deleteModel": "Delete model",
-
   "llm.title": "AI Enhancement",
   "llm.description": "Enhance your transcriptions by automatically fixing grammar, removing filler words, and cleaning up your speech.",
   "llm.setupTitle": "AI Text Correction (LLM)",
@@ -69,7 +65,7 @@
   "llm.setupRequired": "Setup required - Download a",
   "llm.setupLocalModel": "local model",
   "llm.setupSuffix": "first to enable AI improvements",
-  "llm.learnMore": "Learn more \u2192",
+  "llm.learnMore": "Learn more →",
   "llm.enableCheckbox": "Enhance My Transcriptions with AI",
   "llm.enableHint": "When off, you'll get the raw Whisper transcription. When on, AI will enhance your text by fixing grammar and removing filler words.",
   "llm.providerTab": "Provider",
@@ -82,12 +78,10 @@
   "llm.customInstructions": "Custom Instructions",
   "llm.customInstructionsHint": "Your custom instructions will be added on top of Vox's default behavior (fix grammar, remove filler words, preserve meaning). Leave empty to use only the defaults.",
   "llm.customInstructionsPlaceholder": "Add additional instructions for the AI...",
-
   "llm.foundry.endpoint": "Endpoint",
   "llm.foundry.apiKey": "API Key",
   "llm.foundry.apiKeyPlaceholder": "Enter your API key",
   "llm.foundry.model": "Model",
-
   "llm.bedrock.region": "Region",
   "llm.bedrock.profile": "AWS Profile",
   "llm.bedrock.profileHint": "Optional. Named profile from ~/.aws/credentials. Ignored when Access Key ID is provided.",
@@ -96,21 +90,18 @@
   "llm.bedrock.accessKeyHint": "Optional. If empty, uses AWS default credential chain (env vars, ~/.aws/credentials, IAM roles).",
   "llm.bedrock.secretAccessKey": "Secret Access Key",
   "llm.bedrock.modelId": "Model ID",
-
   "llm.openai.apiKey": "API Key",
   "llm.openai.apiKeyPlaceholder": "Enter your API key",
   "llm.openai.model": "Model",
   "llm.openai.endpoint": "Endpoint",
   "llm.openai.endpointHint": "Pre-filled for {provider}. Change only if using a custom endpoint.",
-
   "llm.litellm.endpoint": "Endpoint",
   "llm.litellm.endpointHint": "URL of your LiteLLM proxy instance (e.g., http://localhost:4000).",
   "llm.litellm.apiKey": "API Key",
-  "llm.litellm.apiKeyPlaceholder": "Optional \u2014 depends on your LiteLLM setup",
+  "llm.litellm.apiKeyPlaceholder": "Optional — depends on your LiteLLM setup",
   "llm.litellm.apiKeyHint": "Only required if your LiteLLM proxy is configured with authentication.",
   "llm.litellm.model": "Model",
   "llm.litellm.modelHint": "LiteLLM uses the format provider/model for provider-specific models: gpt-4o, azure/gpt-4, bedrock/claude-3, anthropic/claude-3-5-sonnet, cohere/command-r-plus.",
-
   "permissions.title": "System Permissions",
   "permissions.description": "Vox requires these macOS permissions to function properly.",
   "permissions.microphone": "Microphone",
@@ -124,7 +115,6 @@
   "permissions.denied": "Denied",
   "permissions.setupRequired": "Setup Required",
   "permissions.requesting": "Requesting...",
-
   "permissions.pipeline.title": "Pipeline Test",
   "permissions.pipeline.description": "Record a 5-second audio sample to test transcription and LLM correction.",
   "permissions.pipeline.testButton": "Record 5s Test",
@@ -135,7 +125,6 @@
   "permissions.pipeline.llmError": "LLM error: {error}",
   "permissions.pipeline.empty": "(empty)",
   "permissions.pipeline.testFailed": "Test failed: {error}",
-
   "shortcuts.title": "Keyboard Shortcuts",
   "shortcuts.description": "Configure the keyboard shortcuts for voice recording. Click a field and press your desired key combination.",
   "shortcuts.holdMode": "Hold mode",
@@ -144,11 +133,9 @@
   "shortcuts.toggleHint": "Press once to start, press again to stop.",
   "shortcuts.restoreDefaults": "Restore Defaults",
   "shortcuts.pressShortcut": "Press shortcut...",
-
   "ui.settingsSaved": "Settings saved",
   "ui.setupIncomplete": "Setup incomplete",
   "ui.loading": "Loading...",
-
   "tray.showVox": "Show Vox",
   "tray.speech": "Speech: {quality}",
   "tray.speechNoModel": "Speech: No model",
@@ -162,16 +149,31 @@
   "tray.updateTo": "Update to v{version}",
   "tray.reportIssue": "Report Issue",
   "tray.quit": "Quit",
-
   "indicator.listening": "Listening...",
   "indicator.transcribing": "Transcribing...",
   "indicator.enhancing": "Enhancing...",
   "indicator.nothingHeard": "Nothing heard",
   "indicator.canceled": "Canceled",
-
   "dialog.accessibilityTitle": "Accessibility Permission Required",
   "dialog.accessibilityMessage": "Vox needs Accessibility permission to use keyboard shortcuts",
   "dialog.accessibilityDetail": "Vox uses global keyboard shortcuts (like Alt+Space) to activate voice recording.\n\nTo enable this feature:\n\n1. Click \"Open System Settings\" below\n2. Find and enable \"Electron\" or \"Vox\" in the Accessibility list\n3. Restart Vox\n\nWithout this permission, you can still use Vox from the menu bar, but keyboard shortcuts won't work.",
   "dialog.openSystemSettings": "Open System Settings",
-  "dialog.continueWithoutShortcuts": "Continue Without Shortcuts"
+  "dialog.continueWithoutShortcuts": "Continue Without Shortcuts",
+  "notification.accessibilityRequired.title": "Vox - Accessibility Permission Required",
+  "notification.accessibilityRequired.body": "Please grant Accessibility permission in System Settings to enable keyboard shortcuts.",
+  "notification.hookFailed.title": "Vox - Keyboard Hook Failed",
+  "notification.hookFailed.body": "Failed to start keyboard shortcuts. Try restarting Vox.",
+  "notification.accessibilityRevoked.title": "Vox - Accessibility Permission Revoked",
+  "notification.accessibilityRevoked.body": "Keyboard shortcuts have been disabled. Re-enable Accessibility permission to restore them.",
+  "notification.shortcutsEnabled.title": "Vox - Shortcuts Enabled",
+  "notification.shortcutsEnabled.body": "Accessibility permission granted! Keyboard shortcuts are now active.",
+  "notification.restartRequired.title": "Vox - Restart Required",
+  "notification.restartRequired.body": "Please restart Vox for keyboard shortcut changes to take effect.",
+  "notification.setupRequired.title": "Vox - Setup Required",
+  "notification.setupRequired.body": "Please configure local model in Settings",
+  "notification.setupRequired.indicator": "Please configure local model",
+  "notification.recordingFailed": "Recording failed: {error}",
+  "notification.pasteFailed": "Auto-paste failed: {error}. Text is on your clipboard.",
+  "notification.copiedToClipboard": "{text}...Copied — press Cmd+V to paste.",
+  "error.noModel": "Please configure local model in Settings"
 }
