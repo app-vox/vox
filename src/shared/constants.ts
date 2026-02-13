@@ -82,6 +82,25 @@ OUTPUT:
 19. No greetings, explanations, commentary, or responses
 20. Just the cleaned transcription, nothing else`;
 
+export const WHISPER_PROMPT_MAX_CHARS = 896;
+
+export function buildWhisperPrompt(dictionary: string[]): string {
+  if (dictionary.length === 0) return WHISPER_PROMPT;
+
+  const terms = dictionary.join(", ");
+  const separator = ". ";
+  const combined = `${terms}${separator}${WHISPER_PROMPT}`;
+
+  if (combined.length <= WHISPER_PROMPT_MAX_CHARS) return combined;
+
+  const available = WHISPER_PROMPT_MAX_CHARS - WHISPER_PROMPT.length - separator.length;
+  const truncated = terms.slice(0, available);
+  const lastComma = truncated.lastIndexOf(",");
+  const cleanTerms = lastComma > 0 ? truncated.slice(0, lastComma) : truncated;
+
+  return `${cleanTerms}${separator}${WHISPER_PROMPT}`;
+}
+
 export function buildSystemPrompt(customPrompt: string): string {
   if (!customPrompt?.trim()) {
     return LLM_SYSTEM_PROMPT;
