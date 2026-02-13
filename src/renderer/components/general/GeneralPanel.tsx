@@ -65,7 +65,6 @@ export function GeneralPanel() {
   const triggerToast = useSaveToast((s) => s.trigger);
 
   const [updateState, setUpdateState] = useState<UpdateState | null>(null);
-  const [dismissed, setDismissed] = useState(false);
   const [currentVersion, setCurrentVersion] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
 
@@ -84,7 +83,6 @@ export function GeneralPanel() {
   }, []);
 
   const handleCheckForUpdates = async () => {
-    setDismissed(false);
     await window.voxApi.updates.check();
   };
 
@@ -115,7 +113,7 @@ export function GeneralPanel() {
 
   const status = updateState?.status ?? "idle";
   const checking = status === "checking";
-  const showUpdateBanner = (status === "available" || status === "downloading" || status === "ready") && !dismissed;
+  const showUpdateBanner = status === "available" || status === "downloading" || status === "ready";
 
   return (
     <>
@@ -256,12 +254,6 @@ export function GeneralPanel() {
                       </svg>
                     </button>
                   ) : null}
-                  <button onClick={() => setDismissed(true)} className={styles.dismissButton} aria-label="Dismiss">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  </button>
                 </div>
               </div>
               <button onClick={openIssueTracker} className={styles.reportIssueBelow}>
