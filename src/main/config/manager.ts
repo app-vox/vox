@@ -38,6 +38,7 @@ export class ConfigManager {
         customPrompt: saved.customPrompt ?? defaults.customPrompt,
         launchAtLogin: saved.launchAtLogin ?? defaults.launchAtLogin,
         dictionary: Array.isArray(saved.dictionary) ? saved.dictionary : defaults.dictionary,
+        language: saved.language ?? defaults.language,
       };
 
       for (const field of SENSITIVE_FIELDS) {

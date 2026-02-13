@@ -23,4 +23,9 @@ describe("VoxConfig", () => {
     const config = createDefaultConfig();
     expect(config.dictionary).toEqual([]);
   });
+
+  it("should include language field defaulting to 'system'", () => {
+    const config = createDefaultConfig();
+    expect(config.language).toBe("system");
+  });
 });

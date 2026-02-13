@@ -1,5 +1,7 @@
 export type ThemeMode = "light" | "dark" | "system";
 
+export type SupportedLanguage = "en" | "pt-BR" | "pt-PT" | "es" | "fr" | "de" | "it" | "ru" | "tr";
+
 export type LlmProviderType = "foundry" | "bedrock" | "openai" | "deepseek" | "litellm";
 
 export interface LlmConfig {
@@ -43,6 +45,7 @@ export interface VoxConfig {
   customPrompt: string;
   launchAtLogin: boolean;
   dictionary: string[];
+  language: SupportedLanguage | "system";
 }
 
 export function createDefaultConfig(isProduction = false): VoxConfig {
@@ -73,5 +76,6 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     customPrompt: "",
     launchAtLogin: isProduction,
     dictionary: [],
+    language: "system",
   };
 }
