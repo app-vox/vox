@@ -19,6 +19,11 @@ export interface PermissionsStatus {
   bundleId: string;
 }
 
+export interface KeychainStatus {
+  available: boolean;
+  encryptedCount: number;
+}
+
 export interface TranscribeResult {
   rawText: string;
   correctedText: string | null;
@@ -67,6 +72,7 @@ export interface VoxAPI {
   };
   permissions: {
     status(): Promise<PermissionsStatus>;
+    keychainStatus(): Promise<KeychainStatus>;
     requestMicrophone(): Promise<boolean>;
     requestAccessibility(): Promise<void>;
   };
@@ -145,6 +151,7 @@ const voxApi: VoxAPI = {
   },
   permissions: {
     status: () => ipcRenderer.invoke("permissions:status"),
+    keychainStatus: () => ipcRenderer.invoke("permissions:keychain-status"),
     requestMicrophone: () => ipcRenderer.invoke("permissions:request-microphone"),
     requestAccessibility: () => ipcRenderer.invoke("permissions:request-accessibility"),
   },

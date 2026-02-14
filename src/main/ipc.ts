@@ -1,4 +1,4 @@
-import { app, BrowserWindow, clipboard, ipcMain, nativeImage, nativeTheme, systemPreferences, shell } from "electron";
+import { app, BrowserWindow, clipboard, ipcMain, nativeImage, nativeTheme, safeStorage, systemPreferences, shell } from "electron";
 import * as fs from "fs";
 import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
@@ -178,6 +178,13 @@ export function registerIpcHandlers(
       pid: process.pid,
       execPath: process.execPath,
       bundleId: app.name,
+    };
+  });
+
+  ipcMain.handle("permissions:keychain-status", () => {
+    return {
+      available: safeStorage.isEncryptionAvailable(),
+      encryptedCount: configManager.countEncryptedSecrets(),
     };
   });
 
