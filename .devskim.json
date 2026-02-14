@@ -1,6 +1,6 @@
 {
   "LanguageRuleIgnoreMap": {
-    "json": ["DS197836"],
+    "json": ["DS197836", "DS162092"],
     "typescript": ["DS172411", "DS162092"],
     "typescriptreact": ["DS162092"]
   }

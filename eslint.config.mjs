@@ -32,7 +32,7 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       "i18next/no-literal-string": [
-        "warn",
+        "error",
         {
           markupOnly: true,
           ignoreAttribute: [
