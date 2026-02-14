@@ -3,6 +3,7 @@ import { useConfigStore } from "../../stores/config-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
 import type { ThemeMode } from "../../../shared/config";
 import card from "../shared/card.module.scss";
+import buttons from "../shared/buttons.module.scss";
 import styles from "./GeneralPanel.module.scss";
 
 const THEME_OPTIONS: { value: ThemeMode; label: string; icon: ReactNode }[] = [
@@ -49,6 +50,8 @@ export function GeneralPanel() {
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
+  const setupComplete = useConfigStore((s) => s.setupComplete);
+  const setActiveTab = useConfigStore((s) => s.setActiveTab);
   const triggerToast = useSaveToast((s) => s.trigger);
 
   const isDevMode = import.meta.env.DEV;
@@ -70,6 +73,33 @@ export function GeneralPanel() {
 
   return (
     <>
+      {!setupComplete && (
+        <div className={`${card.card} ${styles.setupBanner}`}>
+          <div className={card.body}>
+            <div className={styles.setupContent}>
+              <div className={styles.setupIcon}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" y1="19" x2="12" y2="23" />
+                  <line x1="8" y1="23" x2="16" y2="23" />
+                </svg>
+              </div>
+              <div>
+                <div className={styles.setupTitle}>Configure Speech</div>
+                <div className={styles.setupDesc}>Download a speech model to start using Vox for transcription.</div>
+              </div>
+              <button
+                className={`${buttons.btn} ${buttons.primary}`}
+                onClick={() => setActiveTab("whisper")}
+              >
+                Get started
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className={card.card}>
         <div className={card.header}>
           <h2>Theme</h2>

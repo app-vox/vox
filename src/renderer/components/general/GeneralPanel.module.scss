@@ -1,3 +1,37 @@
+.setupBanner {
+  border-color: var(--color-accent);
+}
+
+.setupContent {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.setupIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-hover);
+  color: var(--color-accent);
+}
+
+.setupTitle {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
+}
+
+.setupDesc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
 .segmented {
   display: inline-flex;
   background: var(--color-bg-input);
