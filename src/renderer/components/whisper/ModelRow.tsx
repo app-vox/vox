@@ -24,6 +24,10 @@ export function ModelRow({ model, selected, onSelect, onDelete }: ModelRowProps)
   const confirmTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
+    setDownloaded(model.downloaded);
+  }, [model.downloaded]);
+
+  useEffect(() => {
     const handler = (p: { size: string; downloaded: number; total: number }) => {
       if (p.size === model.size) {
         if (p.total > 0 && p.downloaded < p.total) {

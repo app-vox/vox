@@ -122,6 +122,13 @@
   width: 60px;
   height: 60px;
   border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: opacity 200ms ease;
+  opacity: 0.85;
+
+  &:hover {
+    opacity: 1;
+  }
 }
 
 .aboutDivider {

@@ -45,7 +45,16 @@ export function AboutPanel() {
             {currentVersion ? `Vox v${currentVersion}` : "Version information and support."}
           </p>
         </div>
-        {logoUrl && <img src={logoUrl} alt="Vox" className={styles.aboutLogo} draggable={false} />}
+        {logoUrl && (
+          <img
+            src={logoUrl}
+            alt="Vox"
+            className={styles.aboutLogo}
+            draggable={false}
+            onClick={() => window.voxApi.shell.openExternal("https://app-vox.github.io/vox/")}
+            title="Visit Vox website"
+          />
+        )}
       </div>
       <div className={card.body}>
         {showUpdateBanner ? (

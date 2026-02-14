@@ -59,7 +59,9 @@ export function registerIpcHandlers(
       configManager.save(config);
       onConfigChange?.();
     } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") return;
+      if (err instanceof DOMException && err.name === "AbortError") {
+        throw new Error("Download cancelled");
+      }
       throw err;
     }
   });

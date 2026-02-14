@@ -32,7 +32,7 @@ export function DictionaryPanel() {
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const [inputValue, setInputValue] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(() => Number(localStorage.getItem("vox:dictionary-pageSize")) || 10);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -82,6 +82,7 @@ export function DictionaryPanel() {
   };
 
   const handlePageSizeChange = (size: number) => {
+    localStorage.setItem("vox:dictionary-pageSize", String(size));
     setPageSize(size);
     setPage(1);
   };

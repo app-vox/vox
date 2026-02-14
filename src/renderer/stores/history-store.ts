@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import type { TranscriptionEntry } from "../../shared/types";
 
-const DEFAULT_PAGE_SIZE = 10;
+const STORAGE_KEY = "vox:history-pageSize";
+const DEFAULT_PAGE_SIZE = Number(localStorage.getItem(STORAGE_KEY)) || 10;
 
 interface HistoryState {
   entries: TranscriptionEntry[];
@@ -52,6 +53,7 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
   },
 
   setPageSize: (size: number) => {
+    localStorage.setItem(STORAGE_KEY, String(size));
     set({ pageSize: size, page: 1 });
     get().fetchPage();
   },
