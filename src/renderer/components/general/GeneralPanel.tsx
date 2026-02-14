@@ -5,8 +5,7 @@ import { usePermissions } from "../../hooks/use-permissions";
 import { useT } from "../../i18n-context";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
 import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, BookIcon } from "../../../shared/icons";
-import type { ThemeMode, SupportedLanguage, AudioCueType } from "../../../shared/config";
-import { generateCueSamples, isWavCue, getWavFilename } from "../../../shared/audio-cue";
+import type { ThemeMode, SupportedLanguage } from "../../../shared/config";
 import { CustomSelect, type SelectItem } from "../ui/CustomSelect";
 import { OfflineBanner } from "../ui/OfflineBanner";
 import card from "../shared/card.module.scss";
@@ -32,26 +31,8 @@ const LANGUAGE_NAMES: Record<SupportedLanguage, string> = {
   tr: "T\u00fcrk\u00e7e",
 };
 
-function previewCue(cue: AudioCueType) {
-  if (cue === "none") return;
-
-  if (isWavCue(cue)) {
-    const filename = getWavFilename(cue);
-    if (!filename) return;
-    const audio = new Audio(`/audio/${filename}`);
-    audio.play().catch(() => {});
-  } else {
-    const ctx = new AudioContext();
-    const samples = generateCueSamples(cue, ctx.sampleRate);
-    if (samples.length === 0) { ctx.close(); return; }
-    const buffer = ctx.createBuffer(1, samples.length, ctx.sampleRate);
-    buffer.getChannelData(0).set(new Float32Array(samples));
-    const source = ctx.createBufferSource();
-    source.buffer = buffer;
-    source.connect(ctx.destination);
-    source.start();
-    source.onended = () => ctx.close();
-  }
+function previewCue(cue: string) {
+  window.voxApi.audio.previewCue(cue).catch(() => {});
 }
 
 export function GeneralPanel() {
@@ -245,7 +226,7 @@ export function GeneralPanel() {
               value={config.recordingAudioCue ?? "tap"}
               items={soundItems}
               onChange={(val) => handleSoundChange("recordingAudioCue", val)}
-              onPreview={(val) => previewCue(val as AudioCueType)}
+              onPreview={previewCue}
             />
           </div>
           <div className={styles.fieldRow}>
@@ -254,7 +235,7 @@ export function GeneralPanel() {
               value={config.recordingStopAudioCue ?? "pop"}
               items={soundItems}
               onChange={(val) => handleSoundChange("recordingStopAudioCue", val)}
-              onPreview={(val) => previewCue(val as AudioCueType)}
+              onPreview={previewCue}
             />
           </div>
           <div className={styles.fieldRow}>
@@ -263,7 +244,7 @@ export function GeneralPanel() {
               value={config.errorAudioCue ?? "error"}
               items={errorSoundItems}
               onChange={(val) => handleSoundChange("errorAudioCue", val)}
-              onPreview={(val) => previewCue(val as AudioCueType)}
+              onPreview={previewCue}
             />
           </div>
         </div>
