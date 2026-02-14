@@ -20,6 +20,13 @@ export default tseslint.config(
   },
 
   {
+    files: ["src/**/*.ts", "src/**/*.tsx"],
+    rules: {
+      "no-console": "error",
+    },
+  },
+
+  {
     files: ["src/main/**/*.ts"],
     rules: {
       "@typescript-eslint/no-require-imports": "off",
