@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import card from "../shared/card.module.scss";
 import form from "../shared/forms.module.scss";
@@ -32,6 +32,11 @@ export function DictionaryPanel() {
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const [inputValue, setInputValue] = useState("");
   const [copied, setCopied] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
   if (!config) return null;
 
@@ -91,6 +96,7 @@ export function DictionaryPanel() {
       <div className={card.body}>
         <div className={styles.addRow}>
           <input
+            ref={inputRef}
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}

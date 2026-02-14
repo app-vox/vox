@@ -73,7 +73,12 @@ export function HistoryPanel() {
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [confirmClear, setConfirmClear] = useState(false);
+
+  useEffect(() => {
+    searchInputRef.current?.focus();
+  }, []);
 
   // Load initial page on mount
   useEffect(() => {
@@ -146,6 +151,7 @@ export function HistoryPanel() {
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
             <input
+              ref={searchInputRef}
               type="text"
               placeholder="Search transcriptions..."
               defaultValue={searchQuery}
