@@ -18,6 +18,52 @@ export function getWavFilename(type: AudioCueType): string | null {
   return WAV_CUE_FILES[type] ?? null;
 }
 
+export interface AudioSamples {
+  samples: number[];
+  sampleRate: number;
+}
+
+/** Parse a WAV buffer (PCM 16-bit) into mono float32 samples. */
+export function parseWavSamples(buf: Buffer): AudioSamples {
+  // Find "fmt " chunk
+  let offset = 12; // skip RIFF header
+  let channels = 1;
+  let sampleRate = 44100;
+  let bitsPerSample = 16;
+
+  while (offset < buf.length - 8) {
+    const tag = buf.toString("ascii", offset, offset + 4);
+    const size = buf.readUInt32LE(offset + 4);
+    if (tag === "fmt ") {
+      channels = buf.readUInt16LE(offset + 10);
+      sampleRate = buf.readUInt32LE(offset + 12);
+      bitsPerSample = buf.readUInt16LE(offset + 22);
+    } else if (tag === "data") {
+      const dataStart = offset + 8;
+      const dataEnd = dataStart + size;
+      const bytesPerSample = bitsPerSample / 8;
+      const frameCount = Math.floor(size / (bytesPerSample * channels));
+      const samples: number[] = new Array(frameCount);
+
+      for (let i = 0; i < frameCount; i++) {
+        let mono = 0;
+        for (let ch = 0; ch < channels; ch++) {
+          const pos = dataStart + (i * channels + ch) * bytesPerSample;
+          if (pos + 1 >= dataEnd) break;
+          mono += buf.readInt16LE(pos) / 32768;
+        }
+        samples[i] = mono / channels;
+      }
+
+      return { samples, sampleRate };
+    }
+    offset += 8 + size;
+    if (size % 2 !== 0) offset++; // WAV chunks are word-aligned
+  }
+
+  return { samples: [], sampleRate };
+}
+
 export function generateCueSamples(type: AudioCueType, sampleRate: number): number[] {
   switch (type) {
     case "click":

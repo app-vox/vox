@@ -18,7 +18,7 @@ import { isAccessibilityGranted } from "./input/paster";
 import { SetupChecker } from "./setup/checker";
 import { HistoryManager } from "./history/manager";
 import { type VoxConfig, type AudioCueType } from "../shared/config";
-import { generateCueSamples, isWavCue, getWavFilename } from "../shared/audio-cue";
+import { generateCueSamples, isWavCue, getWavFilename, parseWavSamples } from "../shared/audio-cue";
 import { t, setLanguage, resolveSystemLanguage } from "../shared/i18n";
 
 const configDir = path.join(app.getPath("userData"));
@@ -122,10 +122,11 @@ app.whenReady().then(async () => {
       const filename = getWavFilename(cue);
       if (!filename) return;
       const audioDir = app.isPackaged
-        ? join(process.resourcesPath, "app.asar.unpacked", "public", "audio")
-        : join(app.getAppPath(), "public", "audio");
+        ? join(process.resourcesPath, "resources", "audio")
+        : join(app.getAppPath(), "resources", "audio");
       const wavData = readFileSync(join(audioDir, filename));
-      await pipeline.playWavCue(wavData.toString("base64"));
+      const parsed = parseWavSamples(wavData);
+      if (parsed.samples.length > 0) await pipeline.playAudioCue(parsed.samples, parsed.sampleRate);
     } else {
       const samples = generateCueSamples(cue, 44100);
       if (samples.length > 0) await pipeline.playAudioCue(samples);
