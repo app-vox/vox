@@ -227,5 +227,13 @@
   "sidebar.visitWebsite": "Visitar site do Vox",
   "sidebar.updateAvailable": "Atualização disponível",
   "sidebar.updateVox": "Atualizar Vox",
-  "history.deleteTranscription": "Excluir transcrição"
+  "history.deleteTranscription": "Excluir transcrição",
+  "general.recordingFeedback.title": "Feedback de Gravação",
+  "general.recordingFeedback.audioCue": "Som de início de gravação",
+  "general.recordingFeedback.audioCue.description": "Reproduz um som quando a gravação começa para sinalizar que você pode começar a falar.",
+  "general.recordingFeedback.audioCue.click": "Clique",
+  "general.recordingFeedback.audioCue.beep": "Bipe",
+  "general.recordingFeedback.audioCue.chime": "Sino",
+  "general.recordingFeedback.audioCue.none": "Nenhum",
+  "indicator.initializing": "Iniciando..."
 }

@@ -39,6 +39,7 @@ export class ConfigManager {
         launchAtLogin: saved.launchAtLogin ?? defaults.launchAtLogin,
         dictionary: Array.isArray(saved.dictionary) ? saved.dictionary : defaults.dictionary,
         language: saved.language ?? defaults.language,
+        recordingAudioCue: saved.recordingAudioCue ?? defaults.recordingAudioCue,
       };
 
       for (const field of SENSITIVE_FIELDS) {

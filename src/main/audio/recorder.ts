@@ -12,6 +12,8 @@ const TARGET_RATE = 16000;
 export class AudioRecorder {
   private win: BrowserWindow | null = null;
   private recording = false;
+  private levelsInterval: ReturnType<typeof setInterval> | null = null;
+  onAudioLevels: ((levels: number[]) => void) | null = null;
 
   private async ensureWindow(): Promise<BrowserWindow> {
     if (!this.win || this.win.isDestroyed()) {
@@ -41,6 +43,13 @@ export class AudioRecorder {
         if (ctx.state === "suspended") await ctx.resume();
 
         const source = ctx.createMediaStreamSource(stream);
+
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 128;
+        analyser.smoothingTimeConstant = 0.6;
+        source.connect(analyser);
+        window._recAnalyser = analyser;
+
         const processor = ctx.createScriptProcessor(4096, 1, 1);
         window._recChunks = [];
         window._recStream = stream;
@@ -56,9 +65,41 @@ export class AudioRecorder {
     `);
 
     this.recording = true;
+
+    // Start audio level polling for waveform visualization
+    this.levelsInterval = setInterval(async () => {
+      if (!this.recording || !this.win || this.win.isDestroyed()) {
+        this.stopLevels();
+        return;
+      }
+      try {
+        const levels: number[] = await this.win.webContents.executeJavaScript(`
+          (() => {
+            if (!window._recAnalyser) return [0,0,0,0,0,0,0,0,0,0,0,0];
+            const data = new Uint8Array(window._recAnalyser.frequencyBinCount);
+            window._recAnalyser.getByteFrequencyData(data);
+            const binCount = data.length;
+            const bandSize = Math.floor(binCount / 12);
+            const levels = [];
+            for (let i = 0; i < 12; i++) {
+              let sum = 0;
+              const start = i * bandSize;
+              const end = Math.min(start + bandSize, binCount);
+              for (let j = start; j < end; j++) sum += data[j];
+              levels.push(sum / ((end - start) * 255));
+            }
+            return levels;
+          })()
+        `);
+        this.onAudioLevels?.(levels);
+      } catch {
+        // Window may have been destroyed
+      }
+    }, 33);
   }
 
   async stop(): Promise<RecordingResult> {
+    this.stopLevels();
     if (!this.recording || !this.win || this.win.isDestroyed()) {
       throw new Error("Recorder not started");
     }
@@ -83,6 +124,7 @@ export class AudioRecorder {
           window._recStream = null;
           window._recCtx = null;
           window._recProcessor = null;
+          window._recAnalyser = null;
 
           return { audioBuffer: Array.from(merged), sampleRate };
         })()
@@ -97,6 +139,7 @@ export class AudioRecorder {
   }
 
   async cancel(): Promise<void> {
+    this.stopLevels();
     if (!this.recording || !this.win || this.win.isDestroyed()) {
       return;
     }
@@ -110,6 +153,7 @@ export class AudioRecorder {
           window._recStream = null;
           window._recCtx = null;
           window._recProcessor = null;
+          window._recAnalyser = null;
         })()
       `);
     } catch (err) {
@@ -118,7 +162,36 @@ export class AudioRecorder {
     this.recording = false;
   }
 
+  async playAudioCue(samples: number[]): Promise<void> {
+    if (samples.length === 0) return;
+    if (!this.win || this.win.isDestroyed()) return;
+
+    await this.win.webContents.executeJavaScript(`
+      (() => {
+        const samples = new Float32Array(${JSON.stringify(Array.from(samples))});
+        const ctx = new AudioContext();
+        const buffer = ctx.createBuffer(1, samples.length, ctx.sampleRate);
+        buffer.getChannelData(0).set(samples.length <= buffer.length
+          ? samples
+          : samples.slice(0, buffer.length));
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+        source.start();
+        source.onended = () => ctx.close();
+      })()
+    `);
+  }
+
+  private stopLevels(): void {
+    if (this.levelsInterval) {
+      clearInterval(this.levelsInterval);
+      this.levelsInterval = null;
+    }
+  }
+
   dispose(): void {
+    this.stopLevels();
     if (this.win && !this.win.isDestroyed()) {
       this.win.destroy();
     }

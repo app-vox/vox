@@ -227,5 +227,13 @@
   "sidebar.visitWebsite": "Посетить сайт Vox",
   "sidebar.updateAvailable": "Доступно обновление",
   "sidebar.updateVox": "Обновить Vox",
-  "history.deleteTranscription": "Удалить транскрипцию"
+  "history.deleteTranscription": "Удалить транскрипцию",
+  "general.recordingFeedback.title": "Обратная связь записи",
+  "general.recordingFeedback.audioCue": "Звук начала записи",
+  "general.recordingFeedback.audioCue.description": "Воспроизводит звук при начале записи, чтобы сигнализировать, что можно начинать говорить.",
+  "general.recordingFeedback.audioCue.click": "Щелчок",
+  "general.recordingFeedback.audioCue.beep": "Сигнал",
+  "general.recordingFeedback.audioCue.chime": "Колокольчик",
+  "general.recordingFeedback.audioCue.none": "Нет",
+  "indicator.initializing": "Запуск..."
 }
