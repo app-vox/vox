@@ -19,6 +19,7 @@ import {
 } from "../../../shared/icons";
 import { WarningBadge } from "../ui/WarningBadge";
 import { NewDot } from "../ui/NewDot";
+import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
 import styles from "./Sidebar.module.scss";
 
 const VOX_WEBSITE_URL = "https://app-vox.github.io/vox/";
@@ -28,6 +29,7 @@ interface NavItemDef {
   icon: ReactNode;
   requiresModel?: boolean;
   requiresPermissions?: boolean;
+  requiresTest?: boolean;
   checkConfigured?: "speech" | "permissions" | "ai-enhancement";
 }
 
@@ -57,7 +59,7 @@ const CATEGORY_DEFS: NavCategoryDef[] = [
     labelKey: "sidebar.ai",
     items: [
       { id: "whisper", icon: <MicIcon width={16} height={16} />, requiresModel: true, checkConfigured: "speech" },
-      { id: "llm", icon: <LayersIcon width={16} height={16} />, checkConfigured: "ai-enhancement" },
+      { id: "llm", icon: <LayersIcon width={16} height={16} />, requiresTest: true, checkConfigured: "ai-enhancement" },
     ],
   },
   {
@@ -128,7 +130,12 @@ export function Sidebar() {
     if (!type) return false;
     if (type === "speech") return setupComplete;
     if (type === "permissions") return permissionStatus?.accessibility === true && permissionStatus?.microphone === "granted";
-    if (type === "ai-enhancement") return setupComplete && config?.enableLlmEnhancement === true;
+    if (type === "ai-enhancement") {
+      return setupComplete
+        && config?.enableLlmEnhancement === true
+        && config?.llmConnectionTested === true
+        && computeLlmConfigHash(config) === config?.llmConfigHash;
+    }
     return false;
   };
 
@@ -155,7 +162,11 @@ export function Sidebar() {
         <span className={styles.label}>
           {item.label}
           {item.id === "dictionary" && showDictionaryDot && <NewDot />}
-          <WarningBadge show={(item.requiresModel === true && !setupComplete) || (item.requiresPermissions === true && needsPermissions())} />
+          <WarningBadge show={
+            (item.requiresModel === true && !setupComplete)
+            || (item.requiresPermissions === true && needsPermissions())
+            || (item.requiresTest === true && config?.enableLlmEnhancement === true && !isConfigured("ai-enhancement"))
+          } />
         </span>
       )}
     </button>
