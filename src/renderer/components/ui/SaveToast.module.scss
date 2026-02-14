@@ -1,7 +1,5 @@
 .toast {
   position: fixed;
-  top: var(--spacing-2);
-  right: var(--spacing-4);
   background: var(--color-bg-card);
   color: var(--color-text-primary);
   padding: var(--spacing-2) var(--spacing-3);
@@ -15,6 +13,7 @@
   transition: opacity 0.3s ease-in-out;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
+  white-space: nowrap;
 
   svg {
     color: var(--color-checkmark);
@@ -27,4 +26,16 @@
   &.hidden {
     opacity: 0;
   }
+}
+
+.aboveSidebar {
+  bottom: 64px;
+  left: 8px;
+  width: 184px;
+  justify-content: center;
+}
+
+.topRight {
+  top: var(--spacing-2);
+  right: var(--spacing-4);
 }

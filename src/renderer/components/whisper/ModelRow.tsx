@@ -24,8 +24,16 @@ export function ModelRow({ model, selected, onSelect, onDelete }: ModelRowProps)
   const confirmTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
+    setDownloaded(model.downloaded);
+  }, [model.downloaded]);
+
+  useEffect(() => {
     const handler = (p: { size: string; downloaded: number; total: number }) => {
       if (p.size === model.size) {
+        if (p.total > 0 && p.downloaded < p.total) {
+          setDownloading(true);
+          setDownloaded(false);
+        }
         setProgress({ downloaded: p.downloaded, total: p.total });
       }
     };
@@ -86,10 +94,10 @@ export function ModelRow({ model, selected, onSelect, onDelete }: ModelRowProps)
           disabled={!downloaded}
           onChange={() => onSelect(model.size)}
         />
-        <span className={styles.name}>
-          {model.info.label} <span className={styles.technicalName}>({model.size})</span>
+        <span className={styles.nameBlock}>
+          <span className={styles.name}>{model.info.label} <span className={styles.desc}>{model.info.description}</span></span>
+          <span className={styles.technicalName}>{model.size}</span>
         </span>
-        <span className={styles.desc}>{model.info.description}</span>
       </label>
       {downloading ? (
         <div className={styles.progress}>

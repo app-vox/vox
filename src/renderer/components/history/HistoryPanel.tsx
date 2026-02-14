@@ -7,7 +7,15 @@ import styles from "./HistoryPanel.module.scss";
 const DEBOUNCE_MS = 300;
 
 function formatTime(timestamp: string): string {
-  return new Date(timestamp).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  return new Date(timestamp).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+
+function formatDuration(ms: number): string {
+  const seconds = ms / 1000;
+  if (seconds < 60) return `${seconds.toFixed(1)}s`;
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}m ${remainingSeconds.toFixed(0)}s`;
 }
 
 function formatDateGroup(timestamp: string): string {
@@ -20,7 +28,7 @@ function formatDateGroup(timestamp: string): string {
   yesterday.setDate(yesterday.getDate() - 1);
   if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
 
-  return date.toLocaleDateString([], { month: "long", day: "numeric" });
+  return date.toLocaleDateString(undefined, { month: "long", day: "numeric" });
 }
 
 function groupByDate(entries: TranscriptionEntry[]): Map<string, TranscriptionEntry[]> {
@@ -63,50 +71,39 @@ function CopyButton({ text }: { text: string }) {
 export function HistoryPanel() {
   const entries = useHistoryStore((s) => s.entries);
   const total = useHistoryStore((s) => s.total);
+  const page = useHistoryStore((s) => s.page);
+  const pageSize = useHistoryStore((s) => s.pageSize);
   const loading = useHistoryStore((s) => s.loading);
-  const hasMore = useHistoryStore((s) => s.hasMore);
   const searchQuery = useHistoryStore((s) => s.searchQuery);
   const fetchPage = useHistoryStore((s) => s.fetchPage);
+  const setPage = useHistoryStore((s) => s.setPage);
+  const setPageSize = useHistoryStore((s) => s.setPageSize);
   const search = useHistoryStore((s) => s.search);
+  const deleteEntry = useHistoryStore((s) => s.deleteEntry);
   const clearHistory = useHistoryStore((s) => s.clearHistory);
   const reset = useHistoryStore((s) => s.reset);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const sentinelRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [confirmClear, setConfirmClear] = useState(false);
 
-  // Load initial page on mount
+  const totalPages = Math.ceil(total / pageSize);
+
+  useEffect(() => {
+    searchInputRef.current?.focus();
+  }, []);
+
   useEffect(() => {
     reset();
     fetchPage();
   }, [reset, fetchPage]);
 
-  // Auto-refresh when a new transcription is added
   useEffect(() => {
     window.voxApi.history.onEntryAdded(() => {
       reset();
       fetchPage();
     });
   }, [reset, fetchPage]);
-
-  // Infinite scroll via IntersectionObserver
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-
-    const scrollRoot = sentinel.closest(".content");
-    const observer = new IntersectionObserver(
-      (intersections) => {
-        if (intersections[0].isIntersecting && hasMore && !loading) {
-          fetchPage();
-        }
-      },
-      { root: scrollRoot, threshold: 0.1 },
-    );
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [hasMore, loading, fetchPage]);
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,6 +143,7 @@ export function HistoryPanel() {
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
             <input
+              ref={searchInputRef}
               type="text"
               placeholder="Search transcriptions..."
               defaultValue={searchQuery}
@@ -170,13 +168,26 @@ export function HistoryPanel() {
                         <div className={styles.entryMeta}>
                           <span>{formatTime(entry.timestamp)}</span>
                           <span>{entry.wordCount} words</span>
+                          <span>{formatDuration(entry.audioDurationMs)}</span>
                           <span>{entry.whisperModel}</span>
                           {entry.llmEnhanced && entry.llmProvider && (
                             <span className={styles.badge}>{entry.llmProvider}</span>
                           )}
                         </div>
                       </div>
-                      <CopyButton text={entry.text} />
+                      <div className={styles.entryActions}>
+                        <CopyButton text={entry.text} />
+                        <button
+                          className={styles.deleteButton}
+                          onClick={() => deleteEntry(entry.id)}
+                          title="Delete transcription"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -184,10 +195,28 @@ export function HistoryPanel() {
             </div>
           )}
 
-          {/* Infinite scroll sentinel */}
-          <div ref={sentinelRef} className={styles.sentinel}>
-            {loading && <div className={styles.spinner}>Loading...</div>}
-          </div>
+          {loading && <div className={styles.spinner}>Loading...</div>}
+
+          {total > 0 && (
+            <div className={styles.pagination}>
+              <div className={styles.pageInfo}>
+                {page} / {totalPages || 1}
+              </div>
+              <div className={styles.pageControls}>
+                <button disabled={page <= 1} onClick={() => setPage(page - 1)}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+                </button>
+                <button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                </button>
+              </div>
+              <select className={styles.pageSizeSelect} value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))}>
+                <option value={10}>10 / page</option>
+                <option value={25}>25 / page</option>
+                <option value={50}>50 / page</option>
+              </select>
+            </div>
+          )}
         </div>
       </div>
 
