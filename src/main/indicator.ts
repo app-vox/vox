@@ -23,8 +23,8 @@ interface ModeConfig {
 const MODE_CONFIG: Record<IndicatorMode, ModeConfig> = {
   initializing: { color: "#888888", icon: "spinner", showLabel: false, showCancel: true, animation: "none" },
   listening:    { color: "#ff4444", icon: "waveform", showLabel: false, showCancel: true, animation: "none" },
-  transcribing: { color: "#ffaa00", icon: "dot", showLabel: true, showCancel: true, animation: "pulse" },
-  enhancing:    { color: "#44aaff", icon: "dot", showLabel: true, showCancel: false, animation: "pulse" },
+  transcribing: { color: "#ffaa00", icon: "dot", showLabel: false, showCancel: true, animation: "pulse" },
+  enhancing:    { color: "#44aaff", icon: "dot", showLabel: false, showCancel: false, animation: "pulse" },
   error:        { color: "#fbbf24", icon: "x-icon", showLabel: true, showCancel: false, animation: "glow" },
   canceled:     { color: "#fbbf24", icon: "x-icon", showLabel: true, showCancel: false, animation: "glow" },
 };
