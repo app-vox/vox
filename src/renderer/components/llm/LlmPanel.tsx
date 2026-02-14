@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useDebouncedSave } from "../../hooks/use-debounced-save";
 import { useT } from "../../i18n-context";
@@ -11,7 +11,7 @@ import { CustomProviderFields } from "./CustomProviderFields";
 import { StatusBox } from "../ui/StatusBox";
 import { NewDot } from "../ui/NewDot";
 import { CustomSelect } from "../ui/CustomSelect";
-import { ExternalLinkIcon, CheckCircleIcon, InfoCircleAltIcon, CopyIcon, SparkleIcon } from "../../../shared/icons";
+import { ExternalLinkIcon, CheckCircleIcon, InfoCircleAltIcon, CopyIcon, SparkleIcon, PlayIcon } from "../../../shared/icons";
 import type { LlmProviderType, LlmConfig } from "../../../shared/config";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
 import card from "../shared/card.module.scss";
@@ -53,6 +53,15 @@ export function LlmPanel() {
   const [visitedCustomPrompt, setVisitedCustomPrompt] = useState(() => localStorage.getItem("vox:visited-custom-prompt") === "true");
   const [copiedExample, setCopiedExample] = useState<string | null>(null);
   const testSectionRef = useRef<HTMLDivElement>(null);
+
+  const configHash = config ? computeLlmConfigHash(config) : "";
+  const prevHashRef = useRef(configHash);
+  useEffect(() => {
+    if (prevHashRef.current && prevHashRef.current !== configHash) {
+      setTestStatus({ text: "", type: "info" });
+    }
+    prevHashRef.current = configHash;
+  }, [configHash]);
 
   const handlePromptTabClick = useCallback(() => {
     if (!visitedCustomPrompt) {
@@ -251,6 +260,7 @@ export function LlmPanel() {
                     disabled={testing}
                     className={`${buttons.btn} ${buttons.primary}`}
                   >
+                    <PlayIcon width={14} height={14} />
                     {t("llm.testConnection")}
                   </button>
                   <StatusBox text={testStatus.text} type={testStatus.type} />

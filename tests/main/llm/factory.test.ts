@@ -146,4 +146,21 @@ describe("createLlmProvider", () => {
     const provider = createLlmProvider(config, { forTest: true });
     expect(provider).toBeInstanceOf(FoundryProvider);
   });
+
+  it("should bypass enableLlmEnhancement check when forTest is true", () => {
+    const config = makeVoxConfig({
+      enableLlmEnhancement: false,
+      llmConnectionTested: false,
+      llmConfigHash: "",
+      llm: {
+        ...createDefaultConfig().llm,
+        provider: "foundry",
+        endpoint: "https://example.com",
+        apiKey: "key",
+        model: "claude",
+      },
+    });
+    const provider = createLlmProvider(config, { forTest: true });
+    expect(provider).toBeInstanceOf(FoundryProvider);
+  });
 });
