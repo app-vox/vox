@@ -33,7 +33,7 @@ const WINDOW_WIDTH = 300;
 const WINDOW_HEIGHT = 80;
 
 function buildStaticHtml(): string {
-  const bars = Array.from({ length: 7 }, (_, i) =>
+  const bars = Array.from({ length: 12 }, (_, i) =>
     `<div class="bar" data-index="${i}"></div>`
   ).join("");
 

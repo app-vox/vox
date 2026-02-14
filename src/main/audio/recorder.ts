@@ -45,7 +45,7 @@ export class AudioRecorder {
         const source = ctx.createMediaStreamSource(stream);
 
         const analyser = ctx.createAnalyser();
-        analyser.fftSize = 64;
+        analyser.fftSize = 128;
         analyser.smoothingTimeConstant = 0.6;
         source.connect(analyser);
         window._recAnalyser = analyser;
@@ -75,13 +75,13 @@ export class AudioRecorder {
       try {
         const levels: number[] = await this.win.webContents.executeJavaScript(`
           (() => {
-            if (!window._recAnalyser) return [0,0,0,0,0,0,0];
+            if (!window._recAnalyser) return [0,0,0,0,0,0,0,0,0,0,0,0];
             const data = new Uint8Array(window._recAnalyser.frequencyBinCount);
             window._recAnalyser.getByteFrequencyData(data);
             const binCount = data.length;
-            const bandSize = Math.floor(binCount / 7);
+            const bandSize = Math.floor(binCount / 12);
             const levels = [];
-            for (let i = 0; i < 7; i++) {
+            for (let i = 0; i < 12; i++) {
               let sum = 0;
               const start = i * bandSize;
               const end = Math.min(start + bandSize, binCount);
