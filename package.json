@@ -1,6 +1,6 @@
 {
   "name": "vox",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Open-source macOS voice-to-text with local Whisper transcription and LLM correction",
   "main": "out/main/index.js",
   "engines": {
