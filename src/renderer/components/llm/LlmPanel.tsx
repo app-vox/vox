@@ -11,11 +11,12 @@ import { CustomProviderFields } from "./CustomProviderFields";
 import { StatusBox } from "../ui/StatusBox";
 import { NewDot } from "../ui/NewDot";
 import { CustomSelect } from "../ui/CustomSelect";
-import { ExternalLinkIcon, CheckCircleIcon, InfoCircleAltIcon, CopyIcon } from "../../../shared/icons";
+import { ExternalLinkIcon, CheckCircleIcon, InfoCircleAltIcon, CopyIcon, SparkleIcon } from "../../../shared/icons";
 import type { LlmProviderType, LlmConfig } from "../../../shared/config";
 import card from "../shared/card.module.scss";
 import form from "../shared/forms.module.scss";
 import buttons from "../shared/buttons.module.scss";
+import styles from "./LlmPanel.module.scss";
 
 function isProviderConfigured(provider: LlmProviderType, llm: LlmConfig): boolean {
   switch (provider) {
@@ -143,22 +144,31 @@ export function LlmPanel() {
         </button>
       </div>
       <div className={card.body}>
-        <div className={form.field}>
-          <label htmlFor="enable-llm-enhancement">
-            <input
-              type="checkbox"
-              id="enable-llm-enhancement"
-              checked={config.enableLlmEnhancement ?? false}
-              onChange={(e) => {
-                updateConfig({ enableLlmEnhancement: e.target.checked });
-                saveConfig(true);
-              }}
-            />
-            <p>{t("llm.enableCheckbox")}</p>
-          </label>
-          <p className={form.hint}>
-            {t("llm.enableHint")}
-          </p>
+        <div
+          className={`${styles.enhanceToggle} ${config.enableLlmEnhancement ? styles.active : ""}`}
+          role="switch"
+          aria-checked={config.enableLlmEnhancement ?? false}
+          tabIndex={0}
+          onClick={() => {
+            updateConfig({ enableLlmEnhancement: !config.enableLlmEnhancement });
+            saveConfig(true);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              updateConfig({ enableLlmEnhancement: !config.enableLlmEnhancement });
+              saveConfig(true);
+            }
+          }}
+        >
+          <div className={styles.enhanceIcon}>
+            <SparkleIcon width={18} height={18} />
+          </div>
+          <div className={styles.enhanceText}>
+            <div className={styles.enhanceTitle}>{t("llm.enableCheckbox")}</div>
+            <div className={styles.enhanceDesc}>{t("llm.enableHint")}</div>
+          </div>
+          <div className={`${styles.toggle} ${config.enableLlmEnhancement ? styles.toggleOn : ""}`} />
         </div>
 
         {config.enableLlmEnhancement && (
