@@ -28,4 +28,9 @@ describe("VoxConfig", () => {
     const config = createDefaultConfig();
     expect(config.language).toBe("system");
   });
+
+  it("should include recordingAudioCue defaulting to 'click'", () => {
+    const config = createDefaultConfig();
+    expect(config.recordingAudioCue).toBe("click");
+  });
 });

@@ -7,6 +7,8 @@ import { ShortcutStateMachine } from "./listener";
 import { IndicatorWindow } from "../indicator";
 import { setTrayListeningState } from "../tray";
 import { t } from "../../shared/i18n";
+import { generateCueSamples } from "../../shared/audio-cue";
+import type { AudioCueType } from "../../shared/config";
 
 /** Map Electron accelerator key names to UiohookKey keycodes. */
 const KEY_TO_UIOHOOK: Record<string, number> = {
@@ -176,8 +178,12 @@ export class ShortcutManager {
     }, 1000);
   }
 
-  showIndicator(mode: "listening" | "transcribing" | "enhancing" | "error"): void {
+  showIndicator(mode: "initializing" | "listening" | "transcribing" | "enhancing" | "error"): void {
     this.indicator.show(mode);
+  }
+
+  sendAudioLevels(levels: number[]): void {
+    this.indicator.sendAudioLevels(levels);
   }
 
   /** Programmatically trigger the toggle shortcut (e.g., from tray menu) */
@@ -328,18 +334,28 @@ export class ShortcutManager {
 
   private onRecordingStart(): void {
     const pipeline = this.deps.getPipeline();
-    console.log("[Vox] Recording started");
-    this.indicator.hide();
-    this.indicator.show("listening");
+    console.log("[Vox] Recording requested — showing initializing indicator");
+    this.indicator.show("initializing");
     this.updateTrayState();
-    pipeline.startRecording().catch((err: Error) => {
+
+    pipeline.startRecording().then(() => {
+      console.log("[Vox] Recording started — mic active");
+      this.indicator.show("listening");
+
+      const config = this.deps.configManager.load();
+      const cueType = (config.recordingAudioCue ?? "click") as AudioCueType;
+      const samples = generateCueSamples(cueType, 44100);
+      if (samples.length > 0) {
+        pipeline.playAudioCue(samples).catch((err: Error) => {
+          console.error("[Vox] Audio cue failed:", err.message);
+        });
+      }
+    }).catch((err: Error) => {
       console.error("[Vox] Recording failed:", err.message);
       this.indicator.hide();
       this.updateTrayState();
 
       if (err instanceof NoModelError) {
-        // When no model is configured, show error and immediately cancel
-        // No need to wait for Escape - the error itself cancels the operation
         this.indicator.showError(3000, t("notification.setupRequired.indicator"));
         this.stateMachine.setIdle();
         this.updateTrayState();
@@ -372,9 +388,9 @@ export class ShortcutManager {
       } else {
         // Paste only happens here - after successful pipeline completion with valid text
         console.log("[Vox] Valid text received, proceeding with paste");
-        this.indicator.hide();
         await new Promise((r) => setTimeout(r, 200));
         pasteText(trimmedText);
+        this.indicator.hide();
       }
     } catch (err: unknown) {
       // Any exception (CanceledError, NoModelError, etc.) prevents paste
