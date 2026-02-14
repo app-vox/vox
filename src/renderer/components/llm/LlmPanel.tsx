@@ -71,18 +71,20 @@ export function LlmPanel() {
           </p>
         </div>
         <div className={card.warningBanner}>
-          {t("llm.setupRequired")}{" "}
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              useConfigStore.getState().setActiveTab("whisper");
-            }}
-            style={{ color: "inherit", textDecoration: "underline", cursor: "pointer" }}
-          >
-            {t("llm.setupLocalModel")}
-          </a>
-          {" "}{t("llm.setupSuffix")}
+          <span>
+            {t("llm.setupRequired")}{" "}
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                useConfigStore.getState().setActiveTab("whisper");
+              }}
+              style={{ color: "inherit", textDecoration: "underline", cursor: "pointer" }}
+            >
+              {t("llm.setupLocalModel")}
+            </a>
+            {" "}{t("llm.setupSuffix")}
+          </span>
         </div>
       </div>
     );

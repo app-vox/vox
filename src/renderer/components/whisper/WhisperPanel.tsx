@@ -112,7 +112,7 @@ export function WhisperPanel() {
       </div>
       {!setupComplete && (
         <div className={card.warningBanner}>
-          <AlertTriangleIcon width={14} height={14} style={{ marginRight: 6, flexShrink: 0 }} />
+          <AlertTriangleIcon width={14} height={14} />
           {t("whisper.downloadPrompt")}
         </div>
       )}
