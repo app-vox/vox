@@ -2,6 +2,14 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { useHistoryStore } from "../../stores/history-store";
 import { useT } from "../../i18n-context";
 import type { TranscriptionEntry } from "../../../shared/types";
+import {
+  SearchIcon,
+  CheckIcon,
+  CopyIcon,
+  TrashAltIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "../../../shared/icons";
 import card from "../shared/card.module.scss";
 import styles from "./HistoryPanel.module.scss";
 
@@ -55,14 +63,9 @@ function CopyButton({ text, t }: { text: string; t: (key: string) => string }) {
   return (
     <button className={styles.copyButton} onClick={handleCopy} title={t("history.copyToClipboard")}>
       {copied ? (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="20 6 9 17 4 12" />
-        </svg>
+        <CheckIcon width={14} height={14} />
       ) : (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-        </svg>
+        <CopyIcon width={14} height={14} />
       )}
       <span>{copied ? t("history.copied") : t("history.copy")}</span>
     </button>
@@ -140,10 +143,7 @@ export function HistoryPanel() {
         </div>
         <div className={card.body}>
           <div className={styles.searchContainer}>
-            <svg className={styles.searchIcon} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
+            <SearchIcon className={styles.searchIcon} width={16} height={16} />
             <input
               ref={searchInputRef}
               type="text"
@@ -184,10 +184,7 @@ export function HistoryPanel() {
                           onClick={() => deleteEntry(entry.id)}
                           title={t("history.deleteTranscription")}
                         >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                          </svg>
+                          <TrashAltIcon width={14} height={14} />
                         </button>
                       </div>
                     </div>
@@ -207,10 +204,10 @@ export function HistoryPanel() {
               </div>
               <div className={styles.pageControls}>
                 <button disabled={page <= 1} onClick={() => setPage(page - 1)}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+                  <ChevronLeftIcon width={12} height={12} />
                 </button>
                 <button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                  <ChevronRightIcon width={12} height={12} />
                 </button>
               </div>
               {/* eslint-disable i18next/no-literal-string */}

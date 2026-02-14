@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useT } from "../../i18n-context";
+import { XIcon, ChevronLeftIcon, ChevronRightIcon } from "../../../shared/icons";
 import card from "../shared/card.module.scss";
 import form from "../shared/forms.module.scss";
 import buttons from "../shared/buttons.module.scss";
@@ -140,10 +141,7 @@ export function DictionaryPanel() {
                     onClick={() => removeTerm(term)}
                     title={t("dictionary.remove")}
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
+                    <XIcon width={14} height={14} />
                   </button>
                 </div>
               ))}
@@ -157,10 +155,10 @@ export function DictionaryPanel() {
                 </div>
                 <div className={styles.pageControls}>
                   <button disabled={page <= 1} onClick={() => setPage(page - 1)}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+                    <ChevronLeftIcon width={12} height={12} />
                   </button>
                   <button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                    <ChevronRightIcon width={12} height={12} />
                   </button>
                 </div>
                 {/* eslint-disable i18next/no-literal-string */}
