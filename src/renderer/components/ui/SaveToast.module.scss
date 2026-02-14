@@ -1,7 +1,7 @@
 .toast {
   position: fixed;
-  top: var(--spacing-2);
-  right: var(--spacing-4);
+  bottom: 52px;
+  left: var(--spacing-2);
   background: var(--color-bg-card);
   color: var(--color-text-primary);
   padding: var(--spacing-2) var(--spacing-3);
