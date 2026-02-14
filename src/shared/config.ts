@@ -2,6 +2,8 @@ export type ThemeMode = "light" | "dark" | "system";
 
 export type SupportedLanguage = "en" | "pt-BR" | "pt-PT" | "es" | "fr" | "de" | "it" | "ru" | "tr";
 
+export type AudioCueType = "click" | "beep" | "chime" | "none";
+
 export type LlmProviderType = "foundry" | "bedrock" | "openai" | "deepseek" | "litellm";
 
 export interface LlmConfig {
@@ -46,6 +48,7 @@ export interface VoxConfig {
   launchAtLogin: boolean;
   dictionary: string[];
   language: SupportedLanguage | "system";
+  recordingAudioCue: AudioCueType;
 }
 
 export function createDefaultConfig(isProduction = false): VoxConfig {
@@ -77,5 +80,6 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     launchAtLogin: isProduction,
     dictionary: [],
     language: "system",
+    recordingAudioCue: "click",
   };
 }
