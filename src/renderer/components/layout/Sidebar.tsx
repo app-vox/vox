@@ -107,8 +107,10 @@ const COLLAPSE_ICON = (
 
 const CATEGORY_DEFS: NavCategoryDef[] = [
   {
+    labelKey: "sidebar.words",
     items: [
-      { id: "general", icon: GEAR_ICON },
+      { id: "transcriptions", icon: CLOCK_ICON },
+      { id: "dictionary", icon: BOOK_ICON },
     ],
   },
   {
@@ -119,17 +121,15 @@ const CATEGORY_DEFS: NavCategoryDef[] = [
     ],
   },
   {
-    labelKey: "sidebar.words",
+    labelKey: "sidebar.interface",
     items: [
-      { id: "dictionary", icon: BOOK_ICON },
-      { id: "transcriptions", icon: CLOCK_ICON },
+      { id: "shortcuts", icon: KEYBOARD_ICON },
+      { id: "permissions", icon: SHIELD_ICON, requiresPermissions: true, checkConfigured: "permissions" },
     ],
   },
   {
-    labelKey: "sidebar.interface",
     items: [
-      { id: "permissions", icon: SHIELD_ICON, requiresPermissions: true, checkConfigured: "permissions" },
-      { id: "shortcuts", icon: KEYBOARD_ICON },
+      { id: "general", icon: GEAR_ICON },
     ],
   },
 ];

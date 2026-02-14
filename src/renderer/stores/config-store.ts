@@ -23,7 +23,7 @@ interface ConfigState {
 export const useConfigStore = create<ConfigState>((set, get) => ({
   config: null,
   loading: true,
-  activeTab: typeof window !== "undefined" ? (migrateActiveTab(localStorage.getItem("vox:activeTab")) || "general") : "general",
+  activeTab: typeof window !== "undefined" ? (migrateActiveTab(localStorage.getItem("vox:activeTab")) || "transcriptions") : "transcriptions",
   setupComplete: false,
 
   setActiveTab: (tab) => {
