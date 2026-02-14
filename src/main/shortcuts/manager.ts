@@ -229,6 +229,14 @@ export class ShortcutManager {
     return state === "hold" || state === "toggle" || state === "processing";
   }
 
+  getIndicator(): IndicatorWindow {
+    return this.indicator;
+  }
+
+  getStateMachineState(): string {
+    return this.stateMachine.getState();
+  }
+
   stop(): void {
     if (this.watchdogTimer) clearInterval(this.watchdogTimer);
     globalShortcut.unregisterAll();

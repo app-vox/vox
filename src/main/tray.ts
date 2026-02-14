@@ -124,6 +124,10 @@ export function updateTrayConfig(config: VoxConfig): void {
   updateTrayMenu();
 }
 
+export function getTrayState() {
+  return { isListening, hasModel, trayActive: tray !== null };
+}
+
 export function updateTrayMenu(): void {
   if (!tray || !callbacks) return;
 

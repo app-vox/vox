@@ -10,7 +10,7 @@ import { transcribe } from "./audio/whisper";
 import { createLlmProvider } from "./llm/factory";
 import { Pipeline } from "./pipeline";
 import { ShortcutManager } from "./shortcuts/manager";
-import { setupTray, setTrayModelState, updateTrayConfig, updateTrayMenu } from "./tray";
+import { setupTray, setTrayModelState, updateTrayConfig, updateTrayMenu, getTrayState } from "./tray";
 import { initAutoUpdater } from "./updater";
 import { openHome } from "./windows/home";
 import { registerIpcHandlers } from "./ipc";
@@ -165,6 +165,16 @@ app.whenReady().then(async () => {
     getPipeline: () => pipeline!,
   });
   shortcutManager.start();
+
+  ipcMain.handle("dev:get-runtime-state", () => {
+    return {
+      shortcutState: shortcutManager?.getStateMachineState() ?? "idle",
+      isRecording: shortcutManager?.isRecording() ?? false,
+      indicatorVisible: shortcutManager?.getIndicator().isVisible() ?? false,
+      indicatorMode: shortcutManager?.getIndicator().getMode(),
+      ...getTrayState(),
+    };
+  });
 
   const setupChecker = new SetupChecker(modelManager);
   setupTray({

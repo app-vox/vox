@@ -200,6 +200,7 @@ export class IndicatorWindow {
   private hideTimer: ReturnType<typeof setTimeout> | null = null;
   private contentReady = false;
   private pendingUpdate: object | null = null;
+  private currentMode: IndicatorMode | null = null;
 
   show(mode: IndicatorMode, customLabel?: string): void {
     if (this.hideTimer) {
@@ -211,6 +212,7 @@ export class IndicatorWindow {
     const config = MODE_CONFIG[mode];
     const labelText = customLabel ?? t(INDICATOR_KEYS[mode]);
     const update = { ...config, labelText };
+    this.currentMode = mode;
 
     if (this.window && !this.window.isDestroyed()) {
       this.window.setIgnoreMouseEvents(!isInteractive);
@@ -308,6 +310,15 @@ export class IndicatorWindow {
     this.window = null;
     this.contentReady = false;
     this.pendingUpdate = null;
+    this.currentMode = null;
+  }
+
+  isVisible(): boolean {
+    return this.window !== null && !this.window.isDestroyed();
+  }
+
+  getMode(): string | null {
+    return this.currentMode;
   }
 
   private execSetMode(update: object): void {
