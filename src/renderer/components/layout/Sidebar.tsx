@@ -16,6 +16,7 @@ import {
   MenuIcon,
   CheckmarkBadgeIcon,
   AlertLinesIcon,
+  CodeBracketIcon,
 } from "../../../shared/icons";
 import { WarningBadge } from "../ui/WarningBadge";
 import { NewDot } from "../ui/NewDot";
@@ -218,6 +219,18 @@ export function Sidebar() {
 
       <div className={styles.bottom}>
         <div className={styles.divider} />
+        {import.meta.env.DEV && (
+          <button
+            className={`${styles.navItem} ${activeTab === "dev" ? styles.navItemActive : ""}`}
+            onClick={() => handleTabClick("dev")}
+            title={collapsed ? "Dev States" : undefined}
+          >
+            <div className={styles.iconWrap}>
+              <CodeBracketIcon width={16} height={16} />
+            </div>
+            {!collapsed && <span className={styles.label}>Dev States</span>}
+          </button>
+        )}
         <button
           className={`${styles.navItem} ${activeTab === "about" ? styles.navItemActive : ""}`}
           onClick={() => setActiveTab("about")}

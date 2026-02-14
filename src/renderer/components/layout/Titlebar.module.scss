@@ -84,3 +84,19 @@
   font-size: var(--font-size-sm);
   white-space: nowrap;
 }
+
+.overrideBadge {
+  -webkit-app-region: no-drag;
+  display: flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  background: #ef4444;
+  border-radius: var(--radius-md);
+  color: white;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}

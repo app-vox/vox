@@ -1,0 +1,121 @@
+.masterToggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: var(--spacing-1) 0;
+  cursor: pointer;
+
+  input[type="checkbox"] {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    margin-top: 2px;
+    border: 2px solid var(--color-border);
+    border-radius: 4px;
+    background: var(--color-bg-input);
+    cursor: pointer;
+    position: relative;
+    transition: all 150ms ease;
+
+    &:hover {
+      border-color: var(--color-border-hover);
+      background: var(--color-bg-hover);
+    }
+
+    &:checked {
+      background: var(--color-text-primary);
+      border-color: var(--color-text-primary);
+
+      &::after {
+        content: "";
+        position: absolute;
+        left: 5px;
+        top: 2px;
+        width: 4px;
+        height: 8px;
+        border: solid var(--color-bg-root);
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+    }
+  }
+}
+
+.masterLabel {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.masterDesc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  line-height: 1.4;
+}
+
+.stateRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-1) 0;
+  font-size: var(--font-size-sm);
+  border-bottom: 1px solid var(--color-border);
+  min-height: 32px;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.stateLabel {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  margin-right: var(--spacing-3);
+}
+
+.stateValue {
+  color: var(--color-text-primary);
+  font-family: var(--font-mono, monospace);
+  font-size: var(--font-size-xs);
+  text-align: right;
+  word-break: break-all;
+}
+
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.green { background: #22c55e; }
+.yellow { background: #eab308; }
+.red { background: #ef4444; }
+.gray { background: #6b7280; }
+
+.refreshBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: var(--spacing-1) var(--spacing-2);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-bg-hover);
+    border-color: var(--color-border-hover);
+  }
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}

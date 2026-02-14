@@ -11,6 +11,7 @@ import { PermissionsPanel } from "./components/permissions/PermissionsPanel";
 import { GeneralPanel } from "./components/general/GeneralPanel";
 import { TranscriptionsPanel } from "./components/transcriptions/TranscriptionsPanel";
 import { DictionaryPanel } from "./components/dictionary/DictionaryPanel";
+import { DevPanel } from "./components/dev/DevPanel";
 import { ScrollButtons } from "./components/ui/ScrollButtons";
 import { useTheme } from "./hooks/use-theme";
 import { I18nProvider } from "./i18n-context";
@@ -24,6 +25,7 @@ const PANELS: Record<string, () => JSX.Element | null> = {
   shortcuts: ShortcutsPanel,
   transcriptions: TranscriptionsPanel,
   about: AboutPanel,
+  ...(import.meta.env.DEV ? { dev: DevPanel } : {}),
 };
 
 export function App() {

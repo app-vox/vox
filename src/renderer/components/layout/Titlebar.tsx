@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import type { UpdateState } from "../../../preload/index";
 import { useConfigStore } from "../../stores/config-store";
+import { useDevOverrides } from "../../stores/dev-overrides-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
 import { useT } from "../../i18n-context";
 import { GearIcon, InfoCircleIcon, DownloadIcon } from "../../../shared/icons";
@@ -11,6 +12,7 @@ export function Titlebar() {
   const t = useT();
   const activeTab = useConfigStore((s) => s.activeTab);
   const setActiveTab = useConfigStore((s) => s.setActiveTab);
+  const overridesEnabled = useDevOverrides((s) => s.overrides.enabled);
   const showToast = useSaveToast((s) => s.show);
   const toastTimestamp = useSaveToast((s) => s.timestamp);
   const hideToast = useSaveToast((s) => s.hide);
@@ -75,6 +77,9 @@ export function Titlebar() {
     <div className={styles.titlebar}>
       <div className={styles.spacer} />
       <SaveToast show={showToast} timestamp={toastTimestamp} onHide={hideToast} />
+      {overridesEnabled && (
+        <span className={styles.overrideBadge}>States Overridden</span>
+      )}
       {renderUpdateButton()}
       <button
         className={`${styles.actionBtn} ${activeTab === "about" ? styles.actionBtnActive : ""}`}
