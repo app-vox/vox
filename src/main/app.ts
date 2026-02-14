@@ -45,8 +45,13 @@ function setupPipeline(): void {
     : "";
   const llmProvider = createLlmProvider(config);
 
+  const recorder = new AudioRecorder();
+  recorder.onAudioLevels = (levels) => {
+    shortcutManager?.sendAudioLevels(levels);
+  };
+
   pipeline = new Pipeline({
-    recorder: new AudioRecorder(),
+    recorder,
     transcribe,
     llmProvider,
     modelPath,
