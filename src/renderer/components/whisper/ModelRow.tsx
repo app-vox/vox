@@ -90,10 +90,10 @@ export function ModelRow({ model, selected, onSelect, onDelete }: ModelRowProps)
           disabled={!downloaded}
           onChange={() => onSelect(model.size)}
         />
-        <span className={styles.name}>
-          {model.info.label} <span className={styles.technicalName}>({model.size})</span>
+        <span className={styles.nameBlock}>
+          <span className={styles.name}>{model.info.label}</span>
+          <span className={styles.technicalName}>{model.size}</span>
         </span>
-        <span className={styles.desc}>{model.info.description}</span>
       </label>
       {downloading ? (
         <div className={styles.progress}>
