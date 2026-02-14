@@ -16,8 +16,8 @@ export function openHome(onClosed: () => void, initialTab?: string): void {
   const cursorPoint = screen.getCursorScreenPoint();
   const display = screen.getDisplayNearestPoint(cursorPoint);
 
-  const WINDOW_WIDTH = 700;
-  const WINDOW_HEIGHT = 770;
+  const WINDOW_WIDTH = 900;
+  const WINDOW_HEIGHT = 820;
   const windowWidth = WINDOW_WIDTH;
   const windowHeight = WINDOW_HEIGHT;
   const x = Math.round(display.bounds.x + (display.bounds.width - windowWidth) / 2);
@@ -28,7 +28,9 @@ export function openHome(onClosed: () => void, initialTab?: string): void {
     height: windowHeight,
     x,
     y,
-    resizable: false,
+    resizable: true,
+    minWidth: 750,
+    minHeight: 600,
     title: "Vox",
     titleBarStyle: "hiddenInset",
     backgroundColor: nativeTheme.shouldUseDarkColors ? "#0a0a0a" : "#ffffff",
