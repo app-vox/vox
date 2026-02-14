@@ -8,13 +8,14 @@ import de from "./locales/de.json";
 import it from "./locales/it.json";
 import ru from "./locales/ru.json";
 import tr from "./locales/tr.json";
+import pl from "./locales/pl.json";
 
 export const SUPPORTED_LANGUAGES: SupportedLanguage[] = [
-  "en", "pt-BR", "pt-PT", "es", "fr", "de", "it", "ru", "tr",
+  "en", "pt-BR", "pt-PT", "es", "fr", "de", "it", "pl", "ru", "tr",
 ];
 
 const translations: Record<SupportedLanguage, Record<string, string>> = {
-  en, "pt-BR": ptBR, "pt-PT": ptPT, es, fr, de, it, ru, tr,
+  en, "pt-BR": ptBR, "pt-PT": ptPT, es, fr, de, it, pl, ru, tr,
 };
 
 let currentLanguage: SupportedLanguage = "en";
@@ -40,6 +41,7 @@ const LANGUAGE_MAPPING: Record<string, SupportedLanguage> = {
   fr: "fr", "fr-FR": "fr", "fr-CA": "fr",
   de: "de", "de-DE": "de", "de-AT": "de", "de-CH": "de",
   it: "it", "it-IT": "it",
+  pl: "pl", "pl-PL": "pl",
   ru: "ru", "ru-RU": "ru",
   tr: "tr", "tr-TR": "tr",
 };

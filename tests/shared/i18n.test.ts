@@ -9,8 +9,9 @@ import de from "../../src/shared/i18n/locales/de.json";
 import itIT from "../../src/shared/i18n/locales/it.json";
 import ru from "../../src/shared/i18n/locales/ru.json";
 import tr from "../../src/shared/i18n/locales/tr.json";
+import pl from "../../src/shared/i18n/locales/pl.json";
 
-const allTranslations = { en, "pt-BR": ptBR, "pt-PT": ptPT, es, fr, de, it: itIT, ru, tr };
+const allTranslations = { en, "pt-BR": ptBR, "pt-PT": ptPT, es, fr, de, it: itIT, pl, ru, tr };
 
 describe("i18n", () => {
   beforeEach(() => {
@@ -37,7 +38,7 @@ describe("i18n", () => {
   });
 
   it("should have all supported languages", () => {
-    expect(SUPPORTED_LANGUAGES).toEqual(["en", "pt-BR", "pt-PT", "es", "fr", "de", "it", "ru", "tr"]);
+    expect(SUPPORTED_LANGUAGES).toEqual(["en", "pt-BR", "pt-PT", "es", "fr", "de", "it", "pl", "ru", "tr"]);
   });
 
   it("should resolve system locale to supported language", () => {
@@ -49,6 +50,8 @@ describe("i18n", () => {
     expect(resolveSystemLanguage("fr-FR")).toBe("fr");
     expect(resolveSystemLanguage("de-DE")).toBe("de");
     expect(resolveSystemLanguage("it-IT")).toBe("it");
+    expect(resolveSystemLanguage("pl")).toBe("pl");
+    expect(resolveSystemLanguage("pl-PL")).toBe("pl");
     expect(resolveSystemLanguage("ru-RU")).toBe("ru");
     expect(resolveSystemLanguage("tr-TR")).toBe("tr");
     expect(resolveSystemLanguage("ja-JP")).toBe("en");

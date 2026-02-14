@@ -1,6 +1,6 @@
 export type ThemeMode = "light" | "dark" | "system";
 
-export type SupportedLanguage = "en" | "pt-BR" | "pt-PT" | "es" | "fr" | "de" | "it" | "ru" | "tr";
+export type SupportedLanguage = "en" | "pt-BR" | "pt-PT" | "es" | "fr" | "de" | "it" | "pl" | "ru" | "tr";
 
 export type AudioCueType = "click" | "beep" | "chime" | "none";
 
