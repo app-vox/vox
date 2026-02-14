@@ -48,15 +48,20 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle("models:download", async (_event, size: string) => {
-    await modelManager.download(size as WhisperModelSize, (downloaded, total) => {
-      _event.sender.send("models:download-progress", { size, downloaded, total });
-    });
+    try {
+      await modelManager.download(size as WhisperModelSize, (downloaded, total) => {
+        _event.sender.send("models:download-progress", { size, downloaded, total });
+      });
 
-    // Auto-select the downloaded model
-    const config = configManager.load();
-    config.whisper.model = size as WhisperModelSize;
-    configManager.save(config);
-    onConfigChange?.();
+      // Auto-select the downloaded model
+      const config = configManager.load();
+      config.whisper.model = size as WhisperModelSize;
+      configManager.save(config);
+      onConfigChange?.();
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      throw err;
+    }
   });
 
   ipcMain.handle("models:cancel-download", (_event, size: string) => {
