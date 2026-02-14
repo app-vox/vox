@@ -4,6 +4,7 @@ import { useSaveToast } from "../hooks/use-save-toast";
 
 function migrateActiveTab(tab: string | null): string | null {
   if (tab === "appearance") return "general";
+  if (tab === "history") return "transcriptions";
   return tab;
 }
 
@@ -22,7 +23,7 @@ interface ConfigState {
 export const useConfigStore = create<ConfigState>((set, get) => ({
   config: null,
   loading: true,
-  activeTab: typeof window !== "undefined" ? (migrateActiveTab(localStorage.getItem("vox:activeTab")) || "general") : "general",
+  activeTab: typeof window !== "undefined" ? (migrateActiveTab(localStorage.getItem("vox:activeTab")) || "transcriptions") : "transcriptions",
   setupComplete: false,
 
   setActiveTab: (tab) => {

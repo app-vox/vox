@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from "react";
-import { useHistoryStore } from "../../stores/history-store";
+import { useTranscriptionsStore } from "../../stores/transcriptions-store";
 import { useT } from "../../i18n-context";
 import type { TranscriptionEntry } from "../../../shared/types";
 import {
@@ -11,7 +11,7 @@ import {
   ChevronRightIcon,
 } from "../../../shared/icons";
 import card from "../shared/card.module.scss";
-import styles from "./HistoryPanel.module.scss";
+import styles from "./TranscriptionsPanel.module.scss";
 
 const DEBOUNCE_MS = 300;
 
@@ -72,21 +72,21 @@ function CopyButton({ text, t }: { text: string; t: (key: string) => string }) {
   );
 }
 
-export function HistoryPanel() {
+export function TranscriptionsPanel() {
   const t = useT();
-  const entries = useHistoryStore((s) => s.entries);
-  const total = useHistoryStore((s) => s.total);
-  const page = useHistoryStore((s) => s.page);
-  const pageSize = useHistoryStore((s) => s.pageSize);
-  const loading = useHistoryStore((s) => s.loading);
-  const searchQuery = useHistoryStore((s) => s.searchQuery);
-  const fetchPage = useHistoryStore((s) => s.fetchPage);
-  const setPage = useHistoryStore((s) => s.setPage);
-  const setPageSize = useHistoryStore((s) => s.setPageSize);
-  const search = useHistoryStore((s) => s.search);
-  const deleteEntry = useHistoryStore((s) => s.deleteEntry);
-  const clearHistory = useHistoryStore((s) => s.clearHistory);
-  const reset = useHistoryStore((s) => s.reset);
+  const entries = useTranscriptionsStore((s) => s.entries);
+  const total = useTranscriptionsStore((s) => s.total);
+  const page = useTranscriptionsStore((s) => s.page);
+  const pageSize = useTranscriptionsStore((s) => s.pageSize);
+  const loading = useTranscriptionsStore((s) => s.loading);
+  const searchQuery = useTranscriptionsStore((s) => s.searchQuery);
+  const fetchPage = useTranscriptionsStore((s) => s.fetchPage);
+  const setPage = useTranscriptionsStore((s) => s.setPage);
+  const setPageSize = useTranscriptionsStore((s) => s.setPageSize);
+  const search = useTranscriptionsStore((s) => s.search);
+  const deleteEntry = useTranscriptionsStore((s) => s.deleteEntry);
+  const clearHistory = useTranscriptionsStore((s) => s.clearHistory);
+  const reset = useTranscriptionsStore((s) => s.reset);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const searchInputRef = useRef<HTMLInputElement>(null);

@@ -46,8 +46,10 @@ interface NavCategory {
 
 const CATEGORY_DEFS: NavCategoryDef[] = [
   {
+    labelKey: "sidebar.content",
     items: [
-      { id: "general", icon: <GearIcon width={16} height={16} /> },
+      { id: "transcriptions", icon: <ClockIcon width={16} height={16} /> },
+      { id: "dictionary", icon: <BookIcon width={16} height={16} /> },
     ],
   },
   {
@@ -58,17 +60,15 @@ const CATEGORY_DEFS: NavCategoryDef[] = [
     ],
   },
   {
-    labelKey: "sidebar.words",
+    labelKey: "sidebar.interface",
     items: [
-      { id: "dictionary", icon: <BookIcon width={16} height={16} /> },
-      { id: "history", icon: <ClockIcon width={16} height={16} /> },
+      { id: "shortcuts", icon: <KeyboardIcon width={16} height={16} /> },
+      { id: "permissions", icon: <ShieldIcon width={16} height={16} />, requiresPermissions: true, checkConfigured: "permissions" },
     ],
   },
   {
-    labelKey: "sidebar.interface",
     items: [
-      { id: "permissions", icon: <ShieldIcon width={16} height={16} />, requiresPermissions: true, checkConfigured: "permissions" },
-      { id: "shortcuts", icon: <KeyboardIcon width={16} height={16} /> },
+      { id: "general", icon: <GearIcon width={16} height={16} /> },
     ],
   },
 ];
@@ -95,7 +95,7 @@ export function Sidebar({ onCollapseChange }: SidebarProps) {
     whisper: t("tabs.speech"),
     llm: t("tabs.aiEnhancement"),
     dictionary: t("tabs.dictionary"),
-    history: t("tabs.history"),
+    transcriptions: t("tabs.transcriptions"),
     permissions: t("tabs.permissions"),
     shortcuts: t("tabs.shortcuts"),
   };

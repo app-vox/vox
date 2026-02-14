@@ -2,13 +2,14 @@ import { useCallback, useEffect, useRef, useState, type JSX } from "react";
 import { useConfigStore } from "./stores/config-store";
 import { SpinnerIcon } from "../shared/icons";
 import { Sidebar } from "./components/layout/Sidebar";
+import { Titlebar } from "./components/layout/Titlebar";
 import { AboutPanel } from "./components/about/AboutPanel";
 import { LlmPanel } from "./components/llm/LlmPanel";
 import { WhisperPanel } from "./components/whisper/WhisperPanel";
 import { ShortcutsPanel } from "./components/shortcuts/ShortcutsPanel";
 import { PermissionsPanel } from "./components/permissions/PermissionsPanel";
 import { GeneralPanel } from "./components/general/GeneralPanel";
-import { HistoryPanel } from "./components/history/HistoryPanel";
+import { TranscriptionsPanel } from "./components/transcriptions/TranscriptionsPanel";
 import { DictionaryPanel } from "./components/dictionary/DictionaryPanel";
 import { SaveToast } from "./components/ui/SaveToast";
 import { ScrollButtons } from "./components/ui/ScrollButtons";
@@ -23,7 +24,7 @@ const PANELS: Record<string, () => JSX.Element | null> = {
   dictionary: DictionaryPanel,
   permissions: PermissionsPanel,
   shortcuts: ShortcutsPanel,
-  history: HistoryPanel,
+  transcriptions: TranscriptionsPanel,
   about: AboutPanel,
 };
 
@@ -77,6 +78,7 @@ export function App() {
       <div className="flex h-full">
         <Sidebar onCollapseChange={handleCollapseChange} />
         <div className="flex flex-col flex-1 min-w-0">
+          <Titlebar />
           <main className="content" ref={contentRef}>
             <Panel />
           </main>

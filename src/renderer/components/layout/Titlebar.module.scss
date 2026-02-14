@@ -1,0 +1,82 @@
+.titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 48px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-root);
+  -webkit-app-region: drag;
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+.actionBtn {
+  -webkit-app-region: no-drag;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--color-bg-hover);
+    color: var(--color-text-secondary);
+  }
+}
+
+.actionBtnActive {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+.updateBtn {
+  -webkit-app-region: no-drag;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 8px;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+
+  &:hover {
+    background: var(--color-bg-hover);
+    border-color: var(--color-border-hover);
+    color: var(--color-text-primary);
+  }
+}
+
+.updateBtnReady {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-btn-primary-text);
+
+  &:hover {
+    background: var(--color-accent-hover);
+    border-color: var(--color-accent-hover);
+  }
+}
+
+.updateProgress {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 8px;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+}
