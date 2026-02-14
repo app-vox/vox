@@ -236,21 +236,19 @@ jobs:
           TAG="${{ needs.version.outputs.tag }}"
 
           # Delete existing latest release and tag if they exist
-          gh release delete latest --yes 2>/dev/null || true
-          git push origin :refs/tags/latest 2>/dev/null || true
-
-          # Create new latest tag pointing to current commit
-          git tag -f latest
-          git push origin latest
+          # Use GitHub API instead of git push to avoid tag protection rules
+          gh release delete latest --yes --cleanup-tag 2>/dev/null || true
 
           # Create the latest release as a prerelease so electron-updater
           # skips it and resolves to the versioned release (which has
           # matching file names for latest-mac.yml).
+          # --target creates the tag via the API, bypassing git push restrictions.
           gh release create latest \
+            --target "$(git rev-parse HEAD)" \
             --prerelease \
             --title "Vox Latest ($TAG)" \
-            --notes "$(cat <<'NOTES'
-          This release always points to the latest version. Current: **$TAG**
+            --notes "$(cat <<NOTES
+          This release always points to the latest version. Current: **${TAG}**
 
           ### Download
 
