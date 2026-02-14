@@ -164,9 +164,9 @@ export class AudioRecorder {
 
   async playAudioCue(samples: number[]): Promise<void> {
     if (samples.length === 0) return;
-    if (!this.win || this.win.isDestroyed()) return;
+    const win = await this.ensureWindow();
 
-    await this.win.webContents.executeJavaScript(`
+    await win.webContents.executeJavaScript(`
       (() => {
         const samples = new Float32Array(${JSON.stringify(Array.from(samples))});
         const ctx = new AudioContext();
@@ -184,9 +184,9 @@ export class AudioRecorder {
   }
 
   async playWavCue(base64Data: string): Promise<void> {
-    if (!this.win || this.win.isDestroyed()) return;
+    const win = await this.ensureWindow();
 
-    await this.win.webContents.executeJavaScript(`
+    await win.webContents.executeJavaScript(`
       (async () => {
         const binary = atob("${base64Data}");
         const bytes = new Uint8Array(binary.length);
