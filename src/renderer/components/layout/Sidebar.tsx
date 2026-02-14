@@ -179,7 +179,7 @@ export function Sidebar() {
       return setupComplete
         && effectiveLlmEnhancement === true
         && effectiveLlmTested === true
-        && computeLlmConfigHash(config) === config?.llmConfigHash;
+        && config != null && computeLlmConfigHash(config) === config.llmConfigHash;
     }
     return false;
   };

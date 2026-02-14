@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useConfigStore } from "../../stores/config-store";
+import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useDebouncedSave } from "../../hooks/use-debounced-save";
 import { useT } from "../../i18n-context";
 import { FoundryFields } from "./FoundryFields";
@@ -45,7 +46,7 @@ export function LlmPanel() {
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
-  const setupComplete = useConfigStore((s) => s.setupComplete);
+  const realSetupComplete = useConfigStore((s) => s.setupComplete);
   const { debouncedSave, flush } = useDebouncedSave(500, true);
   const [testing, setTesting] = useState(false);
   const [testStatus, setTestStatus] = useState<{ text: string; type: "info" | "success" | "error" }>({ text: "", type: "info" });
@@ -64,6 +65,22 @@ export function LlmPanel() {
     prevHashRef.current = configHash;
   }, [configHash]);
 
+  // Dev overrides (gated — tree-shaken in production)
+  const setupComplete = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("setupComplete", realSetupComplete)
+    : realSetupComplete;
+
+  const devLlmEnhancement = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("llmEnhancementEnabled", undefined)
+    : undefined;
+
+  const devLlmTested = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("llmConnectionTested", undefined)
+    : undefined;
+
   const handlePromptTabClick = useCallback(() => {
     if (!visitedCustomPrompt) {
       setVisitedCustomPrompt(true);
@@ -74,8 +91,11 @@ export function LlmPanel() {
 
   if (!config) return null;
 
-  const needsTest = config.enableLlmEnhancement
-    && (!config.llmConnectionTested || computeLlmConfigHash(config) !== config.llmConfigHash);
+  const effectiveEnhancement = devLlmEnhancement ?? config.enableLlmEnhancement;
+  const effectiveTested = devLlmTested ?? config.llmConnectionTested;
+
+  const needsTest = effectiveEnhancement
+    && (!effectiveTested || computeLlmConfigHash(config) !== config.llmConfigHash);
 
   if (!setupComplete) {
     return (
@@ -166,9 +186,9 @@ export function LlmPanel() {
       </div>
       <div className={card.body}>
         <div
-          className={`${styles.enhanceToggle} ${config.enableLlmEnhancement ? styles.active : ""}`}
+          className={`${styles.enhanceToggle} ${effectiveEnhancement ? styles.active : ""}`}
           role="switch"
-          aria-checked={config.enableLlmEnhancement ?? false}
+          aria-checked={effectiveEnhancement ?? false}
           tabIndex={0}
           onClick={() => {
             updateConfig({ enableLlmEnhancement: !config.enableLlmEnhancement });
@@ -189,10 +209,10 @@ export function LlmPanel() {
             <div className={styles.enhanceTitle}>{t("llm.enableCheckbox")}</div>
             <div className={styles.enhanceDesc}>{t("llm.enableHint")}</div>
           </div>
-          <div className={`${styles.toggle} ${config.enableLlmEnhancement ? styles.toggleOn : ""}`} />
+          <div className={`${styles.toggle} ${effectiveEnhancement ? styles.toggleOn : ""}`} />
         </div>
 
-        {config.enableLlmEnhancement && (
+        {effectiveEnhancement && (
           <>
             {needsTest && (
               <div className={card.warningBannerInline}>

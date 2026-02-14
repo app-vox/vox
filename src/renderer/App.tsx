@@ -63,8 +63,11 @@ export function App() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full text-text-secondary text-sm" style={{ gap: "8px" }}>
-        <SpinnerIcon width={16} height={16} style={{ animation: "spin 1s linear infinite" }} />
+      <div className="flex flex-col items-center justify-center h-full text-text-secondary text-sm" style={{ gap: "12px" }}>
+        <SpinnerIcon width={32} height={32} style={{ animation: "spin 1s linear infinite" }} />
+        {/* Renders before I18nProvider — hardcoded is intentional */}
+        {/* eslint-disable-next-line i18next/no-literal-string */}
+        <span>Loading…</span>
       </div>
     );
   }

@@ -288,7 +288,7 @@ export function DevPanel() {
   };
 
   const presets: { label: string; preset: Partial<DevOverrides> }[] = [
-    { label: "No Internet", preset: { setupComplete: false } },
+    { label: "No Internet", preset: { online: false } },
     { label: "LLM Not Configured", preset: { llmEnhancementEnabled: false, llmConnectionTested: false } },
     { label: "LLM Untested", preset: { llmEnhancementEnabled: true, llmConnectionTested: false } },
     { label: "No Model", preset: { setupComplete: false } },
@@ -296,7 +296,7 @@ export function DevPanel() {
     { label: "Update Available", preset: { updateStatus: "available" } },
     { label: "Update Downloading", preset: { updateStatus: "downloading", updateDownloadProgress: 42 } },
     { label: "Update Ready", preset: { updateStatus: "ready" } },
-    { label: "Everything Broken", preset: { setupComplete: false, microphonePermission: "denied", accessibilityPermission: false, updateStatus: "error", llmEnhancementEnabled: false, llmConnectionTested: false } },
+    { label: "Everything Broken", preset: { online: false, setupComplete: false, microphonePermission: "denied", accessibilityPermission: false, updateStatus: "error", llmEnhancementEnabled: false, llmConnectionTested: false } },
   ];
 
   const collapsed = typeof window !== "undefined"
@@ -371,7 +371,16 @@ export function DevPanel() {
             </>
           ),
         },
-        { label: "Online", render: () => <>{boolDot(online)}</> },
+        {
+          label: "Online",
+          overrideField: "online",
+          render: () => (
+            <>
+              <span className={styles.realValue}>{boolDot(online)}</span>
+              {ov && <OverrideBool field="online" {...ovProps} />}
+            </>
+          ),
+        },
       ],
     },
     {

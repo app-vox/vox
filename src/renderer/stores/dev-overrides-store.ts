@@ -9,6 +9,7 @@ export interface DevOverrides {
   microphonePermission?: "granted" | "denied" | "not-determined";
   accessibilityPermission?: boolean;
   setupComplete?: boolean;
+  online?: boolean;
   llmEnhancementEnabled?: boolean;
   llmConnectionTested?: boolean;
 }

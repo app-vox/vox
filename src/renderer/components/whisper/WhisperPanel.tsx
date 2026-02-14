@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
 import { useOnlineStatus } from "../../hooks/use-online-status";
+import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useT } from "../../i18n-context";
 import { ModelRow } from "./ModelRow";
 import { StatusBox } from "../ui/StatusBox";
@@ -21,7 +22,13 @@ export function WhisperPanel() {
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const loadConfig = useConfigStore((s) => s.loadConfig);
-  const setupComplete = useConfigStore((s) => s.setupComplete);
+  const realSetupComplete = useConfigStore((s) => s.setupComplete);
+
+  // Dev overrides (gated — tree-shaken in production)
+  const setupComplete = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("setupComplete", realSetupComplete)
+    : realSetupComplete;
   const triggerToast = useSaveToast((s) => s.trigger);
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [testing, setTesting] = useState(false);
