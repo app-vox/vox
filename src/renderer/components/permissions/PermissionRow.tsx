@@ -9,8 +9,8 @@ interface PermissionRowProps {
   description: string;
   granted: boolean;
   statusText?: string;
-  buttonText: string;
-  onRequest: () => void;
+  buttonText?: string;
+  onRequest?: () => void;
   requesting?: boolean;
   setupRequired?: boolean;
 }
@@ -47,13 +47,15 @@ export function PermissionRow({
             <span className={`${styles.badge} ${styles.missing}`}>
               {statusText || t("permissions.notGranted")}
             </span>
-            <button
-              onClick={onRequest}
-              disabled={requesting}
-              className={`${btn.btn} ${btn.secondary} ${btn.sm}`}
-            >
-              {requesting ? t("permissions.requesting") : buttonText}
-            </button>
+            {buttonText && onRequest && (
+              <button
+                onClick={onRequest}
+                disabled={requesting}
+                className={`${btn.btn} ${btn.secondary} ${btn.sm}`}
+              >
+                {requesting ? t("permissions.requesting") : buttonText}
+              </button>
+            )}
           </>
         )}
       </div>
