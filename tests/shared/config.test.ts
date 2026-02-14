@@ -43,4 +43,14 @@ describe("VoxConfig", () => {
     const config = createDefaultConfig();
     expect(config.errorAudioCue).toBe("error");
   });
+
+  it("should include llmConnectionTested defaulting to false", () => {
+    const config = createDefaultConfig();
+    expect(config.llmConnectionTested).toBe(false);
+  });
+
+  it("should include llmConfigHash defaulting to empty string", () => {
+    const config = createDefaultConfig();
+    expect(config.llmConfigHash).toBe("");
+  });
 });
