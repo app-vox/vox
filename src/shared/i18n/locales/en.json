@@ -220,7 +220,7 @@
   "general.setup.description": "Download a speech model to start using Vox for transcription.",
   "general.setup.getStarted": "Get started",
   "sidebar.ai": "AI",
-  "sidebar.words": "Words",
+  "sidebar.content": "Content",
   "sidebar.interface": "Interface",
   "sidebar.expand": "Expand sidebar",
   "sidebar.collapse": "Collapse sidebar",

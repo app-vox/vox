@@ -98,7 +98,7 @@ const COLLAPSE_ICON = (
 
 const CATEGORY_DEFS: NavCategoryDef[] = [
   {
-    labelKey: "sidebar.words",
+    labelKey: "sidebar.content",
     items: [
       { id: "transcriptions", icon: CLOCK_ICON },
       { id: "dictionary", icon: BOOK_ICON },
