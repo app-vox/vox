@@ -1,5 +1,5 @@
-import { type LlmProvider } from "./provider";
-import { logLlmRequest, logLlmResponse } from "./logging";
+import log from "electron-log/main";
+import { BaseLlmProvider } from "./base-provider";
 
 export interface AnthropicConfig {
   apiKey: string;
@@ -12,18 +12,16 @@ interface AnthropicResponse {
   content: { type: string; text: string }[];
 }
 
-export class AnthropicProvider implements LlmProvider {
+export class AnthropicProvider extends BaseLlmProvider {
+  protected readonly providerName = "Anthropic";
   private readonly config: AnthropicConfig;
 
   constructor(config: AnthropicConfig) {
+    super();
     this.config = config;
   }
 
-  async correct(rawText: string): Promise<string> {
-    const isDev = process.env.NODE_ENV === "development";
-
-    logLlmRequest("AnthropicProvider", rawText, this.config.customPrompt, this.config.hasCustomPrompt);
-
+  protected async enhance(rawText: string): Promise<string> {
     const url = "https://api.anthropic.com/v1/messages";
 
     const requestBody = {
@@ -36,9 +34,7 @@ export class AnthropicProvider implements LlmProvider {
       max_tokens: 4096,
     };
 
-    if (isDev) {
-      console.log("[AnthropicProvider] [DEV] Request body:", JSON.stringify(requestBody, null, 2));
-    }
+    log.scope(this.providerName).debug("Request body", requestBody);
 
     const response = await fetch(url, {
       method: "POST",
@@ -61,9 +57,14 @@ export class AnthropicProvider implements LlmProvider {
       throw new Error("LLM returned no text content");
     }
 
-    const correctedText = textBlock.text.trim();
-    logLlmResponse("AnthropicProvider", rawText, correctedText);
+    return textBlock.text.trim();
+  }
 
-    return correctedText;
+  protected hasCustomPrompt(): boolean {
+    return this.config.hasCustomPrompt;
+  }
+
+  protected getCustomPrompt(): string {
+    return this.config.customPrompt;
   }
 }

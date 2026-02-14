@@ -4,8 +4,8 @@ import {
   type ConverseCommandOutput,
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromIni } from "@aws-sdk/credential-provider-ini";
-import { type LlmProvider } from "./provider";
-import { logLlmRequest, logLlmResponse } from "./logging";
+import log from "electron-log/main";
+import { BaseLlmProvider } from "./base-provider";
 
 export interface BedrockConfig {
   region: string;
@@ -17,16 +17,18 @@ export interface BedrockConfig {
   hasCustomPrompt: boolean;
 }
 
-export class BedrockProvider implements LlmProvider {
+export class BedrockProvider extends BaseLlmProvider {
+  protected readonly providerName = "Bedrock";
   private readonly client: BedrockRuntimeClient;
   private readonly modelId: string;
-  private readonly customPrompt: string;
-  private readonly hasCustomPrompt: boolean;
+  private readonly customPromptText: string;
+  private readonly customPromptEnabled: boolean;
 
   constructor(config: BedrockConfig) {
+    super();
     this.modelId = config.modelId;
-    this.customPrompt = config.customPrompt;
-    this.hasCustomPrompt = config.hasCustomPrompt;
+    this.customPromptText = config.customPrompt;
+    this.customPromptEnabled = config.hasCustomPrompt;
 
     const clientConfig: Record<string, unknown> = {
       region: config.region,
@@ -47,14 +49,10 @@ export class BedrockProvider implements LlmProvider {
     this.client = new BedrockRuntimeClient(clientConfig);
   }
 
-  async correct(rawText: string): Promise<string> {
-    const isDev = process.env.NODE_ENV === "development";
-
-    logLlmRequest("BedrockProvider", rawText, this.customPrompt, this.hasCustomPrompt);
-
+  protected async enhance(rawText: string): Promise<string> {
     const command = new ConverseCommand({
       modelId: this.modelId,
-      system: [{ text: this.customPrompt }],
+      system: [{ text: this.customPromptText }],
       messages: [
         {
           role: "user",
@@ -67,10 +65,10 @@ export class BedrockProvider implements LlmProvider {
       },
     });
 
-    if (isDev) {
-      console.log("[BedrockProvider] [DEV] Model ID:", this.modelId);
-      console.log("[BedrockProvider] [DEV] Temperature: 0.1");
-    }
+    log.scope(this.providerName).debug("Bedrock request", {
+      modelId: this.modelId,
+      temperature: 0.1,
+    });
 
     const response: ConverseCommandOutput = await this.client.send(command);
 
@@ -82,9 +80,14 @@ export class BedrockProvider implements LlmProvider {
       throw new Error("LLM returned no text content");
     }
 
-    const correctedText = textBlock.text.trim();
-    logLlmResponse("BedrockProvider", rawText, correctedText);
+    return textBlock.text.trim();
+  }
 
-    return correctedText;
+  protected hasCustomPrompt(): boolean {
+    return this.customPromptEnabled;
+  }
+
+  protected getCustomPrompt(): string {
+    return this.customPromptText;
   }
 }

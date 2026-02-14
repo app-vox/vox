@@ -6,6 +6,14 @@ const { mockSend, mockFromIni } = vi.hoisted(() => ({
   mockFromIni: vi.fn().mockReturnValue("ini-credentials"),
 }));
 
+vi.mock("electron-log/main", () => ({
+  default: {
+    scope: vi.fn().mockReturnValue({
+      info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn(),
+    }),
+  },
+}));
+
 vi.mock("@aws-sdk/client-bedrock-runtime", () => ({
   BedrockRuntimeClient: vi.fn().mockImplementation(function (this: Record<string, unknown>) { this.send = mockSend; }),
   ConverseCommand: vi.fn().mockImplementation(function (this: Record<string, unknown>, input: unknown) { this.input = input; }),

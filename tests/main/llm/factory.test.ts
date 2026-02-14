@@ -1,5 +1,13 @@
 import { describe, it, expect, vi } from "vitest";
 
+vi.mock("electron-log/main", () => ({
+  default: {
+    scope: vi.fn().mockReturnValue({
+      info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn(),
+    }),
+  },
+}));
+
 vi.mock("../../../src/main/llm/bedrock", () => ({
   BedrockProvider: vi.fn(),
 }));
