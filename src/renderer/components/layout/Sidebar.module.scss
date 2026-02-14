@@ -16,14 +16,6 @@
     padding: 6px;
   }
 
-  .collapseBtn {
-    margin-left: 0;
-  }
-
-  .top {
-    justify-content: center;
-  }
-
   .bottom {
     padding: 8px 4px;
   }
@@ -32,7 +24,8 @@
 .top {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  position: relative;
   padding: 38px 8px 8px;
   -webkit-app-region: drag;
 }
@@ -57,12 +50,18 @@
   }
 }
 
-.title {
-  font-size: 16px;
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-  white-space: nowrap;
-  overflow: hidden;
+.logoWordmark {
+  height: 20px;
+  width: auto;
+  flex-shrink: 0;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  opacity: 0.85;
+  transition: opacity 200ms ease;
+
+  &:hover {
+    opacity: 1;
+  }
 }
 
 .collapseBtn {
@@ -78,7 +77,8 @@
   border-radius: var(--radius-md);
   color: var(--color-text-tertiary);
   cursor: pointer;
-  margin-left: auto;
+  position: absolute;
+  right: 8px;
 
   &:hover {
     background: var(--color-bg-hover);

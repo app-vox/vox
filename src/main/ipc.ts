@@ -1,4 +1,5 @@
 import { app, BrowserWindow, clipboard, ipcMain, nativeImage, nativeTheme, systemPreferences, shell } from "electron";
+import * as fs from "fs";
 import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
 import { HistoryManager } from "./history/manager";
@@ -16,6 +17,10 @@ export function registerIpcHandlers(
 ): void {
   ipcMain.handle("resources:data-url", (_event, ...segments: string[]) => {
     const filePath = getResourcePath(...segments);
+    if (filePath.endsWith(".svg")) {
+      const svg = fs.readFileSync(filePath, "utf-8");
+      return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
+    }
     const image = nativeImage.createFromPath(filePath);
     return image.toDataURL();
   });

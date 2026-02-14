@@ -84,6 +84,7 @@ export function Sidebar() {
   const t = useT();
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true");
   const [logoSrc, setLogoSrc] = useState("");
+  const [iconSrc, setIconSrc] = useState("");
   const [updateState, setUpdateState] = useState<UpdateState | null>(null);
   const [visitedDictionary, setVisitedDictionary] = useState(() => localStorage.getItem(VISITED_DICTIONARY_KEY) === "true");
   const activeTab = useConfigStore((s) => s.activeTab);
@@ -116,7 +117,8 @@ export function Sidebar() {
   }));
 
   useEffect(() => {
-    window.voxApi.resources.dataUrl("trayIcon@8x.png").then(setLogoSrc);
+    window.voxApi.resources.dataUrl("vox-logo.svg").then(setLogoSrc);
+    window.voxApi.resources.dataUrl("trayIcon@8x.png").then(setIconSrc);
   }, []);
 
   useEffect(() => {
@@ -179,13 +181,12 @@ export function Sidebar() {
           <img
             alt="Vox"
             src={logoSrc}
-            className={styles.logoClickable}
+            className={styles.logoWordmark}
             draggable={false}
             onClick={() => window.voxApi.shell.openExternal(VOX_WEBSITE_URL)}
             title={t("sidebar.visitWebsite")}
           />
         )}
-        {!collapsed && <span className={styles.title}>Vox</span>}
         <button
           className={styles.collapseBtn}
           onClick={() => {
@@ -235,11 +236,11 @@ export function Sidebar() {
             </span>
           )}
         </button>
-        {collapsed && logoSrc && (
+        {collapsed && iconSrc && (
           <div className={styles.collapsedLogo}>
             <img
               alt="Vox"
-              src={logoSrc}
+              src={iconSrc}
               className={styles.logoClickable}
               draggable={false}
               onClick={() => window.voxApi.shell.openExternal(VOX_WEBSITE_URL)}
