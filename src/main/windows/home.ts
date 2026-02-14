@@ -1,6 +1,15 @@
 import { app, BrowserWindow, Menu, nativeTheme, screen } from "electron";
 import * as path from "path";
 
+function setAppMenu(): void {
+  const template: Electron.MenuItemConstructorOptions[] = [
+    { role: "appMenu" },
+    { role: "editMenu" },
+    { role: "windowMenu" },
+  ];
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+}
+
 let homeWindow: BrowserWindow | null = null;
 
 export function openHome(onClosed: () => void, initialTab?: string): void {
@@ -30,6 +39,7 @@ export function openHome(onClosed: () => void, initialTab?: string): void {
     y,
     resizable: false,
     maximizable: false,
+    fullscreenable: false,
     title: "Vox",
     titleBarStyle: "hiddenInset",
     backgroundColor: nativeTheme.shouldUseDarkColors ? "#0a0a0a" : "#ffffff",
@@ -41,6 +51,8 @@ export function openHome(onClosed: () => void, initialTab?: string): void {
       preload: path.join(__dirname, "../preload/index.js"),
     },
   });
+
+  setAppMenu();
 
   if (!app.isPackaged && process.env["ELECTRON_RENDERER_URL"]) {
     homeWindow.loadURL(process.env["ELECTRON_RENDERER_URL"]);
