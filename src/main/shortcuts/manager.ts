@@ -335,7 +335,6 @@ export class ShortcutManager {
   private onRecordingStart(): void {
     const pipeline = this.deps.getPipeline();
     console.log("[Vox] Recording requested — showing initializing indicator");
-    this.indicator.hide();
     this.indicator.show("initializing");
     this.updateTrayState();
 
