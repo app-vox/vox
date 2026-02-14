@@ -117,13 +117,7 @@ export class ShortcutManager {
         const state = this.stateMachine.getState();
         if (state === "hold" || state === "toggle" || state === "processing") {
           console.log("[Vox] Escape pressed, canceling operation");
-          const pipeline = this.deps.getPipeline();
-          pipeline.cancel().catch((err) => {
-            console.error("[Vox] Error during cancel:", err);
-          });
-          this.indicator.showCanceled();
-          this.stateMachine.setIdle();
-          this.updateTrayState();
+          this.cancelRecording();
         }
       }
     });
@@ -218,6 +212,9 @@ export class ShortcutManager {
         console.error("[Vox] Error during cancel:", err);
       });
       this.indicator.showCanceled();
+      const config = this.deps.configManager.load();
+      const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
+      this.playCue(errorCueType);
       this.stateMachine.setIdle();
       this.updateTrayState();
     }
