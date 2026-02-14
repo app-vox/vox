@@ -280,6 +280,25 @@ export function DevPanel() {
   const ov = overrides.enabled;
   const ovProps = { overrides, setOverride, clearOverride };
 
+  const applyPreset = (preset: Partial<DevOverrides>) => {
+    if (!ov) setEnabled(true);
+    for (const [key, value] of Object.entries(preset)) {
+      setOverride(key as keyof DevOverrides, value as DevOverrides[keyof DevOverrides]);
+    }
+  };
+
+  const presets: { label: string; preset: Partial<DevOverrides> }[] = [
+    { label: "No Internet", preset: { setupComplete: false } },
+    { label: "LLM Not Configured", preset: { llmEnhancementEnabled: false, llmConnectionTested: false } },
+    { label: "LLM Untested", preset: { llmEnhancementEnabled: true, llmConnectionTested: false } },
+    { label: "No Model", preset: { setupComplete: false } },
+    { label: "Permissions Denied", preset: { microphonePermission: "denied", accessibilityPermission: false } },
+    { label: "Update Available", preset: { updateStatus: "available" } },
+    { label: "Update Downloading", preset: { updateStatus: "downloading", updateDownloadProgress: 42 } },
+    { label: "Update Ready", preset: { updateStatus: "ready" } },
+    { label: "Everything Broken", preset: { setupComplete: false, microphonePermission: "denied", accessibilityPermission: false, updateStatus: "error", llmEnhancementEnabled: false, llmConnectionTested: false } },
+  ];
+
   const collapsed = typeof window !== "undefined"
     ? localStorage.getItem("vox:sidebar-collapsed") === "true"
     : false;
@@ -524,7 +543,16 @@ export function DevPanel() {
       </div>
 
       <div className={styles.disclaimer}>
-        Some values are read-only (main process). Only overridable states show controls when Override is enabled.
+        Some values may be slightly outdated (polled every 1s). Read-only states come from the main process and cannot be overridden.
+      </div>
+
+      {/* Presets */}
+      <div className={styles.presets}>
+        {presets.map((p) => (
+          <button key={p.label} className={styles.presetBtn} onClick={() => applyPreset(p.preset)}>
+            {p.label}
+          </button>
+        ))}
       </div>
 
       {/* Grid — always shows all cards, search highlights + scrolls */}
