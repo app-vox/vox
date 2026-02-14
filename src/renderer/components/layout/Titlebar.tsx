@@ -1,18 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import type { UpdateState } from "../../../preload/index";
 import { useConfigStore } from "../../stores/config-store";
-import { useDevOverrides } from "../../stores/dev-overrides-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
 import { useT } from "../../i18n-context";
 import { GearIcon, InfoCircleIcon, DownloadIcon } from "../../../shared/icons";
 import { SaveToast } from "../ui/SaveToast";
 import styles from "./Titlebar.module.scss";
 
+// Lazy-load the dev override badge so the store is excluded from production bundles.
+const LazyDevOverrideBadge = import.meta.env.DEV
+  ? lazy(() => import("../dev/DevOverrideBadge").then((m) => ({ default: m.DevOverrideBadge })))
+  : null;
+
 export function Titlebar() {
   const t = useT();
   const activeTab = useConfigStore((s) => s.activeTab);
   const setActiveTab = useConfigStore((s) => s.setActiveTab);
-  const overridesEnabled = useDevOverrides((s) => s.overrides.enabled);
   const showToast = useSaveToast((s) => s.show);
   const toastTimestamp = useSaveToast((s) => s.timestamp);
   const hideToast = useSaveToast((s) => s.hide);
@@ -77,13 +80,10 @@ export function Titlebar() {
     <div className={styles.titlebar}>
       <div className={styles.spacer} />
       <SaveToast show={showToast} timestamp={toastTimestamp} onHide={hideToast} />
-      {overridesEnabled && (
-        <button
-          className={styles.overrideBadge}
-          onClick={() => setActiveTab("dev")}
-        >
-          {"States Overridden"}
-        </button>
+      {LazyDevOverrideBadge && (
+        <Suspense fallback={null}>
+          <LazyDevOverrideBadge />
+        </Suspense>
       )}
       {renderUpdateButton()}
       <button

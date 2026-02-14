@@ -16,7 +16,6 @@ import {
   MenuIcon,
   CheckmarkBadgeIcon,
   AlertLinesIcon,
-  CodeBracketIcon,
 } from "../../../shared/icons";
 import { WarningBadge } from "../ui/WarningBadge";
 import { NewDot } from "../ui/NewDot";
@@ -218,7 +217,6 @@ export function Sidebar() {
       </nav>
 
       <div className={styles.bottom}>
-        <div className={styles.divider} />
         {import.meta.env.DEV && (
           <>
             <button
@@ -227,7 +225,10 @@ export function Sidebar() {
               title={collapsed ? "Dev States" : undefined}
             >
               <div className={styles.iconWrap}>
-                <CodeBracketIcon width={16} height={16} />
+                <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="16 18 22 12 16 6" />
+                  <polyline points="8 6 2 12 8 18" />
+                </svg>
               </div>
               {/* eslint-disable-next-line i18next/no-literal-string */}
               {!collapsed && <span className={styles.label}>Dev States</span>}

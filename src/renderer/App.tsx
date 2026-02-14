@@ -1,4 +1,4 @@
-import { useEffect, useRef, type JSX } from "react";
+import { useEffect, useRef, lazy, Suspense, type JSX } from "react";
 import { useConfigStore } from "./stores/config-store";
 import { SpinnerIcon } from "../shared/icons";
 import { Sidebar } from "./components/layout/Sidebar";
@@ -11,10 +11,24 @@ import { PermissionsPanel } from "./components/permissions/PermissionsPanel";
 import { GeneralPanel } from "./components/general/GeneralPanel";
 import { TranscriptionsPanel } from "./components/transcriptions/TranscriptionsPanel";
 import { DictionaryPanel } from "./components/dictionary/DictionaryPanel";
-import { DevPanel } from "./components/dev/DevPanel";
 import { ScrollButtons } from "./components/ui/ScrollButtons";
 import { useTheme } from "./hooks/use-theme";
 import { I18nProvider } from "./i18n-context";
+
+// Lazy-load DevPanel so the entire module tree is excluded from production bundles.
+// In production, import.meta.env.DEV is false and this code path is dead-code-eliminated.
+const LazyDevPanel = import.meta.env.DEV
+  ? lazy(() => import("./components/dev/DevPanel").then((m) => ({ default: m.DevPanel })))
+  : null;
+
+function DevPanelWrapper() {
+  if (!LazyDevPanel) return null;
+  return (
+    <Suspense fallback={null}>
+      <LazyDevPanel />
+    </Suspense>
+  );
+}
 
 const PANELS: Record<string, () => JSX.Element | null> = {
   general: GeneralPanel,
@@ -25,7 +39,7 @@ const PANELS: Record<string, () => JSX.Element | null> = {
   shortcuts: ShortcutsPanel,
   transcriptions: TranscriptionsPanel,
   about: AboutPanel,
-  ...(import.meta.env.DEV ? { dev: DevPanel } : {}),
+  ...(import.meta.env.DEV ? { dev: DevPanelWrapper } : {}),
 };
 
 export function App() {
