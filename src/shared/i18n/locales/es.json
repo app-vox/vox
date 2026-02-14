@@ -1,5 +1,5 @@
 {
-  "tabs.history": "Transcripciones",
+  "tabs.transcriptions": "Transcripciones",
   "tabs.speech": "Voz",
   "tabs.aiEnhancement": "Mejora con IA",
   "tabs.dictionary": "Diccionario",
@@ -220,7 +220,7 @@
   "general.setup.description": "Descarga un modelo de voz para empezar a usar Vox para transcripción.",
   "general.setup.getStarted": "Comenzar",
   "sidebar.ai": "IA",
-  "sidebar.words": "Palabras",
+  "sidebar.content": "Contenido",
   "sidebar.interface": "Interfaz",
   "sidebar.expand": "Expandir barra lateral",
   "sidebar.collapse": "Contraer barra lateral",

@@ -1,5 +1,5 @@
 {
-  "tabs.history": "Yazıya Dökümler",
+  "tabs.transcriptions": "Yazıya Dökümler",
   "tabs.speech": "Konuşma",
   "tabs.aiEnhancement": "Yapay Zeka İyileştirme",
   "tabs.dictionary": "Sözlük",
@@ -220,7 +220,7 @@
   "general.setup.description": "Transkripsiyon için Vox'u kullanmaya başlamak üzere bir konuşma modeli indirin.",
   "general.setup.getStarted": "Başla",
   "sidebar.ai": "YZ",
-  "sidebar.words": "Kelimeler",
+  "sidebar.content": "İçerik",
   "sidebar.interface": "Arayüz",
   "sidebar.expand": "Kenar çubuğunu genişlet",
   "sidebar.collapse": "Kenar çubuğunu daralt",

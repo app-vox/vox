@@ -1,5 +1,5 @@
 {
-  "tabs.history": "Транскрипции",
+  "tabs.transcriptions": "Транскрипции",
   "tabs.speech": "Речь",
   "tabs.aiEnhancement": "Улучшение ИИ",
   "tabs.dictionary": "Словарь",
@@ -220,7 +220,7 @@
   "general.setup.description": "Загрузите модель распознавания речи, чтобы начать использовать Vox для транскрибации.",
   "general.setup.getStarted": "Начать",
   "sidebar.ai": "ИИ",
-  "sidebar.words": "Слова",
+  "sidebar.content": "Контент",
   "sidebar.interface": "Интерфейс",
   "sidebar.expand": "Развернуть боковую панель",
   "sidebar.collapse": "Свернуть боковую панель",
