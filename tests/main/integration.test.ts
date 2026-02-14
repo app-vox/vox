@@ -6,6 +6,19 @@ import { createLlmProvider } from "../../src/main/llm/factory";
 import { createDefaultConfig } from "../../src/shared/config";
 import { computeLlmConfigHash } from "../../src/shared/llm-config-hash";
 
+// Mock electron-log
+vi.mock("electron-log/main", () => ({
+  default: {
+    scope: vi.fn().mockReturnValue({
+      info: vi.fn(),
+      debug: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      verbose: vi.fn(),
+    }),
+  },
+}));
+
 // Mock fs module
 vi.mock("fs", () => ({
   existsSync: vi.fn().mockReturnValue(true),
