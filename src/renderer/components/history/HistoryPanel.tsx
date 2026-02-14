@@ -7,7 +7,15 @@ import styles from "./HistoryPanel.module.scss";
 const DEBOUNCE_MS = 300;
 
 function formatTime(timestamp: string): string {
-  return new Date(timestamp).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  return new Date(timestamp).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+
+function formatDuration(ms: number): string {
+  const seconds = ms / 1000;
+  if (seconds < 60) return `${seconds.toFixed(1)}s`;
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}m ${remainingSeconds.toFixed(0)}s`;
 }
 
 function formatDateGroup(timestamp: string): string {
@@ -20,7 +28,7 @@ function formatDateGroup(timestamp: string): string {
   yesterday.setDate(yesterday.getDate() - 1);
   if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
 
-  return date.toLocaleDateString([], { month: "long", day: "numeric" });
+  return date.toLocaleDateString(undefined, { month: "long", day: "numeric" });
 }
 
 function groupByDate(entries: TranscriptionEntry[]): Map<string, TranscriptionEntry[]> {
@@ -176,6 +184,7 @@ export function HistoryPanel() {
                         <div className={styles.entryMeta}>
                           <span>{formatTime(entry.timestamp)}</span>
                           <span>{entry.wordCount} words</span>
+                          <span>{formatDuration(entry.audioDurationMs)}</span>
                           <span>{entry.whisperModel}</span>
                           {entry.llmEnhanced && entry.llmProvider && (
                             <span className={styles.badge}>{entry.llmProvider}</span>
