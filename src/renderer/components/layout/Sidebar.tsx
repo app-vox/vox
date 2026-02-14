@@ -220,17 +220,20 @@ export function Sidebar() {
       <div className={styles.bottom}>
         <div className={styles.divider} />
         {import.meta.env.DEV && (
-          <button
-            className={`${styles.navItem} ${activeTab === "dev" ? styles.navItemActive : ""}`}
-            onClick={() => handleTabClick("dev")}
-            title={collapsed ? "Dev States" : undefined}
-          >
-            <div className={styles.iconWrap}>
-              <CodeBracketIcon width={16} height={16} />
-            </div>
-            {/* eslint-disable-next-line i18next/no-literal-string */}
-            {!collapsed && <span className={styles.label}>Dev States</span>}
-          </button>
+          <>
+            <button
+              className={`${styles.navItem} ${styles.devItem} ${activeTab === "dev" ? styles.devItemActive : ""}`}
+              onClick={() => handleTabClick("dev")}
+              title={collapsed ? "Dev States" : undefined}
+            >
+              <div className={styles.iconWrap}>
+                <CodeBracketIcon width={16} height={16} />
+              </div>
+              {/* eslint-disable-next-line i18next/no-literal-string */}
+              {!collapsed && <span className={styles.label}>Dev States</span>}
+            </button>
+            <div className={styles.divider} />
+          </>
         )}
         <button
           className={`${styles.navItem} ${activeTab === "about" ? styles.navItemActive : ""}`}

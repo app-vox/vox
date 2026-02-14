@@ -92,6 +92,7 @@
   height: 22px;
   padding: 0 8px;
   background: #ef4444;
+  border: none;
   border-radius: var(--radius-md);
   color: white;
   font-size: var(--font-size-xs);
@@ -99,4 +100,10 @@
   white-space: nowrap;
   flex-shrink: 0;
   letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 150ms ease;
+
+  &:hover {
+    background: #dc2626;
+  }
 }

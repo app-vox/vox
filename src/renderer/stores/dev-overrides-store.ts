@@ -34,19 +34,60 @@ interface DevOverridesState {
   clearAll: () => void;
 }
 
-const DEFAULT_OVERRIDES: DevOverrides = { enabled: false };
+const STORAGE_KEY = "vox:dev-overrides";
+
+function loadOverrides(): DevOverrides {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw) as DevOverrides;
+  } catch { /* ignore */ }
+  return { enabled: false };
+}
+
+function saveOverrides(overrides: DevOverrides) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(overrides));
+  } catch { /* ignore */ }
+}
 
 export const useDevOverrides = create<DevOverridesState>((set) => ({
-  overrides: { ...DEFAULT_OVERRIDES },
+  overrides: loadOverrides(),
   setEnabled: (enabled) =>
-    set((s) => ({ overrides: { ...s.overrides, enabled } })),
+    set((s) => {
+      const next = { ...s.overrides, enabled };
+      saveOverrides(next);
+      return { overrides: next };
+    }),
   setOverride: (key, value) =>
-    set((s) => ({ overrides: { ...s.overrides, [key]: value } })),
+    set((s) => {
+      const next = { ...s.overrides, [key]: value };
+      saveOverrides(next);
+      return { overrides: next };
+    }),
   clearOverride: (key) =>
     set((s) => {
       const next = { ...s.overrides };
       delete next[key];
+      saveOverrides(next);
       return { overrides: next };
     }),
-  clearAll: () => set({ overrides: { ...DEFAULT_OVERRIDES } }),
+  clearAll: () => {
+    const fresh: DevOverrides = { enabled: false };
+    saveOverrides(fresh);
+    return set({ overrides: fresh });
+  },
 }));
+
+/**
+ * Returns the override value if overrides are enabled and the key is set,
+ * otherwise returns the real value.
+ */
+export function useDevValue<K extends keyof DevOverrides>(
+  key: K,
+  realValue: DevOverrides[K],
+): DevOverrides[K] {
+  const enabled = useDevOverrides((s) => s.overrides.enabled);
+  const override = useDevOverrides((s) => s.overrides[key]);
+  if (enabled && override !== undefined) return override;
+  return realValue;
+}

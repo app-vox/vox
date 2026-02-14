@@ -1,5 +1,5 @@
 /* eslint-disable i18next/no-literal-string */
-import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, type ReactNode } from "react";
 import type { UpdateState, ModelInfo } from "../../../preload/index";
 import { useConfigStore } from "../../stores/config-store";
 import { useDevOverrides, type DevOverrides } from "../../stores/dev-overrides-store";
@@ -8,6 +8,7 @@ import { useTranscriptionsStore } from "../../stores/transcriptions-store";
 import { useOnlineStatus } from "../../hooks/use-online-status";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
+import { SearchIcon } from "../../../shared/icons";
 import card from "../shared/card.module.scss";
 import styles from "./DevPanel.module.scss";
 
@@ -21,14 +22,29 @@ interface RuntimeState {
   trayActive: boolean;
 }
 
+/* ── Helpers ─────────────────────────────────────────────────────── */
+
 function Dot({ color }: { color: "green" | "yellow" | "red" | "gray" }) {
   return <span className={`${styles.dot} ${styles[color]}`} />;
 }
 
-function StateRow({ label, children }: { label: string; children: ReactNode }) {
+function Highlight({ text, query }: { text: string; query: string }) {
+  if (!query) return <>{text}</>;
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className={styles.highlight}>{text.slice(idx, idx + query.length)}</mark>
+      {text.slice(idx + query.length)}
+    </>
+  );
+}
+
+function StateRow({ label, children, query }: { label: string; children: ReactNode; query?: string }) {
   return (
     <div className={styles.stateRow}>
-      <span className={styles.stateLabel}>{label}</span>
+      <span className={styles.stateLabel}><Highlight text={label} query={query ?? ""} /></span>
       <span className={styles.stateValue}>{children}</span>
     </div>
   );
@@ -66,24 +82,19 @@ function OverrideSelect<K extends keyof DevOverrides>({
   const current = overrides[field];
   const isActive = current !== undefined;
   return (
-    <div className={styles.overrideControl}>
-      <select
-        className={`${styles.overrideSelect} ${isActive ? styles.overrideActive : ""}`}
-        value={isActive ? String(current) : "__real__"}
-        onChange={(e) => {
-          if (e.target.value === "__real__") {
-            clearOverride(field);
-          } else {
-            setOverride(field, e.target.value as DevOverrides[K]);
-          }
-        }}
-      >
-        <option value="__real__">Real</option>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>{o.label}</option>
-        ))}
-      </select>
-    </div>
+    <select
+      className={`${styles.overrideSelect} ${isActive ? styles.overrideActive : ""}`}
+      value={isActive ? String(current) : "__real__"}
+      onChange={(e) => {
+        if (e.target.value === "__real__") clearOverride(field);
+        else setOverride(field, e.target.value as DevOverrides[K]);
+      }}
+    >
+      <option value="__real__">Real</option>
+      {options.map((o) => (
+        <option key={o.value} value={o.value}>{o.label}</option>
+      ))}
+    </select>
   );
 }
 
@@ -101,23 +112,18 @@ function OverrideBool<K extends keyof DevOverrides>({
   const current = overrides[field];
   const isActive = current !== undefined;
   return (
-    <div className={styles.overrideControl}>
-      <select
-        className={`${styles.overrideSelect} ${isActive ? styles.overrideActive : ""}`}
-        value={isActive ? String(current) : "__real__"}
-        onChange={(e) => {
-          if (e.target.value === "__real__") {
-            clearOverride(field);
-          } else {
-            setOverride(field, (e.target.value === "true") as DevOverrides[K]);
-          }
-        }}
-      >
-        <option value="__real__">Real</option>
-        <option value="true">true</option>
-        <option value="false">false</option>
-      </select>
-    </div>
+    <select
+      className={`${styles.overrideSelect} ${isActive ? styles.overrideActive : ""}`}
+      value={isActive ? String(current) : "__real__"}
+      onChange={(e) => {
+        if (e.target.value === "__real__") clearOverride(field);
+        else setOverride(field, (e.target.value === "true") as DevOverrides[K]);
+      }}
+    >
+      <option value="__real__">Real</option>
+      <option value="true">true</option>
+      <option value="false">false</option>
+    </select>
   );
 }
 
@@ -138,28 +144,31 @@ function OverrideRange<K extends keyof DevOverrides>({
 }) {
   const current = overrides[field];
   const isActive = current !== undefined;
-  return (
-    <div className={styles.overrideControl}>
-      {isActive ? (
-        <div className={styles.rangeRow}>
-          <input
-            type="range"
-            min={min}
-            max={max}
-            value={Number(current)}
-            className={styles.overrideRange}
-            onChange={(e) => setOverride(field, Number(e.target.value) as DevOverrides[K])}
-          />
-          <span className={styles.rangeValue}>{String(current)}%</span>
-          <button className={styles.clearBtn} onClick={() => clearOverride(field)}>x</button>
-        </div>
-      ) : (
-        <button className={styles.setBtn} onClick={() => setOverride(field, 50 as DevOverrides[K])}>
-          Set
-        </button>
-      )}
+  return isActive ? (
+    <div className={styles.rangeRow}>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        value={Number(current)}
+        className={styles.overrideRange}
+        onChange={(e) => setOverride(field, Number(e.target.value) as DevOverrides[K])}
+      />
+      <span className={styles.rangeValue}>{String(current)}%</span>
+      <button className={styles.clearBtn} onClick={() => clearOverride(field)}>x</button>
     </div>
+  ) : (
+    <button className={styles.setBtn} onClick={() => setOverride(field, 50 as DevOverrides[K])}>
+      Set
+    </button>
   );
+}
+
+/* ── Card definition ─────────────────────────────────────────────── */
+
+interface CardDef {
+  title: string;
+  rows: { label: string; render: (q: string) => ReactNode }[];
 }
 
 /* ── Main Panel ──────────────────────────────────────────────────── */
@@ -179,8 +188,6 @@ export function DevPanel() {
   const refreshPerms = usePermissionsStore((s) => s.refresh);
 
   const transcriptionTotal = useTranscriptionsStore((s) => s.total);
-  const transcriptionPage = useTranscriptionsStore((s) => s.page);
-  const transcriptionPageSize = useTranscriptionsStore((s) => s.pageSize);
   const transcriptionSearch = useTranscriptionsStore((s) => s.searchQuery);
 
   const online = useOnlineStatus();
@@ -190,27 +197,20 @@ export function DevPanel() {
   const [updateState, setUpdateState] = useState<UpdateState | null>(null);
   const [version, setVersion] = useState("");
   const [systemLocale, setSystemLocale] = useState("");
-
-  const collapsed = typeof window !== "undefined"
-    ? localStorage.getItem("vox:sidebar-collapsed") === "true"
-    : false;
+  const [search, setSearch] = useState("");
 
   const fetchRuntime = useCallback(async () => {
     try {
       const state = await window.voxApi.dev.getRuntimeState();
       setRuntime(state);
-    } catch {
-      // dev IPC may not be available
-    }
+    } catch { /* dev IPC may not be available */ }
   }, []);
 
   const fetchModels = useCallback(async () => {
     try {
       const list = await window.voxApi.models.list();
       setModels(list);
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
   }, []);
 
   const didMount = useRef(false);
@@ -237,14 +237,12 @@ export function DevPanel() {
 
   const downloadedModels = models.filter((m) => m.downloaded).map((m) => m.size);
   const selectedModel = config?.whisper?.model || "(none)";
-
   const llmProvider = config?.llm?.provider || "unknown";
   const llmEnhancement = config?.enableLlmEnhancement ?? false;
   const llmConnectionTested = config?.llmConnectionTested ?? false;
   const llmConfigHash = config?.llmConfigHash || "(empty)";
   const currentHash = config ? computeLlmConfigHash(config) : "";
   const hashMatch = llmConfigHash === currentHash;
-  const customPrompt = config?.customPrompt ? `"${config.customPrompt.slice(0, 40)}${config.customPrompt.length > 40 ? "..." : ""}"` : "(none)";
 
   const hasApiKey = (() => {
     if (!config) return false;
@@ -279,6 +277,262 @@ export function DevPanel() {
   const ov = overrides.enabled;
   const ovProps = { overrides, setOverride, clearOverride };
 
+  const collapsed = typeof window !== "undefined"
+    ? localStorage.getItem("vox:sidebar-collapsed") === "true"
+    : false;
+
+  // Build card definitions
+  const cards: CardDef[] = useMemo(() => [
+    {
+      title: "Update State",
+      rows: [
+        {
+          label: "Status",
+          render: () => (
+            <>
+              <span className={styles.realValue}>{statusDot(updateState?.status)}</span>
+              {ov && <OverrideSelect field="updateStatus" options={[
+                { value: "idle", label: "idle" }, { value: "checking", label: "checking" },
+                { value: "available", label: "available" }, { value: "downloading", label: "downloading" },
+                { value: "ready", label: "ready" }, { value: "error", label: "error" },
+              ]} {...ovProps} />}
+            </>
+          ),
+        },
+        ...(ov ? [{
+          label: "Download %",
+          render: () => <OverrideRange field="updateDownloadProgress" min={0} max={100} {...ovProps} />,
+        }] : []),
+        { label: "Version", render: () => <>{version || "(unknown)"}</> },
+      ],
+    },
+    {
+      title: "Permissions",
+      rows: [
+        {
+          label: "Microphone",
+          render: () => (
+            <>
+              <span className={styles.realValue}>{statusDot(permStatus?.microphone)}</span>
+              {ov && <OverrideSelect field="microphonePermission" options={[
+                { value: "granted", label: "granted" }, { value: "denied", label: "denied" },
+                { value: "not-determined", label: "not-determined" },
+              ]} {...ovProps} />}
+            </>
+          ),
+        },
+        {
+          label: "Accessibility",
+          render: () => (
+            <>
+              <span className={styles.realValue}>{boolDot(permStatus?.accessibility === true)}</span>
+              {ov && <OverrideBool field="accessibilityPermission" {...ovProps} />}
+            </>
+          ),
+        },
+      ],
+    },
+    {
+      title: "Setup & Connectivity",
+      rows: [
+        {
+          label: "Setup Complete",
+          render: () => (
+            <>
+              <span className={styles.realValue}>{boolDot(setupComplete)}</span>
+              {ov && <OverrideBool field="setupComplete" {...ovProps} />}
+            </>
+          ),
+        },
+        {
+          label: "Online",
+          render: () => (
+            <>
+              <span className={styles.realValue}>{boolDot(online)}</span>
+              {ov && <OverrideBool field="online" {...ovProps} />}
+            </>
+          ),
+        },
+      ],
+    },
+    {
+      title: "Recording / Pipeline",
+      rows: [
+        {
+          label: "Recording",
+          render: () => (
+            <>
+              <span className={styles.realValue}>{runtime ? boolDot(runtime.isRecording) : <Dot color="gray" />}</span>
+              {ov && <OverrideBool field="isRecording" {...ovProps} />}
+            </>
+          ),
+        },
+        {
+          label: "Shortcut State",
+          render: () => (
+            <>
+              <span className={styles.realValue}>{runtime ? statusDot(runtime.shortcutState) : <Dot color="gray" />}</span>
+              {ov && <OverrideSelect field="shortcutState" options={[
+                { value: "idle", label: "idle" }, { value: "hold", label: "hold" },
+                { value: "toggle", label: "toggle" }, { value: "processing", label: "processing" },
+              ]} {...ovProps} />}
+            </>
+          ),
+        },
+      ],
+    },
+    {
+      title: "Indicator",
+      rows: [
+        {
+          label: "Visible",
+          render: () => (
+            <>
+              <span className={styles.realValue}>{runtime ? boolDot(runtime.indicatorVisible) : <Dot color="gray" />}</span>
+              {ov && <OverrideBool field="indicatorVisible" {...ovProps} />}
+            </>
+          ),
+        },
+        {
+          label: "Mode",
+          render: () => (
+            <>
+              <span className={styles.realValue}>{runtime ? statusDot(runtime.indicatorMode) : <Dot color="gray" />}</span>
+              {ov && <OverrideSelect field="indicatorMode" options={[
+                { value: "initializing", label: "initializing" }, { value: "listening", label: "listening" },
+                { value: "transcribing", label: "transcribing" }, { value: "enhancing", label: "enhancing" },
+                { value: "error", label: "error" }, { value: "canceled", label: "canceled" },
+              ]} {...ovProps} />}
+            </>
+          ),
+        },
+      ],
+    },
+    {
+      title: "Tray",
+      rows: [
+        { label: "Active", render: () => <>{runtime ? boolDot(runtime.trayActive) : <Dot color="gray" />}</> },
+        {
+          label: "Listening",
+          render: () => (
+            <>
+              <span className={styles.realValue}>{runtime ? boolDot(runtime.isListening) : <Dot color="gray" />}</span>
+              {ov && <OverrideBool field="trayIsListening" {...ovProps} />}
+            </>
+          ),
+        },
+        {
+          label: "Has Model",
+          render: () => (
+            <>
+              <span className={styles.realValue}>{runtime ? boolDot(runtime.hasModel) : <Dot color="gray" />}</span>
+              {ov && <OverrideBool field="trayHasModel" {...ovProps} />}
+            </>
+          ),
+        },
+      ],
+    },
+    {
+      title: "LLM",
+      rows: [
+        { label: "Provider", render: () => <>{llmProvider}</> },
+        {
+          label: "Enhancement",
+          render: () => (
+            <>
+              <span className={styles.realValue}>{boolDot(llmEnhancement)}</span>
+              {ov && <OverrideBool field="llmEnhancementEnabled" {...ovProps} />}
+            </>
+          ),
+        },
+        {
+          label: "Tested",
+          render: () => (
+            <>
+              <span className={styles.realValue}>{boolDot(llmConnectionTested)}</span>
+              {ov && <OverrideBool field="llmConnectionTested" {...ovProps} />}
+            </>
+          ),
+        },
+        {
+          label: "Hash",
+          render: () => hashMatch
+            ? <><Dot color="green" />ok</>
+            : <><Dot color="yellow" />stale</>,
+        },
+        { label: "API Key", render: () => <>{boolDot(hasApiKey)}</> },
+        { label: "Model", render: () => <>{modelName}</> },
+      ],
+    },
+    {
+      title: "Whisper",
+      rows: [
+        { label: "Model", render: () => <>{selectedModel}</> },
+        { label: "Downloaded", render: () => <>{downloadedModels.length > 0 ? downloadedModels.join(", ") : "(none)"}</> },
+      ],
+    },
+    {
+      title: "General",
+      rows: [
+        { label: "Theme", render: () => <>{config?.theme || "system"}</> },
+        { label: "Language", render: () => <>{config?.language || "system"}</> },
+        { label: "Launch at Login", render: () => <>{boolDot(config?.launchAtLogin)}</> },
+        { label: "Dictionary", render: () => <>{config?.dictionary?.length ?? 0} words</> },
+      ],
+    },
+    {
+      title: "Audio Cues",
+      rows: [
+        { label: "Start", render: () => <>{config?.recordingAudioCue || "none"}</> },
+        { label: "Stop", render: () => <>{config?.recordingStopAudioCue || "none"}</> },
+        { label: "Error", render: () => <>{config?.errorAudioCue || "none"}</> },
+      ],
+    },
+    {
+      title: "Shortcuts",
+      rows: [
+        { label: "Hold", render: () => <>{config?.shortcuts?.hold || "(none)"}</> },
+        { label: "Toggle", render: () => <>{config?.shortcuts?.toggle || "(none)"}</> },
+      ],
+    },
+    {
+      title: "Transcriptions",
+      rows: [
+        { label: "Total", render: () => <>{transcriptionTotal}</> },
+        { label: "Search", render: () => <>{transcriptionSearch || "(none)"}</> },
+      ],
+    },
+    {
+      title: "Window / UI",
+      rows: [
+        { label: "Active Tab", render: () => <>{activeTab}</> },
+        { label: "Collapsed", render: () => <>{boolDot(collapsed)}</> },
+        { label: "Dev Mode", render: () => <>{boolDot(import.meta.env.DEV)}</> },
+        { label: "Online", render: () => <>{boolDot(online)}</> },
+      ],
+    },
+    {
+      title: "I18n",
+      rows: [
+        { label: "Locale", render: () => <>{systemLocale || "(loading)"}</> },
+        { label: "Language", render: () => <>{config?.language || "system"}</> },
+        { label: "Supported", render: () => <>{SUPPORTED_LANGUAGES.join(", ")}</> },
+      ],
+    },
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [config, setupComplete, permStatus, online, runtime, updateState, version,
+      models, systemLocale, ov, overrides, transcriptionTotal, transcriptionSearch,
+      activeTab, collapsed, llmProvider, llmEnhancement, llmConnectionTested,
+      llmConfigHash, currentHash, hashMatch, hasApiKey, modelName, selectedModel,
+      downloadedModels]);
+
+  const q = search.trim().toLowerCase();
+  const filteredCards = q
+    ? cards.filter((c) =>
+        c.title.toLowerCase().includes(q) ||
+        c.rows.some((r) => r.label.toLowerCase().includes(q)))
+    : cards;
+
   return (
     <>
       {/* Master Override Toggle */}
@@ -293,7 +547,7 @@ export function DevPanel() {
             <div>
               <div className={styles.masterLabel}>Override States</div>
               <div className={styles.masterDesc}>
-                Enable dev overrides to simulate different app states. Choose "Real" to use actual values.
+                Simulate different app states. Overrides persist across reloads.
               </div>
             </div>
           </label>
@@ -305,279 +559,39 @@ export function DevPanel() {
         </div>
       </div>
 
-      {/* ── UX States (prioritized) ──────────────────────────────── */}
-
-      {/* Update State */}
-      <div className={card.card}>
-        <div className={card.header}>
-          <h2>Update State</h2>
-        </div>
-        <div className={card.body}>
-          <StateRow label="Status">
-            <span className={styles.realValue}>{statusDot(updateState?.status)}</span>
-            {ov && (
-              <OverrideSelect
-                field="updateStatus"
-                options={[
-                  { value: "idle", label: "idle" },
-                  { value: "checking", label: "checking" },
-                  { value: "available", label: "available" },
-                  { value: "downloading", label: "downloading" },
-                  { value: "ready", label: "ready" },
-                  { value: "error", label: "error" },
-                ]}
-                {...ovProps}
-              />
-            )}
-          </StateRow>
-          {ov && (
-            <StateRow label="Download Progress">
-              <OverrideRange field="updateDownloadProgress" min={0} max={100} {...ovProps} />
-            </StateRow>
-          )}
-          <StateRow label="Current Version">{version || "(unknown)"}</StateRow>
-          <StateRow label="Latest Version">{updateState?.latestVersion || "(unknown)"}</StateRow>
-          {!ov && (
-            <StateRow label="Download Progress">
-              {updateState?.status === "downloading"
-                ? `${Math.round(updateState.downloadProgress)}%`
-                : "N/A"
-              }
-            </StateRow>
-          )}
-        </div>
+      {/* Search */}
+      <div className={styles.searchWrap}>
+        <SearchIcon width={14} height={14} />
+        <input
+          className={styles.searchInput}
+          type="text"
+          placeholder="Search states..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        {search && (
+          <button className={styles.searchClear} onClick={() => setSearch("")}>x</button>
+        )}
       </div>
 
-      {/* Permissions */}
-      <div className={card.card}>
-        <div className={card.header}>
-          <h2>Permissions</h2>
-        </div>
-        <div className={card.body}>
-          <StateRow label="Microphone">
-            <span className={styles.realValue}>{statusDot(permStatus?.microphone)}</span>
-            {ov && (
-              <OverrideSelect
-                field="microphonePermission"
-                options={[
-                  { value: "granted", label: "granted" },
-                  { value: "denied", label: "denied" },
-                  { value: "not-determined", label: "not-determined" },
-                ]}
-                {...ovProps}
-              />
-            )}
-          </StateRow>
-          <StateRow label="Accessibility">
-            <span className={styles.realValue}>{boolDot(permStatus?.accessibility === true)}</span>
-            {ov && <OverrideBool field="accessibilityPermission" {...ovProps} />}
-          </StateRow>
-        </div>
-      </div>
-
-      {/* Setup & Connectivity */}
-      <div className={card.card}>
-        <div className={card.header}>
-          <h2>Setup &amp; Connectivity</h2>
-        </div>
-        <div className={card.body}>
-          <StateRow label="Setup Complete">
-            <span className={styles.realValue}>{boolDot(setupComplete)}</span>
-            {ov && <OverrideBool field="setupComplete" {...ovProps} />}
-          </StateRow>
-          <StateRow label="Online">
-            <span className={styles.realValue}>{boolDot(online)}</span>
-            {ov && <OverrideBool field="online" {...ovProps} />}
-          </StateRow>
-        </div>
-      </div>
-
-      {/* ── Recording & Pipeline ─────────────────────────────────── */}
-
-      <div className={card.card}>
-        <div className={card.header}>
-          <div className={styles.headerRow}>
-            <h2>Recording / Pipeline</h2>
-            <button className={styles.refreshBtn} onClick={fetchRuntime}>Refresh</button>
+      {/* Grid */}
+      <div className={styles.grid}>
+        {filteredCards.map((c) => (
+          <div key={c.title} className={card.card}>
+            <div className={card.header}>
+              <h2><Highlight text={c.title} query={q} /></h2>
+            </div>
+            <div className={card.body}>
+              {c.rows
+                .filter((r) => !q || c.title.toLowerCase().includes(q) || r.label.toLowerCase().includes(q))
+                .map((r) => (
+                  <StateRow key={r.label} label={r.label} query={q}>
+                    {r.render(q)}
+                  </StateRow>
+                ))}
+            </div>
           </div>
-        </div>
-        <div className={card.body}>
-          <StateRow label="Recording Active">
-            <span className={styles.realValue}>{runtime ? boolDot(runtime.isRecording) : <Dot color="gray" />}</span>
-            {ov && <OverrideBool field="isRecording" {...ovProps} />}
-          </StateRow>
-          <StateRow label="Shortcut State">
-            <span className={styles.realValue}>{runtime ? statusDot(runtime.shortcutState) : <Dot color="gray" />}</span>
-            {ov && (
-              <OverrideSelect
-                field="shortcutState"
-                options={[
-                  { value: "idle", label: "idle" },
-                  { value: "hold", label: "hold" },
-                  { value: "toggle", label: "toggle" },
-                  { value: "processing", label: "processing" },
-                ]}
-                {...ovProps}
-              />
-            )}
-          </StateRow>
-        </div>
-      </div>
-
-      {/* Indicator Window */}
-      <div className={card.card}>
-        <div className={card.header}>
-          <h2>Indicator Window</h2>
-        </div>
-        <div className={card.body}>
-          <StateRow label="Visible">
-            <span className={styles.realValue}>{runtime ? boolDot(runtime.indicatorVisible) : <Dot color="gray" />}</span>
-            {ov && <OverrideBool field="indicatorVisible" {...ovProps} />}
-          </StateRow>
-          <StateRow label="Mode">
-            <span className={styles.realValue}>{runtime ? statusDot(runtime.indicatorMode) : <Dot color="gray" />}</span>
-            {ov && (
-              <OverrideSelect
-                field="indicatorMode"
-                options={[
-                  { value: "initializing", label: "initializing" },
-                  { value: "listening", label: "listening" },
-                  { value: "transcribing", label: "transcribing" },
-                  { value: "enhancing", label: "enhancing" },
-                  { value: "error", label: "error" },
-                  { value: "canceled", label: "canceled" },
-                ]}
-                {...ovProps}
-              />
-            )}
-          </StateRow>
-        </div>
-      </div>
-
-      {/* Tray */}
-      <div className={card.card}>
-        <div className={card.header}>
-          <h2>Tray</h2>
-        </div>
-        <div className={card.body}>
-          <StateRow label="Active">
-            {runtime ? boolDot(runtime.trayActive) : <Dot color="gray" />}
-          </StateRow>
-          <StateRow label="Listening">
-            <span className={styles.realValue}>{runtime ? boolDot(runtime.isListening) : <Dot color="gray" />}</span>
-            {ov && <OverrideBool field="trayIsListening" {...ovProps} />}
-          </StateRow>
-          <StateRow label="Has Model">
-            <span className={styles.realValue}>{runtime ? boolDot(runtime.hasModel) : <Dot color="gray" />}</span>
-            {ov && <OverrideBool field="trayHasModel" {...ovProps} />}
-          </StateRow>
-        </div>
-      </div>
-
-      {/* ── Config States (read-only) ────────────────────────────── */}
-
-      {/* LLM Configuration */}
-      <div className={card.card}>
-        <div className={card.header}>
-          <h2>LLM Configuration</h2>
-        </div>
-        <div className={card.body}>
-          <StateRow label="Provider">{llmProvider}</StateRow>
-          <StateRow label="Enhancement Enabled">
-            <span className={styles.realValue}>{boolDot(llmEnhancement)}</span>
-            {ov && <OverrideBool field="llmEnhancementEnabled" {...ovProps} />}
-          </StateRow>
-          <StateRow label="Connection Tested">
-            <span className={styles.realValue}>{boolDot(llmConnectionTested)}</span>
-            {ov && <OverrideBool field="llmConnectionTested" {...ovProps} />}
-          </StateRow>
-          <StateRow label="Config Hash">
-            {hashMatch
-              ? <><Dot color="green" />{llmConfigHash}</>
-              : <><Dot color="yellow" />{llmConfigHash} (stale)</>
-            }
-          </StateRow>
-          <StateRow label="Custom Prompt">{customPrompt}</StateRow>
-          <StateRow label="API Key Present">{boolDot(hasApiKey)}</StateRow>
-          <StateRow label="Model Name">{modelName}</StateRow>
-        </div>
-      </div>
-
-      {/* Whisper / Speech */}
-      <div className={card.card}>
-        <div className={card.header}>
-          <h2>Whisper / Speech</h2>
-        </div>
-        <div className={card.body}>
-          <StateRow label="Selected Model">{selectedModel}</StateRow>
-          <StateRow label="Downloaded Models">
-            {downloadedModels.length > 0 ? downloadedModels.join(", ") : "(none)"}
-          </StateRow>
-        </div>
-      </div>
-
-      {/* Shortcuts */}
-      <div className={card.card}>
-        <div className={card.header}>
-          <h2>Shortcuts</h2>
-        </div>
-        <div className={card.body}>
-          <StateRow label="Hold">{config?.shortcuts?.hold || "(none)"}</StateRow>
-          <StateRow label="Toggle">{config?.shortcuts?.toggle || "(none)"}</StateRow>
-        </div>
-      </div>
-
-      {/* General Settings */}
-      <div className={card.card}>
-        <div className={card.header}>
-          <h2>General Settings</h2>
-        </div>
-        <div className={card.body}>
-          <StateRow label="Theme">{config?.theme || "system"}</StateRow>
-          <StateRow label="Language">{config?.language || "system"}</StateRow>
-          <StateRow label="Launch at Login">{boolDot(config?.launchAtLogin)}</StateRow>
-          <StateRow label="Audio Cues">
-            start: {config?.recordingAudioCue || "none"} / stop: {config?.recordingStopAudioCue || "none"} / error: {config?.errorAudioCue || "none"}
-          </StateRow>
-          <StateRow label="Dictionary Count">{config?.dictionary?.length ?? 0}</StateRow>
-        </div>
-      </div>
-
-      {/* History / Transcriptions */}
-      <div className={card.card}>
-        <div className={card.header}>
-          <h2>History / Transcriptions</h2>
-        </div>
-        <div className={card.body}>
-          <StateRow label="Total">{transcriptionTotal}</StateRow>
-          <StateRow label="Page">{transcriptionPage}</StateRow>
-          <StateRow label="Page Size">{transcriptionPageSize}</StateRow>
-          <StateRow label="Search Query">{transcriptionSearch || "(none)"}</StateRow>
-        </div>
-      </div>
-
-      {/* Window / UI State */}
-      <div className={card.card}>
-        <div className={card.header}>
-          <h2>Window / UI State</h2>
-        </div>
-        <div className={card.body}>
-          <StateRow label="Active Tab">{activeTab}</StateRow>
-          <StateRow label="Sidebar Collapsed">{boolDot(collapsed)}</StateRow>
-          <StateRow label="Dev Mode">{boolDot(import.meta.env.DEV)}</StateRow>
-        </div>
-      </div>
-
-      {/* I18n State */}
-      <div className={card.card}>
-        <div className={card.header}>
-          <h2>I18n State</h2>
-        </div>
-        <div className={card.body}>
-          <StateRow label="System Locale">{systemLocale || "(loading)"}</StateRow>
-          <StateRow label="Configured Language">{config?.language || "system"}</StateRow>
-          <StateRow label="Supported Languages">{SUPPORTED_LANGUAGES.join(", ")}</StateRow>
-        </div>
+        ))}
       </div>
     </>
   );

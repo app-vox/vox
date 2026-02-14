@@ -12,7 +12,12 @@
   width: 52px;
 
   .top {
-    padding-top: 48px;
+    padding-top: 38px;
+    justify-content: center;
+  }
+
+  .collapseBtn {
+    position: static;
   }
 
   .navItem {
@@ -225,3 +230,20 @@
   padding-top: var(--spacing-2);
 }
 
+/* Dev States button */
+.devItem {
+  background: color-mix(in srgb, #8b5cf6 8%, transparent);
+  border: 1px solid color-mix(in srgb, #8b5cf6 20%, transparent);
+  color: color-mix(in srgb, #8b5cf6 70%, var(--color-text-secondary));
+
+  &:hover {
+    background: color-mix(in srgb, #8b5cf6 15%, transparent);
+    border-color: color-mix(in srgb, #8b5cf6 30%, transparent);
+  }
+}
+
+.devItemActive {
+  background: color-mix(in srgb, #8b5cf6 18%, transparent);
+  border-color: color-mix(in srgb, #8b5cf6 35%, transparent);
+  color: color-mix(in srgb, #8b5cf6 85%, var(--color-text-primary));
+}

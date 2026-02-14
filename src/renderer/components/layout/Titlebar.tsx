@@ -78,8 +78,12 @@ export function Titlebar() {
       <div className={styles.spacer} />
       <SaveToast show={showToast} timestamp={toastTimestamp} onHide={hideToast} />
       {overridesEnabled && (
-        // eslint-disable-next-line i18next/no-literal-string
-        <span className={styles.overrideBadge}>States Overridden</span>
+        <button
+          className={styles.overrideBadge}
+          onClick={() => setActiveTab("dev")}
+        >
+          {"States Overridden"}
+        </button>
       )}
       {renderUpdateButton()}
       <button
