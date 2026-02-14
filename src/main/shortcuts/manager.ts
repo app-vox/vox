@@ -7,7 +7,7 @@ import { ShortcutStateMachine } from "./listener";
 import { IndicatorWindow } from "../indicator";
 import { setTrayListeningState } from "../tray";
 import { t } from "../../shared/i18n";
-import { generateCueSamples, isWavCue, getWavFilename } from "../../shared/audio-cue";
+import { generateCueSamples, isWavCue, getWavFilename, parseWavSamples } from "../../shared/audio-cue";
 import type { AudioCueType } from "../../shared/config";
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -245,13 +245,15 @@ export class ShortcutManager {
       if (!filename) return;
       try {
         const audioDir = app.isPackaged
-          ? join(process.resourcesPath, "app.asar.unpacked", "public", "audio")
-          : join(app.getAppPath(), "public", "audio");
+          ? join(process.resourcesPath, "resources", "audio")
+          : join(app.getAppPath(), "resources", "audio");
         const wavData = readFileSync(join(audioDir, filename));
-        const base64 = wavData.toString("base64");
-        pipeline.playWavCue(base64).catch((err: Error) => {
-          console.error(`[Vox] WAV audio cue failed:`, err.message);
-        });
+        const { samples, sampleRate } = parseWavSamples(wavData);
+        if (samples.length > 0) {
+          pipeline.playAudioCue(samples, sampleRate).catch((err: Error) => {
+            console.error(`[Vox] WAV audio cue failed:`, err.message);
+          });
+        }
       } catch (err: unknown) {
         console.error("[Vox] Failed to load WAV cue:", err instanceof Error ? err.message : err);
       }
