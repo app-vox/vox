@@ -41,9 +41,9 @@ function Highlight({ text, query }: { text: string; query: string }) {
   );
 }
 
-function StateRow({ label, children, query }: { label: string; children: ReactNode; query?: string }) {
+function StateRow({ label, children, query, overridden }: { label: string; children: ReactNode; query?: string; overridden?: boolean }) {
   return (
-    <div className={styles.stateRow}>
+    <div className={`${styles.stateRow} ${overridden ? styles.stateRowOverridden : ""}`}>
       <span className={styles.stateLabel}><Highlight text={label} query={query ?? ""} /></span>
       <span className={styles.stateValue}>{children}</span>
     </div>
@@ -168,7 +168,7 @@ function OverrideRange<K extends keyof DevOverrides>({
 
 interface CardDef {
   title: string;
-  rows: { label: string; render: (q: string) => ReactNode }[];
+  rows: { label: string; render: (q: string) => ReactNode; overrideField?: keyof DevOverrides }[];
 }
 
 /* ── Main Panel ──────────────────────────────────────────────────── */
@@ -288,6 +288,7 @@ export function DevPanel() {
       rows: [
         {
           label: "Status",
+          overrideField: "updateStatus",
           render: () => (
             <>
               <span className={styles.realValue}>{statusDot(updateState?.status)}</span>
@@ -301,6 +302,7 @@ export function DevPanel() {
         },
         ...(ov ? [{
           label: "Download %",
+          overrideField: "updateDownloadProgress" as keyof DevOverrides,
           render: () => <OverrideRange field="updateDownloadProgress" min={0} max={100} {...ovProps} />,
         }] : []),
         { label: "Version", render: () => <>{version || "(unknown)"}</> },
@@ -311,6 +313,7 @@ export function DevPanel() {
       rows: [
         {
           label: "Microphone",
+          overrideField: "microphonePermission",
           render: () => (
             <>
               <span className={styles.realValue}>{statusDot(permStatus?.microphone)}</span>
@@ -323,6 +326,7 @@ export function DevPanel() {
         },
         {
           label: "Accessibility",
+          overrideField: "accessibilityPermission",
           render: () => (
             <>
               <span className={styles.realValue}>{boolDot(permStatus?.accessibility === true)}</span>
@@ -337,6 +341,7 @@ export function DevPanel() {
       rows: [
         {
           label: "Setup Complete",
+          overrideField: "setupComplete",
           render: () => (
             <>
               <span className={styles.realValue}>{boolDot(setupComplete)}</span>
@@ -346,6 +351,7 @@ export function DevPanel() {
         },
         {
           label: "Online",
+          overrideField: "online",
           render: () => (
             <>
               <span className={styles.realValue}>{boolDot(online)}</span>
@@ -360,6 +366,7 @@ export function DevPanel() {
       rows: [
         {
           label: "Recording",
+          overrideField: "isRecording",
           render: () => (
             <>
               <span className={styles.realValue}>{runtime ? boolDot(runtime.isRecording) : <Dot color="gray" />}</span>
@@ -369,6 +376,7 @@ export function DevPanel() {
         },
         {
           label: "Shortcut State",
+          overrideField: "shortcutState",
           render: () => (
             <>
               <span className={styles.realValue}>{runtime ? statusDot(runtime.shortcutState) : <Dot color="gray" />}</span>
@@ -386,6 +394,7 @@ export function DevPanel() {
       rows: [
         {
           label: "Visible",
+          overrideField: "indicatorVisible",
           render: () => (
             <>
               <span className={styles.realValue}>{runtime ? boolDot(runtime.indicatorVisible) : <Dot color="gray" />}</span>
@@ -395,6 +404,7 @@ export function DevPanel() {
         },
         {
           label: "Mode",
+          overrideField: "indicatorMode",
           render: () => (
             <>
               <span className={styles.realValue}>{runtime ? statusDot(runtime.indicatorMode) : <Dot color="gray" />}</span>
@@ -414,6 +424,7 @@ export function DevPanel() {
         { label: "Active", render: () => <>{runtime ? boolDot(runtime.trayActive) : <Dot color="gray" />}</> },
         {
           label: "Listening",
+          overrideField: "trayIsListening",
           render: () => (
             <>
               <span className={styles.realValue}>{runtime ? boolDot(runtime.isListening) : <Dot color="gray" />}</span>
@@ -423,6 +434,7 @@ export function DevPanel() {
         },
         {
           label: "Has Model",
+          overrideField: "trayHasModel",
           render: () => (
             <>
               <span className={styles.realValue}>{runtime ? boolDot(runtime.hasModel) : <Dot color="gray" />}</span>
@@ -438,6 +450,7 @@ export function DevPanel() {
         { label: "Provider", render: () => <>{llmProvider}</> },
         {
           label: "Enhancement",
+          overrideField: "llmEnhancementEnabled",
           render: () => (
             <>
               <span className={styles.realValue}>{boolDot(llmEnhancement)}</span>
@@ -447,6 +460,7 @@ export function DevPanel() {
         },
         {
           label: "Tested",
+          overrideField: "llmConnectionTested",
           render: () => (
             <>
               <span className={styles.realValue}>{boolDot(llmConnectionTested)}</span>
@@ -527,68 +541,75 @@ export function DevPanel() {
       downloadedModels]);
 
   const q = search.trim().toLowerCase();
-  const filteredCards = q
-    ? cards.filter((c) =>
-        c.title.toLowerCase().includes(q) ||
-        c.rows.some((r) => r.label.toLowerCase().includes(q)))
-    : cards;
+
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to first match when search changes
+  useEffect(() => {
+    if (!q || !gridRef.current) return;
+    const firstHighlight = gridRef.current.querySelector(`.${styles.highlight}`);
+    if (firstHighlight) {
+      firstHighlight.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [q]);
+
+  const isRowOverridden = (field?: keyof DevOverrides) =>
+    ov && field !== undefined && overrides[field] !== undefined;
 
   return (
     <>
-      {/* Master Override Toggle */}
-      <div className={card.card}>
-        <div className={card.body}>
-          <label className={styles.masterToggle}>
-            <input
-              type="checkbox"
-              checked={overrides.enabled}
-              onChange={(e) => setEnabled(e.target.checked)}
-            />
-            <div>
-              <div className={styles.masterLabel}>Override States</div>
-              <div className={styles.masterDesc}>
-                Simulate different app states. Overrides persist across reloads.
+      {/* Header: Override toggle + Search side by side */}
+      <div className={styles.panelHeader}>
+        <div className={card.card}>
+          <div className={card.body}>
+            <label className={styles.masterToggle}>
+              <input
+                type="checkbox"
+                checked={overrides.enabled}
+                onChange={(e) => setEnabled(e.target.checked)}
+              />
+              <div>
+                <div className={styles.masterLabel}>Override States</div>
+                <div className={styles.masterDesc}>
+                  Simulate different app states. Overrides persist across reloads.
+                </div>
               </div>
-            </div>
-          </label>
-          {ov && (
-            <button className={styles.clearAllBtn} onClick={clearAll}>
-              Clear All Overrides
-            </button>
+            </label>
+            {ov && (
+              <button className={styles.clearAllBtn} onClick={clearAll}>
+                Clear All Overrides
+              </button>
+            )}
+          </div>
+        </div>
+        <div className={styles.searchWrap}>
+          <SearchIcon width={14} height={14} />
+          <input
+            className={styles.searchInput}
+            type="text"
+            placeholder="Search states..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          {search && (
+            <button className={styles.searchClear} onClick={() => setSearch("")}>x</button>
           )}
         </div>
       </div>
 
-      {/* Search */}
-      <div className={styles.searchWrap}>
-        <SearchIcon width={14} height={14} />
-        <input
-          className={styles.searchInput}
-          type="text"
-          placeholder="Search states..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        {search && (
-          <button className={styles.searchClear} onClick={() => setSearch("")}>x</button>
-        )}
-      </div>
-
-      {/* Grid */}
-      <div className={styles.grid}>
-        {filteredCards.map((c) => (
+      {/* Grid — always shows all cards, search highlights + scrolls */}
+      <div className={styles.grid} ref={gridRef}>
+        {cards.map((c) => (
           <div key={c.title} className={card.card}>
             <div className={card.header}>
               <h2><Highlight text={c.title} query={q} /></h2>
             </div>
             <div className={card.body}>
-              {c.rows
-                .filter((r) => !q || c.title.toLowerCase().includes(q) || r.label.toLowerCase().includes(q))
-                .map((r) => (
-                  <StateRow key={r.label} label={r.label} query={q}>
-                    {r.render(q)}
-                  </StateRow>
-                ))}
+              {c.rows.map((r) => (
+                <StateRow key={r.label} label={r.label} query={q} overridden={isRowOverridden(r.overrideField)}>
+                  {r.render(q)}
+                </StateRow>
+              ))}
             </div>
           </div>
         ))}

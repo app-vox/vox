@@ -20,6 +20,7 @@ import {
 import { WarningBadge } from "../ui/WarningBadge";
 import { NewDot } from "../ui/NewDot";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
+import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import styles from "./Sidebar.module.scss";
 
 const VOX_WEBSITE_URL = "https://app-vox.github.io/vox/";
@@ -90,9 +91,36 @@ export function Sidebar() {
   const [visitedDictionary, setVisitedDictionary] = useState(() => localStorage.getItem(VISITED_DICTIONARY_KEY) === "true");
   const activeTab = useConfigStore((s) => s.activeTab);
   const setActiveTab = useConfigStore((s) => s.setActiveTab);
-  const setupComplete = useConfigStore((s) => s.setupComplete);
+  const realSetupComplete = useConfigStore((s) => s.setupComplete);
   const config = useConfigStore((s) => s.config);
-  const { status: permissionStatus } = usePermissions();
+  const { status: realPermissionStatus } = usePermissions();
+
+  // Dev overrides (gated — tree-shaken in production)
+  const setupComplete = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("setupComplete", realSetupComplete)
+    : realSetupComplete;
+
+  const devMicOverride = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("microphonePermission", undefined)
+    : undefined;
+
+  const devAccessibilityOverride = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("accessibilityPermission", undefined)
+    : undefined;
+
+  const devUpdateStatus = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("updateStatus", undefined)
+    : undefined;
+
+  const permissionStatus = {
+    ...realPermissionStatus,
+    ...(devMicOverride !== undefined ? { microphone: devMicOverride } : {}),
+    ...(devAccessibilityOverride !== undefined ? { accessibility: devAccessibilityOverride } : {}),
+  };
 
   const handleTabClick = useCallback((id: string) => {
     if (id === "dictionary" && !visitedDictionary) {
@@ -127,7 +155,8 @@ export function Sidebar() {
     return window.voxApi.updates.onStateChanged(setUpdateState);
   }, []);
 
-  const hasUpdate = updateState?.status === "available" || updateState?.status === "downloading" || updateState?.status === "ready";
+  const effectiveUpdateStatus = devUpdateStatus ?? updateState?.status;
+  const hasUpdate = effectiveUpdateStatus === "available" || effectiveUpdateStatus === "downloading" || effectiveUpdateStatus === "ready";
 
   const isConfigured = (type?: "speech" | "permissions" | "ai-enhancement") => {
     if (!type) return false;

@@ -47,6 +47,7 @@ function loadOverrides(): DevOverrides {
 function saveOverrides(overrides: DevOverrides) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(overrides));
+    window.dispatchEvent(new CustomEvent("vox:dev-overrides-changed"));
   } catch { /* ignore */ }
 }
 
