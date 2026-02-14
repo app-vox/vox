@@ -4,6 +4,7 @@ import * as path from "path";
 function setAppMenu(): void {
   const template: Electron.MenuItemConstructorOptions[] = [
     { role: "appMenu" },
+    { role: "fileMenu" },
     { role: "editMenu" },
     ...(!app.isPackaged ? [{ role: "viewMenu" as const }] : []),
     { role: "windowMenu" },
@@ -31,8 +32,8 @@ export function openHome(onClosed: () => void, initialTab?: string): void {
   const cursorPoint = screen.getCursorScreenPoint();
   const display = screen.getDisplayNearestPoint(cursorPoint);
 
-  const WINDOW_WIDTH = 900;
-  const WINDOW_HEIGHT = 820;
+  const WINDOW_WIDTH = 940;
+  const WINDOW_HEIGHT = 860;
   const windowWidth = WINDOW_WIDTH;
   const windowHeight = WINDOW_HEIGHT;
   const x = Math.round(display.bounds.x + (display.bounds.width - windowWidth) / 2);

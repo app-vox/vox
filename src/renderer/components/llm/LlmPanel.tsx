@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useDebouncedSave } from "../../hooks/use-debounced-save";
 import { useT } from "../../i18n-context";
@@ -13,6 +13,7 @@ import { NewDot } from "../ui/NewDot";
 import { CustomSelect } from "../ui/CustomSelect";
 import { ExternalLinkIcon, CheckCircleIcon, InfoCircleAltIcon, CopyIcon, SparkleIcon } from "../../../shared/icons";
 import type { LlmProviderType, LlmConfig } from "../../../shared/config";
+import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
 import card from "../shared/card.module.scss";
 import form from "../shared/forms.module.scss";
 import buttons from "../shared/buttons.module.scss";
@@ -51,6 +52,7 @@ export function LlmPanel() {
   const [initialPromptValue, setInitialPromptValue] = useState<string | null>(null);
   const [visitedCustomPrompt, setVisitedCustomPrompt] = useState(() => localStorage.getItem("vox:visited-custom-prompt") === "true");
   const [copiedExample, setCopiedExample] = useState<string | null>(null);
+  const testSectionRef = useRef<HTMLDivElement>(null);
 
   const handlePromptTabClick = useCallback(() => {
     if (!visitedCustomPrompt) {
@@ -61,6 +63,9 @@ export function LlmPanel() {
   }, [visitedCustomPrompt]);
 
   if (!config) return null;
+
+  const needsTest = config.enableLlmEnhancement
+    && (!config.llmConnectionTested || computeLlmConfigHash(config) !== config.llmConfigHash);
 
   if (!setupComplete) {
     return (
@@ -115,6 +120,11 @@ export function LlmPanel() {
 
     try {
       const result = await window.voxApi.llm.test();
+      const freshConfig = await window.voxApi.config.load();
+      updateConfig({
+        llmConnectionTested: freshConfig.llmConnectionTested,
+        llmConfigHash: freshConfig.llmConfigHash,
+      });
       if (result.ok) {
         setTestStatus({ text: t("llm.connectionSuccessful"), type: "success" });
       } else {
@@ -124,6 +134,7 @@ export function LlmPanel() {
       setTestStatus({ text: t("llm.connectionFailed", { error: err instanceof Error ? err.message : String(err) }), type: "error" });
     } finally {
       setTesting(false);
+      testSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   };
 
@@ -173,6 +184,12 @@ export function LlmPanel() {
 
         {config.enableLlmEnhancement && (
           <>
+            {needsTest && (
+              <div className={card.warningBannerInline}>
+                {t("llm.connectionTestRequired")}
+              </div>
+            )}
+
             <div className={form.inlineTabs}>
               <button
                 onClick={() => setActiveTab("provider")}
@@ -228,7 +245,7 @@ export function LlmPanel() {
                   <FoundryFields />
                 )}
 
-                <div className={form.testSection}>
+                <div className={form.testSection} ref={testSectionRef}>
                   <button
                     onClick={handleTest}
                     disabled={testing}

@@ -79,6 +79,7 @@
   "llm.testingConnection": "Testing connection...",
   "llm.connectionSuccessful": "Connection successful",
   "llm.connectionFailed": "Connection failed: {error}",
+  "llm.connectionTestRequired": "You need to test the connection before AI enhancement can be used",
   "llm.customInstructions": "Custom Instructions",
   "llm.customInstructionsHint": "Your custom instructions will be added on top of Vox's default behavior (fix grammar, remove filler words, preserve meaning). Leave empty to use only the defaults.",
   "llm.customInstructionsPlaceholder": "Add additional instructions for the AI...",

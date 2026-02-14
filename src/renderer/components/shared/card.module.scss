@@ -73,3 +73,8 @@
     flex-shrink: 0;
   }
 }
+
+.warningBannerInline {
+  composes: warningBanner;
+  margin: var(--spacing-4) calc(-1 * var(--spacing-6)) var(--spacing-4);
+}

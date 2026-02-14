@@ -77,18 +77,25 @@ export function registerIpcHandlers(
 
   ipcMain.handle("llm:test", async () => {
     const { createLlmProvider } = await import("./llm/factory");
+    const { computeLlmConfigHash } = await import("../shared/llm-config-hash");
     const config = configManager.load();
 
-    // If LLM enhancement is disabled, skip test
-    if (!config.enableLlmEnhancement) {
-      return { ok: true };
-    }
-
     try {
-      const llm = createLlmProvider(config);
+      const llm = createLlmProvider(config, { forTest: true });
       await llm.correct("Hello");
+
+      config.llmConnectionTested = true;
+      config.llmConfigHash = computeLlmConfigHash(config);
+      configManager.save(config);
+      onConfigChange?.();
+
       return { ok: true };
     } catch (err: unknown) {
+      config.llmConnectionTested = false;
+      config.llmConfigHash = "";
+      configManager.save(config);
+      onConfigChange?.();
+
       return { ok: false, error: err instanceof Error ? err.message : String(err) };
     }
   });

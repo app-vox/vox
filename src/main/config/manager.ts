@@ -8,7 +8,7 @@ export interface SecretStore {
   decrypt(cipherText: string): string;
 }
 
-const SENSITIVE_FIELDS: (keyof LlmConfig)[] = ["apiKey", "secretAccessKey", "accessKeyId", "anthropicApiKey", "customToken"];
+const SENSITIVE_FIELDS: (keyof LlmConfig)[] = ["apiKey", "secretAccessKey", "accessKeyId", "openaiApiKey", "anthropicApiKey", "customToken"];
 
 export class ConfigManager {
   private readonly configPath: string;
@@ -42,6 +42,8 @@ export class ConfigManager {
         recordingAudioCue: saved.recordingAudioCue ?? defaults.recordingAudioCue,
         recordingStopAudioCue: saved.recordingStopAudioCue ?? defaults.recordingStopAudioCue,
         errorAudioCue: saved.errorAudioCue ?? defaults.errorAudioCue,
+        llmConnectionTested: saved.llmConnectionTested ?? defaults.llmConnectionTested,
+        llmConfigHash: saved.llmConfigHash ?? defaults.llmConfigHash,
       };
 
       for (const field of SENSITIVE_FIELDS) {

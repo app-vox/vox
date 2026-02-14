@@ -41,6 +41,7 @@ export function GeneralPanel() {
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const setupComplete = useConfigStore((s) => s.setupComplete);
+  const loading = useConfigStore((s) => s.loading);
   const setActiveTab = useConfigStore((s) => s.setActiveTab);
   const triggerToast = useSaveToast((s) => s.trigger);
   const { status: permissionStatus } = usePermissions();
@@ -81,7 +82,7 @@ export function GeneralPanel() {
 
   const isDevMode = import.meta.env.DEV;
 
-  const needsPermissions = setupComplete && (permissionStatus?.accessibility !== true || permissionStatus?.microphone !== "granted");
+  const needsPermissions = !loading && setupComplete && permissionStatus !== null && (permissionStatus.accessibility !== true || permissionStatus.microphone !== "granted");
 
   if (!config) return null;
 
@@ -108,7 +109,7 @@ export function GeneralPanel() {
     <>
       <OfflineBanner />
 
-      {!setupComplete && (
+      {!loading && !setupComplete && (
         <div className={`${card.card} ${styles.setupBanner}`}>
           <div className={card.body}>
             <div className={styles.setupContent}>

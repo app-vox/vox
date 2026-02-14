@@ -79,6 +79,7 @@
   "llm.testingConnection": "Verbindung wird getestet...",
   "llm.connectionSuccessful": "Verbindung erfolgreich",
   "llm.connectionFailed": "Verbindung fehlgeschlagen: {error}",
+  "llm.connectionTestRequired": "Testen Sie die Verbindung, bevor Sie die KI-Verbesserung verwenden",
   "llm.customInstructions": "Benutzerdefinierte Anweisungen",
   "llm.customInstructionsHint": "Ihre benutzerdefinierten Anweisungen werden zum Standardverhalten von Vox hinzugefügt (Grammatik korrigieren, Füllwörter entfernen, Bedeutung beibehalten). Leer lassen, um nur die Standardeinstellungen zu verwenden.",
   "llm.customInstructionsPlaceholder": "Zusätzliche Anweisungen für die KI hinzufügen...",

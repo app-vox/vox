@@ -61,6 +61,8 @@ export interface VoxConfig {
   shortcuts: ShortcutsConfig;
   theme: ThemeMode;
   enableLlmEnhancement: boolean;
+  llmConnectionTested: boolean;
+  llmConfigHash: string;
   customPrompt: string;
   launchAtLogin: boolean;
   dictionary: string[];
@@ -102,6 +104,8 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     },
     theme: "system",
     enableLlmEnhancement: false,
+    llmConnectionTested: false,
+    llmConfigHash: "",
     customPrompt: "",
     launchAtLogin: isProduction,
     dictionary: [],

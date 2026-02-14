@@ -79,6 +79,7 @@
   "llm.testingConnection": "Probando conexión...",
   "llm.connectionSuccessful": "Conexión exitosa",
   "llm.connectionFailed": "Conexión fallida: {error}",
+  "llm.connectionTestRequired": "Debe probar la conexión antes de usar la mejora con IA",
   "llm.customInstructions": "Instrucciones Personalizadas",
   "llm.customInstructionsHint": "Tus instrucciones personalizadas se añadirán al comportamiento predeterminado de Vox (corregir gramática, eliminar muletillas, preservar significado). Déjalo vacío para usar solo los valores predeterminados.",
   "llm.customInstructionsPlaceholder": "Añade instrucciones adicionales para la IA...",
