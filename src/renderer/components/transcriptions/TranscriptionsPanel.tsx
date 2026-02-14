@@ -10,6 +10,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "../../../shared/icons";
+import { CustomSelect } from "../ui/CustomSelect";
 import card from "../shared/card.module.scss";
 import styles from "./TranscriptionsPanel.module.scss";
 
@@ -178,7 +179,6 @@ export function TranscriptionsPanel() {
                         </div>
                       </div>
                       <div className={styles.entryActions}>
-                        <CopyButton text={entry.text} t={t} />
                         <button
                           className={styles.deleteButton}
                           onClick={() => deleteEntry(entry.id)}
@@ -186,6 +186,7 @@ export function TranscriptionsPanel() {
                         >
                           <TrashAltIcon width={14} height={14} />
                         </button>
+                        <CopyButton text={entry.text} t={t} />
                       </div>
                     </div>
                   ))}
@@ -211,11 +212,17 @@ export function TranscriptionsPanel() {
                 </button>
               </div>
               {/* eslint-disable i18next/no-literal-string */}
-              <select className={styles.pageSizeSelect} value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))}>
-                <option value={10}>10 / page</option>
-                <option value={25}>25 / page</option>
-                <option value={50}>50 / page</option>
-              </select>
+              <div className={styles.pageSizeSelect}>
+                <CustomSelect
+                  value={String(pageSize)}
+                  items={[
+                    { value: "10", label: "10 / page" },
+                    { value: "25", label: "25 / page" },
+                    { value: "50", label: "50 / page" },
+                  ]}
+                  onChange={(value) => setPageSize(Number(value))}
+                />
+              </div>
               {/* eslint-enable i18next/no-literal-string */}
             </div>
           )}

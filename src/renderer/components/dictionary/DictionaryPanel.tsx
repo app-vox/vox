@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useT } from "../../i18n-context";
 import { XIcon, ChevronLeftIcon, ChevronRightIcon } from "../../../shared/icons";
+import { CustomSelect } from "../ui/CustomSelect";
 import card from "../shared/card.module.scss";
 import form from "../shared/forms.module.scss";
 import buttons from "../shared/buttons.module.scss";
@@ -162,11 +163,17 @@ export function DictionaryPanel() {
                   </button>
                 </div>
                 {/* eslint-disable i18next/no-literal-string */}
-                <select className={styles.pageSizeSelect} value={pageSize} onChange={(e) => handlePageSizeChange(Number(e.target.value))}>
-                  <option value={10}>10 / page</option>
-                  <option value={25}>25 / page</option>
-                  <option value={50}>50 / page</option>
-                </select>
+                <div className={styles.pageSizeSelect}>
+                  <CustomSelect
+                    value={String(pageSize)}
+                    items={[
+                      { value: "10", label: "10 / page" },
+                      { value: "25", label: "25 / page" },
+                      { value: "50", label: "50 / page" },
+                    ]}
+                    onChange={(value) => handlePageSizeChange(Number(value))}
+                  />
+                </div>
                 {/* eslint-enable i18next/no-literal-string */}
               </div>
             )}
