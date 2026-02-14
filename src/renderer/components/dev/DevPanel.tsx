@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, type ReactNode } from "react";
+/* eslint-disable i18next/no-literal-string */
+import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import type { UpdateState, ModelInfo } from "../../../preload/index";
 import { useConfigStore } from "../../stores/config-store";
 import { useDevOverrides, type DevOverrides } from "../../stores/dev-overrides-store";
@@ -212,21 +213,25 @@ export function DevPanel() {
     }
   }, []);
 
+  const didMount = useRef(false);
   useEffect(() => {
-    fetchRuntime();
-    fetchModels();
-    window.voxApi.updates.getState().then(setUpdateState);
-    window.voxApi.updates.getVersion().then(setVersion);
-    window.voxApi.i18n.getSystemLocale().then(setSystemLocale);
-    if (!permStatus) refreshPerms();
-  }, [fetchRuntime, fetchModels, permStatus, refreshPerms]);
+    if (didMount.current) return;
+    didMount.current = true;
+    void fetchRuntime();
+    void fetchModels();
+    void window.voxApi.updates.getState().then(setUpdateState);
+    void window.voxApi.updates.getVersion().then(setVersion);
+    void window.voxApi.i18n.getSystemLocale().then(setSystemLocale);
+    if (!permStatus) void refreshPerms();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     return window.voxApi.updates.onStateChanged(setUpdateState);
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(fetchRuntime, 1000);
+    const interval = setInterval(() => void fetchRuntime(), 1000);
     return () => clearInterval(interval);
   }, [fetchRuntime]);
 

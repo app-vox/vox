@@ -228,6 +228,7 @@ export function Sidebar() {
             <div className={styles.iconWrap}>
               <CodeBracketIcon width={16} height={16} />
             </div>
+            {/* eslint-disable-next-line i18next/no-literal-string */}
             {!collapsed && <span className={styles.label}>Dev States</span>}
           </button>
         )}
