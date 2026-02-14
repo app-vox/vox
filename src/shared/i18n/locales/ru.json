@@ -67,7 +67,7 @@
   "llm.setupRequired": "Требуется настройка - Скачайте",
   "llm.setupLocalModel": "локальную модель",
   "llm.setupSuffix": "для включения улучшений ИИ",
-  "llm.learnMore": "Подробнее →",
+  "llm.learnMore": "Подробнее",
   "llm.enableCheckbox": "Улучшать мои транскрипции с помощью ИИ",
   "llm.enableHint": "Когда выключено, вы получите необработанную транскрипцию Whisper. Когда включено, ИИ улучшит ваш текст, исправив грамматику и удалив слова-паразиты.",
   "llm.providerTab": "Провайдер",
@@ -215,5 +215,17 @@
   "tray.transcriptions": "Транскрипции",
   "ui.scrollToTop": "Прокрутить вверх",
   "ui.scrollToBottom": "Прокрутить вниз",
-  "ui.showHide": "Показать/скрыть"
+  "ui.showHide": "Показать/скрыть",
+  "general.setup.title": "Настроить речь",
+  "general.setup.description": "Загрузите модель распознавания речи, чтобы начать использовать Vox для транскрибации.",
+  "general.setup.getStarted": "Начать",
+  "sidebar.ai": "ИИ",
+  "sidebar.words": "Слова",
+  "sidebar.interface": "Интерфейс",
+  "sidebar.expand": "Развернуть боковую панель",
+  "sidebar.collapse": "Свернуть боковую панель",
+  "sidebar.visitWebsite": "Посетить сайт Vox",
+  "sidebar.updateAvailable": "Доступно обновление",
+  "sidebar.updateVox": "Обновить Vox",
+  "history.deleteTranscription": "Удалить транскрипцию"
 }

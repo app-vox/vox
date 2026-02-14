@@ -67,7 +67,7 @@
   "llm.setupRequired": "Configuration requise - Téléchargez un",
   "llm.setupLocalModel": "modèle local",
   "llm.setupSuffix": "d'abord pour activer les améliorations IA",
-  "llm.learnMore": "En savoir plus →",
+  "llm.learnMore": "En savoir plus",
   "llm.enableCheckbox": "Améliorer mes transcriptions avec l'IA",
   "llm.enableHint": "Lorsque désactivé, vous obtiendrez la transcription brute de Whisper. Lorsqu'activé, l'IA améliorera votre texte en corrigeant la grammaire et en supprimant les mots de remplissage.",
   "llm.providerTab": "Fournisseur",
@@ -215,5 +215,17 @@
   "tray.transcriptions": "Transcriptions",
   "ui.scrollToTop": "Défiler vers le haut",
   "ui.scrollToBottom": "Défiler vers le bas",
-  "ui.showHide": "Afficher/masquer"
+  "ui.showHide": "Afficher/masquer",
+  "general.setup.title": "Configurer la parole",
+  "general.setup.description": "Téléchargez un modèle vocal pour commencer à utiliser Vox pour la transcription.",
+  "general.setup.getStarted": "Commencer",
+  "sidebar.ai": "IA",
+  "sidebar.words": "Mots",
+  "sidebar.interface": "Interface",
+  "sidebar.expand": "Développer la barre latérale",
+  "sidebar.collapse": "Réduire la barre latérale",
+  "sidebar.visitWebsite": "Visiter le site Vox",
+  "sidebar.updateAvailable": "Mise à jour disponible",
+  "sidebar.updateVox": "Mettre à jour Vox",
+  "history.deleteTranscription": "Supprimer la transcription"
 }

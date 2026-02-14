@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useT } from "../../i18n-context";
 import card from "../shared/card.module.scss";
@@ -7,7 +7,7 @@ import buttons from "../shared/buttons.module.scss";
 import styles from "./DictionaryPanel.module.scss";
 
 const WHISPER_PROMPT_MAX_CHARS = 896;
-const BASE_PROMPT_OVERHEAD = 84; // WHISPER_PROMPT length (82) + separator ". " (2)
+const BASE_PROMPT_OVERHEAD = 84;
 
 function getWhisperTermBudget(dictionary: string[]): { fits: number; total: number; overLimit: boolean } {
   const total = dictionary.length;
@@ -33,13 +33,22 @@ export function DictionaryPanel() {
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const [inputValue, setInputValue] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(() => Number(localStorage.getItem("vox:dictionary-pageSize")) || 10);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
   if (!config) return null;
 
   const dictionary = config.dictionary ?? [];
   const sorted = [...dictionary].sort((a, b) => a.localeCompare(b));
   const budget = getWhisperTermBudget(dictionary);
+
+  const totalPages = Math.ceil(sorted.length / pageSize);
+  const pageEntries = sorted.slice((page - 1) * pageSize, page * pageSize);
 
   const addTerms = (input: string) => {
     const terms = input
@@ -53,6 +62,7 @@ export function DictionaryPanel() {
     if (newTerms.length > 0) {
       updateConfig({ dictionary: [...dictionary, ...newTerms] });
       saveConfig(true);
+      setPage(1);
     }
     setInputValue("");
   };
@@ -60,6 +70,10 @@ export function DictionaryPanel() {
   const removeTerm = (term: string) => {
     updateConfig({ dictionary: dictionary.filter((t) => t !== term) });
     saveConfig(true);
+    const newTotal = dictionary.length - 1;
+    const newTotalPages = Math.ceil(newTotal / pageSize);
+    if (page > newTotalPages && newTotalPages > 0) setPage(newTotalPages);
+    if (newTotal === 0) setPage(1);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -69,10 +83,10 @@ export function DictionaryPanel() {
     }
   };
 
-  const handleCopyToClipboard = () => {
-    navigator.clipboard.writeText(dictionary.join(", "));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handlePageSizeChange = (size: number) => {
+    localStorage.setItem("vox:dictionary-pageSize", String(size));
+    setPageSize(size);
+    setPage(1);
   };
 
   return (
@@ -93,6 +107,7 @@ export function DictionaryPanel() {
       <div className={card.body}>
         <div className={styles.addRow}>
           <input
+            ref={inputRef}
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
@@ -115,15 +130,9 @@ export function DictionaryPanel() {
           <>
             <div className={styles.listHeader}>
               <span className={styles.count}>{sorted.length === 1 ? t("dictionary.oneEntry") : t("dictionary.entries", { count: sorted.length })}</span>
-              <button
-                onClick={handleCopyToClipboard}
-                className={`${buttons.btn} ${buttons.secondary} ${buttons.sm}`}
-              >
-                {copied ? t("dictionary.copied") : t("dictionary.copyToClipboard")}
-              </button>
             </div>
             <div className={styles.entryList}>
-              {sorted.map((term) => (
+              {pageEntries.map((term) => (
                 <div key={term} className={styles.entry}>
                   <span className={styles.entryText}>{term}</span>
                   <button
@@ -139,6 +148,30 @@ export function DictionaryPanel() {
                 </div>
               ))}
             </div>
+
+            {sorted.length > 0 && (
+              <div className={styles.pagination}>
+                <div className={styles.pageInfo}>
+                  {/* eslint-disable-next-line i18next/no-literal-string */}
+                  {page} / {totalPages || 1}
+                </div>
+                <div className={styles.pageControls}>
+                  <button disabled={page <= 1} onClick={() => setPage(page - 1)}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+                  </button>
+                  <button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                  </button>
+                </div>
+                {/* eslint-disable i18next/no-literal-string */}
+                <select className={styles.pageSizeSelect} value={pageSize} onChange={(e) => handlePageSizeChange(Number(e.target.value))}>
+                  <option value={10}>10 / page</option>
+                  <option value={25}>25 / page</option>
+                  <option value={50}>50 / page</option>
+                </select>
+                {/* eslint-enable i18next/no-literal-string */}
+              </div>
+            )}
           </>
         )}
 

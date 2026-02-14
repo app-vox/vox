@@ -1,6 +1,15 @@
 import { app, BrowserWindow, Menu, nativeTheme, screen } from "electron";
 import * as path from "path";
 
+function setAppMenu(): void {
+  const template: Electron.MenuItemConstructorOptions[] = [
+    { role: "appMenu" },
+    { role: "editMenu" },
+    { role: "windowMenu" },
+  ];
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+}
+
 let homeWindow: BrowserWindow | null = null;
 
 export function openHome(onClosed: () => void, initialTab?: string): void {
@@ -16,8 +25,8 @@ export function openHome(onClosed: () => void, initialTab?: string): void {
   const cursorPoint = screen.getCursorScreenPoint();
   const display = screen.getDisplayNearestPoint(cursorPoint);
 
-  const WINDOW_WIDTH = 700;
-  const WINDOW_HEIGHT = 770;
+  const WINDOW_WIDTH = 900;
+  const WINDOW_HEIGHT = 820;
   const windowWidth = WINDOW_WIDTH;
   const windowHeight = WINDOW_HEIGHT;
   const x = Math.round(display.bounds.x + (display.bounds.width - windowWidth) / 2);
@@ -29,6 +38,8 @@ export function openHome(onClosed: () => void, initialTab?: string): void {
     x,
     y,
     resizable: false,
+    maximizable: false,
+    fullscreenable: false,
     title: "Vox",
     titleBarStyle: "hiddenInset",
     backgroundColor: nativeTheme.shouldUseDarkColors ? "#0a0a0a" : "#ffffff",
@@ -40,6 +51,8 @@ export function openHome(onClosed: () => void, initialTab?: string): void {
       preload: path.join(__dirname, "../preload/index.js"),
     },
   });
+
+  setAppMenu();
 
   if (!app.isPackaged && process.env["ELECTRON_RENDERER_URL"]) {
     homeWindow.loadURL(process.env["ELECTRON_RENDERER_URL"]);

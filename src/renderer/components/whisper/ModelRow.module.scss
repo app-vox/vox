@@ -58,19 +58,25 @@
   }
 }
 
+.nameBlock {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
 .name {
   font-weight: var(--font-weight-medium);
+}
+
+.desc {
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-tertiary);
 }
 
 .technicalName {
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-normal);
   color: var(--color-text-tertiary);
-}
-
-.desc {
-  color: var(--color-text-tertiary);
-  margin-left: var(--spacing-1);
 }
 
 .downloaded {

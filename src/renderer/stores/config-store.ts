@@ -39,13 +39,9 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     // Check setup state
     const setupState = await window.voxApi.setup.check();
 
-    // Always default to General tab
-    const activeTab = "general";
-
     set({
       config,
       loading: false,
-      activeTab,
       setupComplete: setupState.hasAnyModel,
     });
   },

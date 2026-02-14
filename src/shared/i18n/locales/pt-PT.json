@@ -67,7 +67,7 @@
   "llm.setupRequired": "Configuração necessária - Transfira um",
   "llm.setupLocalModel": "modelo local",
   "llm.setupSuffix": "primeiro para ativar melhorias com IA",
-  "llm.learnMore": "Saber mais →",
+  "llm.learnMore": "Saber mais",
   "llm.enableCheckbox": "Melhorar as Minhas Transcrições com IA",
   "llm.enableHint": "Quando desativado, receberá a transcrição bruta do Whisper. Quando ativado, a IA melhorará o seu texto corrigindo gramática e removendo palavras de preenchimento.",
   "llm.providerTab": "Fornecedor",
@@ -215,5 +215,17 @@
   "tray.transcriptions": "Transcrições",
   "ui.scrollToTop": "Deslocar para o topo",
   "ui.scrollToBottom": "Deslocar para o final",
-  "ui.showHide": "Mostrar/ocultar"
+  "ui.showHide": "Mostrar/ocultar",
+  "general.setup.title": "Configurar Fala",
+  "general.setup.description": "Transfira um modelo de fala para começar a usar o Vox para transcrição.",
+  "general.setup.getStarted": "Começar",
+  "sidebar.ai": "IA",
+  "sidebar.words": "Palavras",
+  "sidebar.interface": "Interface",
+  "sidebar.expand": "Expandir barra lateral",
+  "sidebar.collapse": "Recolher barra lateral",
+  "sidebar.visitWebsite": "Visitar site do Vox",
+  "sidebar.updateAvailable": "Atualização disponível",
+  "sidebar.updateVox": "Atualizar Vox",
+  "history.deleteTranscription": "Eliminar transcrição"
 }

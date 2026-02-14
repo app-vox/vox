@@ -28,8 +28,8 @@ export function registerIpcHandlers(
     configManager.save(config);
     nativeTheme.themeSource = config.theme;
 
-    // Apply launch at login setting (macOS only)
-    if (process.platform === "darwin") {
+    // Apply launch at login setting (macOS only, packaged builds only)
+    if (process.platform === "darwin" && app.isPackaged) {
       app.setLoginItemSettings({
         openAtLogin: config.launchAtLogin,
         openAsHidden: false,
@@ -49,15 +49,22 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle("models:download", async (_event, size: string) => {
-    await modelManager.download(size as WhisperModelSize, (downloaded, total) => {
-      _event.sender.send("models:download-progress", { size, downloaded, total });
-    });
+    try {
+      await modelManager.download(size as WhisperModelSize, (downloaded, total) => {
+        _event.sender.send("models:download-progress", { size, downloaded, total });
+      });
 
-    // Auto-select the downloaded model
-    const config = configManager.load();
-    config.whisper.model = size as WhisperModelSize;
-    configManager.save(config);
-    onConfigChange?.();
+      // Auto-select the downloaded model
+      const config = configManager.load();
+      config.whisper.model = size as WhisperModelSize;
+      configManager.save(config);
+      onConfigChange?.();
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        throw new Error("Download cancelled");
+      }
+      throw err;
+    }
   });
 
   ipcMain.handle("models:cancel-download", (_event, size: string) => {
@@ -240,6 +247,10 @@ export function registerIpcHandlers(
 
   ipcMain.handle("history:clear", () => {
     historyManager.clear();
+  });
+
+  ipcMain.handle("history:delete-entry", (_event, id: string) => {
+    historyManager.deleteEntry(id);
   });
 
   ipcMain.handle("clipboard:write", (_event, text: string) => {

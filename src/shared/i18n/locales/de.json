@@ -67,7 +67,7 @@
   "llm.setupRequired": "Einrichtung erforderlich - Laden Sie ein",
   "llm.setupLocalModel": "lokales Modell",
   "llm.setupSuffix": "herunter, um KI-Verbesserungen zu aktivieren",
-  "llm.learnMore": "Mehr erfahren →",
+  "llm.learnMore": "Mehr erfahren",
   "llm.enableCheckbox": "Meine Transkriptionen mit KI verbessern",
   "llm.enableHint": "Wenn deaktiviert, erhalten Sie die rohe Whisper-Transkription. Wenn aktiviert, verbessert die KI Ihren Text durch Grammatikkorrektur und Entfernung von Füllwörtern.",
   "llm.providerTab": "Anbieter",
@@ -215,5 +215,17 @@
   "tray.transcriptions": "Transkriptionen",
   "ui.scrollToTop": "Nach oben scrollen",
   "ui.scrollToBottom": "Nach unten scrollen",
-  "ui.showHide": "Anzeigen/ausblenden"
+  "ui.showHide": "Anzeigen/ausblenden",
+  "general.setup.title": "Sprache konfigurieren",
+  "general.setup.description": "Laden Sie ein Sprachmodell herunter, um Vox für die Transkription zu nutzen.",
+  "general.setup.getStarted": "Loslegen",
+  "sidebar.ai": "KI",
+  "sidebar.words": "Wörter",
+  "sidebar.interface": "Oberfläche",
+  "sidebar.expand": "Seitenleiste erweitern",
+  "sidebar.collapse": "Seitenleiste einklappen",
+  "sidebar.visitWebsite": "Vox-Website besuchen",
+  "sidebar.updateAvailable": "Update verfügbar",
+  "sidebar.updateVox": "Vox aktualisieren",
+  "history.deleteTranscription": "Transkription löschen"
 }

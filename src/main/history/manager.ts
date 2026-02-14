@@ -58,6 +58,11 @@ export class HistoryManager {
     };
   }
 
+  deleteEntry(id: string): void {
+    const entries = this.getAllEntries();
+    this.store.set("entries", entries.filter((e) => e.id !== id));
+  }
+
   clear(): void {
     this.store.set("entries", []);
   }

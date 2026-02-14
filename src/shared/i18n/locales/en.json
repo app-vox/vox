@@ -67,7 +67,7 @@
   "llm.setupRequired": "Setup required - Download a",
   "llm.setupLocalModel": "local model",
   "llm.setupSuffix": "first to enable AI improvements",
-  "llm.learnMore": "Learn more →",
+  "llm.learnMore": "Learn more",
   "llm.enableCheckbox": "Enhance My Transcriptions with AI",
   "llm.enableHint": "When off, you'll get the raw Whisper transcription. When on, AI will enhance your text by fixing grammar and removing filler words.",
   "llm.providerTab": "Provider",
@@ -215,5 +215,17 @@
   "tray.transcriptions": "Transcriptions",
   "ui.scrollToTop": "Scroll to top",
   "ui.scrollToBottom": "Scroll to bottom",
-  "ui.showHide": "Show/hide"
+  "ui.showHide": "Show/hide",
+  "general.setup.title": "Configure Speech",
+  "general.setup.description": "Download a speech model to start using Vox for transcription.",
+  "general.setup.getStarted": "Get started",
+  "sidebar.ai": "AI",
+  "sidebar.words": "Words",
+  "sidebar.interface": "Interface",
+  "sidebar.expand": "Expand sidebar",
+  "sidebar.collapse": "Collapse sidebar",
+  "sidebar.visitWebsite": "Visit Vox website",
+  "sidebar.updateAvailable": "Update available",
+  "sidebar.updateVox": "Update Vox",
+  "history.deleteTranscription": "Delete transcription"
 }

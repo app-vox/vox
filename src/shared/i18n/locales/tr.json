@@ -67,7 +67,7 @@
   "llm.setupRequired": "Kurulum gerekli - Önce bir",
   "llm.setupLocalModel": "yerel model",
   "llm.setupSuffix": "indirerek yapay zeka iyileştirmelerini etkinleştirin",
-  "llm.learnMore": "Daha fazla bilgi →",
+  "llm.learnMore": "Daha fazla bilgi",
   "llm.enableCheckbox": "Yazıya Dökümlerimi Yapay Zeka ile İyileştir",
   "llm.enableHint": "Kapalıyken ham Whisper yazıya dökümünü alırsınız. Açıkken yapay zeka, dilbilgisi düzeltme ve dolgu sözcüklerini kaldırma ile metninizi iyileştirir.",
   "llm.providerTab": "Sağlayıcı",
@@ -215,5 +215,17 @@
   "tray.transcriptions": "Yazıya Dökümler",
   "ui.scrollToTop": "Üste kaydır",
   "ui.scrollToBottom": "Alta kaydır",
-  "ui.showHide": "Göster/gizle"
+  "ui.showHide": "Göster/gizle",
+  "general.setup.title": "Konuşmayı Yapılandır",
+  "general.setup.description": "Transkripsiyon için Vox'u kullanmaya başlamak üzere bir konuşma modeli indirin.",
+  "general.setup.getStarted": "Başla",
+  "sidebar.ai": "YZ",
+  "sidebar.words": "Kelimeler",
+  "sidebar.interface": "Arayüz",
+  "sidebar.expand": "Kenar çubuğunu genişlet",
+  "sidebar.collapse": "Kenar çubuğunu daralt",
+  "sidebar.visitWebsite": "Vox web sitesini ziyaret et",
+  "sidebar.updateAvailable": "Güncelleme mevcut",
+  "sidebar.updateVox": "Vox'u Güncelle",
+  "history.deleteTranscription": "Transkripsiyonu sil"
 }
