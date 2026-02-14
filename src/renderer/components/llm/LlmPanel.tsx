@@ -120,13 +120,13 @@ export function LlmPanel() {
 
     try {
       const result = await window.voxApi.llm.test();
+      const freshConfig = await window.voxApi.config.load();
+      updateConfig({
+        llmConnectionTested: freshConfig.llmConnectionTested,
+        llmConfigHash: freshConfig.llmConfigHash,
+      });
       if (result.ok) {
         setTestStatus({ text: t("llm.connectionSuccessful"), type: "success" });
-        const freshConfig = await window.voxApi.config.load();
-        updateConfig({
-          llmConnectionTested: freshConfig.llmConnectionTested,
-          llmConfigHash: freshConfig.llmConfigHash,
-        });
       } else {
         setTestStatus({ text: t("llm.connectionFailed", { error: result.error ?? "" }), type: "error" });
       }

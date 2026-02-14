@@ -80,10 +80,6 @@ export function registerIpcHandlers(
     const { computeLlmConfigHash } = await import("../shared/llm-config-hash");
     const config = configManager.load();
 
-    if (!config.enableLlmEnhancement) {
-      return { ok: true };
-    }
-
     try {
       const llm = createLlmProvider(config, { forTest: true });
       await llm.correct("Hello");
@@ -95,6 +91,11 @@ export function registerIpcHandlers(
 
       return { ok: true };
     } catch (err: unknown) {
+      config.llmConnectionTested = false;
+      config.llmConfigHash = "";
+      configManager.save(config);
+      onConfigChange?.();
+
       return { ok: false, error: err instanceof Error ? err.message : String(err) };
     }
   });
