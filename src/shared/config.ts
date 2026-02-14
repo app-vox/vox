@@ -8,7 +8,9 @@ export type AudioCueType =
   | "error"
   | "none";
 
-export type LlmProviderType = "foundry" | "bedrock" | "openai" | "deepseek" | "litellm";
+export type LlmProviderType = "foundry" | "bedrock" | "openai" | "deepseek" | "litellm" | "anthropic" | "custom";
+
+export type CustomTokenSendAs = "header" | "body" | "query";
 
 export interface LlmConfig {
   provider: LlmProviderType;
@@ -29,6 +31,17 @@ export interface LlmConfig {
   openaiApiKey: string;
   openaiModel: string;
   openaiEndpoint: string;
+
+  // Anthropic fields
+  anthropicApiKey: string;
+  anthropicModel: string;
+
+  // Custom provider fields
+  customEndpoint: string;
+  customToken: string;
+  customTokenAttr: string;
+  customTokenSendAs: CustomTokenSendAs;
+  customModel: string;
 }
 
 export interface WhisperConfig {
@@ -72,6 +85,13 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
       openaiApiKey: "",
       openaiModel: "gpt-4o",
       openaiEndpoint: "https://api.openai.com",
+      anthropicApiKey: "",
+      anthropicModel: "claude-sonnet-4-20250514",
+      customEndpoint: "",
+      customToken: "",
+      customTokenAttr: "Authorization",
+      customTokenSendAs: "header",
+      customModel: "",
     },
     whisper: {
       model: "small",

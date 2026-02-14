@@ -12,6 +12,7 @@ const TARGET_RATE = 16000;
 export class AudioRecorder {
   private win: BrowserWindow | null = null;
   private recording = false;
+  private starting = false;
   private levelsInterval: ReturnType<typeof setInterval> | null = null;
   onAudioLevels: ((levels: number[]) => void) | null = null;
 
@@ -34,6 +35,7 @@ export class AudioRecorder {
   }
 
   async start(): Promise<void> {
+    this.starting = true;
     const win = await this.ensureWindow();
 
     await win.webContents.executeJavaScript(`
@@ -64,6 +66,7 @@ export class AudioRecorder {
       })()
     `);
 
+    this.starting = false;
     this.recording = true;
 
     // Start audio level polling for waveform visualization
@@ -140,7 +143,7 @@ export class AudioRecorder {
 
   async cancel(): Promise<void> {
     this.stopLevels();
-    if (!this.recording || !this.win || this.win.isDestroyed()) {
+    if ((!this.recording && !this.starting) || !this.win || this.win.isDestroyed()) {
       return;
     }
     try {
@@ -160,6 +163,7 @@ export class AudioRecorder {
       console.error("[Recorder] Error during cancel:", err);
     }
     this.recording = false;
+    this.starting = false;
   }
 
   async playAudioCue(samples: number[], sampleRate?: number): Promise<void> {

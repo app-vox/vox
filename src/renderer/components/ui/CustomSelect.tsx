@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useLayoutEffect } from "react";
+import { useState, useRef, useEffect, useCallback, useLayoutEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDownIcon, PlayIcon } from "../../../shared/icons";
 import styles from "./CustomSelect.module.scss";
@@ -6,6 +6,7 @@ import styles from "./CustomSelect.module.scss";
 export interface SelectOption {
   value: string;
   label: string;
+  suffix?: ReactNode;
 }
 
 export interface SelectDivider {
@@ -209,6 +210,9 @@ export function CustomSelect({ value, items, onChange, onPreview, id }: CustomSe
                 >
                   {item.label}
                 </button>
+                {item.suffix && (
+                  <span className={styles.suffix}>{item.suffix}</span>
+                )}
               </div>
             );
           })}

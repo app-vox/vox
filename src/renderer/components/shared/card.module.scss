@@ -58,16 +58,18 @@
 }
 
 .warningBanner {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
   padding: var(--spacing-3) var(--spacing-6);
-  background-color: #fffbeb;
-  color: #92400e;
+  background-color: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  color: var(--color-accent);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  border-top: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
+  border-top: 1px solid color-mix(in srgb, var(--color-accent) 20%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-accent) 20%, transparent);
 
-  :global(.dark) & {
-    background-color: #422006;
-    color: #fbbf24;
+  svg {
+    flex-shrink: 0;
   }
 }

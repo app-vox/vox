@@ -6,7 +6,7 @@ import { useT } from "../../i18n-context";
 import { ModelRow } from "./ModelRow";
 import { StatusBox } from "../ui/StatusBox";
 import { OfflineBanner } from "../ui/OfflineBanner";
-import { RecordIcon } from "../../../shared/icons";
+import { RecordIcon, AlertTriangleIcon } from "../../../shared/icons";
 import { recordAudio } from "../../utils/record-audio";
 import type { ModelInfo } from "../../../preload/index";
 import type { WhisperModelSize } from "../../../shared/config";
@@ -112,8 +112,7 @@ export function WhisperPanel() {
       </div>
       {!setupComplete && (
         <div className={card.warningBanner}>
-          {/* eslint-disable-next-line i18next/no-literal-string */}
-          <span style={{ marginRight: "8px" }}>&#x26A0;&#xFE0F;</span>
+          <AlertTriangleIcon width={14} height={14} />
           {t("whisper.downloadPrompt")}
         </div>
       )}

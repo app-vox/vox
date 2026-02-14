@@ -5,6 +5,7 @@ function setAppMenu(): void {
   const template: Electron.MenuItemConstructorOptions[] = [
     { role: "appMenu" },
     { role: "editMenu" },
+    ...(!app.isPackaged ? [{ role: "viewMenu" as const }] : []),
     { role: "windowMenu" },
   ];
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
