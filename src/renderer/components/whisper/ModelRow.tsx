@@ -25,6 +25,7 @@ export function ModelRow({ model, selected, onSelect, onDelete, downloadDisabled
   const [progress, setProgress] = useState({ downloaded: 0, total: 0 });
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const confirmTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const confirmBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setDownloaded(model.downloaded);
@@ -49,6 +50,18 @@ export function ModelRow({ model, selected, onSelect, onDelete, downloadDisabled
       if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!confirmingDelete) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (confirmBtnRef.current && !confirmBtnRef.current.contains(e.target as Node)) {
+        setConfirmingDelete(false);
+        if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [confirmingDelete]);
 
   const handleDownload = async () => {
     setDownloading(true);
@@ -129,7 +142,7 @@ export function ModelRow({ model, selected, onSelect, onDelete, downloadDisabled
         <div className={styles.actions}>
           <span className={styles.downloaded}>{t("model.downloaded")}</span>
           {confirmingDelete ? (
-            <button onClick={handleDeleteClick} className={styles.confirmDeleteBtn}>
+            <button ref={confirmBtnRef} onClick={handleDeleteClick} className={styles.confirmDeleteBtn}>
               {t("model.confirmDelete")}
             </button>
           ) : (

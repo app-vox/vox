@@ -4,6 +4,8 @@ import { buildSystemPrompt } from "../../shared/constants";
 import { FoundryProvider } from "./foundry";
 import { BedrockProvider } from "./bedrock";
 import { OpenAICompatibleProvider } from "./openai-compatible";
+import { AnthropicProvider } from "./anthropic";
+import { CustomProvider } from "./custom";
 import { NoopProvider } from "./noop";
 
 export function createLlmProvider(config: VoxConfig): LlmProvider {
@@ -40,6 +42,14 @@ export function createLlmProvider(config: VoxConfig): LlmProvider {
         hasCustomPrompt,
       });
 
+    case "anthropic":
+      return new AnthropicProvider({
+        apiKey: config.llm.anthropicApiKey,
+        model: config.llm.anthropicModel,
+        customPrompt: prompt,
+        hasCustomPrompt,
+      });
+
     case "openai":
     case "deepseek":
     case "litellm":
@@ -47,6 +57,17 @@ export function createLlmProvider(config: VoxConfig): LlmProvider {
         endpoint: config.llm.openaiEndpoint,
         apiKey: config.llm.openaiApiKey,
         model: config.llm.openaiModel,
+        customPrompt: prompt,
+        hasCustomPrompt,
+      });
+
+    case "custom":
+      return new CustomProvider({
+        endpoint: config.llm.customEndpoint,
+        token: config.llm.customToken,
+        tokenAttr: config.llm.customTokenAttr,
+        tokenSendAs: config.llm.customTokenSendAs,
+        model: config.llm.customModel,
         customPrompt: prompt,
         hasCustomPrompt,
       });

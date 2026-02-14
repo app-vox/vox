@@ -6,14 +6,37 @@ import { FoundryFields } from "./FoundryFields";
 import { BedrockFields } from "./BedrockFields";
 import { OpenAICompatibleFields } from "./OpenAICompatibleFields";
 import { LiteLLMFields } from "./LiteLLMFields";
+import { AnthropicFields } from "./AnthropicFields";
+import { CustomProviderFields } from "./CustomProviderFields";
 import { StatusBox } from "../ui/StatusBox";
 import { NewDot } from "../ui/NewDot";
 import { CustomSelect } from "../ui/CustomSelect";
-import { ExternalLinkIcon } from "../../../shared/icons";
-import type { LlmProviderType } from "../../../shared/config";
+import { ExternalLinkIcon, CheckCircleIcon, InfoCircleAltIcon, CopyIcon, SparkleIcon } from "../../../shared/icons";
+import type { LlmProviderType, LlmConfig } from "../../../shared/config";
 import card from "../shared/card.module.scss";
 import form from "../shared/forms.module.scss";
 import buttons from "../shared/buttons.module.scss";
+import styles from "./LlmPanel.module.scss";
+
+function isProviderConfigured(provider: LlmProviderType, llm: LlmConfig): boolean {
+  switch (provider) {
+    case "foundry":
+      return !!(llm.endpoint && llm.apiKey && llm.model);
+    case "bedrock":
+      return !!(llm.region && llm.modelId && (llm.profile || (llm.accessKeyId && llm.secretAccessKey)));
+    case "openai":
+    case "deepseek":
+      return !!(llm.openaiApiKey && llm.openaiModel && llm.openaiEndpoint);
+    case "litellm":
+      return !!(llm.openaiEndpoint && llm.openaiModel);
+    case "anthropic":
+      return !!(llm.anthropicApiKey && llm.anthropicModel);
+    case "custom":
+      return !!(llm.customEndpoint && llm.customToken && llm.customTokenAttr);
+    default:
+      return false;
+  }
+}
 
 export function LlmPanel() {
   const t = useT();
@@ -27,6 +50,7 @@ export function LlmPanel() {
   const [activeTab, setActiveTab] = useState<"provider" | "prompt">("provider");
   const [initialPromptValue, setInitialPromptValue] = useState<string | null>(null);
   const [visitedCustomPrompt, setVisitedCustomPrompt] = useState(() => localStorage.getItem("vox:visited-custom-prompt") === "true");
+  const [copiedExample, setCopiedExample] = useState<string | null>(null);
 
   const handlePromptTabClick = useCallback(() => {
     if (!visitedCustomPrompt) {
@@ -48,27 +72,30 @@ export function LlmPanel() {
           </p>
         </div>
         <div className={card.warningBanner}>
-          {t("llm.setupRequired")}{" "}
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              useConfigStore.getState().setActiveTab("whisper");
-            }}
-            style={{ color: "inherit", textDecoration: "underline", cursor: "pointer" }}
-          >
-            {t("llm.setupLocalModel")}
-          </a>
-          {" "}{t("llm.setupSuffix")}
+          <span>
+            {t("llm.setupRequired")}{" "}
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                useConfigStore.getState().setActiveTab("whisper");
+              }}
+              style={{ color: "inherit", textDecoration: "underline", cursor: "pointer" }}
+            >
+              {t("llm.setupLocalModel")}
+            </a>
+            {" "}{t("llm.setupSuffix")}
+          </span>
         </div>
       </div>
     );
   }
 
-  const providerDefaults: Record<string, { openaiEndpoint: string; openaiModel: string }> = {
+  const providerDefaults: Record<string, Record<string, string>> = {
     openai: { openaiEndpoint: "https://api.openai.com", openaiModel: "gpt-4o" },
     deepseek: { openaiEndpoint: "https://api.deepseek.com", openaiModel: "deepseek-chat" },
     litellm: { openaiEndpoint: "http://localhost:4000", openaiModel: "gpt-4o" },
+    anthropic: { anthropicModel: "claude-sonnet-4-20250514" },
   };
 
   const handleProviderChange = (provider: LlmProviderType) => {
@@ -117,22 +144,31 @@ export function LlmPanel() {
         </button>
       </div>
       <div className={card.body}>
-        <div className={form.field}>
-          <label htmlFor="enable-llm-enhancement">
-            <input
-              type="checkbox"
-              id="enable-llm-enhancement"
-              checked={config.enableLlmEnhancement ?? false}
-              onChange={(e) => {
-                updateConfig({ enableLlmEnhancement: e.target.checked });
-                saveConfig(true);
-              }}
-            />
-            <p>{t("llm.enableCheckbox")}</p>
-          </label>
-          <p className={form.hint}>
-            {t("llm.enableHint")}
-          </p>
+        <div
+          className={`${styles.enhanceToggle} ${config.enableLlmEnhancement ? styles.active : ""}`}
+          role="switch"
+          aria-checked={config.enableLlmEnhancement ?? false}
+          tabIndex={0}
+          onClick={() => {
+            updateConfig({ enableLlmEnhancement: !config.enableLlmEnhancement });
+            saveConfig(true);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              updateConfig({ enableLlmEnhancement: !config.enableLlmEnhancement });
+              saveConfig(true);
+            }
+          }}
+        >
+          <div className={styles.enhanceIcon}>
+            <SparkleIcon width={18} height={18} />
+          </div>
+          <div className={styles.enhanceText}>
+            <div className={styles.enhanceTitle}>{t("llm.enableCheckbox")}</div>
+            <div className={styles.enhanceDesc}>{t("llm.enableHint")}</div>
+          </div>
+          <div className={`${styles.toggle} ${config.enableLlmEnhancement ? styles.toggleOn : ""}`} />
         </div>
 
         {config.enableLlmEnhancement && (
@@ -160,13 +196,20 @@ export function LlmPanel() {
                   <CustomSelect
                     id="llm-provider"
                     value={config.llm.provider || "foundry"}
-                    items={[
+                    items={([
                       { value: "foundry", label: "Microsoft Foundry" },
                       { value: "bedrock", label: "AWS Bedrock" },
                       { value: "openai", label: "OpenAI" },
                       { value: "deepseek", label: "DeepSeek" },
+                      { value: "anthropic", label: "Anthropic" },
                       { value: "litellm", label: "LiteLLM" },
-                    ]}
+                      { value: "custom", label: t("llm.custom.label") },
+                    ] as const).map((item) => ({
+                      ...item,
+                      suffix: isProviderConfigured(item.value, config.llm)
+                        ? <CheckCircleIcon width={14} height={14} style={{ color: "var(--color-accent)" }} />
+                        : undefined,
+                    }))}
                     onChange={(value) => handleProviderChange(value as LlmProviderType)}
                   />
                 </div>
@@ -177,6 +220,10 @@ export function LlmPanel() {
                   <OpenAICompatibleFields providerType={config.llm.provider} />
                 ) : config.llm.provider === "bedrock" ? (
                   <BedrockFields />
+                ) : config.llm.provider === "anthropic" ? (
+                  <AnthropicFields />
+                ) : config.llm.provider === "custom" ? (
+                  <CustomProviderFields />
                 ) : (
                   <FoundryFields />
                 )}
@@ -224,18 +271,40 @@ export function LlmPanel() {
                   style={{ resize: "none" }}
                 />
                 <details className={form.exampleDetails}>
-                  {/* eslint-disable-next-line i18next/no-literal-string */}
                   <summary>
-                    💡 {t("llm.exampleInstructions")}
+                    <InfoCircleAltIcon width={13} height={13} />
+                    {t("llm.exampleInstructions")}
                   </summary>
                   <ul>
-                    <li><strong>{t("llm.exampleProfessionalLabel")}</strong> {t("llm.exampleProfessional")}</li>
-                    <li><strong>{t("llm.exampleFormalLabel")}</strong> {t("llm.exampleFormal")}</li>
-                    <li><strong>{t("llm.exampleCasualLabel")}</strong> {t("llm.exampleCasual")}</li>
-                    <li><strong>{t("llm.exampleFunnyLabel")}</strong> {t("llm.exampleFunny")}</li>
-                    <li><strong>{t("llm.exampleEmojisLabel")}</strong> {t("llm.exampleEmojis")}</li>
-                    <li><strong>{t("llm.exampleConciseLabel")}</strong> {t("llm.exampleConcise")}</li>
-                    <li><strong>{t("llm.exampleLanguageLabel")}</strong> {t("llm.exampleLanguage")}</li>
+                    {([
+                      { label: t("llm.exampleProfessionalLabel"), text: t("llm.exampleProfessional"), key: "professional" },
+                      { label: t("llm.exampleFormalLabel"), text: t("llm.exampleFormal"), key: "formal" },
+                      { label: t("llm.exampleCasualLabel"), text: t("llm.exampleCasual"), key: "casual" },
+                      { label: t("llm.exampleFunnyLabel"), text: t("llm.exampleFunny"), key: "funny" },
+                      { label: t("llm.exampleEmojisLabel"), text: t("llm.exampleEmojis"), key: "emojis" },
+                      { label: t("llm.exampleConciseLabel"), text: t("llm.exampleConcise"), key: "concise" },
+                      { label: t("llm.exampleLanguageLabel"), text: t("llm.exampleLanguage"), key: "language" },
+                    ]).map((ex) => (
+                      <li key={ex.key} className={form.exampleItem}>
+                        <span><strong>{ex.label}</strong> {ex.text}</span>
+                        <button
+                          type="button"
+                          className={form.exampleCopyBtn}
+                          title={copiedExample === ex.key ? t("history.copied") : t("history.copy")}
+                          onClick={() => {
+                            const clean = ex.text.replace(/^[""\u201C]|[""\u201D]$/g, "");
+                            window.voxApi.clipboard.write(clean);
+                            setCopiedExample(ex.key);
+                            setTimeout(() => setCopiedExample((prev) => prev === ex.key ? null : prev), 1500);
+                          }}
+                        >
+                          {copiedExample === ex.key
+                            ? <CheckCircleIcon width={12} height={12} />
+                            : <CopyIcon width={12} height={12} />
+                          }
+                        </button>
+                      </li>
+                    ))}
                   </ul>
                 </details>
               </div>
