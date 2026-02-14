@@ -123,11 +123,7 @@ body {
 .logo {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
     text-decoration: none;
-    color: var(--text-primary);
-    font-weight: 600;
-    font-size: 1rem;
     transition: opacity var(--transition-fast);
 }
 
@@ -135,20 +131,15 @@ body {
     opacity: 0.7;
 }
 
-.logo img {
+.logo-wordmark {
     display: block;
-    width: 28px;
-    height: 28px;
+    height: 22px;
+    width: auto;
 }
 
 @media (min-width: 768px) {
-    .logo {
-        font-size: var(--font-size-lg);
-    }
-
-    .logo img {
-        width: 32px;
-        height: 32px;
+    .logo-wordmark {
+        height: 26px;
     }
 }
 
