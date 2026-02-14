@@ -102,7 +102,7 @@ export function LlmPanel() {
   return (
     <div className={card.card}>
       <div className={card.header}>
-        <h2>{t("llm.title")}</h2>
+        <h2>{t("llm.title")} <span className={card.titleSuffix}>{t("llm.titleSuffix")}</span></h2>
         <p className={card.description}>
           {t("llm.description")}
         </p>

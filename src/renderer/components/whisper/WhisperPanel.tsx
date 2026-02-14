@@ -107,7 +107,7 @@ export function WhisperPanel() {
   return (
     <div className={card.card}>
       <div className={card.header}>
-        <h2>{t("whisper.title")}</h2>
+        <h2>{t("whisper.title")} <span className={card.titleSuffix}>{t("whisper.titleSuffix")}</span></h2>
         <p className={card.description}>{t("whisper.description")}</p>
       </div>
       {!setupComplete && (

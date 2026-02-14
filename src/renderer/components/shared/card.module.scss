@@ -21,6 +21,11 @@
   }
 }
 
+.titleSuffix {
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-tertiary);
+}
+
 .description {
   font-size: var(--font-size-base);
   color: var(--color-text-secondary);
