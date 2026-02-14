@@ -31,7 +31,8 @@
   "general.about.readyToInstall": "Vox v{version} yüklenmeye hazır",
   "general.about.downloading": "Vox v{version} indiriliyor... {progress}%",
   "general.about.available": "Vox v{version} mevcut",
-  "whisper.title": "Yerel Model (Whisper ile)",
+  "whisper.title": "Yerel Model",
+  "whisper.titleSuffix": "(Whisper ile)",
   "whisper.description": "Yerel konuşma tanıma modelini seçin. Büyük modeller daha doğru ama daha yavaştır.",
   "whisper.downloadPrompt": "Başlamak için aşağıdan bir model indirin",
   "whisper.testButton": "Yerel Modeli Test Et",
@@ -61,6 +62,7 @@
   "model.cancelDownload": "İndirmeyi iptal et",
   "model.deleteModel": "Modeli sil",
   "llm.title": "Yapay Zeka İyileştirme",
+  "llm.titleSuffix": "(LLM ile)",
   "llm.description": "Yazıya dökümlerinizi otomatik olarak dilbilgisi düzeltme, dolgu sözcüklerini kaldırma ve konuşmanızı temizleme ile iyileştirin.",
   "llm.setupTitle": "Yapay Zeka Metin Düzeltme (LLM)",
   "llm.setupDescription": "Yazıya dökümlerinizi otomatik olarak dilbilgisi düzeltme, dolgu sözcüklerini kaldırma ve konuşmanızı temizleme ile iyileştirin.",
@@ -235,5 +237,12 @@
   "general.recordingFeedback.audioCue.beep": "Bip",
   "general.recordingFeedback.audioCue.chime": "Zil",
   "general.recordingFeedback.audioCue.none": "Yok",
-  "indicator.initializing": "Başlatılıyor..."
+  "indicator.initializing": "Başlatılıyor...",
+  "ui.offlineWarning": "Çevrimdışı görünüyorsunuz. Model indirme gibi bazı özellikler çalışmayabilir.",
+  "general.permissions.title": "İzinleri Ver",
+  "general.permissions.description": "Vox'un kayıt yapması ve metin yapıştırması için mikrofon ve erişilebilirlik izinlerine ihtiyacı var.",
+  "general.permissions.action": "İzinleri ayarla",
+  "general.dictionary.title": "Doğruluğu Artır",
+  "general.dictionary.description": "Transkripsiyon doğruluğunu artırmak için sözlüğe isimler, teknik terimler ve jargon ekleyin.",
+  "general.dictionary.action": "Sözlüğü ayarla"
 }

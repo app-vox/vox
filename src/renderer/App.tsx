@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type JSX } from "react";
+import { useEffect, useRef, type JSX } from "react";
 import { useConfigStore } from "./stores/config-store";
 import { SpinnerIcon } from "../shared/icons";
 import { Sidebar } from "./components/layout/Sidebar";
@@ -11,9 +11,7 @@ import { PermissionsPanel } from "./components/permissions/PermissionsPanel";
 import { GeneralPanel } from "./components/general/GeneralPanel";
 import { TranscriptionsPanel } from "./components/transcriptions/TranscriptionsPanel";
 import { DictionaryPanel } from "./components/dictionary/DictionaryPanel";
-import { SaveToast } from "./components/ui/SaveToast";
 import { ScrollButtons } from "./components/ui/ScrollButtons";
-import { useSaveToast } from "./hooks/use-save-toast";
 import { useTheme } from "./hooks/use-theme";
 import { I18nProvider } from "./i18n-context";
 
@@ -33,11 +31,7 @@ export function App() {
   const activeTab = useConfigStore((s) => s.activeTab);
   const loadConfig = useConfigStore((s) => s.loadConfig);
   const theme = useConfigStore((s) => s.config?.theme);
-  const showToast = useSaveToast((s) => s.show);
-  const toastTimestamp = useSaveToast((s) => s.timestamp);
-  const hideToast = useSaveToast((s) => s.hide);
   const contentRef = useRef<HTMLElement>(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useTheme(theme);
 
@@ -49,18 +43,6 @@ export function App() {
     window.voxApi.navigation.onNavigateTab((tab) => {
       useConfigStore.getState().setActiveTab(tab);
     });
-  }, []);
-
-  useEffect(() => {
-    const handleBlur = () => {
-      if (showToast) hideToast();
-    };
-    window.addEventListener("blur", handleBlur);
-    return () => window.removeEventListener("blur", handleBlur);
-  }, [showToast, hideToast]);
-
-  const handleCollapseChange = useCallback((collapsed: boolean) => {
-    setSidebarCollapsed(collapsed);
   }, []);
 
   if (loading) {
@@ -76,13 +58,12 @@ export function App() {
   return (
     <I18nProvider>
       <div className="flex h-full">
-        <Sidebar onCollapseChange={handleCollapseChange} />
+        <Sidebar />
         <div className="flex flex-col flex-1 min-w-0">
           <Titlebar />
           <main className="content" ref={contentRef}>
             <Panel />
           </main>
-          <SaveToast show={showToast} timestamp={toastTimestamp} onHide={hideToast} sidebarCollapsed={sidebarCollapsed} />
           <ScrollButtons containerRef={contentRef} />
         </div>
       </div>

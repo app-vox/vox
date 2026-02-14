@@ -13,6 +13,8 @@ interface ConfigState {
   loading: boolean;
   activeTab: string;
   setupComplete: boolean;
+  _hasSavedTab: boolean;
+  _hasUserNavigated: boolean;
   setActiveTab: (tab: string) => void;
   loadConfig: () => Promise<void>;
   updateConfig: (partial: Partial<VoxConfig>) => void;
@@ -20,14 +22,18 @@ interface ConfigState {
   checkSetup: () => Promise<void>;
 }
 
+const _savedTab = typeof window !== "undefined" ? migrateActiveTab(localStorage.getItem("vox:activeTab")) : null;
+
 export const useConfigStore = create<ConfigState>((set, get) => ({
   config: null,
   loading: true,
-  activeTab: typeof window !== "undefined" ? (migrateActiveTab(localStorage.getItem("vox:activeTab")) || "transcriptions") : "transcriptions",
+  activeTab: _savedTab || "general",
   setupComplete: false,
+  _hasSavedTab: _savedTab !== null,
+  _hasUserNavigated: false,
 
   setActiveTab: (tab) => {
-    set({ activeTab: tab });
+    set({ activeTab: tab, _hasUserNavigated: true });
     if (typeof window !== "undefined") {
       localStorage.setItem("vox:activeTab", tab);
     }
@@ -37,14 +43,20 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     set({ loading: true });
     const config = await window.voxApi.config.load();
 
-    // Check setup state
     const setupState = await window.voxApi.setup.check();
+    const { _hasUserNavigated, _hasSavedTab } = get();
 
-    set({
+    const updates: Partial<ConfigState> = {
       config,
       loading: false,
       setupComplete: setupState.hasAnyModel,
-    });
+    };
+
+    if (!_hasUserNavigated && !_hasSavedTab) {
+      updates.activeTab = setupState.hasAnyModel ? "transcriptions" : "general";
+    }
+
+    set(updates as ConfigState);
   },
 
   updateConfig: (partial) => {

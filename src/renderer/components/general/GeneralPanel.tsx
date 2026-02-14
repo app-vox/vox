@@ -1,11 +1,13 @@
 import { type ReactNode } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
+import { usePermissions } from "../../hooks/use-permissions";
 import { useT } from "../../i18n-context";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
-import { SunIcon, MoonIcon, MonitorIcon, MicIcon } from "../../../shared/icons";
+import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, BookIcon } from "../../../shared/icons";
 import type { ThemeMode, SupportedLanguage, AudioCueType } from "../../../shared/config";
 import { generateCueSamples } from "../../../shared/audio-cue";
+import { OfflineBanner } from "../ui/OfflineBanner";
 import card from "../shared/card.module.scss";
 import buttons from "../shared/buttons.module.scss";
 import styles from "./GeneralPanel.module.scss";
@@ -37,6 +39,7 @@ export function GeneralPanel() {
   const setupComplete = useConfigStore((s) => s.setupComplete);
   const setActiveTab = useConfigStore((s) => s.setActiveTab);
   const triggerToast = useSaveToast((s) => s.trigger);
+  const { status: permissionStatus } = usePermissions();
 
   const themeLabels: Record<ThemeMode, string> = {
     light: t("general.theme.light"),
@@ -53,6 +56,10 @@ export function GeneralPanel() {
   ];
 
   const isDevMode = import.meta.env.DEV;
+
+  const needsPermissions = setupComplete && (permissionStatus?.accessibility !== true || permissionStatus?.microphone !== "granted");
+  const permissionsGranted = permissionStatus?.accessibility === true && permissionStatus?.microphone === "granted";
+  const dictionaryEmpty = setupComplete && permissionsGranted && (config?.dictionary ?? []).length === 0;
 
   if (!config) return null;
 
@@ -89,6 +96,8 @@ export function GeneralPanel() {
 
   return (
     <>
+      <OfflineBanner />
+
       {!setupComplete && (
         <div className={`${card.card} ${styles.setupBanner}`}>
           <div className={card.body}>
@@ -105,6 +114,50 @@ export function GeneralPanel() {
                 onClick={() => setActiveTab("whisper")}
               >
                 {t("general.setup.getStarted")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {needsPermissions && (
+        <div className={`${card.card} ${styles.setupBanner}`}>
+          <div className={card.body}>
+            <div className={styles.setupContent}>
+              <div className={styles.setupIcon}>
+                <ShieldIcon width={20} height={20} />
+              </div>
+              <div>
+                <div className={styles.setupTitle}>{t("general.permissions.title")}</div>
+                <div className={styles.setupDesc}>{t("general.permissions.description")}</div>
+              </div>
+              <button
+                className={`${buttons.btn} ${buttons.primary}`}
+                onClick={() => setActiveTab("permissions")}
+              >
+                {t("general.permissions.action")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {dictionaryEmpty && (
+        <div className={`${card.card} ${styles.setupBanner}`}>
+          <div className={card.body}>
+            <div className={styles.setupContent}>
+              <div className={styles.setupIcon}>
+                <BookIcon width={20} height={20} />
+              </div>
+              <div>
+                <div className={styles.setupTitle}>{t("general.dictionary.title")}</div>
+                <div className={styles.setupDesc}>{t("general.dictionary.description")}</div>
+              </div>
+              <button
+                className={`${buttons.btn} ${buttons.primary}`}
+                onClick={() => setActiveTab("dictionary")}
+              >
+                {t("general.dictionary.action")}
               </button>
             </div>
           </div>

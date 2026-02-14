@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
+import { useOnlineStatus } from "../../hooks/use-online-status";
 import { useT } from "../../i18n-context";
 import { ModelRow } from "./ModelRow";
 import { StatusBox } from "../ui/StatusBox";
+import { OfflineBanner } from "../ui/OfflineBanner";
 import { RecordIcon } from "../../../shared/icons";
 import { recordAudio } from "../../utils/record-audio";
 import type { ModelInfo } from "../../../preload/index";
@@ -14,6 +16,7 @@ import form from "../shared/forms.module.scss";
 
 export function WhisperPanel() {
   const t = useT();
+  const online = useOnlineStatus();
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
@@ -104,7 +107,7 @@ export function WhisperPanel() {
   return (
     <div className={card.card}>
       <div className={card.header}>
-        <h2>{t("whisper.title")}</h2>
+        <h2>{t("whisper.title")} <span className={card.titleSuffix}>{t("whisper.titleSuffix")}</span></h2>
         <p className={card.description}>{t("whisper.description")}</p>
       </div>
       {!setupComplete && (
@@ -115,6 +118,7 @@ export function WhisperPanel() {
         </div>
       )}
       <div className={card.body}>
+        <OfflineBanner />
         <div>
           {models.map((model) => (
             <ModelRow
@@ -123,6 +127,7 @@ export function WhisperPanel() {
               selected={model.size === config.whisper.model}
               onSelect={handleSelect}
               onDelete={refreshModels}
+              downloadDisabled={!online}
             />
           ))}
         </div>

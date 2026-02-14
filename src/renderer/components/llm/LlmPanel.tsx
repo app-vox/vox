@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useDebouncedSave } from "../../hooks/use-debounced-save";
 import { useT } from "../../i18n-context";
@@ -7,6 +7,7 @@ import { BedrockFields } from "./BedrockFields";
 import { OpenAICompatibleFields } from "./OpenAICompatibleFields";
 import { LiteLLMFields } from "./LiteLLMFields";
 import { StatusBox } from "../ui/StatusBox";
+import { NewDot } from "../ui/NewDot";
 import { ExternalLinkIcon } from "../../../shared/icons";
 import type { LlmProviderType } from "../../../shared/config";
 import card from "../shared/card.module.scss";
@@ -24,6 +25,15 @@ export function LlmPanel() {
   const [testStatus, setTestStatus] = useState<{ text: string; type: "info" | "success" | "error" }>({ text: "", type: "info" });
   const [activeTab, setActiveTab] = useState<"provider" | "prompt">("provider");
   const [initialPromptValue, setInitialPromptValue] = useState<string | null>(null);
+  const [visitedCustomPrompt, setVisitedCustomPrompt] = useState(() => localStorage.getItem("vox:visited-custom-prompt") === "true");
+
+  const handlePromptTabClick = useCallback(() => {
+    if (!visitedCustomPrompt) {
+      setVisitedCustomPrompt(true);
+      localStorage.setItem("vox:visited-custom-prompt", "true");
+    }
+    setActiveTab("prompt");
+  }, [visitedCustomPrompt]);
 
   if (!config) return null;
 
@@ -92,7 +102,7 @@ export function LlmPanel() {
   return (
     <div className={card.card}>
       <div className={card.header}>
-        <h2>{t("llm.title")}</h2>
+        <h2>{t("llm.title")} <span className={card.titleSuffix}>{t("llm.titleSuffix")}</span></h2>
         <p className={card.description}>
           {t("llm.description")}
         </p>
@@ -134,10 +144,11 @@ export function LlmPanel() {
                 {t("llm.providerTab")}
               </button>
               <button
-                onClick={() => setActiveTab("prompt")}
+                onClick={handlePromptTabClick}
                 className={`${form.inlineTab} ${activeTab === "prompt" ? form.active : ""}`}
               >
                 {t("llm.customPromptTab")}
+                {!visitedCustomPrompt && <NewDot />}
               </button>
             </div>
 

@@ -31,7 +31,8 @@
   "general.about.readyToInstall": "Vox v{version} è pronto per l'installazione",
   "general.about.downloading": "Download di Vox v{version}... {progress}%",
   "general.about.available": "Vox v{version} è disponibile",
-  "whisper.title": "Modello locale (con Whisper)",
+  "whisper.title": "Modello locale",
+  "whisper.titleSuffix": "(con Whisper)",
   "whisper.description": "Seleziona il modello locale di riconoscimento vocale. I modelli più grandi sono più precisi ma più lenti.",
   "whisper.downloadPrompt": "Scarica un modello qui sotto per iniziare",
   "whisper.testButton": "Testa modello locale",
@@ -61,6 +62,7 @@
   "model.cancelDownload": "Annulla download",
   "model.deleteModel": "Elimina modello",
   "llm.title": "Miglioramento IA",
+  "llm.titleSuffix": "(con LLM)",
   "llm.description": "Migliora le tue trascrizioni correggendo automaticamente la grammatica, rimuovendo le parole di riempimento e ripulendo il tuo discorso.",
   "llm.setupTitle": "Correzione testo con IA (LLM)",
   "llm.setupDescription": "Migliora le tue trascrizioni correggendo automaticamente la grammatica, rimuovendo le parole di riempimento e ripulendo il tuo discorso.",
@@ -235,5 +237,12 @@
   "general.recordingFeedback.audioCue.beep": "Bip",
   "general.recordingFeedback.audioCue.chime": "Campanello",
   "general.recordingFeedback.audioCue.none": "Nessuno",
-  "indicator.initializing": "Avvio..."
+  "indicator.initializing": "Avvio...",
+  "ui.offlineWarning": "Sembra che tu sia offline. Alcune funzionalità come il download dei modelli potrebbero non funzionare.",
+  "general.permissions.title": "Concedi Permessi",
+  "general.permissions.description": "Vox ha bisogno dei permessi per microfono e accessibilità per registrare e incollare testo.",
+  "general.permissions.action": "Configura permessi",
+  "general.dictionary.title": "Migliora la Precisione",
+  "general.dictionary.description": "Aggiungi nomi, termini tecnici e gergo al dizionario per migliorare la precisione della trascrizione.",
+  "general.dictionary.action": "Configura dizionario"
 }

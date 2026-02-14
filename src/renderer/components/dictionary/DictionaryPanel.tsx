@@ -129,9 +129,6 @@ export function DictionaryPanel() {
 
         {sorted.length > 0 && (
           <>
-            <div className={styles.listHeader}>
-              <span className={styles.count}>{sorted.length === 1 ? t("dictionary.oneEntry") : t("dictionary.entries", { count: sorted.length })}</span>
-            </div>
             <div className={styles.entryList}>
               {pageEntries.map((term) => (
                 <div key={term} className={styles.entry}>
@@ -146,8 +143,11 @@ export function DictionaryPanel() {
                 </div>
               ))}
             </div>
+            <div className={styles.listHeader}>
+              <span className={styles.count}>{sorted.length === 1 ? t("dictionary.oneEntry") : t("dictionary.entries", { count: sorted.length })}</span>
+            </div>
 
-            {sorted.length > 0 && (
+            {totalPages > 1 && (
               <div className={styles.pagination}>
                 <div className={styles.pageInfo}>
                   {/* eslint-disable-next-line i18next/no-literal-string */}

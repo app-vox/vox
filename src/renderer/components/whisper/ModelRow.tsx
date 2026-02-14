@@ -9,6 +9,7 @@ interface ModelRowProps {
   selected: boolean;
   onSelect: (size: string) => void;
   onDelete?: () => void;
+  downloadDisabled?: boolean;
 }
 
 function formatBytes(bytes: number): string {
@@ -17,7 +18,7 @@ function formatBytes(bytes: number): string {
   return `${(bytes / 1_000_000_000).toFixed(1)} GB`;
 }
 
-export function ModelRow({ model, selected, onSelect, onDelete }: ModelRowProps) {
+export function ModelRow({ model, selected, onSelect, onDelete, downloadDisabled }: ModelRowProps) {
   const t = useT();
   const [downloading, setDownloading] = useState(false);
   const [downloaded, setDownloaded] = useState(model.downloaded);
@@ -144,7 +145,7 @@ export function ModelRow({ model, selected, onSelect, onDelete }: ModelRowProps)
       ) : (
         <button
           onClick={handleDownload}
-          disabled={downloading}
+          disabled={downloadDisabled}
           className={styles.downloadBtn}
         >
           {t("model.download")}

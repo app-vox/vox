@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import type { UpdateState } from "../../../preload/index";
 import { useConfigStore } from "../../stores/config-store";
 import { usePermissions } from "../../hooks/use-permissions";
@@ -18,6 +18,7 @@ import {
   AlertLinesIcon,
 } from "../../../shared/icons";
 import { WarningBadge } from "../ui/WarningBadge";
+import { NewDot } from "../ui/NewDot";
 import styles from "./Sidebar.module.scss";
 
 const VOX_WEBSITE_URL = "https://app-vox.github.io/vox/";
@@ -73,22 +74,29 @@ const CATEGORY_DEFS: NavCategoryDef[] = [
   },
 ];
 
-interface SidebarProps {
-  onCollapseChange?: (collapsed: boolean) => void;
-}
-
 const SIDEBAR_COLLAPSED_KEY = "vox:sidebar-collapsed";
 
-export function Sidebar({ onCollapseChange }: SidebarProps) {
+const VISITED_DICTIONARY_KEY = "vox:visited-dictionary";
+
+export function Sidebar() {
   const t = useT();
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true");
   const [logoSrc, setLogoSrc] = useState("");
   const [updateState, setUpdateState] = useState<UpdateState | null>(null);
+  const [visitedDictionary, setVisitedDictionary] = useState(() => localStorage.getItem(VISITED_DICTIONARY_KEY) === "true");
   const activeTab = useConfigStore((s) => s.activeTab);
   const setActiveTab = useConfigStore((s) => s.setActiveTab);
   const setupComplete = useConfigStore((s) => s.setupComplete);
   const config = useConfigStore((s) => s.config);
   const { status: permissionStatus } = usePermissions();
+
+  const handleTabClick = useCallback((id: string) => {
+    if (id === "dictionary" && !visitedDictionary) {
+      setVisitedDictionary(true);
+      localStorage.setItem(VISITED_DICTIONARY_KEY, "true");
+    }
+    setActiveTab(id);
+  }, [setActiveTab, visitedDictionary]);
 
   const itemLabels: Record<string, string> = {
     general: t("tabs.general"),
@@ -104,11 +112,6 @@ export function Sidebar({ onCollapseChange }: SidebarProps) {
     label: cat.labelKey ? t(cat.labelKey) : undefined,
     items: cat.items.map((item) => ({ ...item, label: itemLabels[item.id] ?? item.id })),
   }));
-
-  useEffect(() => {
-    onCollapseChange?.(collapsed);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     window.voxApi.resources.dataUrl("trayIcon@8x.png").then(setLogoSrc);
@@ -133,11 +136,13 @@ export function Sidebar({ onCollapseChange }: SidebarProps) {
     return permissionStatus?.accessibility !== true || permissionStatus?.microphone !== "granted";
   };
 
+  const showDictionaryDot = !visitedDictionary && setupComplete;
+
   const renderItem = (item: NavItem) => (
     <button
       key={item.id}
       className={`${styles.navItem} ${activeTab === item.id ? styles.navItemActive : ""}`}
-      onClick={() => setActiveTab(item.id)}
+      onClick={() => handleTabClick(item.id)}
       title={collapsed ? item.label : undefined}
     >
       <div className={styles.iconWrap}>
@@ -149,6 +154,7 @@ export function Sidebar({ onCollapseChange }: SidebarProps) {
       {!collapsed && (
         <span className={styles.label}>
           {item.label}
+          {item.id === "dictionary" && showDictionaryDot && <NewDot />}
           <WarningBadge show={(item.requiresModel === true && !setupComplete) || (item.requiresPermissions === true && needsPermissions())} />
         </span>
       )}
@@ -175,7 +181,6 @@ export function Sidebar({ onCollapseChange }: SidebarProps) {
             setCollapsed((v) => {
               const next = !v;
               localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next));
-              onCollapseChange?.(next);
               return next;
             });
           }}
@@ -188,6 +193,7 @@ export function Sidebar({ onCollapseChange }: SidebarProps) {
       <nav className={styles.nav}>
         {categories.map((cat, i) => (
           <div key={cat.label ?? i} className={styles.category}>
+            {!cat.label && i > 0 && <div className={styles.divider} />}
             {cat.label && !collapsed && (
               <div className={styles.categoryLabel}>{cat.label}</div>
             )}

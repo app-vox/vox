@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import type { UpdateState } from "../../../preload/index";
 import { useConfigStore } from "../../stores/config-store";
+import { useSaveToast } from "../../hooks/use-save-toast";
 import { useT } from "../../i18n-context";
+import { GearIcon } from "../../../shared/icons";
+import { SaveToast } from "../ui/SaveToast";
 import styles from "./Titlebar.module.scss";
 
 const INFO_ICON = (
@@ -24,6 +27,9 @@ export function Titlebar() {
   const t = useT();
   const activeTab = useConfigStore((s) => s.activeTab);
   const setActiveTab = useConfigStore((s) => s.setActiveTab);
+  const showToast = useSaveToast((s) => s.show);
+  const toastTimestamp = useSaveToast((s) => s.timestamp);
+  const hideToast = useSaveToast((s) => s.hide);
   const [updateState, setUpdateState] = useState<UpdateState | null>(null);
 
   useEffect(() => {
@@ -31,6 +37,14 @@ export function Titlebar() {
     const unsub = window.voxApi.updates.onStateChanged(setUpdateState);
     return unsub;
   }, []);
+
+  useEffect(() => {
+    const handleBlur = () => {
+      if (showToast) hideToast();
+    };
+    window.addEventListener("blur", handleBlur);
+    return () => window.removeEventListener("blur", handleBlur);
+  }, [showToast, hideToast]);
 
   const isDevMode = import.meta.env.DEV;
   const status = updateState?.status ?? "idle";
@@ -75,6 +89,8 @@ export function Titlebar() {
 
   return (
     <div className={styles.titlebar}>
+      <div className={styles.spacer} />
+      <SaveToast show={showToast} timestamp={toastTimestamp} onHide={hideToast} />
       {renderUpdateButton()}
       <button
         className={`${styles.actionBtn} ${activeTab === "about" ? styles.actionBtnActive : ""}`}
@@ -82,6 +98,13 @@ export function Titlebar() {
         title={t("general.about.title")}
       >
         {INFO_ICON}
+      </button>
+      <button
+        className={`${styles.actionBtn} ${activeTab === "general" ? styles.actionBtnActive : ""}`}
+        onClick={() => setActiveTab("general")}
+        title={t("tabs.general")}
+      >
+        <GearIcon width={18} height={18} />
       </button>
     </div>
   );

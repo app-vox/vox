@@ -31,7 +31,8 @@
   "general.about.readyToInstall": "Vox v{version} está listo para instalar",
   "general.about.downloading": "Descargando Vox v{version}... {progress}%",
   "general.about.available": "Vox v{version} está disponible",
-  "whisper.title": "Modelo Local (con Whisper)",
+  "whisper.title": "Modelo Local",
+  "whisper.titleSuffix": "(con Whisper)",
   "whisper.description": "Selecciona el modelo local de reconocimiento de voz. Los modelos más grandes son más precisos pero más lentos.",
   "whisper.downloadPrompt": "Descarga un modelo a continuación para comenzar",
   "whisper.testButton": "Probar Modelo Local",
@@ -61,6 +62,7 @@
   "model.cancelDownload": "Cancelar descarga",
   "model.deleteModel": "Eliminar modelo",
   "llm.title": "Mejora con IA",
+  "llm.titleSuffix": "(con LLM)",
   "llm.description": "Mejora tus transcripciones corrigiendo automáticamente la gramática, eliminando muletillas y limpiando tu discurso.",
   "llm.setupTitle": "Corrección de Texto con IA (LLM)",
   "llm.setupDescription": "Mejora tus transcripciones corrigiendo automáticamente la gramática, eliminando muletillas y limpiando tu discurso.",
@@ -235,5 +237,12 @@
   "general.recordingFeedback.audioCue.beep": "Pitido",
   "general.recordingFeedback.audioCue.chime": "Campanilla",
   "general.recordingFeedback.audioCue.none": "Ninguno",
-  "indicator.initializing": "Iniciando..."
+  "indicator.initializing": "Iniciando...",
+  "ui.offlineWarning": "Parece que estás sin conexión. Algunas funciones como la descarga de modelos podrían no funcionar.",
+  "general.permissions.title": "Otorgar Permisos",
+  "general.permissions.description": "Vox necesita permisos de micrófono y accesibilidad para grabar y pegar texto.",
+  "general.permissions.action": "Configurar permisos",
+  "general.dictionary.title": "Mejorar Precisión",
+  "general.dictionary.description": "Agrega nombres, términos técnicos y jerga al diccionario para mejorar la precisión de la transcripción.",
+  "general.dictionary.action": "Configurar diccionario"
 }

@@ -31,7 +31,8 @@
   "general.about.readyToInstall": "Vox v{version} est prêt à installer",
   "general.about.downloading": "Téléchargement de Vox v{version}... {progress}%",
   "general.about.available": "Vox v{version} est disponible",
-  "whisper.title": "Modèle local (avec Whisper)",
+  "whisper.title": "Modèle local",
+  "whisper.titleSuffix": "(avec Whisper)",
   "whisper.description": "Sélectionnez le modèle local de reconnaissance vocale. Les modèles plus grands sont plus précis mais plus lents.",
   "whisper.downloadPrompt": "Veuillez télécharger un modèle ci-dessous pour commencer",
   "whisper.testButton": "Tester le modèle local",
@@ -61,6 +62,7 @@
   "model.cancelDownload": "Annuler le téléchargement",
   "model.deleteModel": "Supprimer le modèle",
   "llm.title": "Amélioration IA",
+  "llm.titleSuffix": "(avec LLM)",
   "llm.description": "Améliorez vos transcriptions en corrigeant automatiquement la grammaire, en supprimant les mots de remplissage et en nettoyant votre discours.",
   "llm.setupTitle": "Correction de texte par IA (LLM)",
   "llm.setupDescription": "Améliorez vos transcriptions en corrigeant automatiquement la grammaire, en supprimant les mots de remplissage et en nettoyant votre discours.",
@@ -235,5 +237,12 @@
   "general.recordingFeedback.audioCue.beep": "Bip",
   "general.recordingFeedback.audioCue.chime": "Carillon",
   "general.recordingFeedback.audioCue.none": "Aucun",
-  "indicator.initializing": "Démarrage..."
+  "indicator.initializing": "Démarrage...",
+  "ui.offlineWarning": "Vous semblez être hors ligne. Certaines fonctionnalités comme le téléchargement de modèles pourraient ne pas fonctionner.",
+  "general.permissions.title": "Accorder les Permissions",
+  "general.permissions.description": "Vox a besoin des permissions de microphone et d'accessibilité pour enregistrer et coller du texte.",
+  "general.permissions.action": "Configurer les permissions",
+  "general.dictionary.title": "Améliorer la Précision",
+  "general.dictionary.description": "Ajoutez des noms, termes techniques et jargon au dictionnaire pour améliorer la précision de la transcription.",
+  "general.dictionary.action": "Configurer le dictionnaire"
 }

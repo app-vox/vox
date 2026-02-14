@@ -31,7 +31,8 @@
   "general.about.readyToInstall": "Vox v{version} готов к установке",
   "general.about.downloading": "Загрузка Vox v{version}... {progress}%",
   "general.about.available": "Vox v{version} доступен",
-  "whisper.title": "Локальная модель (Whisper)",
+  "whisper.title": "Локальная модель",
+  "whisper.titleSuffix": "(Whisper)",
   "whisper.description": "Выберите локальную модель распознавания речи. Большие модели точнее, но медленнее.",
   "whisper.downloadPrompt": "Скачайте модель ниже, чтобы начать",
   "whisper.testButton": "Тестировать локальную модель",
@@ -61,6 +62,7 @@
   "model.cancelDownload": "Отменить загрузку",
   "model.deleteModel": "Удалить модель",
   "llm.title": "Улучшение ИИ",
+  "llm.titleSuffix": "(LLM)",
   "llm.description": "Улучшайте свои транскрипции автоматической коррекцией грамматики, удалением слов-паразитов и очисткой речи.",
   "llm.setupTitle": "Коррекция текста ИИ (LLM)",
   "llm.setupDescription": "Улучшайте свои транскрипции автоматической коррекцией грамматики, удалением слов-паразитов и очисткой речи.",
@@ -235,5 +237,12 @@
   "general.recordingFeedback.audioCue.beep": "Сигнал",
   "general.recordingFeedback.audioCue.chime": "Колокольчик",
   "general.recordingFeedback.audioCue.none": "Нет",
-  "indicator.initializing": "Запуск..."
+  "indicator.initializing": "Запуск...",
+  "ui.offlineWarning": "Похоже, вы не в сети. Некоторые функции, такие как загрузка моделей, могут не работать.",
+  "general.permissions.title": "Предоставить Разрешения",
+  "general.permissions.description": "Vox требуются разрешения на микрофон и универсальный доступ для записи и вставки текста.",
+  "general.permissions.action": "Настроить разрешения",
+  "general.dictionary.title": "Повысить Точность",
+  "general.dictionary.description": "Добавьте имена, технические термины и жаргон в словарь для повышения точности транскрипции.",
+  "general.dictionary.action": "Настроить словарь"
 }

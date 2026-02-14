@@ -54,8 +54,8 @@ function buildStaticHtml(): string {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 9px;
-    padding: 8px 14px;
+    gap: 7px;
+    padding: 6px 12px;
     background: rgba(25, 25, 25, 0.95);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -64,25 +64,25 @@ function buildStaticHtml(): string {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
     color: rgba(255, 255, 255, 0.95);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     letter-spacing: 0.1px;
     white-space: nowrap;
     pointer-events: none;
-    min-width: 120px;
-    min-height: 36px;
+    min-width: 100px;
+    min-height: 30px;
   }
   .hidden { display: none !important; }
   .dot {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     flex-shrink: 0;
   }
   .x-icon { flex-shrink: 0; }
   .spinner {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     border: 2px solid rgba(255, 255, 255, 0.2);
     border-top-color: #888;
     border-radius: 50%;
@@ -93,7 +93,7 @@ function buildStaticHtml(): string {
     display: flex;
     align-items: center;
     gap: 2px;
-    height: 20px;
+    height: 16px;
   }
   .bar {
     width: 3px;
@@ -107,8 +107,8 @@ function buildStaticHtml(): string {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     border: none;
     background: transparent;
@@ -140,7 +140,7 @@ function buildStaticHtml(): string {
     <path id="x-path" d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>
   <span class="hidden" id="label"></span>
-  <button class="cancel-btn" id="cancel-btn" style="visibility:hidden" onclick="window.electronAPI?.cancelRecording()">
+  <button class="cancel-btn" id="cancel-btn" style="display:none" onclick="window.electronAPI?.cancelRecording()">
     <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M8 2L2 8M2 2L8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
@@ -189,8 +189,7 @@ function setMode(cfg) {
   }
 
   var cb = document.getElementById('cancel-btn');
-  cb.style.visibility = cfg.showCancel ? 'visible' : 'hidden';
-  cb.style.pointerEvents = cfg.showCancel ? 'auto' : 'none';
+  cb.style.display = cfg.showCancel ? 'flex' : 'none';
 }
 </script>
 </body></html>`;
@@ -257,7 +256,7 @@ export class IndicatorWindow {
     const cursorPoint = screen.getCursorScreenPoint();
     const display = screen.getDisplayNearestPoint(cursorPoint);
     const x = Math.round(display.bounds.x + display.bounds.width / 2 - WINDOW_WIDTH / 2);
-    this.window.setPosition(x, display.bounds.y + 20);
+    this.window.setPosition(x, display.bounds.y + 10);
 
     this.window.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(buildStaticHtml())}`);
 

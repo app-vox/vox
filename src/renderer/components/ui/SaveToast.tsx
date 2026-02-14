@@ -7,10 +7,9 @@ interface SaveToastProps {
   show: boolean;
   timestamp: number;
   onHide: () => void;
-  sidebarCollapsed?: boolean;
 }
 
-export function SaveToast({ show, timestamp, onHide, sidebarCollapsed }: SaveToastProps) {
+export function SaveToast({ show, timestamp, onHide }: SaveToastProps) {
   const t = useT();
   const [visible, setVisible] = useState(false);
   const [prevTimestamp, setPrevTimestamp] = useState(timestamp);
@@ -43,11 +42,9 @@ export function SaveToast({ show, timestamp, onHide, sidebarCollapsed }: SaveToa
 
   if (!show && !visible) return null;
 
-  const positionClass = sidebarCollapsed ? styles.topRight : styles.aboveSidebar;
-
   return (
-    <div className={`${styles.toast} ${visible ? styles.visible : styles.hidden} ${positionClass}`}>
-      <CheckRoundedIcon width={16} height={16} />
+    <div className={`${styles.toast} ${visible ? styles.visible : styles.hidden}`}>
+      <CheckRoundedIcon width={13} height={13} />
       {t("ui.settingsSaved")}
     </div>
   );
