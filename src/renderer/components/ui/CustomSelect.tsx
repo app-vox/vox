@@ -186,16 +186,6 @@ export function CustomSelect({ value, items, onChange, onPreview, id }: CustomSe
                 className={`${styles.option} ${isSelected ? styles.selected : ""} ${isFocused ? styles.focused : ""}`}
                 onMouseEnter={() => setFocusIndex(i)}
               >
-                <button
-                  type="button"
-                  className={styles.optionLabel}
-                  onClick={() => {
-                    onChange(item.value);
-                    setOpen(false);
-                  }}
-                >
-                  {item.label}
-                </button>
                 {onPreview && item.value !== "none" && (
                   <button
                     type="button"
@@ -206,9 +196,19 @@ export function CustomSelect({ value, items, onChange, onPreview, id }: CustomSe
                     }}
                     tabIndex={-1}
                   >
-                    <PlayIcon width={10} height={10} />
+                    <PlayIcon width={8} height={8} />
                   </button>
                 )}
+                <button
+                  type="button"
+                  className={styles.optionLabel}
+                  onClick={() => {
+                    onChange(item.value);
+                    setOpen(false);
+                  }}
+                >
+                  {item.label}
+                </button>
               </div>
             );
           })}

@@ -99,18 +99,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  margin-right: 6px;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  margin-left: 10px;
   background: none;
-  border: none;
-  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
   color: var(--color-text-tertiary);
   cursor: pointer;
   opacity: 0;
   transition: opacity var(--duration-fast) var(--ease-default),
     color var(--duration-fast) var(--ease-default),
-    background var(--duration-fast) var(--ease-default);
+    border-color var(--duration-fast) var(--ease-default);
+
+  svg {
+    margin-left: 1px;
+  }
 
   .option:hover &,
   .option.focused & {
@@ -119,7 +124,7 @@
 
   &:hover {
     color: var(--color-text-primary);
-    background: var(--color-bg-hover);
+    border-color: var(--color-text-primary);
   }
 }
 
