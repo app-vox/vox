@@ -1,0 +1,116 @@
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-default);
+  outline: none;
+  text-align: left;
+  gap: var(--spacing-2);
+
+  &:hover {
+    border-color: var(--color-border-hover);
+  }
+
+  &:focus-visible {
+    border-color: var(--color-border-focus);
+  }
+
+  svg {
+    flex-shrink: 0;
+    color: var(--color-text-tertiary);
+    transition: transform var(--duration-fast) var(--ease-default);
+  }
+
+  &.open svg {
+    transform: rotate(180deg);
+  }
+}
+
+.dropdown {
+  position: fixed;
+  z-index: 9999;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: var(--spacing-1) 0;
+  max-height: 240px;
+  overflow-y: auto;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 3px;
+  }
+}
+
+.option {
+  display: block;
+  width: 100%;
+  padding: 7px 12px;
+  background: none;
+  border: none;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-default);
+
+  &:hover,
+  &.focused {
+    background: var(--color-bg-hover);
+  }
+
+  &.selected {
+    color: var(--color-accent);
+    font-weight: var(--font-weight-medium);
+  }
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-1-5) 12px;
+  margin: var(--spacing-1) 0;
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+  }
+}
+
+.dividerLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+.dividerPlain {
+  height: 1px;
+  background: var(--color-border);
+  margin: var(--spacing-1) 12px;
+}
