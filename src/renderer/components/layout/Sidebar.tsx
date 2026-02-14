@@ -150,7 +150,14 @@ export function Sidebar({ onCollapseChange }: SidebarProps) {
   }, []);
 
   useEffect(() => {
-    window.voxApi.updates.getState().then(setUpdateState);
+    window.voxApi.updates.getState().then((state) => {
+      // TODO: remove this fake update state after testing
+      if (import.meta.env.DEV) {
+        setUpdateState({ ...state, status: "available", latestVersion: "0.99.0" });
+      } else {
+        setUpdateState(state);
+      }
+    });
     return window.voxApi.updates.onStateChanged(setUpdateState);
   }, []);
 
@@ -219,6 +226,7 @@ export function Sidebar({ onCollapseChange }: SidebarProps) {
               return next;
             });
           }}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {COLLAPSE_ICON}
         </button>
@@ -255,6 +263,11 @@ export function Sidebar({ onCollapseChange }: SidebarProps) {
           </div>
           {!collapsed && <span className={styles.label}>{hasUpdate ? "Update Vox" : "About"}</span>}
         </button>
+        {collapsed && logoSrc && (
+          <div className={styles.collapsedLogo}>
+            <img alt="Vox" src={logoSrc} className={styles.logo} draggable={false} />
+          </div>
+        )}
       </div>
     </aside>
   );

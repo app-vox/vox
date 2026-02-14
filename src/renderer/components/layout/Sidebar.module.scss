@@ -180,6 +180,13 @@
   margin: 4px 8px 8px;
 }
 
+.collapsedLogo {
+  display: flex;
+  justify-content: center;
+  padding-top: var(--spacing-2);
+  opacity: 0.4;
+}
+
 .updateBadge {
   position: absolute;
   top: -4px;
