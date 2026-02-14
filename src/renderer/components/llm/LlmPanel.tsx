@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useDebouncedSave } from "../../hooks/use-debounced-save";
 import { useT } from "../../i18n-context";
@@ -52,6 +52,7 @@ export function LlmPanel() {
   const [initialPromptValue, setInitialPromptValue] = useState<string | null>(null);
   const [visitedCustomPrompt, setVisitedCustomPrompt] = useState(() => localStorage.getItem("vox:visited-custom-prompt") === "true");
   const [copiedExample, setCopiedExample] = useState<string | null>(null);
+  const testSectionRef = useRef<HTMLDivElement>(null);
 
   const handlePromptTabClick = useCallback(() => {
     if (!visitedCustomPrompt) {
@@ -121,7 +122,11 @@ export function LlmPanel() {
       const result = await window.voxApi.llm.test();
       if (result.ok) {
         setTestStatus({ text: t("llm.connectionSuccessful"), type: "success" });
-        await useConfigStore.getState().loadConfig();
+        const freshConfig = await window.voxApi.config.load();
+        updateConfig({
+          llmConnectionTested: freshConfig.llmConnectionTested,
+          llmConfigHash: freshConfig.llmConfigHash,
+        });
       } else {
         setTestStatus({ text: t("llm.connectionFailed", { error: result.error ?? "" }), type: "error" });
       }
@@ -129,6 +134,7 @@ export function LlmPanel() {
       setTestStatus({ text: t("llm.connectionFailed", { error: err instanceof Error ? err.message : String(err) }), type: "error" });
     } finally {
       setTesting(false);
+      testSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   };
 
@@ -239,7 +245,7 @@ export function LlmPanel() {
                   <FoundryFields />
                 )}
 
-                <div className={form.testSection}>
+                <div className={form.testSection} ref={testSectionRef}>
                   <button
                     onClick={handleTest}
                     disabled={testing}

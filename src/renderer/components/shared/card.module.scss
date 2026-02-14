@@ -76,6 +76,5 @@
 
 .warningBannerInline {
   composes: warningBanner;
-  margin: 0 calc(-1 * var(--spacing-6));
-  margin-bottom: var(--spacing-4);
+  margin: var(--spacing-4) calc(-1 * var(--spacing-6)) var(--spacing-4);
 }
