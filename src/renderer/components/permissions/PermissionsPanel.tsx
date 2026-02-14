@@ -4,14 +4,14 @@ import { usePermissions } from "../../hooks/use-permissions";
 import { useT } from "../../i18n-context";
 import { PermissionRow } from "./PermissionRow";
 import { PipelineTest } from "./PipelineTest";
-import { MicIcon, LockIcon } from "../../../shared/icons";
+import { MicIcon, LockIcon, ShieldIcon } from "../../../shared/icons";
 import card from "../shared/card.module.scss";
 
 export function PermissionsPanel() {
   const t = useT();
   const activeTab = useConfigStore((s) => s.activeTab);
   const setupComplete = useConfigStore((s) => s.setupComplete);
-  const { status, refresh, requestMicrophone, requestAccessibility } = usePermissions();
+  const { status, keychainStatus, refresh, requestMicrophone, requestAccessibility } = usePermissions();
   const [requestingMic, setRequestingMic] = useState(false);
 
   useEffect(() => {
@@ -32,8 +32,28 @@ export function PermissionsPanel() {
     setRequestingMic(false);
   };
 
+  const handleOpenKeychain = () => {
+    window.voxApi.shell.openExternal("x-apple.systempreferences:com.apple.preference.security?Privacy");
+  };
+
   const micGranted = status?.microphone === "granted";
   const accGranted = !!status?.accessibility;
+
+  const keychainGranted = keychainStatus?.available ?? false;
+  const keychainDescription = !keychainStatus
+    ? t("permissions.keychainDesc")
+    : keychainStatus.available
+      ? keychainStatus.encryptedCount > 0
+        ? t("permissions.keychainProtectedDesc", { count: String(keychainStatus.encryptedCount) })
+        : t("permissions.keychainAvailableDesc")
+      : t("permissions.keychainUnprotectedDesc");
+  const keychainStatusText = !keychainStatus
+    ? undefined
+    : keychainStatus.available
+      ? keychainStatus.encryptedCount > 0
+        ? t("permissions.keychainProtected")
+        : t("permissions.keychainAvailable")
+      : t("permissions.keychainUnprotected");
 
   return (
     <>
@@ -62,6 +82,15 @@ export function PermissionsPanel() {
             buttonText={t("permissions.openSettings")}
             onRequest={requestAccessibility}
             setupRequired={!setupComplete}
+          />
+          <PermissionRow
+            icon={<ShieldIcon width={18} height={18} />}
+            name={t("permissions.keychain")}
+            description={keychainDescription}
+            granted={keychainGranted}
+            statusText={keychainStatusText}
+            buttonText={keychainStatus?.available === false ? t("permissions.keychainOpenKeychain") : undefined}
+            onRequest={keychainStatus?.available === false ? handleOpenKeychain : undefined}
           />
         </div>
       </div>
