@@ -140,7 +140,7 @@ function buildStaticHtml(): string {
     <path id="x-path" d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>
   <span class="hidden" id="label"></span>
-  <button class="cancel-btn hidden" id="cancel-btn" onclick="window.electronAPI?.cancelRecording()">
+  <button class="cancel-btn" id="cancel-btn" style="visibility:hidden" onclick="window.electronAPI?.cancelRecording()">
     <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M8 2L2 8M2 2L8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
@@ -189,7 +189,8 @@ function setMode(cfg) {
   }
 
   var cb = document.getElementById('cancel-btn');
-  if (cfg.showCancel) { cb.classList.remove('hidden'); } else { cb.classList.add('hidden'); }
+  cb.style.visibility = cfg.showCancel ? 'visible' : 'hidden';
+  cb.style.pointerEvents = cfg.showCancel ? 'auto' : 'none';
 }
 </script>
 </body></html>`;
