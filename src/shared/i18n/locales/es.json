@@ -250,7 +250,7 @@
   "general.recordingFeedback.sound.nudge": "Nudge",
   "general.recordingFeedback.sound.error": "Error",
   "general.recordingFeedback.classic": "Clásico",
-  "general.recordingFeedback.errorSound": "Sonido de error",
+  "general.recordingFeedback.errorSound": "Sonido de alerta",
   "indicator.initializing": "Iniciando...",
   "ui.offlineWarning": "Parece que estás sin conexión. Algunas funciones como la descarga de modelos podrían no funcionar.",
   "general.permissions.title": "Otorgar Permisos",

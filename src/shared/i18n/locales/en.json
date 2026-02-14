@@ -250,7 +250,7 @@
   "general.recordingFeedback.sound.nudge": "Nudge",
   "general.recordingFeedback.sound.error": "Error",
   "general.recordingFeedback.classic": "Classic",
-  "general.recordingFeedback.errorSound": "Error sound",
+  "general.recordingFeedback.errorSound": "Alert sound",
   "indicator.initializing": "Starting...",
   "ui.offlineWarning": "You appear to be offline. Some features like model downloads may not work.",
   "general.permissions.title": "Grant Permissions",

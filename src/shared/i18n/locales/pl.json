@@ -249,7 +249,7 @@
   "general.recordingFeedback.sound.nudge": "Nudge",
   "general.recordingFeedback.sound.error": "Error",
   "general.recordingFeedback.classic": "Klasyczne",
-  "general.recordingFeedback.errorSound": "Dźwięk błędu",
+  "general.recordingFeedback.errorSound": "Dźwięk alertu",
   "indicator.initializing": "Uruchamianie...",
   "history.deleteTranscription": "Usuń transkrypcję",
   "ui.offlineWarning": "Wygląda na to, że jesteś offline. Niektóre funkcje, takie jak pobieranie modeli, mogą nie działać.",

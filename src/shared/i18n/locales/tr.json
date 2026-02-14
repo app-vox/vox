@@ -250,7 +250,7 @@
   "general.recordingFeedback.sound.nudge": "Nudge",
   "general.recordingFeedback.sound.error": "Error",
   "general.recordingFeedback.classic": "Klasik",
-  "general.recordingFeedback.errorSound": "Hata sesi",
+  "general.recordingFeedback.errorSound": "Uyarı sesi",
   "indicator.initializing": "Başlatılıyor...",
   "ui.offlineWarning": "Çevrimdışı görünüyorsunuz. Model indirme gibi bazı özellikler çalışmayabilir.",
   "general.permissions.title": "İzinleri Ver",

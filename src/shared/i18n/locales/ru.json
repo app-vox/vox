@@ -250,7 +250,7 @@
   "general.recordingFeedback.sound.nudge": "Nudge",
   "general.recordingFeedback.sound.error": "Error",
   "general.recordingFeedback.classic": "Классические",
-  "general.recordingFeedback.errorSound": "Звук ошибки",
+  "general.recordingFeedback.errorSound": "Звук оповещения",
   "indicator.initializing": "Запуск...",
   "ui.offlineWarning": "Похоже, вы не в сети. Некоторые функции, такие как загрузка моделей, могут не работать.",
   "general.permissions.title": "Предоставить Разрешения",
