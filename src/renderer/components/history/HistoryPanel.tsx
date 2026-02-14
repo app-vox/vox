@@ -71,55 +71,38 @@ function CopyButton({ text }: { text: string }) {
 export function HistoryPanel() {
   const entries = useHistoryStore((s) => s.entries);
   const total = useHistoryStore((s) => s.total);
+  const page = useHistoryStore((s) => s.page);
+  const pageSize = useHistoryStore((s) => s.pageSize);
   const loading = useHistoryStore((s) => s.loading);
-  const hasMore = useHistoryStore((s) => s.hasMore);
   const searchQuery = useHistoryStore((s) => s.searchQuery);
   const fetchPage = useHistoryStore((s) => s.fetchPage);
+  const setPage = useHistoryStore((s) => s.setPage);
+  const setPageSize = useHistoryStore((s) => s.setPageSize);
   const search = useHistoryStore((s) => s.search);
   const clearHistory = useHistoryStore((s) => s.clearHistory);
   const reset = useHistoryStore((s) => s.reset);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const sentinelRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [confirmClear, setConfirmClear] = useState(false);
+
+  const totalPages = Math.ceil(total / pageSize);
 
   useEffect(() => {
     searchInputRef.current?.focus();
   }, []);
 
-  // Load initial page on mount
   useEffect(() => {
     reset();
     fetchPage();
   }, [reset, fetchPage]);
 
-  // Auto-refresh when a new transcription is added
   useEffect(() => {
     window.voxApi.history.onEntryAdded(() => {
       reset();
       fetchPage();
     });
   }, [reset, fetchPage]);
-
-  // Infinite scroll via IntersectionObserver
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-
-    const scrollRoot = sentinel.closest(".content");
-    const observer = new IntersectionObserver(
-      (intersections) => {
-        if (intersections[0].isIntersecting && hasMore && !loading) {
-          fetchPage();
-        }
-      },
-      { root: scrollRoot, threshold: 0.1 },
-    );
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [hasMore, loading, fetchPage]);
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -199,10 +182,24 @@ export function HistoryPanel() {
             </div>
           )}
 
-          {/* Infinite scroll sentinel */}
-          <div ref={sentinelRef} className={styles.sentinel}>
-            {loading && <div className={styles.spinner}>Loading...</div>}
-          </div>
+          {loading && <div className={styles.spinner}>Loading...</div>}
+
+          {totalPages > 1 && (
+            <div className={styles.pagination}>
+              <div className={styles.pageInfo}>
+                Page {page} of {totalPages}
+              </div>
+              <div className={styles.pageControls}>
+                <button disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button>
+                <button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>Next</button>
+              </div>
+              <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))}>
+                <option value={10}>10 per page</option>
+                <option value={25}>25 per page</option>
+                <option value={50}>50 per page</option>
+              </select>
+            </div>
+          )}
         </div>
       </div>
 

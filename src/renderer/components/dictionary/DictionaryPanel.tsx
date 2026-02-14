@@ -6,7 +6,7 @@ import buttons from "../shared/buttons.module.scss";
 import styles from "./DictionaryPanel.module.scss";
 
 const WHISPER_PROMPT_MAX_CHARS = 896;
-const BASE_PROMPT_OVERHEAD = 84; // WHISPER_PROMPT length (82) + separator ". " (2)
+const BASE_PROMPT_OVERHEAD = 84;
 
 function getWhisperTermBudget(dictionary: string[]): { fits: number; total: number; overLimit: boolean } {
   const total = dictionary.length;
@@ -31,6 +31,8 @@ export function DictionaryPanel() {
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const [inputValue, setInputValue] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -42,6 +44,9 @@ export function DictionaryPanel() {
   const dictionary = config.dictionary ?? [];
   const sorted = [...dictionary].sort((a, b) => a.localeCompare(b));
   const budget = getWhisperTermBudget(dictionary);
+
+  const totalPages = Math.ceil(sorted.length / pageSize);
+  const pageEntries = sorted.slice((page - 1) * pageSize, page * pageSize);
 
   const addTerms = (input: string) => {
     const terms = input
@@ -55,6 +60,7 @@ export function DictionaryPanel() {
     if (newTerms.length > 0) {
       updateConfig({ dictionary: [...dictionary, ...newTerms] });
       saveConfig(true);
+      setPage(1);
     }
     setInputValue("");
   };
@@ -62,6 +68,10 @@ export function DictionaryPanel() {
   const removeTerm = (term: string) => {
     updateConfig({ dictionary: dictionary.filter((t) => t !== term) });
     saveConfig(true);
+    const newTotal = dictionary.length - 1;
+    const newTotalPages = Math.ceil(newTotal / pageSize);
+    if (page > newTotalPages && newTotalPages > 0) setPage(newTotalPages);
+    if (newTotal === 0) setPage(1);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -69,6 +79,11 @@ export function DictionaryPanel() {
       e.preventDefault();
       addTerms(inputValue);
     }
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setPage(1);
   };
 
   return (
@@ -114,7 +129,7 @@ export function DictionaryPanel() {
               <span className={styles.count}>{sorted.length} {sorted.length === 1 ? "entry" : "entries"}</span>
             </div>
             <div className={styles.entryList}>
-              {sorted.map((term) => (
+              {pageEntries.map((term) => (
                 <div key={term} className={styles.entry}>
                   <span className={styles.entryText}>{term}</span>
                   <button
@@ -130,6 +145,23 @@ export function DictionaryPanel() {
                 </div>
               ))}
             </div>
+
+            {totalPages > 1 && (
+              <div className={styles.pagination}>
+                <div className={styles.pageInfo}>
+                  Page {page} of {totalPages}
+                </div>
+                <div className={styles.pageControls}>
+                  <button disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button>
+                  <button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>Next</button>
+                </div>
+                <select value={pageSize} onChange={(e) => handlePageSizeChange(Number(e.target.value))}>
+                  <option value={10}>10 per page</option>
+                  <option value={25}>25 per page</option>
+                  <option value={50}>50 per page</option>
+                </select>
+              </div>
+            )}
           </>
         )}
 
