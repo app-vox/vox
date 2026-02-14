@@ -210,15 +210,15 @@ export function LlmPanel() {
                 />
                 <details className={form.exampleDetails}>
                   <summary>
-                    💡 Example Instructions
+                    💡 {t("llm.exampleInstructions")}
                   </summary>
                   <ul>
-                    <li><strong>Professional:</strong> "Use professional business language"</li>
-                    <li><strong>Formal:</strong> "Use formal language and avoid contractions"</li>
-                    <li><strong>Casual:</strong> "Keep it super casual and conversational"</li>
-                    <li><strong>Funny:</strong> "Add humor and make it entertaining while keeping the meaning"</li>
-                    <li><strong>With Emojis:</strong> "Add relevant emojis throughout the text to make it more expressive"</li>
-                    <li><strong>Concise:</strong> "Make it as brief as possible without losing meaning"</li>
+                    <li><strong>{t("llm.exampleProfessionalLabel")}</strong> {t("llm.exampleProfessional")}</li>
+                    <li><strong>{t("llm.exampleFormalLabel")}</strong> {t("llm.exampleFormal")}</li>
+                    <li><strong>{t("llm.exampleCasualLabel")}</strong> {t("llm.exampleCasual")}</li>
+                    <li><strong>{t("llm.exampleFunnyLabel")}</strong> {t("llm.exampleFunny")}</li>
+                    <li><strong>{t("llm.exampleEmojisLabel")}</strong> {t("llm.exampleEmojis")}</li>
+                    <li><strong>{t("llm.exampleConciseLabel")}</strong> {t("llm.exampleConcise")}</li>
                   </ul>
                 </details>
               </div>

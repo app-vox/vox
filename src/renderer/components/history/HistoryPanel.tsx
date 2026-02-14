@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useHistoryStore } from "../../stores/history-store";
+import { useT } from "../../i18n-context";
 import type { TranscriptionEntry } from "../../../shared/types";
 import card from "../shared/card.module.scss";
 import styles from "./HistoryPanel.module.scss";
@@ -10,23 +11,23 @@ function formatTime(timestamp: string): string {
   return new Date(timestamp).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
-function formatDateGroup(timestamp: string): string {
+function formatDateGroup(timestamp: string, t: (key: string) => string): string {
   const date = new Date(timestamp);
   const now = new Date();
 
-  if (date.toDateString() === now.toDateString()) return "Today";
+  if (date.toDateString() === now.toDateString()) return t("history.today");
 
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
-  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+  if (date.toDateString() === yesterday.toDateString()) return t("history.yesterday");
 
   return date.toLocaleDateString([], { month: "long", day: "numeric" });
 }
 
-function groupByDate(entries: TranscriptionEntry[]): Map<string, TranscriptionEntry[]> {
+function groupByDate(entries: TranscriptionEntry[], t: (key: string) => string): Map<string, TranscriptionEntry[]> {
   const groups = new Map<string, TranscriptionEntry[]>();
   for (const entry of entries) {
-    const key = formatDateGroup(entry.timestamp);
+    const key = formatDateGroup(entry.timestamp, t);
     const group = groups.get(key) ?? [];
     group.push(entry);
     groups.set(key, group);
@@ -34,7 +35,7 @@ function groupByDate(entries: TranscriptionEntry[]): Map<string, TranscriptionEn
   return groups;
 }
 
-function CopyButton({ text }: { text: string }) {
+function CopyButton({ text, t }: { text: string; t: (key: string) => string }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -44,7 +45,7 @@ function CopyButton({ text }: { text: string }) {
   };
 
   return (
-    <button className={styles.copyButton} onClick={handleCopy} title="Copy to clipboard">
+    <button className={styles.copyButton} onClick={handleCopy} title={t("history.copyToClipboard")}>
       {copied ? (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="20 6 9 17 4 12" />
@@ -55,12 +56,13 @@ function CopyButton({ text }: { text: string }) {
           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
         </svg>
       )}
-      <span>{copied ? "Copied!" : "Copy"}</span>
+      <span>{copied ? t("history.copied") : t("history.copy")}</span>
     </button>
   );
 }
 
 export function HistoryPanel() {
+  const t = useT();
   const entries = useHistoryStore((s) => s.entries);
   const total = useHistoryStore((s) => s.total);
   const loading = useHistoryStore((s) => s.loading);
@@ -128,15 +130,15 @@ export function HistoryPanel() {
     setConfirmClear(false);
   };
 
-  const groups = groupByDate(entries);
+  const groups = groupByDate(entries, t);
 
   return (
     <>
       <div className={card.card}>
         <div className={card.header}>
-          <h2>Transcription History</h2>
+          <h2>{t("history.title")}</h2>
           <p className={card.description}>
-            {total > 0 ? `${total} transcription${total !== 1 ? "s" : ""} stored` : "Your transcriptions will appear here"}
+            {total > 0 ? (total === 1 ? t("history.oneStored") : t("history.countStored", { count: total })) : t("history.emptyState")}
           </p>
         </div>
         <div className={card.body}>
@@ -147,7 +149,7 @@ export function HistoryPanel() {
             </svg>
             <input
               type="text"
-              placeholder="Search transcriptions..."
+              placeholder={t("history.searchPlaceholder")}
               defaultValue={searchQuery}
               onChange={handleSearchChange}
               className={styles.searchInput}
@@ -156,7 +158,7 @@ export function HistoryPanel() {
 
           {entries.length === 0 && !loading ? (
             <div className={styles.emptyState}>
-              {searchQuery ? "No transcriptions match your search." : "No transcriptions yet. Start recording to build your history."}
+              {searchQuery ? t("history.noSearchResults") : t("history.noTranscriptions")}
             </div>
           ) : (
             <div className={styles.entryList}>
@@ -169,14 +171,14 @@ export function HistoryPanel() {
                         <p className={styles.entryText}>{entry.text}</p>
                         <div className={styles.entryMeta}>
                           <span>{formatTime(entry.timestamp)}</span>
-                          <span>{entry.wordCount} words</span>
+                          <span>{t("history.words", { count: entry.wordCount })}</span>
                           <span>{entry.whisperModel}</span>
                           {entry.llmEnhanced && entry.llmProvider && (
                             <span className={styles.badge}>{entry.llmProvider}</span>
                           )}
                         </div>
                       </div>
-                      <CopyButton text={entry.text} />
+                      <CopyButton text={entry.text} t={t} />
                     </div>
                   ))}
                 </div>
@@ -186,7 +188,7 @@ export function HistoryPanel() {
 
           {/* Infinite scroll sentinel */}
           <div ref={sentinelRef} className={styles.sentinel}>
-            {loading && <div className={styles.spinner}>Loading...</div>}
+            {loading && <div className={styles.spinner}>{t("history.loading")}</div>}
           </div>
         </div>
       </div>
@@ -199,7 +201,7 @@ export function HistoryPanel() {
               onClick={handleClear}
               onBlur={() => setConfirmClear(false)}
             >
-              {confirmClear ? "Confirm Clear All History" : "Clear History"}
+              {confirmClear ? t("history.confirmClear") : t("history.clearHistory")}
             </button>
           </div>
         </div>

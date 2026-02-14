@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { EyeIcon } from "./icons";
+import { useT } from "../../i18n-context";
 import form from "../shared/forms.module.scss";
 
 interface SecretInputProps {
@@ -12,6 +13,7 @@ interface SecretInputProps {
 }
 
 export function SecretInput({ id, value, onChange, onFocus, onBlur, placeholder }: SecretInputProps) {
+  const t = useT();
   const [visible, setVisible] = useState(false);
 
   return (
@@ -29,7 +31,7 @@ export function SecretInput({ id, value, onChange, onFocus, onBlur, placeholder 
         type="button"
         onClick={() => setVisible(!visible)}
         className={form.iconBtn}
-        title="Show/hide"
+        title={t("ui.showHide")}
       >
         <EyeIcon />
       </button>

@@ -14,6 +14,7 @@ import { ScrollButtons } from "./components/ui/ScrollButtons";
 import { useSaveToast } from "./hooks/use-save-toast";
 import { useTheme } from "./hooks/use-theme";
 import { I18nProvider } from "./i18n-context";
+import { t } from "../shared/i18n";
 
 const PANELS: Record<string, () => JSX.Element | null> = {
   general: GeneralPanel,
@@ -50,7 +51,7 @@ export function App() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full text-text-secondary text-sm">
-        Loading...
+        {t("ui.loading")}
       </div>
     );
   }

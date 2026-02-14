@@ -133,7 +133,7 @@ export function updateTrayMenu(): void {
       click: callbacks.onOpenHome,
     },
     {
-      label: "Transcriptions",
+      label: t("tray.transcriptions"),
       click: () => callbacks?.onOpenHistory?.(),
     },
   ];

@@ -8,7 +8,6 @@ import styles from "./TabNav.module.scss";
 const TABS: { id: string; icon: ReactNode; requiresModel?: boolean; requiresPermissions?: boolean; checkConfigured?: "speech" | "permissions" | "ai-enhancement" }[] = [
   {
     id: "history",
-    label: "Transcriptions",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
@@ -42,7 +41,6 @@ const TABS: { id: string; icon: ReactNode; requiresModel?: boolean; requiresPerm
   },
   {
     id: "dictionary",
-    label: "Dictionary",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
@@ -96,8 +94,10 @@ export function TabNav() {
   const { status: permissionStatus } = usePermissions();
 
   const tabLabels: Record<string, string> = {
+    history: t("tabs.history"),
     whisper: t("tabs.speech"),
     llm: t("tabs.aiEnhancement"),
+    dictionary: t("tabs.dictionary"),
     general: t("tabs.general"),
     permissions: t("tabs.permissions"),
     shortcuts: t("tabs.shortcuts"),
