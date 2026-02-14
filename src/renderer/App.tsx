@@ -1,7 +1,7 @@
 import { useEffect, useRef, type JSX } from "react";
 import { useConfigStore } from "./stores/config-store";
-import { Header } from "./components/layout/Header";
-import { TabNav } from "./components/layout/TabNav";
+import { Sidebar } from "./components/layout/Sidebar";
+import { AboutPanel } from "./components/about/AboutPanel";
 import { LlmPanel } from "./components/llm/LlmPanel";
 import { WhisperPanel } from "./components/whisper/WhisperPanel";
 import { ShortcutsPanel } from "./components/shortcuts/ShortcutsPanel";
@@ -22,6 +22,7 @@ const PANELS: Record<string, () => JSX.Element | null> = {
   permissions: PermissionsPanel,
   shortcuts: ShortcutsPanel,
   history: HistoryPanel,
+  about: AboutPanel,
 };
 
 export function App() {
@@ -57,14 +58,15 @@ export function App() {
   const Panel = PANELS[activeTab] ?? WhisperPanel;
 
   return (
-    <div className="flex flex-col h-full">
-      <Header />
-      <TabNav />
-      <main className="content" ref={contentRef}>
-        <Panel />
-      </main>
-      <SaveToast show={showToast} timestamp={toastTimestamp} onHide={hideToast} />
-      <ScrollButtons containerRef={contentRef} />
+    <div className="flex h-full">
+      <Sidebar />
+      <div className="flex flex-col flex-1 min-w-0">
+        <main className="content" ref={contentRef}>
+          <Panel />
+        </main>
+        <SaveToast show={showToast} timestamp={toastTimestamp} onHide={hideToast} />
+        <ScrollButtons containerRef={contentRef} />
+      </div>
     </div>
   );
 }
