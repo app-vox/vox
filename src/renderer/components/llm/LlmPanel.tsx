@@ -27,6 +27,7 @@ function isProviderConfigured(provider: LlmProviderType, llm: LlmConfig): boolea
       return !!(llm.region && llm.modelId && (llm.profile || (llm.accessKeyId && llm.secretAccessKey)));
     case "openai":
     case "deepseek":
+    case "glm":
       return !!(llm.openaiApiKey && llm.openaiModel && llm.openaiEndpoint);
     case "litellm":
       return !!(llm.openaiEndpoint && llm.openaiModel);
@@ -108,6 +109,7 @@ export function LlmPanel() {
   const providerDefaults: Record<string, Record<string, string>> = {
     openai: { openaiEndpoint: "https://api.openai.com", openaiModel: "gpt-4o" },
     deepseek: { openaiEndpoint: "https://api.deepseek.com", openaiModel: "deepseek-chat" },
+    glm: { openaiEndpoint: "https://open.bigmodel.cn/api/paas/v4", openaiModel: "glm-4" },
     litellm: { openaiEndpoint: "http://localhost:4000", openaiModel: "gpt-4o" },
     anthropic: { anthropicModel: "claude-sonnet-4-20250514" },
   };
@@ -125,7 +127,6 @@ export function LlmPanel() {
   const handleTest = async () => {
     setTesting(true);
     setTestStatus({ text: t("llm.testingConnection"), type: "info" });
-    await saveConfig();
 
     try {
       const result = await window.voxApi.llm.test(config);
@@ -227,6 +228,7 @@ export function LlmPanel() {
                       { value: "bedrock", label: "AWS Bedrock" },
                       { value: "openai", label: "OpenAI" },
                       { value: "deepseek", label: "DeepSeek" },
+                      { value: "glm", label: "GLM (Zhipu AI)" },
                       { value: "anthropic", label: "Anthropic" },
                       { value: "litellm", label: "LiteLLM" },
                       { value: "custom", label: t("llm.custom.label") },
@@ -242,7 +244,7 @@ export function LlmPanel() {
 
                 {config.llm.provider === "litellm" ? (
                   <LiteLLMFields />
-                ) : (config.llm.provider === "openai" || config.llm.provider === "deepseek") ? (
+                ) : (config.llm.provider === "openai" || config.llm.provider === "deepseek" || config.llm.provider === "glm") ? (
                   <OpenAICompatibleFields providerType={config.llm.provider} />
                 ) : config.llm.provider === "bedrock" ? (
                   <BedrockFields />
