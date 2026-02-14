@@ -130,13 +130,6 @@
   "permissions.pipeline.title": "Test del pipeline",
   "permissions.pipeline.description": "Registra un campione audio di 5 secondi per testare la trascrizione e la correzione LLM.",
   "permissions.pipeline.testButton": "Registra test di 5s",
-  "permissions.pipeline.recording": "Registrazione per 5 secondi...",
-  "permissions.pipeline.transcribing": "Trascrizione...",
-  "permissions.pipeline.localModel": "Modello locale: {text}",
-  "permissions.pipeline.llmResult": "LLM:     {text}",
-  "permissions.pipeline.llmError": "Errore LLM: {error}",
-  "permissions.pipeline.empty": "(vuoto)",
-  "permissions.pipeline.testFailed": "Test fallito: {error}",
 
   "shortcuts.title": "Scorciatoie da tastiera",
   "shortcuts.description": "Configura le scorciatoie da tastiera per la registrazione vocale. Fai clic su un campo e premi la combinazione di tasti desiderata.",
@@ -236,7 +229,6 @@
   "llm.exampleConcise": "\"Rendilo il più breve possibile senza perdere il significato\"",
   "llm.exampleConciseLabel": "Conciso:",
   "tray.transcriptions": "Trascrizioni",
-  "permissions.pasteTestString": "Test di incolla Vox",
   "ui.scrollToTop": "Scorri in alto",
   "ui.scrollToBottom": "Scorri in basso",
   "ui.showHide": "Mostra/nascondi"

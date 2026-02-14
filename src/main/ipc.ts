@@ -198,7 +198,7 @@ export function registerIpcHandlers(
     } catch { /* ignore */ }
 
     try {
-      pasteText(t("permissions.pasteTestString"));
+      pasteText("Vox paste test");
       return {
         ok: true,
         hasAccessibility,

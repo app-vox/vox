@@ -13,25 +13,25 @@ export function PipelineTest() {
 
   const handleTest = async () => {
     setTesting(true);
-    setTestStatus({ text: t("permissions.pipeline.recording"), type: "info" });
+    setTestStatus({ text: t("whisper.recording"), type: "info" });
 
     try {
       const recording = await recordAudio(5);
-      setTestStatus({ text: t("permissions.pipeline.transcribing"), type: "info" });
+      setTestStatus({ text: t("whisper.transcribing"), type: "info" });
       const result = await window.voxApi.pipeline.testTranscribe(recording);
 
-      let output = t("permissions.pipeline.localModel", { text: result.rawText || t("permissions.pipeline.empty") });
+      let output = `Local Model: ${result.rawText || "(empty)"}`;
       if (result.correctedText) {
-        output += "\n" + t("permissions.pipeline.llmResult", { text: result.correctedText });
+        output += `\nLLM:     ${result.correctedText}`;
         setTestStatus({ text: output, type: "success" });
       } else if (result.llmError) {
-        output += "\n" + t("permissions.pipeline.llmError", { error: result.llmError });
+        output += `\nLLM error: ${result.llmError}`;
         setTestStatus({ text: output, type: "error" });
       } else {
         setTestStatus({ text: output, type: "success" });
       }
     } catch (err: unknown) {
-      setTestStatus({ text: t("permissions.pipeline.testFailed", { error: err instanceof Error ? err.message : String(err) }), type: "error" });
+      setTestStatus({ text: t("whisper.testFailed", { error: err instanceof Error ? err.message : String(err) }), type: "error" });
     } finally {
       setTesting(false);
     }
