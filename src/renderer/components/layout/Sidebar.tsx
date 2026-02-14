@@ -131,7 +131,11 @@ const DOWNLOAD_ICON = (
   </svg>
 );
 
-export function Sidebar() {
+interface SidebarProps {
+  onCollapseChange?: (collapsed: boolean) => void;
+}
+
+export function Sidebar({ onCollapseChange }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [logoSrc, setLogoSrc] = useState("");
   const [updateState, setUpdateState] = useState<UpdateState | null>(null);
@@ -169,6 +173,7 @@ export function Sidebar() {
       key={item.id}
       className={`${styles.navItem} ${activeTab === item.id ? styles.navItemActive : ""}`}
       onClick={() => setActiveTab(item.id)}
+      title={collapsed ? item.label : undefined}
     >
       <div className={styles.iconWrap}>
         {item.icon}
@@ -207,7 +212,13 @@ export function Sidebar() {
         {!collapsed && <span className={styles.title}>Vox</span>}
         <button
           className={styles.collapseBtn}
-          onClick={() => setCollapsed((v) => !v)}
+          onClick={() => {
+            setCollapsed((v) => {
+              const next = !v;
+              onCollapseChange?.(next);
+              return next;
+            });
+          }}
         >
           {COLLAPSE_ICON}
         </button>
@@ -229,8 +240,19 @@ export function Sidebar() {
         <button
           className={`${styles.navItem} ${activeTab === "about" ? styles.navItemActive : ""} ${hasUpdate ? styles.navItemUpdate : ""}`}
           onClick={() => setActiveTab("about")}
+          title={collapsed ? (hasUpdate ? "Update Vox" : "About") : undefined}
         >
-          <div className={styles.iconWrap}>{hasUpdate ? DOWNLOAD_ICON : INFO_ICON}</div>
+          <div className={styles.iconWrap}>
+            {hasUpdate ? DOWNLOAD_ICON : INFO_ICON}
+            {hasUpdate && collapsed && (
+              <span className={styles.updateBadge}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="8" x2="12" y2="14" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+              </span>
+            )}
+          </div>
           {!collapsed && <span className={styles.label}>{hasUpdate ? "Update Vox" : "About"}</span>}
         </button>
       </div>
