@@ -63,6 +63,14 @@ npx mega-linter-runner --flavor javascript
 
 Reports are saved to the `megalinter-reports/` directory (git-ignored).
 
+## Dev States panel (dev-only)
+
+When running `npm run dev`, a **Dev States** tab appears in the sidebar. It displays all runtime states and lets you override them (fake an update, revoke permissions, etc.) to test UI behavior without real conditions.
+
+This panel is **completely excluded from production builds**. All entry points use `import.meta.env.DEV` guards with `React.lazy()` dynamic imports, so Vite's dead-code elimination removes the entire module tree (panel, store, styles) during `npm run build`. Zero dev bytes ship to users.
+
+If you add new dev-only code, follow the same pattern: gate behind `import.meta.env.DEV` and use `lazy(() => import(...))` — never static imports.
+
 ## Code style
 
 - TypeScript strict mode
