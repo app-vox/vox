@@ -37,6 +37,7 @@ export class ConfigManager {
         enableLlmEnhancement: saved.enableLlmEnhancement ?? defaults.enableLlmEnhancement,
         customPrompt: saved.customPrompt ?? defaults.customPrompt,
         launchAtLogin: saved.launchAtLogin ?? defaults.launchAtLogin,
+        dictionary: Array.isArray(saved.dictionary) ? saved.dictionary : defaults.dictionary,
       };
 
       for (const field of SENSITIVE_FIELDS) {

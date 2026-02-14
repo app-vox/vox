@@ -1,0 +1,78 @@
+.addRow {
+  display: flex;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-4);
+
+  input {
+    flex: 1;
+  }
+}
+
+.entryList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-2) var(--spacing-3);
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  transition: border-color var(--duration-fast) var(--ease-default);
+
+  &:hover {
+    border-color: var(--color-border-hover);
+  }
+}
+
+.entryText {
+  flex: 1;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.deleteBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-icon-lg);
+  height: var(--size-icon-lg);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color var(--duration-fast) var(--ease-default),
+    background var(--duration-fast) var(--ease-default);
+
+  &:hover {
+    color: var(--color-text-secondary);
+    background: var(--color-bg-hover);
+  }
+}
+
+.emptyState {
+  text-align: center;
+  padding: var(--spacing-6) var(--spacing-4);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.listHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-3);
+}
+
+.count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}

@@ -18,7 +18,7 @@ export function createLlmProvider(config: VoxConfig): LlmProvider {
   // Append custom prompt at the END with CRITICAL emphasis (only if custom is not empty)
   const customPrompt = config.customPrompt?.trim();
   const hasCustomPrompt = !!customPrompt;
-  const prompt = buildSystemPrompt(customPrompt || "");
+  const prompt = buildSystemPrompt(customPrompt || "", config.dictionary ?? []);
 
   console.log("[LLM Factory] Creating provider:", config.llm.provider);
   console.log("[LLM Factory] Custom prompt:", hasCustomPrompt ? "YES" : "NO");

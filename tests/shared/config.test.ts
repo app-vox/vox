@@ -18,4 +18,9 @@ describe("VoxConfig", () => {
     expect(config.shortcuts.hold).toBe("Alt+Space");
     expect(config.shortcuts.toggle).toBe("Alt+Shift+Space");
   });
+
+  it("should include an empty dictionary array in the default config", () => {
+    const config = createDefaultConfig();
+    expect(config.dictionary).toEqual([]);
+  });
 });

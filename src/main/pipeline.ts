@@ -15,10 +15,12 @@ export interface PipelineDeps {
   transcribe(
     audioBuffer: Float32Array,
     sampleRate: number,
-    modelPath: string
+    modelPath: string,
+    dictionary?: string[]
   ): Promise<TranscriptionResult>;
   llmProvider: LlmProvider;
   modelPath: string;
+  dictionary?: string[];
   onStage?: (stage: PipelineStage) => void;
   onComplete?: (result: {
     text: string;
@@ -155,7 +157,8 @@ export class Pipeline {
     const transcription = await this.deps.transcribe(
       recording.audioBuffer,
       recording.sampleRate,
-      this.deps.modelPath
+      this.deps.modelPath,
+      this.deps.dictionary ?? []
     );
 
     if (this.canceled) {

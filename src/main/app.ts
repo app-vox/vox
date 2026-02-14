@@ -49,6 +49,7 @@ function setupPipeline(): void {
     transcribe,
     llmProvider,
     modelPath,
+    dictionary: config.dictionary ?? [],
     onStage: (stage) => shortcutManager?.showIndicator(stage),
     onComplete: (result) => {
       try {

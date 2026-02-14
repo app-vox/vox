@@ -42,6 +42,7 @@ export interface VoxConfig {
   enableLlmEnhancement: boolean;
   customPrompt: string;
   launchAtLogin: boolean;
+  dictionary: string[];
 }
 
 export function createDefaultConfig(isProduction = false): VoxConfig {
@@ -71,5 +72,6 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     enableLlmEnhancement: false,
     customPrompt: "",
     launchAtLogin: isProduction,
+    dictionary: [],
   };
 }

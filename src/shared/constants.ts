@@ -82,10 +82,36 @@ OUTPUT:
 19. No greetings, explanations, commentary, or responses
 20. Just the cleaned transcription, nothing else`;
 
-export function buildSystemPrompt(customPrompt: string): string {
-  if (!customPrompt?.trim()) {
-    return LLM_SYSTEM_PROMPT;
+export const WHISPER_PROMPT_MAX_CHARS = 896;
+
+export function buildWhisperPrompt(dictionary: string[]): string {
+  if (dictionary.length === 0) return WHISPER_PROMPT;
+
+  const terms = dictionary.join(", ");
+  const separator = ". ";
+  const combined = `${terms}${separator}${WHISPER_PROMPT}`;
+
+  if (combined.length <= WHISPER_PROMPT_MAX_CHARS) return combined;
+
+  const available = WHISPER_PROMPT_MAX_CHARS - WHISPER_PROMPT.length - separator.length;
+  const truncated = terms.slice(0, available);
+  const lastComma = truncated.lastIndexOf(",");
+  const cleanTerms = lastComma > 0 ? truncated.slice(0, lastComma) : truncated;
+
+  return `${cleanTerms}${separator}${WHISPER_PROMPT}`;
+}
+
+export function buildSystemPrompt(customPrompt: string, dictionary: string[] = []): string {
+  let prompt = LLM_SYSTEM_PROMPT;
+
+  if (dictionary.length > 0) {
+    const terms = dictionary.map(t => `"${t}"`).join(", ");
+    prompt += `\n\nDICTIONARY - PRESERVE THESE TERMS EXACTLY:\nThe user has defined these terms. If the transcription contains misspellings or variations of these terms, correct them to match exactly: ${terms}`;
   }
 
-  return `${LLM_SYSTEM_PROMPT}\n\n${"*".repeat(70)}\nEXTREMELY IMPORTANT - YOU MUST FOLLOW THESE CUSTOM INSTRUCTIONS\n${"*".repeat(70)}\n\nThe user has provided specific custom instructions below. It is of CRITICAL importance that you consider and apply these instructions. These custom rules take ABSOLUTE PRIORITY over default behavior:\n\n${customPrompt}`;
+  if (!customPrompt?.trim()) {
+    return prompt;
+  }
+
+  return `${prompt}\n\n${"*".repeat(70)}\nEXTREMELY IMPORTANT - YOU MUST FOLLOW THESE CUSTOM INSTRUCTIONS\n${"*".repeat(70)}\n\nThe user has provided specific custom instructions below. It is of CRITICAL importance that you consider and apply these instructions. These custom rules take ABSOLUTE PRIORITY over default behavior:\n\n${customPrompt}`;
 }

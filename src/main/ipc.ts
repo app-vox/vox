@@ -109,7 +109,7 @@ export function registerIpcHandlers(
     }
     const modelPath = modelManager.getModelPath(config.whisper.model);
     const samples = resampleTo16kHz(new Float32Array(recording.audioBuffer), recording.sampleRate);
-    const result = await transcribe(samples, 16000, modelPath);
+    const result = await transcribe(samples, 16000, modelPath, config.dictionary ?? []);
     return result.text;
   });
 
@@ -124,7 +124,7 @@ export function registerIpcHandlers(
     const modelPath = modelManager.getModelPath(config.whisper.model);
     const samples = resampleTo16kHz(new Float32Array(recording.audioBuffer), recording.sampleRate);
 
-    const result = await transcribe(samples, 16000, modelPath);
+    const result = await transcribe(samples, 16000, modelPath, config.dictionary ?? []);
     const rawText = result.text;
 
     let correctedText: string | null = null;
