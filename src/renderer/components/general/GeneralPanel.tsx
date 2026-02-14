@@ -4,7 +4,7 @@ import { useSaveToast } from "../../hooks/use-save-toast";
 import { usePermissions } from "../../hooks/use-permissions";
 import { useT } from "../../i18n-context";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
-import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, BookIcon } from "../../../shared/icons";
+import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon } from "../../../shared/icons";
 import type { ThemeMode, SupportedLanguage } from "../../../shared/config";
 import { CustomSelect, type SelectItem } from "../ui/CustomSelect";
 import { OfflineBanner } from "../ui/OfflineBanner";
@@ -82,8 +82,6 @@ export function GeneralPanel() {
   const isDevMode = import.meta.env.DEV;
 
   const needsPermissions = setupComplete && (permissionStatus?.accessibility !== true || permissionStatus?.microphone !== "granted");
-  const permissionsGranted = permissionStatus?.accessibility === true && permissionStatus?.microphone === "granted";
-  const dictionaryEmpty = setupComplete && permissionsGranted && (config?.dictionary ?? []).length === 0;
 
   if (!config) return null;
 
@@ -154,28 +152,6 @@ export function GeneralPanel() {
         </div>
       )}
 
-      {dictionaryEmpty && (
-        <div className={`${card.card} ${styles.setupBanner}`}>
-          <div className={card.body}>
-            <div className={styles.setupContent}>
-              <div className={styles.setupIcon}>
-                <BookIcon width={20} height={20} />
-              </div>
-              <div>
-                <div className={styles.setupTitle}>{t("general.dictionary.title")}</div>
-                <div className={styles.setupDesc}>{t("general.dictionary.description")}</div>
-              </div>
-              <button
-                className={`${buttons.btn} ${buttons.primary}`}
-                onClick={() => setActiveTab("dictionary")}
-              >
-                {t("general.dictionary.action")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className={card.card}>
         <div className={card.header}>
           <h2>{t("general.theme.title")}</h2>
@@ -221,8 +197,9 @@ export function GeneralPanel() {
         </div>
         <div className={card.body}>
           <div className={styles.fieldRow}>
-            <label>{t("general.recordingFeedback.startSound")}</label>
+            <label htmlFor="recording-start-sound">{t("general.recordingFeedback.startSound")}</label>
             <CustomSelect
+              id="recording-start-sound"
               value={config.recordingAudioCue ?? "tap"}
               items={soundItems}
               onChange={(val) => handleSoundChange("recordingAudioCue", val)}
@@ -230,8 +207,9 @@ export function GeneralPanel() {
             />
           </div>
           <div className={styles.fieldRow}>
-            <label>{t("general.recordingFeedback.stopSound")}</label>
+            <label htmlFor="recording-stop-sound">{t("general.recordingFeedback.stopSound")}</label>
             <CustomSelect
+              id="recording-stop-sound"
               value={config.recordingStopAudioCue ?? "pop"}
               items={soundItems}
               onChange={(val) => handleSoundChange("recordingStopAudioCue", val)}
@@ -239,8 +217,9 @@ export function GeneralPanel() {
             />
           </div>
           <div className={styles.fieldRow}>
-            <label>{t("general.recordingFeedback.errorSound")}</label>
+            <label htmlFor="recording-error-sound">{t("general.recordingFeedback.errorSound")}</label>
             <CustomSelect
+              id="recording-error-sound"
               value={config.errorAudioCue ?? "error"}
               items={errorSoundItems}
               onChange={(val) => handleSoundChange("errorAudioCue", val)}

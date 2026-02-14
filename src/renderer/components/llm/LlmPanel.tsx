@@ -11,7 +11,7 @@ import { CustomProviderFields } from "./CustomProviderFields";
 import { StatusBox } from "../ui/StatusBox";
 import { NewDot } from "../ui/NewDot";
 import { CustomSelect } from "../ui/CustomSelect";
-import { ExternalLinkIcon, CheckCircleIcon } from "../../../shared/icons";
+import { ExternalLinkIcon, CheckCircleIcon, InfoCircleAltIcon, CopyIcon } from "../../../shared/icons";
 import type { LlmProviderType, LlmConfig } from "../../../shared/config";
 import card from "../shared/card.module.scss";
 import form from "../shared/forms.module.scss";
@@ -49,6 +49,7 @@ export function LlmPanel() {
   const [activeTab, setActiveTab] = useState<"provider" | "prompt">("provider");
   const [initialPromptValue, setInitialPromptValue] = useState<string | null>(null);
   const [visitedCustomPrompt, setVisitedCustomPrompt] = useState(() => localStorage.getItem("vox:visited-custom-prompt") === "true");
+  const [copiedExample, setCopiedExample] = useState<string | null>(null);
 
   const handlePromptTabClick = useCallback(() => {
     if (!visitedCustomPrompt) {
@@ -258,18 +259,40 @@ export function LlmPanel() {
                   style={{ resize: "none" }}
                 />
                 <details className={form.exampleDetails}>
-                  {/* eslint-disable-next-line i18next/no-literal-string */}
                   <summary>
-                    💡 {t("llm.exampleInstructions")}
+                    <InfoCircleAltIcon width={13} height={13} />
+                    {t("llm.exampleInstructions")}
                   </summary>
                   <ul>
-                    <li><strong>{t("llm.exampleProfessionalLabel")}</strong> {t("llm.exampleProfessional")}</li>
-                    <li><strong>{t("llm.exampleFormalLabel")}</strong> {t("llm.exampleFormal")}</li>
-                    <li><strong>{t("llm.exampleCasualLabel")}</strong> {t("llm.exampleCasual")}</li>
-                    <li><strong>{t("llm.exampleFunnyLabel")}</strong> {t("llm.exampleFunny")}</li>
-                    <li><strong>{t("llm.exampleEmojisLabel")}</strong> {t("llm.exampleEmojis")}</li>
-                    <li><strong>{t("llm.exampleConciseLabel")}</strong> {t("llm.exampleConcise")}</li>
-                    <li><strong>{t("llm.exampleLanguageLabel")}</strong> {t("llm.exampleLanguage")}</li>
+                    {([
+                      { label: t("llm.exampleProfessionalLabel"), text: t("llm.exampleProfessional"), key: "professional" },
+                      { label: t("llm.exampleFormalLabel"), text: t("llm.exampleFormal"), key: "formal" },
+                      { label: t("llm.exampleCasualLabel"), text: t("llm.exampleCasual"), key: "casual" },
+                      { label: t("llm.exampleFunnyLabel"), text: t("llm.exampleFunny"), key: "funny" },
+                      { label: t("llm.exampleEmojisLabel"), text: t("llm.exampleEmojis"), key: "emojis" },
+                      { label: t("llm.exampleConciseLabel"), text: t("llm.exampleConcise"), key: "concise" },
+                      { label: t("llm.exampleLanguageLabel"), text: t("llm.exampleLanguage"), key: "language" },
+                    ]).map((ex) => (
+                      <li key={ex.key} className={form.exampleItem}>
+                        <span><strong>{ex.label}</strong> {ex.text}</span>
+                        <button
+                          type="button"
+                          className={form.exampleCopyBtn}
+                          title={copiedExample === ex.key ? t("history.copied") : t("history.copy")}
+                          onClick={() => {
+                            const clean = ex.text.replace(/^[""]|[""]$/g, "");
+                            navigator.clipboard.writeText(clean);
+                            setCopiedExample(ex.key);
+                            setTimeout(() => setCopiedExample((prev) => prev === ex.key ? null : prev), 1500);
+                          }}
+                        >
+                          {copiedExample === ex.key
+                            ? <CheckCircleIcon width={12} height={12} />
+                            : <CopyIcon width={12} height={12} />
+                          }
+                        </button>
+                      </li>
+                    ))}
                   </ul>
                 </details>
               </div>
