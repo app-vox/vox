@@ -100,18 +100,19 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  margin-left: 10px;
-  background: none;
-  border: 1px solid var(--color-border);
+  width: 20px;
+  height: 20px;
+  margin-left: 8px;
+  background: transparent;
+  border: 1.5px solid var(--color-border);
   border-radius: 50%;
-  color: var(--color-text-tertiary);
+  color: var(--color-text-muted);
   cursor: pointer;
   opacity: 0;
-  transition: opacity var(--duration-fast) var(--ease-default),
-    color var(--duration-fast) var(--ease-default),
-    border-color var(--duration-fast) var(--ease-default);
+  transition: opacity 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease,
+    background 150ms ease;
 
   svg {
     margin-left: 1px;
@@ -119,12 +120,14 @@
 
   .option:hover &,
   .option.focused & {
-    opacity: 1;
+    opacity: 0.6;
   }
 
   &:hover {
-    color: var(--color-text-primary);
-    border-color: var(--color-text-primary);
+    opacity: 1 !important;
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 10%, transparent);
   }
 }
 
