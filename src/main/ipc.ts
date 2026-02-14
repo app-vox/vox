@@ -27,8 +27,8 @@ export function registerIpcHandlers(
     configManager.save(config);
     nativeTheme.themeSource = config.theme;
 
-    // Apply launch at login setting (macOS only)
-    if (process.platform === "darwin") {
+    // Apply launch at login setting (macOS only, packaged builds only)
+    if (process.platform === "darwin" && app.isPackaged) {
       app.setLoginItemSettings({
         openAtLogin: config.launchAtLogin,
         openAsHidden: false,
