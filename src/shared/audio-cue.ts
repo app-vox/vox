@@ -1,5 +1,23 @@
 import type { AudioCueType } from "./config";
 
+const WAV_CUE_FILES: Partial<Record<AudioCueType, string>> = {
+  tap: "tap.wav",
+  tick: "tick.wav",
+  pop: "pop.wav",
+  ping: "ping.wav",
+  ding: "ding.wav",
+  nudge: "nudge.wav",
+  error: "error.wav",
+};
+
+export function isWavCue(type: AudioCueType): boolean {
+  return type in WAV_CUE_FILES;
+}
+
+export function getWavFilename(type: AudioCueType): string | null {
+  return WAV_CUE_FILES[type] ?? null;
+}
+
 export function generateCueSamples(type: AudioCueType, sampleRate: number): number[] {
   switch (type) {
     case "click":
@@ -9,6 +27,8 @@ export function generateCueSamples(type: AudioCueType, sampleRate: number): numb
     case "chime":
       return generateChime(sampleRate);
     case "none":
+      return [];
+    default:
       return [];
   }
 }

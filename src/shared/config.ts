@@ -2,7 +2,11 @@ export type ThemeMode = "light" | "dark" | "system";
 
 export type SupportedLanguage = "en" | "pt-BR" | "pt-PT" | "es" | "fr" | "de" | "it" | "pl" | "ru" | "tr";
 
-export type AudioCueType = "click" | "beep" | "chime" | "none";
+export type AudioCueType =
+  | "tap" | "tick" | "pop" | "ping" | "ding" | "nudge"
+  | "click" | "beep" | "chime"
+  | "error"
+  | "none";
 
 export type LlmProviderType = "foundry" | "bedrock" | "openai" | "deepseek" | "litellm";
 
@@ -49,6 +53,8 @@ export interface VoxConfig {
   dictionary: string[];
   language: SupportedLanguage | "system";
   recordingAudioCue: AudioCueType;
+  recordingStopAudioCue: AudioCueType;
+  errorAudioCue: AudioCueType;
 }
 
 export function createDefaultConfig(isProduction = false): VoxConfig {
@@ -80,6 +86,8 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     launchAtLogin: isProduction,
     dictionary: [],
     language: "system",
-    recordingAudioCue: "click",
+    recordingAudioCue: "tap",
+    recordingStopAudioCue: "pop",
+    errorAudioCue: "error",
   };
 }
