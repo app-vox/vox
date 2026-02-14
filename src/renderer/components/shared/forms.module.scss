@@ -77,6 +77,12 @@
   }
 }
 
+.fieldRow {
+  display: flex;
+  gap: var(--spacing-3);
+  align-items: flex-start;
+}
+
 .hint {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);

@@ -7,6 +7,7 @@ import { BedrockFields } from "./BedrockFields";
 import { OpenAICompatibleFields } from "./OpenAICompatibleFields";
 import { LiteLLMFields } from "./LiteLLMFields";
 import { AnthropicFields } from "./AnthropicFields";
+import { CustomProviderFields } from "./CustomProviderFields";
 import { StatusBox } from "../ui/StatusBox";
 import { NewDot } from "../ui/NewDot";
 import { CustomSelect } from "../ui/CustomSelect";
@@ -29,6 +30,8 @@ function isProviderConfigured(provider: LlmProviderType, llm: LlmConfig): boolea
       return !!(llm.openaiEndpoint && llm.openaiModel);
     case "anthropic":
       return !!(llm.anthropicApiKey && llm.anthropicModel);
+    case "custom":
+      return !!(llm.customEndpoint && llm.customToken && llm.customTokenAttr);
     default:
       return false;
   }
@@ -187,6 +190,7 @@ export function LlmPanel() {
                       { value: "deepseek", label: "DeepSeek" },
                       { value: "anthropic", label: "Anthropic" },
                       { value: "litellm", label: "LiteLLM" },
+                      { value: "custom", label: t("llm.custom.label") },
                     ] as const).map((item) => ({
                       ...item,
                       suffix: isProviderConfigured(item.value, config.llm)
@@ -205,6 +209,8 @@ export function LlmPanel() {
                   <BedrockFields />
                 ) : config.llm.provider === "anthropic" ? (
                   <AnthropicFields />
+                ) : config.llm.provider === "custom" ? (
+                  <CustomProviderFields />
                 ) : (
                   <FoundryFields />
                 )}
