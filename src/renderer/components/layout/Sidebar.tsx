@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import type { UpdateState } from "../../../preload/index";
 import { useConfigStore } from "../../stores/config-store";
 import { usePermissions } from "../../hooks/use-permissions";
 import { useT } from "../../i18n-context";
@@ -89,14 +88,6 @@ const KEYBOARD_ICON = (
   </svg>
 );
 
-const INFO_ICON = (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <line x1="12" y1="16" x2="12" y2="12" />
-    <line x1="12" y1="8" x2="12.01" y2="8" />
-  </svg>
-);
-
 const COLLAPSE_ICON = (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <line x1="3" y1="12" x2="21" y2="12" />
@@ -144,7 +135,6 @@ export function Sidebar({ onCollapseChange }: SidebarProps) {
   const t = useT();
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true");
   const [logoSrc, setLogoSrc] = useState("");
-  const [updateState, setUpdateState] = useState<UpdateState | null>(null);
   const activeTab = useConfigStore((s) => s.activeTab);
   const setActiveTab = useConfigStore((s) => s.setActiveTab);
   const setupComplete = useConfigStore((s) => s.setupComplete);
@@ -174,13 +164,6 @@ export function Sidebar({ onCollapseChange }: SidebarProps) {
   useEffect(() => {
     window.voxApi.resources.dataUrl("trayIcon@8x.png").then(setLogoSrc);
   }, []);
-
-  useEffect(() => {
-    window.voxApi.updates.getState().then(setUpdateState);
-    return window.voxApi.updates.onStateChanged(setUpdateState);
-  }, []);
-
-  const hasUpdate = updateState?.status === "available" || updateState?.status === "downloading" || updateState?.status === "ready";
 
   const isConfigured = (type?: "speech" | "permissions" | "ai-enhancement") => {
     if (!type) return false;
@@ -273,30 +256,6 @@ export function Sidebar({ onCollapseChange }: SidebarProps) {
       </nav>
 
       <div className={styles.bottom}>
-        <div className={styles.divider} />
-        <button
-          className={`${styles.navItem} ${activeTab === "about" ? styles.navItemActive : ""}`}
-          onClick={() => setActiveTab("about")}
-          title={collapsed ? (hasUpdate ? t("sidebar.updateAvailable") : t("general.about.title")) : undefined}
-        >
-          <div className={styles.iconWrap}>
-            {INFO_ICON}
-            {hasUpdate && collapsed && (
-              <span className={styles.updateBadge}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="8" x2="12" y2="14" />
-                  <line x1="12" y1="17" x2="12.01" y2="17" />
-                </svg>
-              </span>
-            )}
-          </div>
-          {!collapsed && (
-            <span className={styles.label}>
-              {t("general.about.title")}
-              {hasUpdate && <span className={styles.updateLabel}>{t("sidebar.updateVox")}</span>}
-            </span>
-          )}
-        </button>
         {collapsed && logoSrc && (
           <div className={styles.collapsedLogo}>
             <img

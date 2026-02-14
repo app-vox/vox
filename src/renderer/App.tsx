@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type JSX } from "react";
 import { useConfigStore } from "./stores/config-store";
 import { Sidebar } from "./components/layout/Sidebar";
+import { Titlebar } from "./components/layout/Titlebar";
 import { AboutPanel } from "./components/about/AboutPanel";
 import { LlmPanel } from "./components/llm/LlmPanel";
 import { WhisperPanel } from "./components/whisper/WhisperPanel";
@@ -78,6 +79,7 @@ export function App() {
       <div className="flex h-full">
         <Sidebar onCollapseChange={handleCollapseChange} />
         <div className="flex flex-col flex-1 min-w-0">
+          <Titlebar />
           <main className="content" ref={contentRef}>
             <Panel />
           </main>
