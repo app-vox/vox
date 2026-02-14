@@ -1,5 +1,6 @@
 import { useOnlineStatus } from "../../hooks/use-online-status";
 import { useT } from "../../i18n-context";
+import { AlertTriangleIcon } from "../../../shared/icons";
 import styles from "./OfflineBanner.module.scss";
 
 export function OfflineBanner() {
@@ -10,8 +11,7 @@ export function OfflineBanner() {
 
   return (
     <div className={styles.banner}>
-      {/* eslint-disable-next-line i18next/no-literal-string */}
-      <span>&#x26A0;&#xFE0F;</span>
+      <AlertTriangleIcon width={14} height={14} />
       {t("ui.offlineWarning")}
     </div>
   );

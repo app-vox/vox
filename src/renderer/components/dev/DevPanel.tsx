@@ -8,7 +8,7 @@ import { useTranscriptionsStore } from "../../stores/transcriptions-store";
 import { useOnlineStatus } from "../../hooks/use-online-status";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
-import { SearchIcon } from "../../../shared/icons";
+import { RefreshIcon } from "../../../shared/icons";
 import card from "../shared/card.module.scss";
 import styles from "./DevPanel.module.scss";
 
@@ -172,6 +172,7 @@ function OverrideRange<K extends keyof DevOverrides>({
 interface CardDef {
   title: string;
   rows: { label: string; render: (q: string) => ReactNode; overrideField?: keyof DevOverrides }[];
+  overrideFields?: (keyof DevOverrides)[];
 }
 
 /* ── Main Panel ──────────────────────────────────────────────────── */
@@ -307,6 +308,7 @@ export function DevPanel() {
   const cards: CardDef[] = useMemo(() => [
     {
       title: "Update State",
+      overrideFields: ["updateStatus", "updateDownloadProgress"],
       rows: [
         {
           label: "Status",
@@ -332,6 +334,7 @@ export function DevPanel() {
     },
     {
       title: "Permissions",
+      overrideFields: ["microphonePermission", "accessibilityPermission"],
       rows: [
         {
           label: "Microphone",
@@ -360,6 +363,7 @@ export function DevPanel() {
     },
     {
       title: "Setup & Connectivity",
+      overrideFields: ["setupComplete", "online"],
       rows: [
         {
           label: "Setup Complete",
@@ -407,6 +411,7 @@ export function DevPanel() {
     },
     {
       title: "LLM",
+      overrideFields: ["llmEnhancementEnabled", "llmConnectionTested"],
       rows: [
         { label: "Provider", render: () => <>{llmProvider}</> },
         {
@@ -517,6 +522,14 @@ export function DevPanel() {
   const isRowOverridden = (field?: keyof DevOverrides) =>
     ov && field !== undefined && overrides[field] !== undefined;
 
+  const hasCardOverrides = (fields?: (keyof DevOverrides)[]) =>
+    ov && fields !== undefined && fields.some((f) => overrides[f] !== undefined);
+
+  const clearCardOverrides = (fields?: (keyof DevOverrides)[]) => {
+    if (!fields) return;
+    for (const f of fields) clearOverride(f);
+  };
+
   return (
     <>
       {/* Header row: override toggle + search */}
@@ -531,7 +544,6 @@ export function DevPanel() {
         </label>
         <div className={styles.headerRight}>
           <div className={styles.searchWrap}>
-            <SearchIcon width={14} height={14} />
             <input
               className={styles.searchInput}
               type="text"
@@ -552,7 +564,7 @@ export function DevPanel() {
       </div>
 
       <div className={styles.disclaimer}>
-        Some values may be slightly outdated (polled every 1s). Read-only states come from the main process and cannot be overridden.
+        Some values may become outdated as configuration changes. Read-only states come from the main process and cannot be overridden.
       </div>
 
       {/* Presets */}
@@ -568,8 +580,17 @@ export function DevPanel() {
       <div className={styles.grid} ref={gridRef}>
         {cards.map((c) => (
           <div key={c.title} className={card.card}>
-            <div className={card.header}>
+            <div className={`${card.header} ${styles.cardHeader}`}>
               <h2><Highlight text={c.title} query={q} /></h2>
+              {hasCardOverrides(c.overrideFields) && (
+                <button
+                  className={styles.restoreBtn}
+                  onClick={() => clearCardOverrides(c.overrideFields)}
+                  title="Restore actual values"
+                >
+                  <RefreshIcon width={12} height={12} />
+                </button>
+              )}
             </div>
             <div className={card.body}>
               {c.rows.map((r) => (
