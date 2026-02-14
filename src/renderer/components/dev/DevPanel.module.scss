@@ -7,9 +7,9 @@
 
   input[type="checkbox"] {
     appearance: none;
-    width: 18px;
-    height: 18px;
-    min-width: 18px;
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
     margin-top: 2px;
     border: 2px solid var(--color-border);
     border-radius: 4px;
@@ -32,8 +32,8 @@
         position: absolute;
         left: 5px;
         top: 2px;
-        width: 4px;
-        height: 8px;
+        width: 5px;
+        height: 9px;
         border: solid var(--color-bg-root);
         border-width: 0 2px 2px 0;
         transform: rotate(45deg);
@@ -43,25 +43,43 @@
 }
 
 .masterLabel {
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-lg, 16px);
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
 }
 
 .masterDesc {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base, 14px);
   color: var(--color-text-tertiary);
   line-height: 1.4;
+}
+
+.clearAllBtn {
+  margin-top: var(--spacing-3);
+  padding: var(--spacing-2) var(--spacing-4);
+  background: none;
+  border: 1px solid #ef4444;
+  border-radius: var(--radius-md);
+  color: #ef4444;
+  font-size: var(--font-size-sm, 13px);
+  cursor: pointer;
+  transition: all 150ms ease;
+
+  &:hover {
+    background: #ef4444;
+    color: white;
+  }
 }
 
 .stateRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-1) 0;
-  font-size: var(--font-size-sm);
+  padding: var(--spacing-2, 8px) 0;
+  font-size: var(--font-size-base, 14px);
   border-bottom: 1px solid var(--color-border);
-  min-height: 32px;
+  min-height: 38px;
+  gap: 8px;
 
   &:last-child {
     border-bottom: none;
@@ -71,21 +89,34 @@
 .stateLabel {
   color: var(--color-text-secondary);
   flex-shrink: 0;
-  margin-right: var(--spacing-3);
+  margin-right: var(--spacing-2);
+  font-size: var(--font-size-base, 14px);
 }
 
 .stateValue {
   color: var(--color-text-primary);
   font-family: var(--font-mono, monospace);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm, 13px);
   text-align: right;
   word-break: break-all;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.realValue {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0.6;
 }
 
 .dot {
   display: inline-block;
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   margin-right: 6px;
   vertical-align: middle;
@@ -105,7 +136,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   color: var(--color-text-secondary);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm, 13px);
   cursor: pointer;
 
   &:hover {
@@ -118,4 +149,94 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+/* ── Override Controls ─────────────────────────────────────────── */
+
+.overrideControl {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.overrideSelect {
+  appearance: none;
+  padding: 3px 22px 3px 8px;
+  font-size: 12px;
+  font-family: var(--font-mono, monospace);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-input);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  transition: all 150ms ease;
+
+  &:hover {
+    border-color: var(--color-border-hover);
+  }
+
+  &:focus {
+    outline: 2px solid var(--color-border-hover);
+    outline-offset: -1px;
+  }
+}
+
+.overrideActive {
+  border-color: #f59e0b;
+  background-color: color-mix(in srgb, #f59e0b 10%, var(--color-bg-input));
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.rangeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.overrideRange {
+  width: 100px;
+  accent-color: #f59e0b;
+}
+
+.rangeValue {
+  font-size: 12px;
+  font-family: var(--font-mono, monospace);
+  color: var(--color-text-primary);
+  min-width: 36px;
+  text-align: right;
+}
+
+.clearBtn {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-tertiary);
+  font-size: 11px;
+  padding: 1px 6px;
+  cursor: pointer;
+  line-height: 1;
+
+  &:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+  }
+}
+
+.setBtn {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  padding: 2px 10px;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--color-border-hover);
+    background: var(--color-bg-hover);
+  }
 }
