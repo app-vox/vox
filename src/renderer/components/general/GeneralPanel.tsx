@@ -117,9 +117,9 @@ export function GeneralPanel() {
 
   const handleSoundChange = async (field: "recordingAudioCue" | "recordingStopAudioCue" | "errorAudioCue", cue: string) => {
     updateConfig({ [field]: cue });
+    previewCue(cue as AudioCueType);
     await saveConfig(false);
     triggerToast();
-    previewCue(cue as AudioCueType);
   };
 
   const setTheme = async (theme: ThemeMode) => {
