@@ -31,7 +31,6 @@ export function DictionaryPanel() {
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const [inputValue, setInputValue] = useState("");
-  const [copied, setCopied] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -70,12 +69,6 @@ export function DictionaryPanel() {
       e.preventDefault();
       addTerms(inputValue);
     }
-  };
-
-  const handleCopyToClipboard = () => {
-    navigator.clipboard.writeText(dictionary.join(", "));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -119,12 +112,6 @@ export function DictionaryPanel() {
           <>
             <div className={styles.listHeader}>
               <span className={styles.count}>{sorted.length} {sorted.length === 1 ? "entry" : "entries"}</span>
-              <button
-                onClick={handleCopyToClipboard}
-                className={`${buttons.btn} ${buttons.secondary} ${buttons.sm}`}
-              >
-                {copied ? "Copied!" : "Copy to Clipboard"}
-              </button>
             </div>
             <div className={styles.entryList}>
               {sorted.map((term) => (
