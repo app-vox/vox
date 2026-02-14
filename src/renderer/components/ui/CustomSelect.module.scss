@@ -61,9 +61,9 @@
 }
 
 .option {
-  display: block;
+  display: flex;
+  align-items: center;
   width: 100%;
-  padding: 7px 12px;
   background: none;
   border: none;
   color: var(--color-text-primary);
@@ -81,6 +81,45 @@
   &.selected {
     color: var(--color-accent);
     font-weight: var(--font-weight-medium);
+  }
+}
+
+.optionLabel {
+  flex: 1;
+  padding: 7px 12px;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.previewBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-right: 6px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-default),
+    color var(--duration-fast) var(--ease-default),
+    background var(--duration-fast) var(--ease-default);
+
+  .option:hover &,
+  .option.focused & {
+    opacity: 1;
+  }
+
+  &:hover {
+    color: var(--color-text-primary);
+    background: var(--color-bg-hover);
   }
 }
 

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDownIcon } from "../../../shared/icons";
+import { ChevronDownIcon, PlayIcon } from "../../../shared/icons";
 import styles from "./CustomSelect.module.scss";
 
 export interface SelectOption {
@@ -23,10 +23,11 @@ interface CustomSelectProps {
   value: string;
   items: SelectItem[];
   onChange: (value: string) => void;
+  onPreview?: (value: string) => void;
   id?: string;
 }
 
-export function CustomSelect({ value, items, onChange, id }: CustomSelectProps) {
+export function CustomSelect({ value, items, onChange, onPreview, id }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
   const [focusIndex, setFocusIndex] = useState(-1);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
@@ -44,12 +45,28 @@ export function CustomSelect({ value, items, onChange, id }: CustomSelectProps) 
     return indices;
   }, [items]);
 
-  useLayoutEffect(() => {
-    if (open && triggerRef.current) {
+  const updatePosition = useCallback(() => {
+    if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
       setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
     }
-  }, [open]);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (open) updatePosition();
+  }, [open, updatePosition]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleScroll = () => setOpen(false);
+    const scrollContainer = triggerRef.current?.closest("[class*='content']") ?? window;
+    scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", updatePosition);
+    return () => {
+      scrollContainer.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", updatePosition);
+    };
+  }, [open, updatePosition]);
 
   useEffect(() => {
     if (!open) return;
@@ -162,20 +179,37 @@ export function CustomSelect({ value, items, onChange, id }: CustomSelectProps) 
             const isFocused = i === focusIndex;
 
             return (
-              <button
+              <div
                 key={item.value}
-                type="button"
                 role="option"
                 aria-selected={isSelected}
                 className={`${styles.option} ${isSelected ? styles.selected : ""} ${isFocused ? styles.focused : ""}`}
-                onClick={() => {
-                  onChange(item.value);
-                  setOpen(false);
-                }}
                 onMouseEnter={() => setFocusIndex(i)}
               >
-                {item.label}
-              </button>
+                <button
+                  type="button"
+                  className={styles.optionLabel}
+                  onClick={() => {
+                    onChange(item.value);
+                    setOpen(false);
+                  }}
+                >
+                  {item.label}
+                </button>
+                {onPreview && item.value !== "none" && (
+                  <button
+                    type="button"
+                    className={styles.previewBtn}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onPreview(item.value);
+                    }}
+                    tabIndex={-1}
+                  >
+                    <PlayIcon width={10} height={10} />
+                  </button>
+                )}
+              </div>
             );
           })}
         </div>,
