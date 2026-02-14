@@ -128,7 +128,7 @@ export function LlmPanel() {
     await saveConfig();
 
     try {
-      const result = await window.voxApi.llm.test();
+      const result = await window.voxApi.llm.test(config);
       const freshConfig = await window.voxApi.config.load();
       updateConfig({
         llmConnectionTested: freshConfig.llmConnectionTested,
