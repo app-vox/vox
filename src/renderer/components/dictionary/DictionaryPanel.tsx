@@ -149,16 +149,20 @@ export function DictionaryPanel() {
             {totalPages > 1 && (
               <div className={styles.pagination}>
                 <div className={styles.pageInfo}>
-                  Page {page} of {totalPages}
+                  {page} / {totalPages}
                 </div>
                 <div className={styles.pageControls}>
-                  <button disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button>
-                  <button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>Next</button>
+                  <button disabled={page <= 1} onClick={() => setPage(page - 1)}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+                  </button>
+                  <button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                  </button>
                 </div>
-                <select value={pageSize} onChange={(e) => handlePageSizeChange(Number(e.target.value))}>
-                  <option value={10}>10 per page</option>
-                  <option value={25}>25 per page</option>
-                  <option value={50}>50 per page</option>
+                <select className={styles.pageSizeSelect} value={pageSize} onChange={(e) => handlePageSizeChange(Number(e.target.value))}>
+                  <option value={10}>10 / page</option>
+                  <option value={25}>25 / page</option>
+                  <option value={50}>50 / page</option>
                 </select>
               </div>
             )}
