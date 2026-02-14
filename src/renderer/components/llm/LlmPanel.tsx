@@ -235,6 +235,7 @@ export function LlmPanel() {
                     <li><strong>{t("llm.exampleFunnyLabel")}</strong> {t("llm.exampleFunny")}</li>
                     <li><strong>{t("llm.exampleEmojisLabel")}</strong> {t("llm.exampleEmojis")}</li>
                     <li><strong>{t("llm.exampleConciseLabel")}</strong> {t("llm.exampleConcise")}</li>
+                    <li><strong>{t("llm.exampleLanguageLabel")}</strong> {t("llm.exampleLanguage")}</li>
                   </ul>
                 </details>
               </div>

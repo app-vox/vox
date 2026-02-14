@@ -214,6 +214,8 @@
   "llm.exampleEmojisLabel": "Emojilerle:",
   "llm.exampleConcise": "\"Anlamı kaybetmeden olabildiğince kısa yap\"",
   "llm.exampleConciseLabel": "Özlü:",
+  "llm.exampleLanguage": "\"Her şeyi Çince söyle\"",
+  "llm.exampleLanguageLabel": "Dil:",
   "tray.transcriptions": "Yazıya Dökümler",
   "ui.scrollToTop": "Üste kaydır",
   "ui.scrollToBottom": "Alta kaydır",

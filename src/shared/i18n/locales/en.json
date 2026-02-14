@@ -214,6 +214,8 @@
   "llm.exampleEmojisLabel": "With Emojis:",
   "llm.exampleConcise": "\"Make it as brief as possible without losing meaning\"",
   "llm.exampleConciseLabel": "Concise:",
+  "llm.exampleLanguage": "\"Say everything in Chinese\"",
+  "llm.exampleLanguageLabel": "Language:",
   "tray.transcriptions": "Transcriptions",
   "ui.scrollToTop": "Scroll to top",
   "ui.scrollToBottom": "Scroll to bottom",

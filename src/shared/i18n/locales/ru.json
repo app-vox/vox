@@ -214,6 +214,8 @@
   "llm.exampleEmojisLabel": "С Эмодзи:",
   "llm.exampleConcise": "\"Сделайте это максимально кратким, не теряя смысла\"",
   "llm.exampleConciseLabel": "Краткий:",
+  "llm.exampleLanguage": "\"Скажи всё на китайском\"",
+  "llm.exampleLanguageLabel": "Язык:",
   "tray.transcriptions": "Транскрипции",
   "ui.scrollToTop": "Прокрутить вверх",
   "ui.scrollToBottom": "Прокрутить вниз",
