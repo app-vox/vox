@@ -69,6 +69,7 @@ function buildStaticHtml(): string {
     letter-spacing: 0.1px;
     white-space: nowrap;
     pointer-events: none;
+    min-width: 120px;
   }
   .hidden { display: none !important; }
   .dot {

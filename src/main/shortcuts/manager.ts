@@ -388,9 +388,9 @@ export class ShortcutManager {
       } else {
         // Paste only happens here - after successful pipeline completion with valid text
         console.log("[Vox] Valid text received, proceeding with paste");
-        this.indicator.hide();
         await new Promise((r) => setTimeout(r, 200));
         pasteText(trimmedText);
+        this.indicator.hide();
       }
     } catch (err: unknown) {
       // Any exception (CanceledError, NoModelError, etc.) prevents paste
