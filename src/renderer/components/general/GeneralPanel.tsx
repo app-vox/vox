@@ -71,6 +71,8 @@ export function GeneralPanel() {
   };
 
   const soundItems: SelectItem[] = [
+    { value: "none", label: t("general.recordingFeedback.audioCue.none") },
+    { divider: true },
     { value: "beep", label: t("general.recordingFeedback.audioCue.beep") },
     { value: "chime", label: t("general.recordingFeedback.audioCue.chime") },
     { value: "click", label: t("general.recordingFeedback.audioCue.click") },
@@ -80,23 +82,12 @@ export function GeneralPanel() {
     { value: "pop", label: t("general.recordingFeedback.sound.pop") },
     { value: "tap", label: t("general.recordingFeedback.sound.tap") },
     { value: "tick", label: t("general.recordingFeedback.sound.tick") },
-    { divider: true },
-    { value: "none", label: t("general.recordingFeedback.audioCue.none") },
   ];
 
   const errorSoundItems: SelectItem[] = [
-    { value: "beep", label: t("general.recordingFeedback.audioCue.beep") },
-    { value: "chime", label: t("general.recordingFeedback.audioCue.chime") },
-    { value: "click", label: t("general.recordingFeedback.audioCue.click") },
-    { value: "ding", label: t("general.recordingFeedback.sound.ding") },
-    { value: "error", label: t("general.recordingFeedback.sound.error") },
-    { value: "nudge", label: t("general.recordingFeedback.sound.nudge") },
-    { value: "ping", label: t("general.recordingFeedback.sound.ping") },
-    { value: "pop", label: t("general.recordingFeedback.sound.pop") },
-    { value: "tap", label: t("general.recordingFeedback.sound.tap") },
-    { value: "tick", label: t("general.recordingFeedback.sound.tick") },
-    { divider: true },
     { value: "none", label: t("general.recordingFeedback.audioCue.none") },
+    { divider: true },
+    { value: "error", label: t("general.recordingFeedback.sound.error") },
   ];
 
   const languageItems: SelectItem[] = [
@@ -117,7 +108,6 @@ export function GeneralPanel() {
 
   const handleSoundChange = async (field: "recordingAudioCue" | "recordingStopAudioCue" | "errorAudioCue", cue: string) => {
     updateConfig({ [field]: cue });
-    previewCue(cue as AudioCueType);
     await saveConfig(false);
     triggerToast();
   };
@@ -255,6 +245,7 @@ export function GeneralPanel() {
               value={config.recordingAudioCue ?? "tap"}
               items={soundItems}
               onChange={(val) => handleSoundChange("recordingAudioCue", val)}
+              onPreview={(val) => previewCue(val as AudioCueType)}
             />
           </div>
           <div className={styles.fieldRow}>
@@ -263,6 +254,7 @@ export function GeneralPanel() {
               value={config.recordingStopAudioCue ?? "pop"}
               items={soundItems}
               onChange={(val) => handleSoundChange("recordingStopAudioCue", val)}
+              onPreview={(val) => previewCue(val as AudioCueType)}
             />
           </div>
           <div className={styles.fieldRow}>
@@ -271,6 +263,7 @@ export function GeneralPanel() {
               value={config.errorAudioCue ?? "error"}
               items={errorSoundItems}
               onChange={(val) => handleSoundChange("errorAudioCue", val)}
+              onPreview={(val) => previewCue(val as AudioCueType)}
             />
           </div>
         </div>
