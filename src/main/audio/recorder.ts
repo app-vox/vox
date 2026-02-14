@@ -183,6 +183,25 @@ export class AudioRecorder {
     `);
   }
 
+  async playWavCue(base64Data: string): Promise<void> {
+    if (!this.win || this.win.isDestroyed()) return;
+
+    await this.win.webContents.executeJavaScript(`
+      (async () => {
+        const binary = atob("${base64Data}");
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const ctx = new AudioContext();
+        const buffer = await ctx.decodeAudioData(bytes.buffer);
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+        source.start();
+        source.onended = () => ctx.close();
+      })()
+    `);
+  }
+
   private stopLevels(): void {
     if (this.levelsInterval) {
       clearInterval(this.levelsInterval);

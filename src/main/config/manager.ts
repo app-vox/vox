@@ -40,6 +40,8 @@ export class ConfigManager {
         dictionary: Array.isArray(saved.dictionary) ? saved.dictionary : defaults.dictionary,
         language: saved.language ?? defaults.language,
         recordingAudioCue: saved.recordingAudioCue ?? defaults.recordingAudioCue,
+        recordingStopAudioCue: saved.recordingStopAudioCue ?? defaults.recordingStopAudioCue,
+        errorAudioCue: saved.errorAudioCue ?? defaults.errorAudioCue,
       };
 
       for (const field of SENSITIVE_FIELDS) {
