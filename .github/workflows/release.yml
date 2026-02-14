@@ -190,7 +190,7 @@ jobs:
           # Move all build artifacts to release directory
           find artifacts -type f \( -name "*.dmg" -o -name "*.zip" -o -name "*.blockmap" -o -name "latest-mac.yml" \) -exec mv {} release/ \;
 
-          # Create stable-named copies for the latest release
+          # Create stable-named copies for releases/latest/download URLs
           DMG=$(find release -name "*.dmg" ! -name "Vox-mac-arm64.dmg" | head -1)
           ZIP=$(find release -name "*-mac.zip" | head -1)
           cp "$DMG" "release/Vox-mac-arm64.dmg"
@@ -209,7 +209,7 @@ jobs:
           git commit -m "chore(release): bump version to ${{ needs.version.outputs.version }}"
           git push origin HEAD:main
 
-      - name: Create versioned GitHub Release
+      - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
@@ -219,45 +219,17 @@ jobs:
           git tag "$TAG"
           git push origin "$TAG"
 
+          # Upload both versioned and stable-named assets so that
+          # GitHub's built-in releases/latest/download/<asset> provides
+          # permanent download URLs without a separate "latest" release.
           gh release create "$TAG" \
             --title "Vox $TAG" \
             --generate-notes \
             release/Vox-${VERSION}-arm64.dmg \
             release/Vox-${VERSION}-arm64-mac.zip \
             release/Vox-${VERSION}-arm64-mac.zip.blockmap \
-            release/latest-mac.yml
-
-          echo "Versioned release created: $TAG"
-
-      - name: Update latest release
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          TAG="${{ needs.version.outputs.tag }}"
-
-          # Delete existing latest release and tag if they exist
-          # Use GitHub API instead of git push to avoid tag protection rules
-          gh release delete latest --yes --cleanup-tag 2>/dev/null || true
-
-          # Create the latest release as a prerelease so electron-updater
-          # skips it and resolves to the versioned release (which has
-          # matching file names for latest-mac.yml).
-          # --target creates the tag via the API, bypassing git push restrictions.
-          gh release create latest \
-            --target "$(git rev-parse HEAD)" \
-            --prerelease \
-            --title "Vox Latest ($TAG)" \
-            --notes "$(cat <<NOTES
-          This release always points to the latest version. Current: **${TAG}**
-
-          ### Download
-
-          **Apple Silicon (M1/M2/M3/M4):**
-          - [Vox-mac-arm64.dmg](https://github.com/app-vox/vox/releases/download/latest/Vox-mac-arm64.dmg)
-          - [Vox-mac-arm64.zip](https://github.com/app-vox/vox/releases/download/latest/Vox-mac-arm64.zip)
-          NOTES
-          )" \
+            release/latest-mac.yml \
             release/Vox-mac-arm64.dmg \
             release/Vox-mac-arm64.zip
 
-          echo "Latest release updated"
+          echo "Release created: $TAG"
