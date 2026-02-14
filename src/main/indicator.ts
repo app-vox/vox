@@ -70,6 +70,7 @@ function buildStaticHtml(): string {
     white-space: nowrap;
     pointer-events: none;
     min-width: 120px;
+    min-height: 36px;
   }
   .hidden { display: none !important; }
   .dot {
