@@ -79,6 +79,7 @@
   "llm.testingConnection": "Bağlantı test ediliyor...",
   "llm.connectionSuccessful": "Bağlantı başarılı",
   "llm.connectionFailed": "Bağlantı başarısız: {error}",
+  "llm.connectionTestRequired": "Yapay zeka iyileştirmesini kullanmadan önce bağlantınızı test etmelisiniz",
   "llm.customInstructions": "Özel Talimatlar",
   "llm.customInstructionsHint": "Özel talimatlarınız Vox'un varsayılan davranışına (dilbilgisi düzeltme, dolgu sözcüklerini kaldırma, anlamı koruma) eklenir. Yalnızca varsayılanları kullanmak için boş bırakın.",
   "llm.customInstructionsPlaceholder": "Yapay zeka için ek talimatlar ekleyin...",

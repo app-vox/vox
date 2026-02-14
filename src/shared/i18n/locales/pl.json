@@ -79,6 +79,7 @@
   "llm.testingConnection": "Testowanie połączenia...",
   "llm.connectionSuccessful": "Połączenie udane",
   "llm.connectionFailed": "Połączenie nie powiodło się: {error}",
+  "llm.connectionTestRequired": "Musisz przetestować połączenie przed użyciem ulepszenia AI",
   "llm.customInstructions": "Własne instrukcje",
   "llm.customInstructionsHint": "Twoje własne instrukcje zostaną dodane do domyślnego zachowania Vox (poprawa gramatyki, usuwanie słów wypełniających, zachowanie znaczenia). Pozostaw puste, aby używać tylko domyślnych.",
   "llm.customInstructionsPlaceholder": "Dodaj dodatkowe instrukcje dla AI...",
