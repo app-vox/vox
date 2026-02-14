@@ -26,6 +26,10 @@ export function ModelRow({ model, selected, onSelect, onDelete }: ModelRowProps)
   useEffect(() => {
     const handler = (p: { size: string; downloaded: number; total: number }) => {
       if (p.size === model.size) {
+        if (p.total > 0 && p.downloaded < p.total) {
+          setDownloading(true);
+          setDownloaded(false);
+        }
         setProgress({ downloaded: p.downloaded, total: p.total });
       }
     };
