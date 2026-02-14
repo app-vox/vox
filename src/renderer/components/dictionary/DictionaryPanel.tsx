@@ -37,6 +37,7 @@ export function DictionaryPanel() {
   const [inputValue, setInputValue] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(() => Number(localStorage.getItem("vox:dictionary-pageSize")) || 10);
+  const [highlightTerms, setHighlightTerms] = useState<Set<string>>(new Set());
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -62,9 +63,17 @@ export function DictionaryPanel() {
     const existing = new Set(dictionary.map((t) => t.toLowerCase()));
     const newTerms = terms.filter((t) => !existing.has(t.toLowerCase()));
     if (newTerms.length > 0) {
-      updateConfig({ dictionary: [...dictionary, ...newTerms] });
+      const updated = [...dictionary, ...newTerms];
+      updateConfig({ dictionary: updated });
       saveConfig(true);
-      setPage(1);
+
+      const newSorted = [...updated].sort((a, b) => a.localeCompare(b));
+      const firstNewIndex = newSorted.findIndex((t) => newTerms.includes(t));
+      const targetPage = firstNewIndex >= 0 ? Math.floor(firstNewIndex / pageSize) + 1 : 1;
+      setPage(targetPage);
+
+      setHighlightTerms(new Set(newTerms));
+      setTimeout(() => setHighlightTerms(new Set()), 2000);
     }
     setInputValue("");
   };
@@ -132,7 +141,7 @@ export function DictionaryPanel() {
           <>
             <div className={styles.entryList}>
               {pageEntries.map((term) => (
-                <div key={term} className={styles.entry}>
+                <div key={term} className={`${styles.entry} ${highlightTerms.has(term) ? styles.highlight : ""}`}>
                   <span className={styles.entryText}>{term}</span>
                   <button
                     className={styles.deleteBtn}
