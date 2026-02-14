@@ -95,7 +95,7 @@ export function ModelRow({ model, selected, onSelect, onDelete }: ModelRowProps)
           onChange={() => onSelect(model.size)}
         />
         <span className={styles.nameBlock}>
-          <span className={styles.name}>{model.info.label}</span>
+          <span className={styles.name}>{model.info.label} <span className={styles.desc}>{model.info.description}</span></span>
           <span className={styles.technicalName}>{model.size}</span>
         </span>
       </label>
