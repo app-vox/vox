@@ -77,7 +77,7 @@ function setupPipeline(): void {
           win.webContents.send("history:entry-added");
         }
       } catch (err) {
-        console.error("[Vox] Failed to save transcription to history:", err);
+        log.scope("Vox").error("Failed to save transcription to history", err);
       }
     },
   });
@@ -153,9 +153,9 @@ app.whenReady().then(async () => {
 
     if (response.response === 0) {
       shell.openExternal("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility");
-      console.log("[Vox] Opening Accessibility settings...");
+      log.scope("Vox").info("Opening Accessibility settings");
     } else {
-      console.log("[Vox] User chose to continue without Accessibility permission");
+      log.scope("Vox").info("User chose to continue without Accessibility permission");
     }
   }
 

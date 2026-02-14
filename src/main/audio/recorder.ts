@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from "electron";
 import * as fs from "fs";
 import * as path from "path";
+import log from "electron-log/main";
 
 export interface RecordingResult {
   audioBuffer: Float32Array;
@@ -160,7 +161,7 @@ export class AudioRecorder {
         })()
       `);
     } catch (err) {
-      console.error("[Recorder] Error during cancel:", err);
+      log.scope("Recorder").error("Error during cancel", err);
     }
     this.recording = false;
     this.starting = false;

@@ -1,3 +1,4 @@
+import log from "electron-log/main";
 import { type LlmProvider } from "./provider";
 import { type VoxConfig } from "../../shared/config";
 import { computeLlmConfigHash } from "../../shared/llm-config-hash";
@@ -9,23 +10,23 @@ import { AnthropicProvider } from "./anthropic";
 import { CustomProvider } from "./custom";
 import { NoopProvider } from "./noop";
 
+const factoryLog = log.scope("LlmFactory");
+
 interface CreateLlmProviderOptions {
   forTest?: boolean;
 }
 
 export function createLlmProvider(config: VoxConfig, options?: CreateLlmProviderOptions): LlmProvider {
-  const isDev = process.env.NODE_ENV === "development";
-
   // If LLM enhancement is disabled, return no-op provider
   if (!config.enableLlmEnhancement) {
-    console.log("[LLM Factory] LLM enhancement is disabled, using NoopProvider");
+    factoryLog.info("LLM enhancement disabled, using NoopProvider");
     return new NoopProvider();
   }
 
   // If not tested or config changed since last test, block unless running a test
   if (!options?.forTest) {
     if (!config.llmConnectionTested || computeLlmConfigHash(config) !== config.llmConfigHash) {
-      console.log("[LLM Factory] LLM connection not tested or config changed, using NoopProvider");
+      factoryLog.info("LLM connection not tested or config changed, using NoopProvider");
       return new NoopProvider();
     }
   }
@@ -35,12 +36,10 @@ export function createLlmProvider(config: VoxConfig, options?: CreateLlmProvider
   const hasCustomPrompt = !!customPrompt;
   const prompt = buildSystemPrompt(customPrompt || "", config.dictionary ?? []);
 
-  console.log("[LLM Factory] Creating provider:", config.llm.provider);
-  console.log("[LLM Factory] Custom prompt:", hasCustomPrompt ? "YES" : "NO");
-  if (isDev && hasCustomPrompt) {
-    console.log("[LLM Factory] [DEV] Custom prompt content:", customPrompt);
-    console.log("[LLM Factory] [DEV] Full system prompt length:", prompt.length);
-  }
+  factoryLog.info("Creating provider: %s", config.llm.provider);
+  factoryLog.info("Custom prompt: %s", hasCustomPrompt ? "YES" : "NO");
+  factoryLog.debug("Custom prompt content", customPrompt);
+  factoryLog.debug("Full system prompt length: %d", prompt.length);
 
   // Otherwise route to configured provider
   switch (config.llm.provider) {
