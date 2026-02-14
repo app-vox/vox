@@ -263,6 +263,7 @@
     font-weight: var(--font-weight-medium);
 
     svg {
+      display: inline;
       vertical-align: -2px;
       margin-right: var(--spacing-1);
       color: var(--color-text-muted);

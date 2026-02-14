@@ -78,9 +78,9 @@ export function CustomProviderFields() {
             id="llm-custom-send-as"
             value={config.llm.customTokenSendAs || "header"}
             items={[
-              { value: "header", label: "Header" },
-              { value: "body", label: "Body" },
-              { value: "query", label: "Query Param" },
+              { value: "header", label: t("llm.custom.sendAsHeader") },
+              { value: "body", label: t("llm.custom.sendAsBody") },
+              { value: "query", label: t("llm.custom.sendAsQuery") },
             ]}
             onChange={(value) => {
               updateConfig({ llm: { ...config.llm, customTokenSendAs: value as CustomTokenSendAs } });
