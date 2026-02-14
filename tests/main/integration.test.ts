@@ -4,6 +4,7 @@ import { NoopProvider } from "../../src/main/llm/noop";
 import { FoundryProvider } from "../../src/main/llm/foundry";
 import { createLlmProvider } from "../../src/main/llm/factory";
 import { createDefaultConfig } from "../../src/shared/config";
+import { computeLlmConfigHash } from "../../src/shared/llm-config-hash";
 
 // Mock fs module
 vi.mock("fs", () => ({
@@ -58,8 +59,10 @@ describe("Whisper-only mode integration", () => {
   it("should complete full pipeline with LLM when enabled", async () => {
     const config = createDefaultConfig();
     config.enableLlmEnhancement = true;
+    config.llmConnectionTested = true;
     config.llm.endpoint = "https://api.example.com";
     config.llm.apiKey = "test-key";
+    config.llmConfigHash = computeLlmConfigHash(config);
 
     const mockRecorder = {
       start: vi.fn().mockResolvedValue(undefined),
@@ -161,8 +164,10 @@ describe("Whisper-only mode integration", () => {
   it("should reject true hallucinations even with LLM enabled", async () => {
     const config = createDefaultConfig();
     config.enableLlmEnhancement = true;
+    config.llmConnectionTested = true;
     config.llm.endpoint = "https://api.example.com";
     config.llm.apiKey = "test-key";
+    config.llmConfigHash = computeLlmConfigHash(config);
 
     const mockRecorder = {
       start: vi.fn().mockResolvedValue(undefined),

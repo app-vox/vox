@@ -1,5 +1,6 @@
 import { type LlmProvider } from "./provider";
 import { type VoxConfig } from "../../shared/config";
+import { computeLlmConfigHash } from "../../shared/llm-config-hash";
 import { buildSystemPrompt } from "../../shared/constants";
 import { FoundryProvider } from "./foundry";
 import { BedrockProvider } from "./bedrock";
@@ -8,13 +9,25 @@ import { AnthropicProvider } from "./anthropic";
 import { CustomProvider } from "./custom";
 import { NoopProvider } from "./noop";
 
-export function createLlmProvider(config: VoxConfig): LlmProvider {
+interface CreateLlmProviderOptions {
+  forTest?: boolean;
+}
+
+export function createLlmProvider(config: VoxConfig, options?: CreateLlmProviderOptions): LlmProvider {
   const isDev = process.env.NODE_ENV === "development";
 
   // If LLM enhancement is disabled, return no-op provider
   if (!config.enableLlmEnhancement) {
     console.log("[LLM Factory] LLM enhancement is disabled, using NoopProvider");
     return new NoopProvider();
+  }
+
+  // If not tested or config changed since last test, block unless running a test
+  if (!options?.forTest) {
+    if (!config.llmConnectionTested || computeLlmConfigHash(config) !== config.llmConfigHash) {
+      console.log("[LLM Factory] LLM connection not tested or config changed, using NoopProvider");
+      return new NoopProvider();
+    }
   }
 
   // Append custom prompt at the END with CRITICAL emphasis (only if custom is not empty)
