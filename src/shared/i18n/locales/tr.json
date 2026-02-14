@@ -227,5 +227,13 @@
   "sidebar.visitWebsite": "Vox web sitesini ziyaret et",
   "sidebar.updateAvailable": "Güncelleme mevcut",
   "sidebar.updateVox": "Vox'u Güncelle",
-  "history.deleteTranscription": "Transkripsiyonu sil"
+  "history.deleteTranscription": "Transkripsiyonu sil",
+  "general.recordingFeedback.title": "Kayıt Geri Bildirimi",
+  "general.recordingFeedback.audioCue": "Kayıt başlangıç sesi",
+  "general.recordingFeedback.audioCue.description": "Kayıt başladığında konuşmaya başlayabileceğinizi belirtmek için bir ses çalar.",
+  "general.recordingFeedback.audioCue.click": "Tıklama",
+  "general.recordingFeedback.audioCue.beep": "Bip",
+  "general.recordingFeedback.audioCue.chime": "Zil",
+  "general.recordingFeedback.audioCue.none": "Yok",
+  "indicator.initializing": "Başlatılıyor..."
 }
