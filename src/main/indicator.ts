@@ -1,9 +1,10 @@
 import { BrowserWindow, screen } from "electron";
 import { t } from "../shared/i18n";
 
-type IndicatorMode = "listening" | "transcribing" | "enhancing" | "error" | "canceled";
+type IndicatorMode = "initializing" | "listening" | "transcribing" | "enhancing" | "error" | "canceled";
 
 const INDICATOR_KEYS: Record<IndicatorMode, string> = {
+  initializing: "indicator.initializing",
   listening: "indicator.listening",
   transcribing: "indicator.transcribing",
   enhancing: "indicator.enhancing",
@@ -12,6 +13,7 @@ const INDICATOR_KEYS: Record<IndicatorMode, string> = {
 };
 
 const INDICATOR_STYLES: Record<IndicatorMode, { color: string; pulse: boolean }> = {
+  initializing: { color: "#888888", pulse: false },
   listening:    { color: "#ff4444", pulse: false },
   transcribing: { color: "#ffaa00", pulse: true },
   enhancing:    { color: "#44aaff", pulse: true },
@@ -27,13 +29,24 @@ function buildHtml(mode: IndicatorMode): string {
     : "animation: glow 1.5s ease-in-out infinite;";
 
   const showXIcon = mode === "error" || mode === "canceled";
-  const showCancelButton = mode === "listening" || mode === "transcribing";
+  const showSpinner = mode === "initializing";
+  const showWaveform = mode === "listening";
+  const showCancelButton = mode === "initializing" || mode === "listening" || mode === "transcribing";
 
-  const iconHtml = showXIcon
-    ? `<svg class="icon" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+  let iconHtml: string;
+  if (showXIcon) {
+    iconHtml = `<svg class="icon" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
          <path d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5" stroke="${color}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-       </svg>`
-    : `<div class="dot"></div>`;
+       </svg>`;
+  } else if (showSpinner) {
+    iconHtml = `<div class="spinner"></div>`;
+  } else if (showWaveform) {
+    iconHtml = `<div class="waveform">${Array.from({ length: 7 }, (_, i) => `<div class="bar" data-index="${i}"></div>`).join("")}</div>`;
+  } else {
+    iconHtml = `<div class="dot"></div>`;
+  }
+
+  const labelHtml = showWaveform ? "" : `<span>${text}</span>`;
 
   const cancelButtonHtml = showCancelButton
     ? `<button class="cancel-btn" onclick="window.electronAPI?.cancelRecording()">
@@ -89,6 +102,30 @@ function buildHtml(mode: IndicatorMode): string {
     filter: drop-shadow(0 0 8px ${color});
     ${animation}
   }
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-top-color: #888;
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: spin 0.8s linear infinite;
+  }
+  .waveform {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: 20px;
+  }
+  .bar {
+    width: 3px;
+    min-height: 3px;
+    height: 3px;
+    background: ${color};
+    border-radius: 1.5px;
+    box-shadow: 0 0 4px ${color};
+    transition: height 0.05s ease;
+  }
   .cancel-btn {
     pointer-events: auto;
     display: flex;
@@ -111,6 +148,9 @@ function buildHtml(mode: IndicatorMode): string {
     background: #ef4444;
     color: white;
   }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
   @keyframes pulse {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.4; transform: scale(0.85); }
@@ -120,7 +160,7 @@ function buildHtml(mode: IndicatorMode): string {
     50% { ${showXIcon ? `filter: drop-shadow(0 0 16px ${color});` : `box-shadow: 0 0 16px ${color}, 0 0 24px ${color};`} }
   }
 </style></head>
-<body><div class="pill">${iconHtml}<span>${text}</span>${cancelButtonHtml}</div></body>
+<body><div class="pill">${iconHtml}${labelHtml}${cancelButtonHtml}</div></body>
 </html>`;
 }
 
@@ -139,7 +179,7 @@ export class IndicatorWindow {
       this.window = null;
     }
 
-    const isInteractive = mode === "listening" || mode === "transcribing";
+    const isInteractive = mode === "initializing" || mode === "listening" || mode === "transcribing";
     const estimatedWidth = mode === "error" ? 155 : mode === "canceled" ? 130 : 200;
     const windowWidth = estimatedWidth + 64;
     const windowHeight = 80;
@@ -183,6 +223,20 @@ export class IndicatorWindow {
     this.window.once("ready-to-show", () => {
       this.window?.showInactive();
     });
+  }
+
+  sendAudioLevels(levels: number[]): void {
+    if (!this.window || this.window.isDestroyed()) return;
+    this.window.webContents.executeJavaScript(`
+      (() => {
+        const bars = document.querySelectorAll('.bar');
+        const levels = ${JSON.stringify(levels)};
+        bars.forEach((bar, i) => {
+          const h = Math.max(3, levels[i] * 20);
+          bar.style.height = h + 'px';
+        });
+      })()
+    `).catch(() => {});
   }
 
   showError(durationMs = 3000, customText?: string): void {
