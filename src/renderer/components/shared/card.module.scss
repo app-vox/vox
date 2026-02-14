@@ -73,3 +73,9 @@
     flex-shrink: 0;
   }
 }
+
+.warningBannerInline {
+  composes: warningBanner;
+  margin: 0 calc(-1 * var(--spacing-6));
+  margin-bottom: var(--spacing-4);
+}
