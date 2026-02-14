@@ -114,7 +114,7 @@ function buildStaticHtml(): string {
     background: transparent;
     color: rgba(255, 255, 255, 0.7);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.2s ease, color 0.2s ease;
     flex-shrink: 0;
     margin-left: 2px;
   }
