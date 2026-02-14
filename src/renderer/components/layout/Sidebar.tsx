@@ -30,6 +30,7 @@ interface NavItemDef {
   requiresModel?: boolean;
   requiresPermissions?: boolean;
   requiresTest?: boolean;
+  requiresLlm?: boolean;
   checkConfigured?: "speech" | "permissions" | "ai-enhancement";
 }
 
@@ -52,7 +53,7 @@ const CATEGORY_DEFS: NavCategoryDef[] = [
     labelKey: "sidebar.content",
     items: [
       { id: "transcriptions", icon: <ClockIcon width={16} height={16} /> },
-      { id: "dictionary", icon: <BookIcon width={16} height={16} /> },
+      { id: "dictionary", icon: <BookIcon width={16} height={16} />, requiresLlm: true, checkConfigured: "ai-enhancement" },
     ],
   },
   {
@@ -168,6 +169,7 @@ export function Sidebar() {
             (item.requiresModel === true && !setupComplete)
             || (item.requiresPermissions === true && needsPermissions())
             || (item.requiresTest === true && config?.enableLlmEnhancement === true && !isConfigured("ai-enhancement"))
+            || (item.requiresLlm === true && !isConfigured("ai-enhancement"))
           } />
         </span>
       )}

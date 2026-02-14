@@ -40,7 +40,7 @@
   width: 28px;
   height: 28px;
   flex-shrink: 0;
-  opacity: 0.35;
+  opacity: 0.7;
   cursor: pointer;
   -webkit-app-region: no-drag;
   transition: opacity 200ms ease;
@@ -189,6 +189,30 @@
 .bottom {
   margin-top: auto;
   padding: 8px;
+}
+
+.updateLabel {
+  margin-left: auto;
+  padding: 2px 8px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-base);
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.updateBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  color: var(--color-accent);
+
+  svg {
+    width: 10px;
+    height: 10px;
+  }
 }
 
 .collapsedLogo {

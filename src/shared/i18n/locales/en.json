@@ -218,6 +218,7 @@
   "dictionary.title": "Dictionary",
   "dictionary.description": "Add words and phrases to improve transcription accuracy for names, technical terms, and jargon.",
   "dictionary.overLimitWarning": "Your dictionary has {total} entries but only {fits} fit in the speech recognition prompt. All entries will still be used for AI enhancement.",
+  "dictionary.llmRequired": "The dictionary requires AI Enhancement to be enabled with a tested connection.",
   "dictionary.placeholder": "Type a word or phrase...",
   "dictionary.add": "Add",
   "dictionary.hint": "Use commas to add multiple terms at once, e.g. \"John, Project Alpha, Zoom\"",
