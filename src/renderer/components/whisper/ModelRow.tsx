@@ -89,18 +89,21 @@ export function ModelRow({ model, selected, onSelect, onDelete }: ModelRowProps)
           onChange={() => onSelect(model.size)}
         />
         <span className={styles.name}>
+          {/* eslint-disable-next-line i18next/no-literal-string */}
           {t("whisper.model." + model.size + ".label")} <span className={styles.technicalName}>({model.size})</span>
         </span>
         <span className={styles.desc}>{t("whisper.model." + model.size + ".description")}</span>
       </label>
       {downloading ? (
         <div className={styles.progress}>
+          {/* eslint-disable i18next/no-literal-string */}
           <div className={styles.progressInfo}>
             <span>{percent}%</span>
             <span className={styles.progressSize}>
               {formatBytes(progress.downloaded)} / {formatBytes(progress.total)}
             </span>
           </div>
+          {/* eslint-enable i18next/no-literal-string */}
           <div className={styles.progressBarRow}>
             <div className={styles.progressBar}>
               <div className={styles.progressFill} style={{ width: `${percent}%` }} />

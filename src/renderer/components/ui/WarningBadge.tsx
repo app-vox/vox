@@ -11,8 +11,7 @@ export function WarningBadge({ show }: WarningBadgeProps) {
   if (!show) return null;
 
   return (
-    <span className={styles.badge} title={t("ui.setupIncomplete")}>
-      !
-    </span>
+    /* eslint-disable-next-line i18next/no-literal-string */
+    <span className={styles.badge} title={t("ui.setupIncomplete")}>!</span>
   );
 }

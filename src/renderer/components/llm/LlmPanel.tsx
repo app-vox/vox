@@ -209,6 +209,7 @@ export function LlmPanel() {
                   style={{ resize: "none" }}
                 />
                 <details className={form.exampleDetails}>
+                  {/* eslint-disable-next-line i18next/no-literal-string */}
                   <summary>
                     💡 {t("llm.exampleInstructions")}
                   </summary>

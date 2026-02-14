@@ -218,7 +218,7 @@ export function updateTrayMenu(): void {
   menuTemplate.push(
     { type: "separator" },
     {
-      label: t("tray.reportIssue"),
+      label: `${t("tray.reportIssue")} ↗`,
       click: () => shell.openExternal("https://github.com/app-vox/vox/issues"),
     },
     { type: "separator" },

@@ -109,6 +109,7 @@ export function WhisperPanel() {
       </div>
       {!setupComplete && (
         <div className={card.warningBanner}>
+          {/* eslint-disable-next-line i18next/no-literal-string */}
           <span style={{ marginRight: "8px" }}>&#x26A0;&#xFE0F;</span>
           {t("whisper.downloadPrompt")}
         </div>

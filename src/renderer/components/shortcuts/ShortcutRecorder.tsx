@@ -201,6 +201,7 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange }: S
         <span>
           {displayParts.map((part, i) => (
             <span key={i}>
+              {/* eslint-disable-next-line i18next/no-literal-string */}
               {i > 0 && <span className={styles.separator}>+</span>}
               <kbd className={styles.kbd}>{PLATFORM_LABELS[part] || part}</kbd>
             </span>
