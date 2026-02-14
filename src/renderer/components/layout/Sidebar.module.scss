@@ -43,6 +43,20 @@
   flex-shrink: 0;
 }
 
+.logoClickable {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  opacity: 0.35;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  transition: opacity 200ms ease;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
 .title {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
@@ -143,6 +157,7 @@
   font-size: var(--font-size-xs);
   color: var(--color-accent);
   font-weight: var(--font-weight-medium);
+  margin-left: auto;
 }
 
 .iconWrap {
@@ -160,6 +175,7 @@
   align-items: center;
   gap: 4px;
   overflow: hidden;
+  flex: 1;
 }
 
 .checkmark {
@@ -186,7 +202,6 @@
   display: flex;
   justify-content: center;
   padding-top: var(--spacing-2);
-  opacity: 0.4;
 }
 
 .updateBadge {

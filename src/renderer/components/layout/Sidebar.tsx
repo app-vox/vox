@@ -6,6 +6,8 @@ import { usePermissions } from "../../hooks/use-permissions";
 import { WarningBadge } from "../ui/WarningBadge";
 import styles from "./Sidebar.module.scss";
 
+const VOX_WEBSITE_URL = "https://app-vox.github.io/vox/";
+
 interface NavItem {
   id: string;
   label: string;
@@ -149,14 +151,7 @@ export function Sidebar({ onCollapseChange }: SidebarProps) {
   }, []);
 
   useEffect(() => {
-    window.voxApi.updates.getState().then((state) => {
-      // TODO: remove this fake update state after testing
-      if (import.meta.env.DEV) {
-        setUpdateState({ ...state, status: "available", latestVersion: "0.99.0" });
-      } else {
-        setUpdateState(state);
-      }
-    });
+    window.voxApi.updates.getState().then(setUpdateState);
     return window.voxApi.updates.onStateChanged(setUpdateState);
   }, []);
 
@@ -214,7 +209,16 @@ export function Sidebar({ onCollapseChange }: SidebarProps) {
   return (
     <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""}`}>
       <div className={styles.top}>
-        {!collapsed && logoSrc && <img alt="Vox" src={logoSrc} className={styles.logo} />}
+        {!collapsed && logoSrc && (
+          <img
+            alt="Vox"
+            src={logoSrc}
+            className={styles.logoClickable}
+            draggable={false}
+            onClick={() => window.voxApi.shell.openExternal(VOX_WEBSITE_URL)}
+            title="Visit Vox website"
+          />
+        )}
         {!collapsed && <span className={styles.title}>Vox</span>}
         <button
           className={styles.collapseBtn}
@@ -270,7 +274,14 @@ export function Sidebar({ onCollapseChange }: SidebarProps) {
         </button>
         {collapsed && logoSrc && (
           <div className={styles.collapsedLogo}>
-            <img alt="Vox" src={logoSrc} className={styles.logo} draggable={false} />
+            <img
+              alt="Vox"
+              src={logoSrc}
+              className={styles.logoClickable}
+              draggable={false}
+              onClick={() => window.voxApi.shell.openExternal(VOX_WEBSITE_URL)}
+              title="Visit Vox website"
+            />
           </div>
         )}
       </div>
