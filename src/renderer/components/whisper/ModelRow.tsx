@@ -120,7 +120,7 @@ export function ModelRow({ model, selected, onSelect, onDelete }: ModelRowProps)
               className={styles.cancelBtn}
               title={t("model.cancelDownload")}
             >
-              <XIcon />
+              <XIcon width={14} height={14} />
             </button>
           </div>
         </div>
@@ -137,7 +137,7 @@ export function ModelRow({ model, selected, onSelect, onDelete }: ModelRowProps)
               className={styles.deleteBtn}
               title={t("model.deleteModel")}
             >
-              <TrashIcon />
+              <TrashIcon width={14} height={14} />
             </button>
           )}
         </div>

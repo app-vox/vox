@@ -49,7 +49,7 @@ export function PipelineTest() {
           disabled={testing}
           className={`${btn.btn} ${btn.primary}`}
         >
-          <RecordIcon />
+          <RecordIcon width={16} height={16} />
           {t("permissions.pipeline.testButton")}
         </button>
         <StatusBox text={testStatus.text} type={testStatus.type} />

@@ -33,7 +33,7 @@ export function SecretInput({ id, value, onChange, onFocus, onBlur, placeholder 
         className={form.iconBtn}
         title={t("ui.showHide")}
       >
-        <EyeIcon />
+        <EyeIcon width={16} height={16} />
       </button>
     </div>
   );

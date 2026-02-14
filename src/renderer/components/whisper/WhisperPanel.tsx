@@ -133,7 +133,7 @@ export function WhisperPanel() {
             disabled={testing || !models.some(m => m.downloaded)}
             className={`${btn.btn} ${btn.primary}`}
           >
-            <RecordIcon />
+            <RecordIcon width={16} height={16} />
             {t("whisper.testButton")}
           </button>
           <p className={form.hint}>{t("whisper.testHint")}</p>
