@@ -53,6 +53,7 @@ const LANGUAGE_NAMES: Record<SupportedLanguage, string> = {
   fr: "Fran\u00e7ais",
   de: "Deutsch",
   it: "Italiano",
+  pl: "Polski",
   ru: "\u0420\u0443\u0441\u0441\u043a\u0438\u0439",
   tr: "T\u00fcrk\u00e7e",
 };
