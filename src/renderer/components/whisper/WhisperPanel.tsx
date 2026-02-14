@@ -6,7 +6,7 @@ import { useT } from "../../i18n-context";
 import { ModelRow } from "./ModelRow";
 import { StatusBox } from "../ui/StatusBox";
 import { OfflineBanner } from "../ui/OfflineBanner";
-import { RecordIcon, AlertLinesIcon } from "../../../shared/icons";
+import { RecordIcon, AlertTriangleIcon } from "../../../shared/icons";
 import { recordAudio } from "../../utils/record-audio";
 import type { ModelInfo } from "../../../preload/index";
 import type { WhisperModelSize } from "../../../shared/config";
@@ -112,7 +112,7 @@ export function WhisperPanel() {
       </div>
       {!setupComplete && (
         <div className={card.warningBanner}>
-          <AlertLinesIcon width={14} height={14} style={{ marginRight: 6, flexShrink: 0 }} />
+          <AlertTriangleIcon width={14} height={14} style={{ marginRight: 6, flexShrink: 0 }} />
           {t("whisper.downloadPrompt")}
         </div>
       )}

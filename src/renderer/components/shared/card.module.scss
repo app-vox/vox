@@ -58,6 +58,8 @@
 }
 
 .warningBanner {
+  display: flex;
+  align-items: center;
   padding: var(--spacing-3) var(--spacing-6);
   background-color: color-mix(in srgb, var(--color-accent) 8%, transparent);
   color: var(--color-accent);

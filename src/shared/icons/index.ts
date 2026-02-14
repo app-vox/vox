@@ -10,6 +10,7 @@ export { default as InfoCircleIcon } from "./svg/info-circle.svg?react";
 export { default as MenuIcon } from "./svg/menu.svg?react";
 export { default as CheckmarkBadgeIcon } from "./svg/checkmark-badge.svg?react";
 export { default as AlertLinesIcon } from "./svg/alert-lines.svg?react";
+export { default as AlertTriangleIcon } from "./svg/alert-triangle.svg?react";
 export { default as SunIcon } from "./svg/sun.svg?react";
 export { default as MoonIcon } from "./svg/moon.svg?react";
 export { default as MonitorIcon } from "./svg/monitor.svg?react";
