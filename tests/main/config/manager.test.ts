@@ -168,4 +168,16 @@ describe("ConfigManager", () => {
     expect(raw.llm.secretAccessKey).toBe("");
     expect(raw.llm.accessKeyId).toBe("");
   });
+
+  it("should persist and restore llmConnectionTested and llmConfigHash", () => {
+    const config = createDefaultConfig();
+    config.llmConnectionTested = true;
+    config.llmConfigHash = "abc123";
+
+    manager.save(config);
+    const loaded = manager.load();
+
+    expect(loaded.llmConnectionTested).toBe(true);
+    expect(loaded.llmConfigHash).toBe("abc123");
+  });
 });

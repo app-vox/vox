@@ -20,6 +20,19 @@ function getProviderFields(config: VoxConfig): Record<string, string> {
         openaiModel: llm.openaiModel,
         openaiEndpoint: llm.openaiEndpoint,
       };
+    case "anthropic":
+      return {
+        anthropicApiKey: llm.anthropicApiKey,
+        anthropicModel: llm.anthropicModel,
+      };
+    case "custom":
+      return {
+        customEndpoint: llm.customEndpoint,
+        customToken: llm.customToken,
+        customTokenAttr: llm.customTokenAttr,
+        customTokenSendAs: llm.customTokenSendAs,
+        customModel: llm.customModel,
+      };
     case "foundry":
     default:
       return {

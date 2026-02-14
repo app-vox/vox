@@ -42,6 +42,8 @@ export class ConfigManager {
         recordingAudioCue: saved.recordingAudioCue ?? defaults.recordingAudioCue,
         recordingStopAudioCue: saved.recordingStopAudioCue ?? defaults.recordingStopAudioCue,
         errorAudioCue: saved.errorAudioCue ?? defaults.errorAudioCue,
+        llmConnectionTested: saved.llmConnectionTested ?? defaults.llmConnectionTested,
+        llmConfigHash: saved.llmConfigHash ?? defaults.llmConfigHash,
       };
 
       for (const field of SENSITIVE_FIELDS) {

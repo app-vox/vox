@@ -13,6 +13,7 @@ import { NewDot } from "../ui/NewDot";
 import { CustomSelect } from "../ui/CustomSelect";
 import { ExternalLinkIcon, CheckCircleIcon, InfoCircleAltIcon, CopyIcon, SparkleIcon } from "../../../shared/icons";
 import type { LlmProviderType, LlmConfig } from "../../../shared/config";
+import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
 import card from "../shared/card.module.scss";
 import form from "../shared/forms.module.scss";
 import buttons from "../shared/buttons.module.scss";
@@ -61,6 +62,9 @@ export function LlmPanel() {
   }, [visitedCustomPrompt]);
 
   if (!config) return null;
+
+  const needsTest = config.enableLlmEnhancement
+    && (!config.llmConnectionTested || computeLlmConfigHash(config) !== config.llmConfigHash);
 
   if (!setupComplete) {
     return (
@@ -117,6 +121,7 @@ export function LlmPanel() {
       const result = await window.voxApi.llm.test();
       if (result.ok) {
         setTestStatus({ text: t("llm.connectionSuccessful"), type: "success" });
+        await useConfigStore.getState().loadConfig();
       } else {
         setTestStatus({ text: t("llm.connectionFailed", { error: result.error ?? "" }), type: "error" });
       }
@@ -173,6 +178,12 @@ export function LlmPanel() {
 
         {config.enableLlmEnhancement && (
           <>
+            {needsTest && (
+              <div className={card.warningBannerInline}>
+                {t("llm.connectionTestRequired")}
+              </div>
+            )}
+
             <div className={form.inlineTabs}>
               <button
                 onClick={() => setActiveTab("provider")}
