@@ -20,6 +20,9 @@ import { HistoryManager } from "./history/manager";
 import { type VoxConfig, type AudioCueType } from "../shared/config";
 import { generateCueSamples, isWavCue, getWavFilename, parseWavSamples } from "../shared/audio-cue";
 import { t, setLanguage, resolveSystemLanguage } from "../shared/i18n";
+import log from "./logger";
+
+log.initialize();
 
 const configDir = path.join(app.getPath("userData"));
 const modelsDir = path.join(configDir, "models");
