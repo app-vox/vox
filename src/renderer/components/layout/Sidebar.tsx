@@ -122,7 +122,7 @@ const CATEGORY_DEFS: NavCategoryDef[] = [
     labelKey: "sidebar.words",
     items: [
       { id: "dictionary", icon: BOOK_ICON },
-      { id: "history", icon: CLOCK_ICON },
+      { id: "transcriptions", icon: CLOCK_ICON },
     ],
   },
   {
@@ -156,7 +156,7 @@ export function Sidebar({ onCollapseChange }: SidebarProps) {
     whisper: t("tabs.speech"),
     llm: t("tabs.aiEnhancement"),
     dictionary: t("tabs.dictionary"),
-    history: t("tabs.history"),
+    transcriptions: t("tabs.transcriptions"),
     permissions: t("tabs.permissions"),
     shortcuts: t("tabs.shortcuts"),
   };

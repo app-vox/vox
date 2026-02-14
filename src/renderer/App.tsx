@@ -7,7 +7,7 @@ import { WhisperPanel } from "./components/whisper/WhisperPanel";
 import { ShortcutsPanel } from "./components/shortcuts/ShortcutsPanel";
 import { PermissionsPanel } from "./components/permissions/PermissionsPanel";
 import { GeneralPanel } from "./components/general/GeneralPanel";
-import { HistoryPanel } from "./components/history/HistoryPanel";
+import { TranscriptionsPanel } from "./components/transcriptions/TranscriptionsPanel";
 import { DictionaryPanel } from "./components/dictionary/DictionaryPanel";
 import { SaveToast } from "./components/ui/SaveToast";
 import { ScrollButtons } from "./components/ui/ScrollButtons";
@@ -22,7 +22,7 @@ const PANELS: Record<string, () => JSX.Element | null> = {
   dictionary: DictionaryPanel,
   permissions: PermissionsPanel,
   shortcuts: ShortcutsPanel,
-  history: HistoryPanel,
+  transcriptions: TranscriptionsPanel,
   about: AboutPanel,
 };
 

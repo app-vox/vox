@@ -4,6 +4,7 @@ import { useSaveToast } from "../hooks/use-save-toast";
 
 function migrateActiveTab(tab: string | null): string | null {
   if (tab === "appearance") return "general";
+  if (tab === "history") return "transcriptions";
   return tab;
 }
 
