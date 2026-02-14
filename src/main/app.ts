@@ -149,9 +149,7 @@ app.whenReady().then(async () => {
 
   initAutoUpdater(() => updateTrayMenu());
 
-  if (!app.isPackaged || !setupChecker.hasAnyModel()) {
-    openHome(reloadConfig);
-  }
+  openHome(reloadConfig);
 });
 
 app.on("activate", () => {

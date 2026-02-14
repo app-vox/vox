@@ -14,12 +14,17 @@ let homeWindow: BrowserWindow | null = null;
 
 export function openHome(onClosed: () => void, initialTab?: string): void {
   if (homeWindow) {
-    homeWindow.show();
-    homeWindow.focus();
-    if (initialTab) {
-      homeWindow.webContents.send("navigate-tab", initialTab);
+    if (homeWindow.isDestroyed()) {
+      homeWindow = null;
+    } else {
+      if (homeWindow.isMinimized()) homeWindow.restore();
+      homeWindow.show();
+      homeWindow.focus();
+      if (initialTab) {
+        homeWindow.webContents.send("navigate-tab", initialTab);
+      }
+      return;
     }
-    return;
   }
 
   const cursorPoint = screen.getCursorScreenPoint();
