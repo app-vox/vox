@@ -180,6 +180,12 @@
   flex-shrink: 0;
 }
 
+.divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 10px 8px 4px;
+}
+
 .bottom {
   margin-top: auto;
   padding: 8px;

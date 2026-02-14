@@ -235,5 +235,12 @@
   "general.recordingFeedback.audioCue.beep": "Piep",
   "general.recordingFeedback.audioCue.chime": "Glocke",
   "general.recordingFeedback.audioCue.none": "Keiner",
-  "indicator.initializing": "Starten..."
+  "indicator.initializing": "Starten...",
+  "ui.offlineWarning": "Sie scheinen offline zu sein. Einige Funktionen wie das Herunterladen von Modellen funktionieren möglicherweise nicht.",
+  "general.permissions.title": "Berechtigungen Erteilen",
+  "general.permissions.description": "Vox benötigt Mikrofon- und Bedienungshilfen-Berechtigungen zum Aufnehmen und Einfügen von Text.",
+  "general.permissions.action": "Berechtigungen einrichten",
+  "general.dictionary.title": "Genauigkeit Verbessern",
+  "general.dictionary.description": "Fügen Sie Namen, Fachbegriffe und Jargon zum Wörterbuch hinzu, um die Transkriptionsgenauigkeit zu verbessern.",
+  "general.dictionary.action": "Wörterbuch einrichten"
 }

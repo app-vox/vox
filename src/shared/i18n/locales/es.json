@@ -235,5 +235,12 @@
   "general.recordingFeedback.audioCue.beep": "Pitido",
   "general.recordingFeedback.audioCue.chime": "Campanilla",
   "general.recordingFeedback.audioCue.none": "Ninguno",
-  "indicator.initializing": "Iniciando..."
+  "indicator.initializing": "Iniciando...",
+  "ui.offlineWarning": "Parece que estás sin conexión. Algunas funciones como la descarga de modelos podrían no funcionar.",
+  "general.permissions.title": "Otorgar Permisos",
+  "general.permissions.description": "Vox necesita permisos de micrófono y accesibilidad para grabar y pegar texto.",
+  "general.permissions.action": "Configurar permisos",
+  "general.dictionary.title": "Mejorar Precisión",
+  "general.dictionary.description": "Agrega nombres, términos técnicos y jerga al diccionario para mejorar la precisión de la transcripción.",
+  "general.dictionary.action": "Configurar diccionario"
 }

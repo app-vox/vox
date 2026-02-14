@@ -1,19 +1,17 @@
 .toast {
-  position: fixed;
-  background: var(--color-bg-card);
-  color: var(--color-text-primary);
-  padding: var(--spacing-2) var(--spacing-3);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-hover);
   display: flex;
   align-items: center;
-  gap: var(--spacing-2);
-  box-shadow: var(--shadow-toast);
-  z-index: 9999;
-  transition: opacity 0.3s ease-in-out;
-  font-size: var(--font-size-sm);
+  gap: 4px;
+  padding: 3px 8px;
+  background: var(--color-bg-card);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   white-space: nowrap;
+  transition: opacity 0.3s ease-in-out;
+  -webkit-app-region: no-drag;
 
   svg {
     color: var(--color-checkmark);
@@ -26,16 +24,4 @@
   &.hidden {
     opacity: 0;
   }
-}
-
-.aboveSidebar {
-  bottom: 64px;
-  left: 8px;
-  width: 184px;
-  justify-content: center;
-}
-
-.topRight {
-  top: var(--spacing-2);
-  right: var(--spacing-4);
 }

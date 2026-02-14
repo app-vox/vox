@@ -235,5 +235,12 @@
   "general.recordingFeedback.audioCue.beep": "Bipe",
   "general.recordingFeedback.audioCue.chime": "Sino",
   "general.recordingFeedback.audioCue.none": "Nenhum",
-  "indicator.initializing": "Iniciando..."
+  "indicator.initializing": "Iniciando...",
+  "ui.offlineWarning": "Você parece estar offline. Alguns recursos como download de modelos podem não funcionar.",
+  "general.permissions.title": "Conceder Permissões",
+  "general.permissions.description": "O Vox precisa de permissões de microfone e acessibilidade para gravar e colar texto.",
+  "general.permissions.action": "Configurar permissões",
+  "general.dictionary.title": "Melhorar Precisão",
+  "general.dictionary.description": "Adicione nomes, termos técnicos e jargões ao dicionário para melhorar a precisão da transcrição.",
+  "general.dictionary.action": "Configurar dicionário"
 }

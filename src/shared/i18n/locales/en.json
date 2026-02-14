@@ -235,5 +235,12 @@
   "general.recordingFeedback.audioCue.beep": "Beep",
   "general.recordingFeedback.audioCue.chime": "Chime",
   "general.recordingFeedback.audioCue.none": "None",
-  "indicator.initializing": "Starting..."
+  "indicator.initializing": "Starting...",
+  "ui.offlineWarning": "You appear to be offline. Some features like model downloads may not work.",
+  "general.permissions.title": "Grant Permissions",
+  "general.permissions.description": "Vox needs microphone and accessibility permissions to record and paste text.",
+  "general.permissions.action": "Set up permissions",
+  "general.dictionary.title": "Improve Accuracy",
+  "general.dictionary.description": "Add names, technical terms, and jargon to the dictionary to improve transcription accuracy.",
+  "general.dictionary.action": "Set up dictionary"
 }

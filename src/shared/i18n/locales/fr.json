@@ -235,5 +235,12 @@
   "general.recordingFeedback.audioCue.beep": "Bip",
   "general.recordingFeedback.audioCue.chime": "Carillon",
   "general.recordingFeedback.audioCue.none": "Aucun",
-  "indicator.initializing": "Démarrage..."
+  "indicator.initializing": "Démarrage...",
+  "ui.offlineWarning": "Vous semblez être hors ligne. Certaines fonctionnalités comme le téléchargement de modèles pourraient ne pas fonctionner.",
+  "general.permissions.title": "Accorder les Permissions",
+  "general.permissions.description": "Vox a besoin des permissions de microphone et d'accessibilité pour enregistrer et coller du texte.",
+  "general.permissions.action": "Configurer les permissions",
+  "general.dictionary.title": "Améliorer la Précision",
+  "general.dictionary.description": "Ajoutez des noms, termes techniques et jargon au dictionnaire pour améliorer la précision de la transcription.",
+  "general.dictionary.action": "Configurer le dictionnaire"
 }
