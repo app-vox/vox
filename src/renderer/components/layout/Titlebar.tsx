@@ -3,25 +3,9 @@ import type { UpdateState } from "../../../preload/index";
 import { useConfigStore } from "../../stores/config-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
 import { useT } from "../../i18n-context";
-import { GearIcon } from "../../../shared/icons";
+import { GearIcon, InfoCircleIcon, DownloadIcon } from "../../../shared/icons";
 import { SaveToast } from "../ui/SaveToast";
 import styles from "./Titlebar.module.scss";
-
-const INFO_ICON = (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <line x1="12" y1="16" x2="12" y2="12" />
-    <line x1="12" y1="8" x2="12.01" y2="8" />
-  </svg>
-);
-
-const DOWNLOAD_ICON = (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-    <polyline points="7 10 12 15 17 10" />
-    <line x1="12" y1="15" x2="12" y2="3" />
-  </svg>
-);
 
 export function Titlebar() {
   const t = useT();
@@ -76,7 +60,7 @@ export function Titlebar() {
             className={styles.updateBtn}
             onClick={() => window.voxApi.shell.openExternal(updateState.releaseUrl)}
           >
-            {DOWNLOAD_ICON}
+            <DownloadIcon width={14} height={14} />
             {t("sidebar.updateVox")}
           </button>
         );
@@ -97,7 +81,7 @@ export function Titlebar() {
         onClick={() => setActiveTab("about")}
         title={t("general.about.title")}
       >
-        {INFO_ICON}
+        <InfoCircleIcon width={18} height={18} />
       </button>
       <button
         className={`${styles.actionBtn} ${activeTab === "general" ? styles.actionBtnActive : ""}`}

@@ -35,5 +35,6 @@ export { default as RecordIcon } from "./svg/record.svg?react";
 export { default as PlayIcon } from "./svg/play.svg?react";
 export { default as InfoCircleAltIcon } from "./svg/info-circle-alt.svg?react";
 export { default as SparkleIcon } from "./svg/sparkle.svg?react";
+export { default as DownloadIcon } from "./svg/download.svg?react";
 
 export { Icon } from "./Icon";
