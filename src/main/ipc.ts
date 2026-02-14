@@ -241,6 +241,10 @@ export function registerIpcHandlers(
     historyManager.clear();
   });
 
+  ipcMain.handle("history:delete-entry", (_event, id: string) => {
+    historyManager.deleteEntry(id);
+  });
+
   ipcMain.handle("clipboard:write", (_event, text: string) => {
     clipboard.writeText(text);
   });

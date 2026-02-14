@@ -15,6 +15,7 @@ interface HistoryState {
   setPage: (page: number) => void;
   setPageSize: (size: number) => void;
   search: (query: string) => Promise<void>;
+  deleteEntry: (id: string) => Promise<void>;
   clearHistory: () => Promise<void>;
   reset: () => void;
 }
@@ -68,6 +69,11 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
     } finally {
       set({ loading: false });
     }
+  },
+
+  deleteEntry: async (id: string) => {
+    await window.voxApi.history.deleteEntry(id);
+    get().fetchPage();
   },
 
   clearHistory: async () => {
