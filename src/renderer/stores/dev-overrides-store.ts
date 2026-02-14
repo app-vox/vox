@@ -3,25 +3,12 @@ import { create } from "zustand";
 export interface DevOverrides {
   enabled: boolean;
 
-  // UX-facing states (prioritized)
+  // UX-facing states — these actually affect the renderer UI
   updateStatus?: "idle" | "checking" | "available" | "downloading" | "ready" | "error";
   updateDownloadProgress?: number;
   microphonePermission?: "granted" | "denied" | "not-determined";
   accessibilityPermission?: boolean;
   setupComplete?: boolean;
-  online?: boolean;
-
-  // Recording / Pipeline
-  shortcutState?: "idle" | "hold" | "toggle" | "processing";
-  isRecording?: boolean;
-  indicatorVisible?: boolean;
-  indicatorMode?: "initializing" | "listening" | "transcribing" | "enhancing" | "error" | "canceled" | null;
-
-  // Tray
-  trayIsListening?: boolean;
-  trayHasModel?: boolean;
-
-  // LLM
   llmEnhancementEnabled?: boolean;
   llmConnectionTested?: boolean;
 }

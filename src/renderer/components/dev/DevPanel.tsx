@@ -43,8 +43,11 @@ function Highlight({ text, query }: { text: string; query: string }) {
 
 function StateRow({ label, children, query, overridden }: { label: string; children: ReactNode; query?: string; overridden?: boolean }) {
   return (
-    <div className={`${styles.stateRow} ${overridden ? styles.stateRowOverridden : ""}`}>
-      <span className={styles.stateLabel}><Highlight text={label} query={query ?? ""} /></span>
+    <div className={styles.stateRow}>
+      <span className={styles.stateLabel}>
+        {overridden && <span className={styles.overrideDot} />}
+        <Highlight text={label} query={query ?? ""} />
+      </span>
       <span className={styles.stateValue}>{children}</span>
     </div>
   );
@@ -349,99 +352,29 @@ export function DevPanel() {
             </>
           ),
         },
-        {
-          label: "Online",
-          overrideField: "online",
-          render: () => (
-            <>
-              <span className={styles.realValue}>{boolDot(online)}</span>
-              {ov && <OverrideBool field="online" {...ovProps} />}
-            </>
-          ),
-        },
+        { label: "Online", render: () => <>{boolDot(online)}</> },
       ],
     },
     {
       title: "Recording / Pipeline",
       rows: [
-        {
-          label: "Recording",
-          overrideField: "isRecording",
-          render: () => (
-            <>
-              <span className={styles.realValue}>{runtime ? boolDot(runtime.isRecording) : <Dot color="gray" />}</span>
-              {ov && <OverrideBool field="isRecording" {...ovProps} />}
-            </>
-          ),
-        },
-        {
-          label: "Shortcut State",
-          overrideField: "shortcutState",
-          render: () => (
-            <>
-              <span className={styles.realValue}>{runtime ? statusDot(runtime.shortcutState) : <Dot color="gray" />}</span>
-              {ov && <OverrideSelect field="shortcutState" options={[
-                { value: "idle", label: "idle" }, { value: "hold", label: "hold" },
-                { value: "toggle", label: "toggle" }, { value: "processing", label: "processing" },
-              ]} {...ovProps} />}
-            </>
-          ),
-        },
+        { label: "Recording", render: () => <>{runtime ? boolDot(runtime.isRecording) : <Dot color="gray" />}</> },
+        { label: "Shortcut State", render: () => <>{runtime ? statusDot(runtime.shortcutState) : <Dot color="gray" />}</> },
       ],
     },
     {
       title: "Indicator",
       rows: [
-        {
-          label: "Visible",
-          overrideField: "indicatorVisible",
-          render: () => (
-            <>
-              <span className={styles.realValue}>{runtime ? boolDot(runtime.indicatorVisible) : <Dot color="gray" />}</span>
-              {ov && <OverrideBool field="indicatorVisible" {...ovProps} />}
-            </>
-          ),
-        },
-        {
-          label: "Mode",
-          overrideField: "indicatorMode",
-          render: () => (
-            <>
-              <span className={styles.realValue}>{runtime ? statusDot(runtime.indicatorMode) : <Dot color="gray" />}</span>
-              {ov && <OverrideSelect field="indicatorMode" options={[
-                { value: "initializing", label: "initializing" }, { value: "listening", label: "listening" },
-                { value: "transcribing", label: "transcribing" }, { value: "enhancing", label: "enhancing" },
-                { value: "error", label: "error" }, { value: "canceled", label: "canceled" },
-              ]} {...ovProps} />}
-            </>
-          ),
-        },
+        { label: "Visible", render: () => <>{runtime ? boolDot(runtime.indicatorVisible) : <Dot color="gray" />}</> },
+        { label: "Mode", render: () => <>{runtime ? statusDot(runtime.indicatorMode) : <Dot color="gray" />}</> },
       ],
     },
     {
       title: "Tray",
       rows: [
         { label: "Active", render: () => <>{runtime ? boolDot(runtime.trayActive) : <Dot color="gray" />}</> },
-        {
-          label: "Listening",
-          overrideField: "trayIsListening",
-          render: () => (
-            <>
-              <span className={styles.realValue}>{runtime ? boolDot(runtime.isListening) : <Dot color="gray" />}</span>
-              {ov && <OverrideBool field="trayIsListening" {...ovProps} />}
-            </>
-          ),
-        },
-        {
-          label: "Has Model",
-          overrideField: "trayHasModel",
-          render: () => (
-            <>
-              <span className={styles.realValue}>{runtime ? boolDot(runtime.hasModel) : <Dot color="gray" />}</span>
-              {ov && <OverrideBool field="trayHasModel" {...ovProps} />}
-            </>
-          ),
-        },
+        { label: "Listening", render: () => <>{runtime ? boolDot(runtime.isListening) : <Dot color="gray" />}</> },
+        { label: "Has Model", render: () => <>{runtime ? boolDot(runtime.hasModel) : <Dot color="gray" />}</> },
       ],
     },
     {
@@ -558,43 +491,40 @@ export function DevPanel() {
 
   return (
     <>
-      {/* Header: Override toggle + Search side by side */}
+      {/* Header row: override toggle + search */}
       <div className={styles.panelHeader}>
-        <div className={card.card}>
-          <div className={card.body}>
-            <label className={styles.masterToggle}>
-              <input
-                type="checkbox"
-                checked={overrides.enabled}
-                onChange={(e) => setEnabled(e.target.checked)}
-              />
-              <div>
-                <div className={styles.masterLabel}>Override States</div>
-                <div className={styles.masterDesc}>
-                  Simulate different app states. Overrides persist across reloads.
-                </div>
-              </div>
-            </label>
-            {ov && (
-              <button className={styles.clearAllBtn} onClick={clearAll}>
-                Clear All Overrides
-              </button>
+        <label className={styles.masterToggle}>
+          <input
+            type="checkbox"
+            checked={overrides.enabled}
+            onChange={(e) => setEnabled(e.target.checked)}
+          />
+          <span className={styles.masterLabel}>Override States</span>
+        </label>
+        <div className={styles.headerRight}>
+          <div className={styles.searchWrap}>
+            <SearchIcon width={14} height={14} />
+            <input
+              className={styles.searchInput}
+              type="text"
+              placeholder="Search states..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {search && (
+              <button className={styles.searchClear} onClick={() => setSearch("")}>x</button>
             )}
           </div>
-        </div>
-        <div className={styles.searchWrap}>
-          <SearchIcon width={14} height={14} />
-          <input
-            className={styles.searchInput}
-            type="text"
-            placeholder="Search states..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          {search && (
-            <button className={styles.searchClear} onClick={() => setSearch("")}>x</button>
+          {ov && (
+            <button className={styles.clearAllBtn} onClick={clearAll}>
+              Clear All
+            </button>
           )}
         </div>
+      </div>
+
+      <div className={styles.disclaimer}>
+        Some values are read-only (main process). Only overridable states show controls when Override is enabled.
       </div>
 
       {/* Grid — always shows all cards, search highlights + scrolls */}

@@ -1,16 +1,15 @@
 .masterToggle {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: var(--spacing-1) 0;
+  gap: 8px;
   cursor: pointer;
+  flex-shrink: 0;
 
   input[type="checkbox"] {
     appearance: none;
-    width: 20px;
-    height: 20px;
-    min-width: 20px;
-    margin-top: 2px;
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
     border: 2px solid var(--color-border);
     border-radius: 4px;
     background: var(--color-bg-input);
@@ -24,17 +23,17 @@
     }
 
     &:checked {
-      background: var(--color-text-primary);
-      border-color: var(--color-text-primary);
+      background: #8b5cf6;
+      border-color: #8b5cf6;
 
       &::after {
         content: "";
         position: absolute;
-        left: 5px;
-        top: 2px;
+        left: 4px;
+        top: 1px;
         width: 5px;
         height: 9px;
-        border: solid var(--color-bg-root);
+        border: solid white;
         border-width: 0 2px 2px 0;
         transform: rotate(45deg);
       }
@@ -43,27 +42,23 @@
 }
 
 .masterLabel {
-  font-size: var(--font-size-lg, 16px);
+  font-size: var(--font-size-base, 14px);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
-}
-
-.masterDesc {
-  font-size: var(--font-size-base, 14px);
-  color: var(--color-text-tertiary);
-  line-height: 1.4;
+  white-space: nowrap;
 }
 
 .clearAllBtn {
-  margin-top: var(--spacing-3);
-  padding: var(--spacing-2) var(--spacing-4);
+  padding: 4px 10px;
   background: none;
   border: 1px solid #ef4444;
   border-radius: var(--radius-md);
   color: #ef4444;
-  font-size: var(--font-size-sm, 13px);
+  font-size: var(--font-size-xs, 12px);
   cursor: pointer;
   transition: all 150ms ease;
+  white-space: nowrap;
+  flex-shrink: 0;
 
   &:hover {
     background: #ef4444;
@@ -74,10 +69,29 @@
 /* ── Panel Header ─────────────────────────────────────────────── */
 
 .panelHeader {
-  display: grid;
-  grid-template-columns: 1fr auto;
+  display: flex;
+  align-items: center;
   gap: var(--spacing-4);
-  align-items: start;
+  padding: var(--spacing-3) var(--spacing-4);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  margin-left: auto;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.disclaimer {
+  font-size: var(--font-size-xs, 12px);
+  color: var(--color-text-tertiary);
+  margin-top: var(--spacing-2);
+  font-style: italic;
 }
 
 /* ── Search ──────────────────────────────────────────────────────── */
@@ -85,14 +99,15 @@
 .searchWrap {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: var(--color-bg-card);
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--color-bg-input);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   color: var(--color-text-tertiary);
-  min-width: 200px;
-  height: fit-content;
+  min-width: 180px;
+  max-width: 260px;
+  flex: 1;
 }
 
 .searchInput {
@@ -101,8 +116,9 @@
   border: none;
   outline: none;
   color: var(--color-text-primary);
-  font-size: var(--font-size-base, 14px);
+  font-size: var(--font-size-sm, 13px);
   font-family: inherit;
+  min-width: 0;
 
   &::placeholder {
     color: var(--color-text-tertiary);
@@ -124,10 +140,10 @@
 }
 
 .highlight {
-  background: #f59e0b40;
+  background: color-mix(in srgb, #8b5cf6 25%, transparent);
   color: inherit;
   border-radius: 2px;
-  padding: 0 1px;
+  padding: 0 2px;
 }
 
 /* ── Grid ────────────────────────────────────────────────────────── */
@@ -156,17 +172,15 @@
   }
 }
 
-.stateRowOverridden {
-  background: color-mix(in srgb, #8b5cf6 8%, transparent);
-  border-radius: var(--radius-md);
-  padding: 6px 8px;
-  margin: 0 -8px;
-  border-bottom-color: color-mix(in srgb, #8b5cf6 15%, var(--color-border));
-
-  .stateLabel {
-    color: #8b5cf6;
-    font-weight: 600;
-  }
+.overrideDot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #8b5cf6;
+  margin-right: 6px;
+  flex-shrink: 0;
+  vertical-align: middle;
 }
 
 .stateLabel {
@@ -263,8 +277,8 @@
 }
 
 .overrideActive {
-  border-color: #f59e0b;
-  background-color: color-mix(in srgb, #f59e0b 12%, var(--color-bg-input));
+  border-color: #8b5cf6;
+  background-color: color-mix(in srgb, #8b5cf6 12%, var(--color-bg-input));
   color: var(--color-text-primary);
   font-weight: 600;
 }
@@ -277,7 +291,7 @@
 
 .overrideRange {
   width: 80px;
-  accent-color: #f59e0b;
+  accent-color: #8b5cf6;
 }
 
 .rangeValue {

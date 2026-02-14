@@ -116,6 +116,16 @@ export function Sidebar() {
     ? useDevOverrideValue("updateStatus", undefined)
     : undefined;
 
+  const devLlmEnhancement = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("llmEnhancementEnabled", undefined)
+    : undefined;
+
+  const devLlmTested = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("llmConnectionTested", undefined)
+    : undefined;
+
   const permissionStatus = {
     ...realPermissionStatus,
     ...(devMicOverride !== undefined ? { microphone: devMicOverride } : {}),
@@ -158,14 +168,17 @@ export function Sidebar() {
   const effectiveUpdateStatus = devUpdateStatus ?? updateState?.status;
   const hasUpdate = effectiveUpdateStatus === "available" || effectiveUpdateStatus === "downloading" || effectiveUpdateStatus === "ready";
 
+  const effectiveLlmEnhancement = devLlmEnhancement ?? config?.enableLlmEnhancement;
+  const effectiveLlmTested = devLlmTested ?? config?.llmConnectionTested;
+
   const isConfigured = (type?: "speech" | "permissions" | "ai-enhancement") => {
     if (!type) return false;
     if (type === "speech") return setupComplete;
     if (type === "permissions") return permissionStatus?.accessibility === true && permissionStatus?.microphone === "granted";
     if (type === "ai-enhancement") {
       return setupComplete
-        && config?.enableLlmEnhancement === true
-        && config?.llmConnectionTested === true
+        && effectiveLlmEnhancement === true
+        && effectiveLlmTested === true
         && computeLlmConfigHash(config) === config?.llmConfigHash;
     }
     return false;
@@ -197,7 +210,7 @@ export function Sidebar() {
           <WarningBadge show={
             (item.requiresModel === true && !setupComplete)
             || (item.requiresPermissions === true && needsPermissions())
-            || (item.requiresTest === true && config?.enableLlmEnhancement === true && !isConfigured("ai-enhancement"))
+            || (item.requiresTest === true && effectiveLlmEnhancement === true && !isConfigured("ai-enhancement"))
             || (item.requiresLlm === true && !isConfigured("ai-enhancement"))
           } />
         </span>

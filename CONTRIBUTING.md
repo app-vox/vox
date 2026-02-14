@@ -71,6 +71,8 @@ This panel is **completely excluded from production builds**. All entry points u
 
 If you add new dev-only code, follow the same pattern: gate behind `import.meta.env.DEV` and use `lazy(() => import(...))` — never static imports.
 
+When introducing a new piece of shared state (used across multiple components), add it to the Dev States panel in `src/renderer/components/dev/DevPanel.tsx`. If the state is renderer-side and affects the UI, also add an override for it in the `DevOverrides` interface (`src/renderer/stores/dev-overrides-store.ts`) and wire it into the consuming component via `useDevOverrideValue`.
+
 ## Code style
 
 - TypeScript strict mode
