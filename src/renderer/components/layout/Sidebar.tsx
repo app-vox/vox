@@ -123,20 +123,14 @@ const CATEGORIES: NavCategory[] = [
   },
 ];
 
-const DOWNLOAD_ICON = (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-    <polyline points="7 10 12 15 17 10" />
-    <line x1="12" y1="15" x2="12" y2="3" />
-  </svg>
-);
-
 interface SidebarProps {
   onCollapseChange?: (collapsed: boolean) => void;
 }
 
+const SIDEBAR_COLLAPSED_KEY = "vox:sidebar-collapsed";
+
 export function Sidebar({ onCollapseChange }: SidebarProps) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true");
   const [logoSrc, setLogoSrc] = useState("");
   const [updateState, setUpdateState] = useState<UpdateState | null>(null);
   const activeTab = useConfigStore((s) => s.activeTab);
@@ -144,6 +138,11 @@ export function Sidebar({ onCollapseChange }: SidebarProps) {
   const setupComplete = useConfigStore((s) => s.setupComplete);
   const config = useConfigStore((s) => s.config);
   const { status: permissionStatus } = usePermissions();
+
+  useEffect(() => {
+    onCollapseChange?.(collapsed);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     window.voxApi.resources.dataUrl("trayIcon@8x.png").then(setLogoSrc);
@@ -167,7 +166,7 @@ export function Sidebar({ onCollapseChange }: SidebarProps) {
     if (!type) return false;
     if (type === "speech") return setupComplete;
     if (type === "permissions") return permissionStatus?.accessibility === true && permissionStatus?.microphone === "granted";
-    if (type === "ai-enhancement") return config?.enableLlmEnhancement === true;
+    if (type === "ai-enhancement") return setupComplete && config?.enableLlmEnhancement === true;
     return false;
   };
 
@@ -222,6 +221,7 @@ export function Sidebar({ onCollapseChange }: SidebarProps) {
           onClick={() => {
             setCollapsed((v) => {
               const next = !v;
+              localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next));
               onCollapseChange?.(next);
               return next;
             });
@@ -246,12 +246,12 @@ export function Sidebar({ onCollapseChange }: SidebarProps) {
       <div className={styles.bottom}>
         <div className={styles.divider} />
         <button
-          className={`${styles.navItem} ${activeTab === "about" ? styles.navItemActive : ""} ${hasUpdate ? styles.navItemUpdate : ""}`}
+          className={`${styles.navItem} ${activeTab === "about" ? styles.navItemActive : ""}`}
           onClick={() => setActiveTab("about")}
-          title={collapsed ? (hasUpdate ? "Update Vox" : "About") : undefined}
+          title={collapsed ? (hasUpdate ? "Update available" : "About") : undefined}
         >
           <div className={styles.iconWrap}>
-            {hasUpdate ? DOWNLOAD_ICON : INFO_ICON}
+            {INFO_ICON}
             {hasUpdate && collapsed && (
               <span className={styles.updateBadge}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -261,7 +261,12 @@ export function Sidebar({ onCollapseChange }: SidebarProps) {
               </span>
             )}
           </div>
-          {!collapsed && <span className={styles.label}>{hasUpdate ? "Update Vox" : "About"}</span>}
+          {!collapsed && (
+            <span className={styles.label}>
+              About
+              {hasUpdate && <span className={styles.updateLabel}>Update Vox</span>}
+            </span>
+          )}
         </button>
         {collapsed && logoSrc && (
           <div className={styles.collapsedLogo}>

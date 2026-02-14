@@ -139,8 +139,10 @@
   color: var(--color-text-primary);
 }
 
-.navItemUpdate {
+.updateLabel {
+  font-size: var(--font-size-xs);
   color: var(--color-accent);
+  font-weight: var(--font-weight-medium);
 }
 
 .iconWrap {
