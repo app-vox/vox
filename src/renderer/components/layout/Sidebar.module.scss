@@ -38,14 +38,14 @@
 }
 
 .logo {
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
 }
 
 .logoClickable {
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
   opacity: 0.35;
   cursor: pointer;
@@ -58,7 +58,7 @@
 }
 
 .title {
-  font-size: var(--font-size-base);
+  font-size: 16px;
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
   white-space: nowrap;

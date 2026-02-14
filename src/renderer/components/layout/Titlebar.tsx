@@ -50,7 +50,6 @@ export function Titlebar() {
     if (status === "downloading") {
       return (
         <span className={styles.updateProgress}>
-          {/* eslint-disable-next-line i18next/no-literal-string */}
           {`${Math.round(updateState?.downloadProgress ?? 0)}%`}
         </span>
       );
