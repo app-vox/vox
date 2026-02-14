@@ -2,7 +2,7 @@ import { useState } from "react";
 import { recordAudio } from "../../utils/record-audio";
 import { useT } from "../../i18n-context";
 import { StatusBox } from "../ui/StatusBox";
-import { RecordIcon } from "../ui/icons";
+import { RecordIcon } from "../../../shared/icons";
 import card from "../shared/card.module.scss";
 import btn from "../shared/buttons.module.scss";
 
@@ -49,7 +49,7 @@ export function PipelineTest() {
           disabled={testing}
           className={`${btn.btn} ${btn.primary}`}
         >
-          <RecordIcon />
+          <RecordIcon width={16} height={16} />
           {t("permissions.pipeline.testButton")}
         </button>
         <StatusBox text={testStatus.text} type={testStatus.type} />

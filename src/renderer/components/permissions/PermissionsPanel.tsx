@@ -4,7 +4,7 @@ import { usePermissions } from "../../hooks/use-permissions";
 import { useT } from "../../i18n-context";
 import { PermissionRow } from "./PermissionRow";
 import { PipelineTest } from "./PipelineTest";
-import { MicIcon, LockIcon } from "../ui/icons";
+import { MicIcon, LockIcon } from "../../../shared/icons";
 import card from "../shared/card.module.scss";
 
 export function PermissionsPanel() {
@@ -44,7 +44,7 @@ export function PermissionsPanel() {
         </div>
         <div className={card.body}>
           <PermissionRow
-            icon={<MicIcon />}
+            icon={<MicIcon width={18} height={18} />}
             name={t("permissions.microphone")}
             description={t("permissions.microphoneDesc")}
             granted={micGranted}
@@ -55,7 +55,7 @@ export function PermissionsPanel() {
             setupRequired={!setupComplete}
           />
           <PermissionRow
-            icon={<LockIcon />}
+            icon={<LockIcon width={18} height={18} />}
             name={t("permissions.accessibility")}
             description={t("permissions.accessibilityDesc")}
             granted={accGranted}

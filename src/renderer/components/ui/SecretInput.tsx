@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { EyeIcon } from "./icons";
+import { EyeIcon } from "../../../shared/icons";
 import { useT } from "../../i18n-context";
 import form from "../shared/forms.module.scss";
 
@@ -33,7 +33,7 @@ export function SecretInput({ id, value, onChange, onFocus, onBlur, placeholder 
         className={form.iconBtn}
         title={t("ui.showHide")}
       >
-        <EyeIcon />
+        <EyeIcon width={16} height={16} />
       </button>
     </div>
   );

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useT } from "../../i18n-context";
+import { ChevronUpIcon, ChevronDownIcon } from "../../../shared/icons";
 import styles from "./ScrollButtons.module.scss";
 
 interface ScrollButtonsProps {
@@ -48,16 +49,12 @@ export function ScrollButtons({ containerRef }: ScrollButtonsProps) {
     <>
       {showTop && (
         <button onClick={scrollToTop} className={`${styles.scrollButton} ${styles.scrollTop}`} aria-label={t("ui.scrollToTop")}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="18 15 12 9 6 15" />
-          </svg>
+          <ChevronUpIcon width={16} height={16} />
         </button>
       )}
       {showBottom && (
         <button onClick={scrollToBottom} className={`${styles.scrollButton} ${styles.scrollBottom}`} aria-label={t("ui.scrollToBottom")}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
+          <ChevronDownIcon width={16} height={16} />
         </button>
       )}
     </>
