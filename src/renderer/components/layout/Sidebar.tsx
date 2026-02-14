@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
+import type { UpdateState } from "../../../preload/index";
 import { useConfigStore } from "../../stores/config-store";
 import { usePermissions } from "../../hooks/use-permissions";
 import { WarningBadge } from "../ui/WarningBadge";
@@ -122,9 +123,18 @@ const CATEGORIES: NavCategory[] = [
   },
 ];
 
+const DOWNLOAD_ICON = (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="7 10 12 15 17 10" />
+    <line x1="12" y1="15" x2="12" y2="3" />
+  </svg>
+);
+
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [logoSrc, setLogoSrc] = useState("");
+  const [updateState, setUpdateState] = useState<UpdateState | null>(null);
   const activeTab = useConfigStore((s) => s.activeTab);
   const setActiveTab = useConfigStore((s) => s.setActiveTab);
   const setupComplete = useConfigStore((s) => s.setupComplete);
@@ -134,6 +144,13 @@ export function Sidebar() {
   useEffect(() => {
     window.voxApi.resources.dataUrl("trayIcon@8x.png").then(setLogoSrc);
   }, []);
+
+  useEffect(() => {
+    window.voxApi.updates.getState().then(setUpdateState);
+    return window.voxApi.updates.onStateChanged(setUpdateState);
+  }, []);
+
+  const hasUpdate = updateState?.status === "available" || updateState?.status === "downloading" || updateState?.status === "ready";
 
   const isConfigured = (type?: "speech" | "permissions" | "ai-enhancement") => {
     if (!type) return false;
@@ -210,11 +227,11 @@ export function Sidebar() {
       <div className={styles.bottom}>
         <div className={styles.divider} />
         <button
-          className={`${styles.navItem} ${activeTab === "about" ? styles.navItemActive : ""}`}
+          className={`${styles.navItem} ${activeTab === "about" ? styles.navItemActive : ""} ${hasUpdate ? styles.navItemUpdate : ""}`}
           onClick={() => setActiveTab("about")}
         >
-          <div className={styles.iconWrap}>{INFO_ICON}</div>
-          {!collapsed && <span className={styles.label}>About</span>}
+          <div className={styles.iconWrap}>{hasUpdate ? DOWNLOAD_ICON : INFO_ICON}</div>
+          {!collapsed && <span className={styles.label}>{hasUpdate ? "Update Vox" : "About"}</span>}
         </button>
       </div>
     </aside>
