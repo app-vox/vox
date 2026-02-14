@@ -39,7 +39,7 @@ function buildStaticHtml(): string {
 
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><style>
-  :root { --c: #888; --pill-min-w: 180px; }
+  :root { --c: #888; }
   * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
   html, body {
     background: transparent;
@@ -69,7 +69,7 @@ function buildStaticHtml(): string {
     letter-spacing: 0.1px;
     white-space: nowrap;
     pointer-events: none;
-    min-width: var(--pill-min-w);
+    min-width: 100px;
     min-height: 30px;
   }
   .hidden { display: none !important; }
