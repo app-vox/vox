@@ -261,12 +261,10 @@
     cursor: pointer;
     margin-bottom: var(--spacing-2);
     font-weight: var(--font-weight-medium);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-1-5);
 
     svg {
-      flex-shrink: 0;
+      vertical-align: -2px;
+      margin-right: var(--spacing-1);
       color: var(--color-text-muted);
     }
   }

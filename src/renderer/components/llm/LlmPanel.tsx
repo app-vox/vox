@@ -280,8 +280,8 @@ export function LlmPanel() {
                           className={form.exampleCopyBtn}
                           title={copiedExample === ex.key ? t("history.copied") : t("history.copy")}
                           onClick={() => {
-                            const clean = ex.text.replace(/^[""]|[""]$/g, "");
-                            navigator.clipboard.writeText(clean);
+                            const clean = ex.text.replace(/^[""\u201C]|[""\u201D]$/g, "");
+                            window.voxApi.clipboard.write(clean);
                             setCopiedExample(ex.key);
                             setTimeout(() => setCopiedExample((prev) => prev === ex.key ? null : prev), 1500);
                           }}
