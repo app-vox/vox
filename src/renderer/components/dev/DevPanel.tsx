@@ -93,7 +93,7 @@ function OverrideSelect<K extends keyof DevOverrides>({
         else setOverride(field, e.target.value as DevOverrides[K]);
       }}
     >
-      <option value="__real__">Real</option>
+      <option value="__real__">Actual</option>
       {options.map((o) => (
         <option key={o.value} value={o.value}>{o.label}</option>
       ))}
@@ -123,7 +123,7 @@ function OverrideBool<K extends keyof DevOverrides>({
         else setOverride(field, (e.target.value === "true") as DevOverrides[K]);
       }}
     >
-      <option value="__real__">Real</option>
+      <option value="__real__">Actual</option>
       <option value="true">true</option>
       <option value="false">false</option>
     </select>

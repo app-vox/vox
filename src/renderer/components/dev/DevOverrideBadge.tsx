@@ -13,7 +13,7 @@ export function DevOverrideBadge() {
       className={styles.overrideBadge}
       onClick={() => setActiveTab("dev")}
     >
-      {"States Overridden"}
+      {"Overrides Active"}
     </button>
   );
 }

@@ -20,7 +20,7 @@ import {
 import { WarningBadge } from "../ui/WarningBadge";
 import { NewDot } from "../ui/NewDot";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
-import { useDevOverrideValue } from "../../hooks/use-dev-override";
+import { useDevOverrideValue, useDevOverridesActive } from "../../hooks/use-dev-override";
 import styles from "./Sidebar.module.scss";
 
 const VOX_WEBSITE_URL = "https://app-vox.github.io/vox/";
@@ -125,6 +125,11 @@ export function Sidebar() {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     ? useDevOverrideValue("llmConnectionTested", undefined)
     : undefined;
+
+  const devOverridesActive = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverridesActive()
+    : false;
 
   const permissionStatus = {
     ...realPermissionStatus,
@@ -264,16 +269,26 @@ export function Sidebar() {
             <button
               className={`${styles.navItem} ${styles.devItem} ${activeTab === "dev" ? styles.devItemActive : ""}`}
               onClick={() => handleTabClick("dev")}
-              title={collapsed ? "Dev States" : undefined}
+              title={collapsed ? "Dev Panel" : undefined}
             >
               <div className={styles.iconWrap}>
                 <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="16 18 22 12 16 6" />
                   <polyline points="8 6 2 12 8 18" />
                 </svg>
+                {devOverridesActive && (
+                  <span className={styles.devOverrideDot} />
+                )}
               </div>
-              {/* eslint-disable-next-line i18next/no-literal-string */}
-              {!collapsed && <span className={styles.label}>Dev States</span>}
+              {!collapsed && (
+                <span className={styles.label}>
+                  {"Dev Panel"}
+                  {devOverridesActive && (
+                    // eslint-disable-next-line i18next/no-literal-string
+                    <span className={styles.devOverrideLabel}>Overriding</span>
+                  )}
+                </span>
+              )}
             </button>
             <div className={styles.divider} />
           </>

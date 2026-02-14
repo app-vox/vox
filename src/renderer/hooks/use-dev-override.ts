@@ -46,3 +46,27 @@ export function useDevOverrideValue<K extends keyof DevOverrides>(
 
   return overrideValue;
 }
+
+/**
+ * Returns true when dev overrides are enabled and at least one key is actively set.
+ * Used to show a visual indicator (e.g. red dot on sidebar).
+ */
+export function useDevOverridesActive(): boolean {
+  const [active, setActive] = useState(() => {
+    const ov = readOverrides();
+    if (!ov) return false;
+    return Object.keys(ov).some((k) => k !== "enabled" && ov[k as keyof DevOverrides] !== undefined);
+  });
+
+  useEffect(() => {
+    const handler = () => {
+      const ov = readOverrides();
+      if (!ov) { setActive(false); return; }
+      setActive(Object.keys(ov).some((k) => k !== "enabled" && ov[k as keyof DevOverrides] !== undefined));
+    };
+    window.addEventListener("vox:dev-overrides-changed", handler);
+    return () => window.removeEventListener("vox:dev-overrides-changed", handler);
+  }, []);
+
+  return active;
+}

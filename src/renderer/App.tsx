@@ -1,6 +1,11 @@
 import { useEffect, useRef, lazy, Suspense, type JSX } from "react";
 import { useConfigStore } from "./stores/config-store";
 import { SpinnerIcon } from "../shared/icons";
+
+// Clear dev overrides on startup so the app always starts clean (before any component mounts)
+if (import.meta.env.DEV) {
+  localStorage.removeItem("vox:dev-overrides");
+}
 import { Sidebar } from "./components/layout/Sidebar";
 import { Titlebar } from "./components/layout/Titlebar";
 import { AboutPanel } from "./components/about/AboutPanel";

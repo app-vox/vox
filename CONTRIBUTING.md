@@ -63,15 +63,15 @@ npx mega-linter-runner --flavor javascript
 
 Reports are saved to the `megalinter-reports/` directory (git-ignored).
 
-## Dev States panel (dev-only)
+## Dev Panel (dev-only)
 
-When running `npm run dev`, a **Dev States** tab appears in the sidebar. It displays all runtime states and lets you override them (fake an update, revoke permissions, etc.) to test UI behavior without real conditions.
+When running `npm run dev`, a **Dev Panel** tab appears in the sidebar. It displays all runtime states and lets you override them (fake an update, revoke permissions, simulate offline, etc.) to test UI behavior without real conditions. Overrides are automatically cleared on app startup.
 
 This panel is **completely excluded from production builds**. All entry points use `import.meta.env.DEV` guards with `React.lazy()` dynamic imports, so Vite's dead-code elimination removes the entire module tree (panel, store, styles) during `npm run build`. Zero dev bytes ship to users.
 
 If you add new dev-only code, follow the same pattern: gate behind `import.meta.env.DEV` and use `lazy(() => import(...))` — never static imports.
 
-When introducing a new piece of shared state (used across multiple components), add it to the Dev States panel in `src/renderer/components/dev/DevPanel.tsx`. If the state is renderer-side and affects the UI, also add an override for it in the `DevOverrides` interface (`src/renderer/stores/dev-overrides-store.ts`) and wire it into the consuming component via `useDevOverrideValue`.
+When introducing a new piece of shared state (used across multiple components), add it to the Dev Panel in `src/renderer/components/dev/DevPanel.tsx`. If the state is renderer-side and affects the UI, also add an override for it in the `DevOverrides` interface (`src/renderer/stores/dev-overrides-store.ts`) and wire it into the consuming component via `useDevOverrideValue`.
 
 ## Code style
 
