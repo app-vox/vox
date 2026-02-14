@@ -1,5 +1,5 @@
 {
-  "tabs.history": "Transkriptionen",
+  "tabs.transcriptions": "Transkriptionen",
   "tabs.speech": "Sprache",
   "tabs.aiEnhancement": "KI-Verbesserung",
   "tabs.dictionary": "Wörterbuch",
@@ -220,12 +220,20 @@
   "general.setup.description": "Laden Sie ein Sprachmodell herunter, um Vox für die Transkription zu nutzen.",
   "general.setup.getStarted": "Loslegen",
   "sidebar.ai": "KI",
-  "sidebar.words": "Wörter",
+  "sidebar.content": "Inhalte",
   "sidebar.interface": "Oberfläche",
   "sidebar.expand": "Seitenleiste erweitern",
   "sidebar.collapse": "Seitenleiste einklappen",
   "sidebar.visitWebsite": "Vox-Website besuchen",
   "sidebar.updateAvailable": "Update verfügbar",
   "sidebar.updateVox": "Vox aktualisieren",
-  "history.deleteTranscription": "Transkription löschen"
+  "history.deleteTranscription": "Transkription löschen",
+  "general.recordingFeedback.title": "Aufnahme-Feedback",
+  "general.recordingFeedback.audioCue": "Ton bei Aufnahmestart",
+  "general.recordingFeedback.audioCue.description": "Spielt einen Ton ab, wenn die Aufnahme beginnt, um zu signalisieren, dass Sie sprechen können.",
+  "general.recordingFeedback.audioCue.click": "Klick",
+  "general.recordingFeedback.audioCue.beep": "Piep",
+  "general.recordingFeedback.audioCue.chime": "Glocke",
+  "general.recordingFeedback.audioCue.none": "Keiner",
+  "indicator.initializing": "Starten..."
 }

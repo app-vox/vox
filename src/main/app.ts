@@ -45,8 +45,13 @@ function setupPipeline(): void {
     : "";
   const llmProvider = createLlmProvider(config);
 
+  const recorder = new AudioRecorder();
+  recorder.onAudioLevels = (levels) => {
+    shortcutManager?.sendAudioLevels(levels);
+  };
+
   pipeline = new Pipeline({
-    recorder: new AudioRecorder(),
+    recorder,
     transcribe,
     llmProvider,
     modelPath,
@@ -139,7 +144,7 @@ app.whenReady().then(async () => {
   const setupChecker = new SetupChecker(modelManager);
   setupTray({
     onOpenHome: () => openHome(reloadConfig),
-    onOpenHistory: () => openHome(reloadConfig, "history"),
+    onOpenHistory: () => openHome(reloadConfig, "transcriptions"),
     onStartListening: () => shortcutManager?.triggerToggle(),
     onStopListening: () => shortcutManager?.stopAndProcess(),
     onCancelListening: () => shortcutManager?.cancelRecording(),

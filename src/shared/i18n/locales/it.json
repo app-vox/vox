@@ -1,5 +1,5 @@
 {
-  "tabs.history": "Trascrizioni",
+  "tabs.transcriptions": "Trascrizioni",
   "tabs.speech": "Voce",
   "tabs.aiEnhancement": "Miglioramento IA",
   "tabs.dictionary": "Dizionario",
@@ -220,12 +220,20 @@
   "general.setup.description": "Scarica un modello vocale per iniziare a usare Vox per la trascrizione.",
   "general.setup.getStarted": "Inizia",
   "sidebar.ai": "IA",
-  "sidebar.words": "Parole",
+  "sidebar.content": "Contenuto",
   "sidebar.interface": "Interfaccia",
   "sidebar.expand": "Espandi barra laterale",
   "sidebar.collapse": "Comprimi barra laterale",
   "sidebar.visitWebsite": "Visita il sito di Vox",
   "sidebar.updateAvailable": "Aggiornamento disponibile",
   "sidebar.updateVox": "Aggiorna Vox",
-  "history.deleteTranscription": "Elimina trascrizione"
+  "history.deleteTranscription": "Elimina trascrizione",
+  "general.recordingFeedback.title": "Feedback di Registrazione",
+  "general.recordingFeedback.audioCue": "Suono di inizio registrazione",
+  "general.recordingFeedback.audioCue.description": "Riproduce un suono quando inizia la registrazione per segnalare che puoi iniziare a parlare.",
+  "general.recordingFeedback.audioCue.click": "Clic",
+  "general.recordingFeedback.audioCue.beep": "Bip",
+  "general.recordingFeedback.audioCue.chime": "Campanello",
+  "general.recordingFeedback.audioCue.none": "Nessuno",
+  "indicator.initializing": "Avvio..."
 }

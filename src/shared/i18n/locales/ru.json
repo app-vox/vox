@@ -1,5 +1,5 @@
 {
-  "tabs.history": "Транскрипции",
+  "tabs.transcriptions": "Транскрипции",
   "tabs.speech": "Речь",
   "tabs.aiEnhancement": "Улучшение ИИ",
   "tabs.dictionary": "Словарь",
@@ -220,12 +220,20 @@
   "general.setup.description": "Загрузите модель распознавания речи, чтобы начать использовать Vox для транскрибации.",
   "general.setup.getStarted": "Начать",
   "sidebar.ai": "ИИ",
-  "sidebar.words": "Слова",
+  "sidebar.content": "Контент",
   "sidebar.interface": "Интерфейс",
   "sidebar.expand": "Развернуть боковую панель",
   "sidebar.collapse": "Свернуть боковую панель",
   "sidebar.visitWebsite": "Посетить сайт Vox",
   "sidebar.updateAvailable": "Доступно обновление",
   "sidebar.updateVox": "Обновить Vox",
-  "history.deleteTranscription": "Удалить транскрипцию"
+  "history.deleteTranscription": "Удалить транскрипцию",
+  "general.recordingFeedback.title": "Обратная связь записи",
+  "general.recordingFeedback.audioCue": "Звук начала записи",
+  "general.recordingFeedback.audioCue.description": "Воспроизводит звук при начале записи, чтобы сигнализировать, что можно начинать говорить.",
+  "general.recordingFeedback.audioCue.click": "Щелчок",
+  "general.recordingFeedback.audioCue.beep": "Сигнал",
+  "general.recordingFeedback.audioCue.chime": "Колокольчик",
+  "general.recordingFeedback.audioCue.none": "Нет",
+  "indicator.initializing": "Запуск..."
 }
