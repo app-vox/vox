@@ -12,8 +12,7 @@ export interface PipelineDeps {
     start(): Promise<void>;
     stop(): Promise<RecordingResult>;
     cancel(): Promise<void>;
-    playAudioCue?(samples: number[]): Promise<void>;
-    playWavCue?(base64Data: string): Promise<void>;
+    playAudioCue?(samples: number[], sampleRate?: number): Promise<void>;
   };
   transcribe(
     audioBuffer: Float32Array,
@@ -133,12 +132,8 @@ export class Pipeline {
     }
   }
 
-  async playAudioCue(samples: number[]): Promise<void> {
-    await this.deps.recorder.playAudioCue?.(samples);
-  }
-
-  async playWavCue(base64Data: string): Promise<void> {
-    await this.deps.recorder.playWavCue?.(base64Data);
+  async playAudioCue(samples: number[], sampleRate?: number): Promise<void> {
+    await this.deps.recorder.playAudioCue?.(samples, sampleRate);
   }
 
   async startRecording(): Promise<void> {
