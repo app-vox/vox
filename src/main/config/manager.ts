@@ -8,7 +8,7 @@ export interface SecretStore {
   decrypt(cipherText: string): string;
 }
 
-const SENSITIVE_FIELDS: (keyof LlmConfig)[] = ["apiKey", "secretAccessKey", "accessKeyId"];
+const SENSITIVE_FIELDS: (keyof LlmConfig)[] = ["apiKey", "secretAccessKey", "accessKeyId", "anthropicApiKey"];
 
 export class ConfigManager {
   private readonly configPath: string;

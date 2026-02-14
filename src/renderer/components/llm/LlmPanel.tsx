@@ -6,14 +6,33 @@ import { FoundryFields } from "./FoundryFields";
 import { BedrockFields } from "./BedrockFields";
 import { OpenAICompatibleFields } from "./OpenAICompatibleFields";
 import { LiteLLMFields } from "./LiteLLMFields";
+import { AnthropicFields } from "./AnthropicFields";
 import { StatusBox } from "../ui/StatusBox";
 import { NewDot } from "../ui/NewDot";
 import { CustomSelect } from "../ui/CustomSelect";
-import { ExternalLinkIcon } from "../../../shared/icons";
-import type { LlmProviderType } from "../../../shared/config";
+import { ExternalLinkIcon, CheckCircleIcon } from "../../../shared/icons";
+import type { LlmProviderType, LlmConfig } from "../../../shared/config";
 import card from "../shared/card.module.scss";
 import form from "../shared/forms.module.scss";
 import buttons from "../shared/buttons.module.scss";
+
+function isProviderConfigured(provider: LlmProviderType, llm: LlmConfig): boolean {
+  switch (provider) {
+    case "foundry":
+      return !!(llm.endpoint && llm.apiKey && llm.model);
+    case "bedrock":
+      return !!(llm.region && llm.modelId && (llm.profile || (llm.accessKeyId && llm.secretAccessKey)));
+    case "openai":
+    case "deepseek":
+      return !!(llm.openaiApiKey && llm.openaiModel && llm.openaiEndpoint);
+    case "litellm":
+      return !!(llm.openaiEndpoint && llm.openaiModel);
+    case "anthropic":
+      return !!(llm.anthropicApiKey && llm.anthropicModel);
+    default:
+      return false;
+  }
+}
 
 export function LlmPanel() {
   const t = useT();
@@ -65,10 +84,11 @@ export function LlmPanel() {
     );
   }
 
-  const providerDefaults: Record<string, { openaiEndpoint: string; openaiModel: string }> = {
+  const providerDefaults: Record<string, Record<string, string>> = {
     openai: { openaiEndpoint: "https://api.openai.com", openaiModel: "gpt-4o" },
     deepseek: { openaiEndpoint: "https://api.deepseek.com", openaiModel: "deepseek-chat" },
     litellm: { openaiEndpoint: "http://localhost:4000", openaiModel: "gpt-4o" },
+    anthropic: { anthropicModel: "claude-sonnet-4-20250514" },
   };
 
   const handleProviderChange = (provider: LlmProviderType) => {
@@ -160,13 +180,19 @@ export function LlmPanel() {
                   <CustomSelect
                     id="llm-provider"
                     value={config.llm.provider || "foundry"}
-                    items={[
+                    items={([
                       { value: "foundry", label: "Microsoft Foundry" },
                       { value: "bedrock", label: "AWS Bedrock" },
                       { value: "openai", label: "OpenAI" },
                       { value: "deepseek", label: "DeepSeek" },
+                      { value: "anthropic", label: "Anthropic" },
                       { value: "litellm", label: "LiteLLM" },
-                    ]}
+                    ] as const).map((item) => ({
+                      ...item,
+                      suffix: isProviderConfigured(item.value, config.llm)
+                        ? <CheckCircleIcon width={14} height={14} style={{ color: "var(--color-accent)" }} />
+                        : undefined,
+                    }))}
                     onChange={(value) => handleProviderChange(value as LlmProviderType)}
                   />
                 </div>
@@ -177,6 +203,8 @@ export function LlmPanel() {
                   <OpenAICompatibleFields providerType={config.llm.provider} />
                 ) : config.llm.provider === "bedrock" ? (
                   <BedrockFields />
+                ) : config.llm.provider === "anthropic" ? (
+                  <AnthropicFields />
                 ) : (
                   <FoundryFields />
                 )}
