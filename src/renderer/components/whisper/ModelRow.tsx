@@ -145,7 +145,7 @@ export function ModelRow({ model, selected, onSelect, onDelete, downloadDisabled
       ) : (
         <button
           onClick={handleDownload}
-          disabled={downloading || downloadDisabled}
+          disabled={downloadDisabled}
           className={styles.downloadBtn}
         >
           {t("model.download")}
