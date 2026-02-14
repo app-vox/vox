@@ -146,10 +146,10 @@ export function DictionaryPanel() {
               ))}
             </div>
 
-            {totalPages > 1 && (
+            {sorted.length > 0 && (
               <div className={styles.pagination}>
                 <div className={styles.pageInfo}>
-                  {page} / {totalPages}
+                  {page} / {totalPages || 1}
                 </div>
                 <div className={styles.pageControls}>
                   <button disabled={page <= 1} onClick={() => setPage(page - 1)}>

@@ -81,12 +81,12 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--spacing-3);
+  gap: var(--spacing-2);
   padding: var(--spacing-3) 0;
   margin-top: var(--spacing-3);
   border-top: 1px solid var(--color-border);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
 }
 
 .pageInfo {
@@ -95,16 +95,18 @@
 
 .pageControls {
   display: flex;
-  gap: var(--spacing-1);
+  gap: 2px;
 }
 
 .pageControls button {
-  padding: var(--spacing-1) var(--spacing-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 6px;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-base);
+  border-radius: var(--radius-sm);
   background: var(--color-bg-root);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
   cursor: pointer;
   transition: all var(--duration-fast) var(--ease-default);
 
@@ -114,20 +116,21 @@
   }
 
   &:disabled {
-    opacity: 0.4;
+    opacity: 0.3;
     cursor: not-allowed;
   }
 }
 
 .pageSizeSelect {
-  padding: var(--spacing-1) var(--spacing-2);
+  padding: 3px 4px;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-base);
+  border-radius: var(--radius-sm);
   background: var(--color-bg-root);
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
   font-size: var(--font-size-xs);
   cursor: pointer;
   outline: none;
+  width: auto;
 
   &:hover {
     border-color: var(--color-border-hover);

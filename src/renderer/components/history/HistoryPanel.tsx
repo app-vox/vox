@@ -197,10 +197,10 @@ export function HistoryPanel() {
 
           {loading && <div className={styles.spinner}>Loading...</div>}
 
-          {totalPages > 1 && (
+          {total > 0 && (
             <div className={styles.pagination}>
               <div className={styles.pageInfo}>
-                {page} / {totalPages}
+                {page} / {totalPages || 1}
               </div>
               <div className={styles.pageControls}>
                 <button disabled={page <= 1} onClick={() => setPage(page - 1)}>
