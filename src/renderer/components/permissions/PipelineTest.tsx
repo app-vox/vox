@@ -2,7 +2,7 @@ import { useState } from "react";
 import { recordAudio } from "../../utils/record-audio";
 import { useT } from "../../i18n-context";
 import { StatusBox } from "../ui/StatusBox";
-import { RecordIcon } from "../ui/icons";
+import { RecordIcon } from "../../../shared/icons";
 import card from "../shared/card.module.scss";
 import btn from "../shared/buttons.module.scss";
 

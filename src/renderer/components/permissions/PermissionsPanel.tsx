@@ -4,7 +4,7 @@ import { usePermissions } from "../../hooks/use-permissions";
 import { useT } from "../../i18n-context";
 import { PermissionRow } from "./PermissionRow";
 import { PipelineTest } from "./PipelineTest";
-import { MicIcon, LockIcon } from "../ui/icons";
+import { MicIcon, LockIcon } from "../../../shared/icons";
 import card from "../shared/card.module.scss";
 
 export function PermissionsPanel() {

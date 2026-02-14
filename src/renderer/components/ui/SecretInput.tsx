@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { EyeIcon } from "./icons";
+import { EyeIcon } from "../../../shared/icons";
 import { useT } from "../../i18n-context";
 import form from "../shared/forms.module.scss";
 

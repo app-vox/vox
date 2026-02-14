@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import type { ModelInfo } from "../../../preload/index";
 import { useT } from "../../i18n-context";
-import { TrashIcon, XIcon } from "../ui/icons";
+import { TrashIcon, XIcon } from "../../../shared/icons";
 import styles from "./ModelRow.module.scss";
 
 interface ModelRowProps {

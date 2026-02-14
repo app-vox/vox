@@ -1,5 +1,6 @@
 import { BrowserWindow, screen } from "electron";
 import { t } from "../shared/i18n";
+import { xIndicatorSvg, cancelXSvg } from "../shared/icons/indicator-icons";
 
 type IndicatorMode = "listening" | "transcribing" | "enhancing" | "error" | "canceled";
 
@@ -30,17 +31,11 @@ function buildHtml(mode: IndicatorMode): string {
   const showCancelButton = mode === "listening" || mode === "transcribing";
 
   const iconHtml = showXIcon
-    ? `<svg class="icon" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-         <path d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5" stroke="${color}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-       </svg>`
+    ? xIndicatorSvg(color)
     : `<div class="dot"></div>`;
 
   const cancelButtonHtml = showCancelButton
-    ? `<button class="cancel-btn" onclick="window.electronAPI?.cancelRecording()">
-         <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-           <path d="M8 2L2 8M2 2L8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-         </svg>
-       </button>`
+    ? `<button class="cancel-btn" onclick="window.electronAPI?.cancelRecording()">${cancelXSvg}</button>`
     : "";
 
   return `<!DOCTYPE html>
@@ -296,9 +291,7 @@ export class IndicatorWindow {
   }
 </style></head>
 <body><div class="pill">
-  <svg class="icon" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5" stroke="${color}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>
+  ${xIndicatorSvg(color)}
   <span>${text}</span>
 </div></body>
 </html>`;

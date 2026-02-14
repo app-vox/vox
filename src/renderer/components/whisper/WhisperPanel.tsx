@@ -4,7 +4,7 @@ import { useSaveToast } from "../../hooks/use-save-toast";
 import { useT } from "../../i18n-context";
 import { ModelRow } from "./ModelRow";
 import { StatusBox } from "../ui/StatusBox";
-import { RecordIcon } from "../ui/icons";
+import { RecordIcon } from "../../../shared/icons";
 import { recordAudio } from "../../utils/record-audio";
 import type { ModelInfo } from "../../../preload/index";
 import type { WhisperModelSize } from "../../../shared/config";
