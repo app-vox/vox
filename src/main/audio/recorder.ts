@@ -164,9 +164,9 @@ export class AudioRecorder {
 
   async playAudioCue(samples: number[]): Promise<void> {
     if (samples.length === 0) return;
-    if (!this.win || this.win.isDestroyed()) return;
+    const win = await this.ensureWindow();
 
-    await this.win.webContents.executeJavaScript(`
+    await win.webContents.executeJavaScript(`
       (() => {
         const samples = new Float32Array(${JSON.stringify(Array.from(samples))});
         const ctx = new AudioContext();
@@ -174,6 +174,25 @@ export class AudioRecorder {
         buffer.getChannelData(0).set(samples.length <= buffer.length
           ? samples
           : samples.slice(0, buffer.length));
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+        source.start();
+        source.onended = () => ctx.close();
+      })()
+    `);
+  }
+
+  async playWavCue(base64Data: string): Promise<void> {
+    const win = await this.ensureWindow();
+
+    await win.webContents.executeJavaScript(`
+      (async () => {
+        const binary = atob("${base64Data}");
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const ctx = new AudioContext();
+        const buffer = await ctx.decodeAudioData(bytes.buffer);
         const source = ctx.createBufferSource();
         source.buffer = buffer;
         source.connect(ctx.destination);

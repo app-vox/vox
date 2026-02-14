@@ -24,10 +24,16 @@
   border-radius: var(--radius-md);
   font-size: var(--font-size-base);
   color: var(--color-text-primary);
-  transition: border-color var(--duration-fast) var(--ease-default);
+  transition: border-color var(--duration-fast) var(--ease-default),
+    background 1.5s ease;
 
   &:hover {
     border-color: var(--color-border-hover);
+  }
+
+  &.highlight {
+    border-color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-input));
   }
 }
 

@@ -29,8 +29,18 @@ describe("VoxConfig", () => {
     expect(config.language).toBe("system");
   });
 
-  it("should include recordingAudioCue defaulting to 'click'", () => {
+  it("should include recordingAudioCue defaulting to 'tap'", () => {
     const config = createDefaultConfig();
-    expect(config.recordingAudioCue).toBe("click");
+    expect(config.recordingAudioCue).toBe("tap");
+  });
+
+  it("should include recordingStopAudioCue defaulting to 'pop'", () => {
+    const config = createDefaultConfig();
+    expect(config.recordingStopAudioCue).toBe("pop");
+  });
+
+  it("should include errorAudioCue defaulting to 'error'", () => {
+    const config = createDefaultConfig();
+    expect(config.errorAudioCue).toBe("error");
   });
 });

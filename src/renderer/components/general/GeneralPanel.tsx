@@ -5,8 +5,8 @@ import { usePermissions } from "../../hooks/use-permissions";
 import { useT } from "../../i18n-context";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
 import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, BookIcon } from "../../../shared/icons";
-import type { ThemeMode, SupportedLanguage, AudioCueType } from "../../../shared/config";
-import { generateCueSamples } from "../../../shared/audio-cue";
+import type { ThemeMode, SupportedLanguage } from "../../../shared/config";
+import { CustomSelect, type SelectItem } from "../ui/CustomSelect";
 import { OfflineBanner } from "../ui/OfflineBanner";
 import card from "../shared/card.module.scss";
 import buttons from "../shared/buttons.module.scss";
@@ -31,6 +31,10 @@ const LANGUAGE_NAMES: Record<SupportedLanguage, string> = {
   tr: "T\u00fcrk\u00e7e",
 };
 
+function previewCue(cue: string) {
+  window.voxApi.audio.previewCue(cue).catch(() => {});
+}
+
 export function GeneralPanel() {
   const t = useT();
   const config = useConfigStore((s) => s.config);
@@ -47,12 +51,32 @@ export function GeneralPanel() {
     system: t("general.theme.system"),
   };
 
+  const soundItems: SelectItem[] = [
+    { value: "none", label: t("general.recordingFeedback.audioCue.none") },
+    { divider: true },
+    { value: "beep", label: t("general.recordingFeedback.audioCue.beep") },
+    { value: "chime", label: t("general.recordingFeedback.audioCue.chime") },
+    { value: "click", label: t("general.recordingFeedback.audioCue.click") },
+    { value: "ding", label: t("general.recordingFeedback.sound.ding") },
+    { value: "nudge", label: t("general.recordingFeedback.sound.nudge") },
+    { value: "ping", label: t("general.recordingFeedback.sound.ping") },
+    { value: "pop", label: t("general.recordingFeedback.sound.pop") },
+    { value: "tap", label: t("general.recordingFeedback.sound.tap") },
+    { value: "tick", label: t("general.recordingFeedback.sound.tick") },
+  ];
 
-  const audioCueOptions: { value: AudioCueType; labelKey: string }[] = [
-    { value: "click", labelKey: "general.recordingFeedback.audioCue.click" },
-    { value: "beep", labelKey: "general.recordingFeedback.audioCue.beep" },
-    { value: "chime", labelKey: "general.recordingFeedback.audioCue.chime" },
-    { value: "none", labelKey: "general.recordingFeedback.audioCue.none" },
+  const errorSoundItems: SelectItem[] = [
+    { value: "none", label: t("general.recordingFeedback.audioCue.none") },
+    { divider: true },
+    { value: "error", label: t("general.recordingFeedback.sound.error") },
+  ];
+
+  const languageItems: SelectItem[] = [
+    { value: "system", label: t("general.language.system") },
+    ...SUPPORTED_LANGUAGES.map((lang) => ({
+      value: lang,
+      label: LANGUAGE_NAMES[lang],
+    })),
   ];
 
   const isDevMode = import.meta.env.DEV;
@@ -63,22 +87,10 @@ export function GeneralPanel() {
 
   if (!config) return null;
 
-  const setAudioCue = async (cue: AudioCueType) => {
-    updateConfig({ recordingAudioCue: cue });
+  const handleSoundChange = async (field: "recordingAudioCue" | "recordingStopAudioCue" | "errorAudioCue", cue: string) => {
+    updateConfig({ [field]: cue });
     await saveConfig(false);
     triggerToast();
-
-    if (cue !== "none") {
-      const ctx = new AudioContext();
-      const samples = generateCueSamples(cue, ctx.sampleRate);
-      const buffer = ctx.createBuffer(1, samples.length, ctx.sampleRate);
-      buffer.getChannelData(0).set(new Float32Array(samples));
-      const source = ctx.createBufferSource();
-      source.buffer = buffer;
-      source.connect(ctx.destination);
-      source.start();
-      source.onended = () => ctx.close();
-    }
   };
 
   const setTheme = async (theme: ThemeMode) => {
@@ -191,35 +203,50 @@ export function GeneralPanel() {
           <p className={card.description}>{t("general.language.description")}</p>
         </div>
         <div className={card.body}>
-          <select
+          <CustomSelect
             value={config.language}
-            onChange={(e) => {
-              updateConfig({ language: e.target.value as SupportedLanguage | "system" });
+            items={languageItems}
+            onChange={(val) => {
+              updateConfig({ language: val as SupportedLanguage | "system" });
               saveConfig(false).then(() => triggerToast());
             }}
-          >
-            <option value="system">{t("general.language.system")}</option>
-            {SUPPORTED_LANGUAGES.map((lang) => (
-              <option key={lang} value={lang}>{LANGUAGE_NAMES[lang]}</option>
-            ))}
-          </select>
+          />
         </div>
       </div>
 
       <div className={card.card}>
         <div className={card.header}>
           <h2>{t("general.recordingFeedback.title")}</h2>
-          <p className={card.description}>{t("general.recordingFeedback.audioCue.description")}</p>
+          <p className={card.description}>{t("general.recordingFeedback.description")}</p>
         </div>
         <div className={card.body}>
-          <select
-            value={config.recordingAudioCue ?? "click"}
-            onChange={(e) => setAudioCue(e.target.value as AudioCueType)}
-          >
-            {audioCueOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
-            ))}
-          </select>
+          <div className={styles.fieldRow}>
+            <label>{t("general.recordingFeedback.startSound")}</label>
+            <CustomSelect
+              value={config.recordingAudioCue ?? "tap"}
+              items={soundItems}
+              onChange={(val) => handleSoundChange("recordingAudioCue", val)}
+              onPreview={previewCue}
+            />
+          </div>
+          <div className={styles.fieldRow}>
+            <label>{t("general.recordingFeedback.stopSound")}</label>
+            <CustomSelect
+              value={config.recordingStopAudioCue ?? "pop"}
+              items={soundItems}
+              onChange={(val) => handleSoundChange("recordingStopAudioCue", val)}
+              onPreview={previewCue}
+            />
+          </div>
+          <div className={styles.fieldRow}>
+            <label>{t("general.recordingFeedback.errorSound")}</label>
+            <CustomSelect
+              value={config.errorAudioCue ?? "error"}
+              items={errorSoundItems}
+              onChange={(val) => handleSoundChange("errorAudioCue", val)}
+              onPreview={previewCue}
+            />
+          </div>
         </div>
       </div>
 

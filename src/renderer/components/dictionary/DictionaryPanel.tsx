@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useT } from "../../i18n-context";
 import { XIcon, ChevronLeftIcon, ChevronRightIcon } from "../../../shared/icons";
+import { CustomSelect } from "../ui/CustomSelect";
 import card from "../shared/card.module.scss";
 import form from "../shared/forms.module.scss";
 import buttons from "../shared/buttons.module.scss";
@@ -36,6 +37,7 @@ export function DictionaryPanel() {
   const [inputValue, setInputValue] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(() => Number(localStorage.getItem("vox:dictionary-pageSize")) || 10);
+  const [highlightTerms, setHighlightTerms] = useState<Set<string>>(new Set());
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -61,9 +63,17 @@ export function DictionaryPanel() {
     const existing = new Set(dictionary.map((t) => t.toLowerCase()));
     const newTerms = terms.filter((t) => !existing.has(t.toLowerCase()));
     if (newTerms.length > 0) {
-      updateConfig({ dictionary: [...dictionary, ...newTerms] });
+      const updated = [...dictionary, ...newTerms];
+      updateConfig({ dictionary: updated });
       saveConfig(true);
-      setPage(1);
+
+      const newSorted = [...updated].sort((a, b) => a.localeCompare(b));
+      const firstNewIndex = newSorted.findIndex((t) => newTerms.includes(t));
+      const targetPage = firstNewIndex >= 0 ? Math.floor(firstNewIndex / pageSize) + 1 : 1;
+      setPage(targetPage);
+
+      setHighlightTerms(new Set(newTerms));
+      setTimeout(() => setHighlightTerms(new Set()), 2000);
     }
     setInputValue("");
   };
@@ -131,7 +141,7 @@ export function DictionaryPanel() {
           <>
             <div className={styles.entryList}>
               {pageEntries.map((term) => (
-                <div key={term} className={styles.entry}>
+                <div key={term} className={`${styles.entry} ${highlightTerms.has(term) ? styles.highlight : ""}`}>
                   <span className={styles.entryText}>{term}</span>
                   <button
                     className={styles.deleteBtn}
@@ -162,11 +172,17 @@ export function DictionaryPanel() {
                   </button>
                 </div>
                 {/* eslint-disable i18next/no-literal-string */}
-                <select className={styles.pageSizeSelect} value={pageSize} onChange={(e) => handlePageSizeChange(Number(e.target.value))}>
-                  <option value={10}>10 / page</option>
-                  <option value={25}>25 / page</option>
-                  <option value={50}>50 / page</option>
-                </select>
+                <div className={styles.pageSizeSelect}>
+                  <CustomSelect
+                    value={String(pageSize)}
+                    items={[
+                      { value: "10", label: "10 / page" },
+                      { value: "25", label: "25 / page" },
+                      { value: "50", label: "50 / page" },
+                    ]}
+                    onChange={(value) => handlePageSizeChange(Number(value))}
+                  />
+                </div>
                 {/* eslint-enable i18next/no-literal-string */}
               </div>
             )}

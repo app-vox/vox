@@ -31,6 +31,7 @@ export { default as ChevronDownIcon } from "./svg/chevron-down.svg?react";
 export { default as EyeIcon } from "./svg/eye.svg?react";
 export { default as LockIcon } from "./svg/lock.svg?react";
 export { default as RecordIcon } from "./svg/record.svg?react";
+export { default as PlayIcon } from "./svg/play.svg?react";
 export { default as InfoCircleAltIcon } from "./svg/info-circle-alt.svg?react";
 
 export { Icon } from "./Icon";

@@ -1,5 +1,7 @@
-import { app, BrowserWindow, nativeTheme, session, dialog, shell } from "electron";
+import { app, BrowserWindow, ipcMain, nativeTheme, session, dialog, shell } from "electron";
 import * as path from "path";
+import { readFileSync } from "fs";
+import { join } from "path";
 import { ConfigManager } from "./config/manager";
 import { createSecretStore } from "./config/secrets";
 import { ModelManager } from "./models/manager";
@@ -15,7 +17,8 @@ import { registerIpcHandlers } from "./ipc";
 import { isAccessibilityGranted } from "./input/paster";
 import { SetupChecker } from "./setup/checker";
 import { HistoryManager } from "./history/manager";
-import { type VoxConfig } from "../shared/config";
+import { type VoxConfig, type AudioCueType } from "../shared/config";
+import { generateCueSamples, isWavCue, getWavFilename } from "../shared/audio-cue";
 import { t, setLanguage, resolveSystemLanguage } from "../shared/i18n";
 
 const configDir = path.join(app.getPath("userData"));
@@ -111,6 +114,23 @@ app.whenReady().then(async () => {
   setLanguage(lang);
 
   registerIpcHandlers(configManager, modelManager, historyManager, reloadConfig);
+
+  ipcMain.handle("audio:preview-cue", async (_event, cueType: string) => {
+    if (cueType === "none" || !pipeline) return;
+    const cue = cueType as AudioCueType;
+    if (isWavCue(cue)) {
+      const filename = getWavFilename(cue);
+      if (!filename) return;
+      const audioDir = app.isPackaged
+        ? join(process.resourcesPath, "app.asar.unpacked", "public", "audio")
+        : join(app.getAppPath(), "public", "audio");
+      const wavData = readFileSync(join(audioDir, filename));
+      await pipeline.playWavCue(wavData.toString("base64"));
+    } else {
+      const samples = generateCueSamples(cue, 44100);
+      if (samples.length > 0) await pipeline.playAudioCue(samples);
+    }
+  });
 
   setupPipeline();
   historyManager.cleanup();

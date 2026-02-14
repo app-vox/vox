@@ -71,6 +71,22 @@
   }
 }
 
+.fieldRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+
+  & + & {
+    margin-top: var(--spacing-4);
+  }
+
+  label {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+  }
+}
+
 .checkboxRow {
   display: flex;
   align-items: flex-start;

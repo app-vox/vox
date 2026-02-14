@@ -8,6 +8,7 @@ import { OpenAICompatibleFields } from "./OpenAICompatibleFields";
 import { LiteLLMFields } from "./LiteLLMFields";
 import { StatusBox } from "../ui/StatusBox";
 import { NewDot } from "../ui/NewDot";
+import { CustomSelect } from "../ui/CustomSelect";
 import { ExternalLinkIcon } from "../../../shared/icons";
 import type { LlmProviderType } from "../../../shared/config";
 import card from "../shared/card.module.scss";
@@ -156,17 +157,18 @@ export function LlmPanel() {
               <>
                 <div className={form.field}>
                   <label htmlFor="llm-provider">{t("llm.providerLabel")}</label>
-                  <select
+                  <CustomSelect
                     id="llm-provider"
                     value={config.llm.provider || "foundry"}
-                    onChange={(e) => handleProviderChange(e.target.value as LlmProviderType)}
-                  >
-                    <option value="foundry">Microsoft Foundry</option>
-                    <option value="bedrock">AWS Bedrock</option>
-                    <option value="openai">OpenAI</option>
-                    <option value="deepseek">DeepSeek</option>
-                    <option value="litellm">LiteLLM</option>
-                  </select>
+                    items={[
+                      { value: "foundry", label: "Microsoft Foundry" },
+                      { value: "bedrock", label: "AWS Bedrock" },
+                      { value: "openai", label: "OpenAI" },
+                      { value: "deepseek", label: "DeepSeek" },
+                      { value: "litellm", label: "LiteLLM" },
+                    ]}
+                    onChange={(value) => handleProviderChange(value as LlmProviderType)}
+                  />
                 </div>
 
                 {config.llm.provider === "litellm" ? (
@@ -233,6 +235,7 @@ export function LlmPanel() {
                     <li><strong>{t("llm.exampleFunnyLabel")}</strong> {t("llm.exampleFunny")}</li>
                     <li><strong>{t("llm.exampleEmojisLabel")}</strong> {t("llm.exampleEmojis")}</li>
                     <li><strong>{t("llm.exampleConciseLabel")}</strong> {t("llm.exampleConcise")}</li>
+                    <li><strong>{t("llm.exampleLanguageLabel")}</strong> {t("llm.exampleLanguage")}</li>
                   </ul>
                 </details>
               </div>

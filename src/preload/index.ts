@@ -103,6 +103,9 @@ export interface VoxAPI {
   navigation: {
     onNavigateTab(callback: (tab: string) => void): void;
   };
+  audio: {
+    previewCue(cueType: string): Promise<void>;
+  };
   indicator: {
     cancelRecording(): Promise<void>;
   };
@@ -187,6 +190,9 @@ const voxApi: VoxAPI = {
     onNavigateTab: (callback) => {
       ipcRenderer.on("navigate-tab", (_event, tab: string) => callback(tab));
     },
+  },
+  audio: {
+    previewCue: (cueType) => ipcRenderer.invoke("audio:preview-cue", cueType),
   },
   indicator: {
     cancelRecording: () => ipcRenderer.invoke("indicator:cancel-recording"),

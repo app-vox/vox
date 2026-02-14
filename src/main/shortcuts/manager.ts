@@ -7,8 +7,11 @@ import { ShortcutStateMachine } from "./listener";
 import { IndicatorWindow } from "../indicator";
 import { setTrayListeningState } from "../tray";
 import { t } from "../../shared/i18n";
-import { generateCueSamples } from "../../shared/audio-cue";
+import { generateCueSamples, isWavCue, getWavFilename } from "../../shared/audio-cue";
 import type { AudioCueType } from "../../shared/config";
+import { readFileSync } from "fs";
+import { join } from "path";
+import { app } from "electron";
 
 /** Map Electron accelerator key names to UiohookKey keycodes. */
 const KEY_TO_UIOHOOK: Record<string, number> = {
@@ -114,13 +117,7 @@ export class ShortcutManager {
         const state = this.stateMachine.getState();
         if (state === "hold" || state === "toggle" || state === "processing") {
           console.log("[Vox] Escape pressed, canceling operation");
-          const pipeline = this.deps.getPipeline();
-          pipeline.cancel().catch((err) => {
-            console.error("[Vox] Error during cancel:", err);
-          });
-          this.indicator.showCanceled();
-          this.stateMachine.setIdle();
-          this.updateTrayState();
+          this.cancelRecording();
         }
       }
     });
@@ -215,6 +212,9 @@ export class ShortcutManager {
         console.error("[Vox] Error during cancel:", err);
       });
       this.indicator.showCanceled();
+      const config = this.deps.configManager.load();
+      const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
+      this.playCue(errorCueType);
       this.stateMachine.setIdle();
       this.updateTrayState();
     }
@@ -234,6 +234,35 @@ export class ShortcutManager {
 
   private updateTrayState(): void {
     setTrayListeningState(this.isRecording());
+  }
+
+  private playCue(cueType: AudioCueType): void {
+    if (cueType === "none") return;
+    const pipeline = this.deps.getPipeline();
+
+    if (isWavCue(cueType)) {
+      const filename = getWavFilename(cueType);
+      if (!filename) return;
+      try {
+        const audioDir = app.isPackaged
+          ? join(process.resourcesPath, "app.asar.unpacked", "public", "audio")
+          : join(app.getAppPath(), "public", "audio");
+        const wavData = readFileSync(join(audioDir, filename));
+        const base64 = wavData.toString("base64");
+        pipeline.playWavCue(base64).catch((err: Error) => {
+          console.error(`[Vox] WAV audio cue failed:`, err.message);
+        });
+      } catch (err: unknown) {
+        console.error("[Vox] Failed to load WAV cue:", err instanceof Error ? err.message : err);
+      }
+    } else {
+      const samples = generateCueSamples(cueType, 44100);
+      if (samples.length > 0) {
+        pipeline.playAudioCue(samples).catch((err: Error) => {
+          console.error("[Vox] Audio cue failed:", err.message);
+        });
+      }
+    }
   }
 
   registerShortcutKeys(): void {
@@ -343,13 +372,8 @@ export class ShortcutManager {
       this.indicator.show("listening");
 
       const config = this.deps.configManager.load();
-      const cueType = (config.recordingAudioCue ?? "click") as AudioCueType;
-      const samples = generateCueSamples(cueType, 44100);
-      if (samples.length > 0) {
-        pipeline.playAudioCue(samples).catch((err: Error) => {
-          console.error("[Vox] Audio cue failed:", err.message);
-        });
-      }
+      const cueType = (config.recordingAudioCue ?? "tap") as AudioCueType;
+      this.playCue(cueType);
     }).catch((err: Error) => {
       console.error("[Vox] Recording failed:", err.message);
       this.indicator.hide();
@@ -375,31 +399,38 @@ export class ShortcutManager {
     this.updateTrayState();
     console.log("[Vox] Recording stopped, processing pipeline");
     this.indicator.show("transcribing");
+
+    const config = this.deps.configManager.load();
+    const stopCueType = (config.recordingStopAudioCue ?? "pop") as AudioCueType;
+    this.playCue(stopCueType);
+
     try {
       const text = await pipeline.stopAndProcess();
       console.log("[Vox] Pipeline complete, text:", text.slice(0, 80));
       const trimmedText = text.trim();
 
-      // Only paste if we have valid, non-empty text from the transcript
       if (!trimmedText || trimmedText.length === 0) {
         console.log("[Vox] No valid text to paste, showing error indicator");
         this.indicator.showError();
-        console.log("[Vox] Error indicator should now be visible");
+        const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
+        this.playCue(errorCueType);
       } else {
-        // Paste only happens here - after successful pipeline completion with valid text
         console.log("[Vox] Valid text received, proceeding with paste");
         await new Promise((r) => setTimeout(r, 200));
         pasteText(trimmedText);
         this.indicator.hide();
       }
     } catch (err: unknown) {
-      // Any exception (CanceledError, NoModelError, etc.) prevents paste
       if (err instanceof CanceledError) {
         console.log("[Vox] Operation canceled by user");
         this.indicator.showCanceled();
+        const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
+        this.playCue(errorCueType);
       } else {
         console.error("[Vox] Pipeline failed:", err instanceof Error ? err.message : err);
         this.indicator.showError();
+        const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
+        this.playCue(errorCueType);
       }
     } finally {
       this.stateMachine.setIdle();
