@@ -21,6 +21,8 @@ import { type AudioCueType } from "../shared/config";
 import { generateCueSamples, isWavCue, getWavFilename, parseWavSamples } from "../shared/audio-cue";
 import { t, setLanguage, resolveSystemLanguage } from "../shared/i18n";
 import { getLlmModelName } from "../shared/llm-utils";
+import { AnalyticsService } from "./analytics/service";
+import { setupAnalyticsErrorCapture } from "./logger";
 import log from "./logger";
 
 log.initialize();
@@ -31,6 +33,7 @@ const modelsDir = path.join(configDir, "models");
 const configManager = new ConfigManager(configDir, createSecretStore());
 const modelManager = new ModelManager(modelsDir);
 const historyManager = new HistoryManager();
+const analytics = new AnalyticsService();
 
 let pipeline: Pipeline | null = null;
 let shortcutManager: ShortcutManager | null = null;
@@ -85,6 +88,7 @@ function reloadConfig(): void {
   setupPipeline();
   shortcutManager?.registerShortcutKeys();
   updateTrayConfig(config);
+  analytics.setEnabled(config.analyticsEnabled);
 
   const setupChecker = new SetupChecker(modelManager);
   setTrayModelState(setupChecker.hasAnyModel());
@@ -107,7 +111,17 @@ app.whenReady().then(async () => {
     : initialConfig.language;
   setLanguage(lang);
 
-  registerIpcHandlers(configManager, modelManager, historyManager, reloadConfig);
+  analytics.init({
+    enabled: initialConfig.analyticsEnabled,
+    locale: lang,
+  });
+  analytics.identify();
+  setupAnalyticsErrorCapture(analytics);
+  analytics.track("app_launched", {
+    launch_at_login: initialConfig.launchAtLogin,
+  });
+
+  registerIpcHandlers(configManager, modelManager, historyManager, reloadConfig, analytics);
 
   ipcMain.handle("audio:preview-cue", async (_event, cueType: string) => {
     if (cueType === "none" || !pipeline) return;
@@ -153,6 +167,7 @@ app.whenReady().then(async () => {
   shortcutManager = new ShortcutManager({
     configManager,
     getPipeline: () => pipeline!,
+    analytics,
   });
   shortcutManager.start();
 
@@ -211,6 +226,10 @@ app.on("activate", () => {
 });
 
 app.on("will-quit", () => {
+  analytics.track("app_quit", {
+    session_duration_ms: Math.round(performance.now()),
+  });
+  analytics.shutdown();
   shortcutManager?.stop();
 });
 

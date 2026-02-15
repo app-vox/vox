@@ -3,6 +3,7 @@ import * as fs from "fs";
 import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
 import { HistoryManager } from "./history/manager";
+import { AnalyticsService } from "./analytics/service";
 import { type VoxConfig, type WhisperModelSize } from "../shared/config";
 import { getResourcePath } from "./resources";
 import { SetupChecker } from "./setup/checker";
@@ -13,7 +14,8 @@ export function registerIpcHandlers(
   configManager: ConfigManager,
   modelManager: ModelManager,
   historyManager: HistoryManager,
-  onConfigChange?: () => void
+  onConfigChange?: () => void,
+  analytics?: AnalyticsService
 ): void {
   ipcMain.handle("resources:data-url", (_event, ...segments: string[]) => {
     const filePath = getResourcePath(...segments);

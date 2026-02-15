@@ -79,6 +79,7 @@ function getHoldKeyCodes(accelerator: string): Set<number> {
 export interface ShortcutManagerDeps {
   configManager: ConfigManager;
   getPipeline: () => Pipeline;
+  analytics?: { track(event: string, properties?: Record<string, unknown>): void };
 }
 
 export class ShortcutManager {
