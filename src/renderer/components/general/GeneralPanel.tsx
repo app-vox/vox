@@ -6,7 +6,7 @@ import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useT } from "../../i18n-context";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
 import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, ChevronDownIcon } from "../../../shared/icons";
-import type { ThemeMode, SupportedLanguage } from "../../../shared/config";
+import type { ThemeMode, SupportedLanguage, HudPosition, OverlayPosition } from "../../../shared/config";
 import { CustomSelect, type SelectItem } from "../ui/CustomSelect";
 import { OfflineBanner } from "../ui/OfflineBanner";
 import card from "../shared/card.module.scss";
@@ -104,6 +104,19 @@ export function GeneralPanel() {
       label: LANGUAGE_NAMES[lang],
     })),
   ];
+
+  const hudPositionItems: SelectItem[] = [
+    { value: "left", label: t("general.hud.positionLeft") },
+    { value: "center", label: t("general.hud.positionCenter") },
+    { value: "right", label: t("general.hud.positionRight") },
+  ];
+
+  const overlayPositionItems: SelectItem[] = [
+    { value: "top", label: t("general.overlay.top") },
+    { value: "bottom", label: t("general.overlay.bottom") },
+  ];
+
+  const showAutoInvertDisclaimer = config.showHud && config.hudPosition === "center" && config.overlayPosition === "bottom";
 
   const [hudCollapsed, setHudCollapsed] = useState(() => localStorage.getItem(HUD_COLLAPSED_KEY) === "true");
 
@@ -240,8 +253,66 @@ export function GeneralPanel() {
                 <div className={styles.checkboxDesc}>{t("general.hud.showOnHoverDesc")}</div>
               </div>
             </label>
+
+            <div className={`${styles.selectFieldRow} ${!config.showHud ? styles.disabled : ""}`}>
+              <div className={styles.selectLabel}>{t("general.hud.position")}</div>
+              <div className={styles.selectDesc}>{t("general.hud.positionDesc")}</div>
+              <CustomSelect
+                value={config.hudPosition}
+                items={hudPositionItems}
+                onChange={(val) => {
+                  updateConfig({ hudPosition: val as HudPosition });
+                  saveConfig(false).then(() => triggerToast());
+                }}
+              />
+            </div>
           </div>
         )}
+      </div>
+
+      <div className={card.card}>
+        <div className={card.header}>
+          <h2>{t("general.overlay.title")}</h2>
+          <p className={card.description}>{t("general.overlay.description")}</p>
+        </div>
+        <div className={card.body}>
+          <div className={styles.fieldRow}>
+            <label>{t("general.overlay.position")}</label>
+            <div className={styles.selectDesc}>{t("general.overlay.positionDesc")}</div>
+            <CustomSelect
+              value={config.overlayPosition}
+              items={overlayPositionItems}
+              onChange={(val) => {
+                updateConfig({ overlayPosition: val as OverlayPosition });
+                saveConfig(false).then(() => triggerToast());
+              }}
+            />
+          </div>
+          {showAutoInvertDisclaimer && (
+            <div className={styles.disclaimer}>{t("general.overlay.autoInvertDisclaimer")}</div>
+          )}
+
+          <div className={styles.previewRow}>
+            <div>
+              <div className={styles.previewScreen}>
+                <div className={`${styles.previewOverlay} ${config.overlayPosition === "bottom" ? styles.previewOverlayBottom : styles.previewOverlayTop}`} />
+              </div>
+              <div className={styles.previewLabel}>{t("general.overlay.title")}</div>
+            </div>
+            {config.showHud && (
+              <div>
+                <div className={styles.previewScreen}>
+                  <div className={`${styles.previewHud} ${
+                    config.hudPosition === "left" ? styles.previewHudLeft
+                    : config.hudPosition === "right" ? styles.previewHudRight
+                    : styles.previewHudCenter
+                  }`} />
+                </div>
+                <div className={styles.previewLabel}>{t("general.hud.title")}</div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className={card.card}>
