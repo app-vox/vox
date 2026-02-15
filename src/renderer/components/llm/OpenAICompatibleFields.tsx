@@ -19,11 +19,13 @@ export function OpenAICompatibleFields({ providerType }: { providerType: "openai
   const [focusedField, setFocusedField] = useState<{ field: string; value: string } | null>(null);
 
   if (!config) return null;
+  const { llm } = config;
+  if (llm.provider !== "openai" && llm.provider !== "deepseek" && llm.provider !== "glm") return null;
 
   const defaults = PROVIDER_DEFAULTS[providerType];
 
   const update = (field: string, value: string) => {
-    updateConfig({ llm: { ...config.llm, [field]: value } as typeof config.llm });
+    updateConfig({ llm: { ...llm, [field]: value } as typeof llm });
     debouncedSave();
   };
 
@@ -44,10 +46,10 @@ export function OpenAICompatibleFields({ providerType }: { providerType: "openai
         <label htmlFor="llm-openai-apikey">{t("llm.openai.apiKey")}</label>
         <SecretInput
           id="llm-openai-apikey"
-          value={config.llm.openaiApiKey || ""}
+          value={llm.openaiApiKey || ""}
           onChange={(v) => update("openaiApiKey", v)}
-          onFocus={() => handleFocus("openaiApiKey", config.llm.openaiApiKey || "")}
-          onBlur={() => handleBlur("openaiApiKey", config.llm.openaiApiKey || "")}
+          onFocus={() => handleFocus("openaiApiKey", llm.openaiApiKey || "")}
+          onBlur={() => handleBlur("openaiApiKey", llm.openaiApiKey || "")}
           placeholder={t("llm.openai.apiKeyPlaceholder")}
         />
       </div>
@@ -56,7 +58,7 @@ export function OpenAICompatibleFields({ providerType }: { providerType: "openai
         <input
           id="llm-openai-model"
           type="text"
-          value={config.llm.openaiModel || ""}
+          value={llm.openaiModel || ""}
           onChange={(e) => update("openaiModel", e.target.value)}
           onFocus={(e) => handleFocus("openaiModel", e.target.value)}
           onBlur={(e) => handleBlur("openaiModel", e.target.value)}
@@ -68,7 +70,7 @@ export function OpenAICompatibleFields({ providerType }: { providerType: "openai
         <input
           id="llm-openai-endpoint"
           type="url"
-          value={config.llm.openaiEndpoint || ""}
+          value={llm.openaiEndpoint || ""}
           onChange={(e) => update("openaiEndpoint", e.target.value)}
           onFocus={(e) => handleFocus("openaiEndpoint", e.target.value)}
           onBlur={(e) => handleBlur("openaiEndpoint", e.target.value)}

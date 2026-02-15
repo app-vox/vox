@@ -13,9 +13,11 @@ export function FoundryFields() {
   const [focusedField, setFocusedField] = useState<{ field: string; value: string } | null>(null);
 
   if (!config) return null;
+  const { llm } = config;
+  if (llm.provider !== "foundry") return null;
 
   const update = (field: string, value: string) => {
-    updateConfig({ llm: { ...config.llm, [field]: value } as typeof config.llm });
+    updateConfig({ llm: { ...llm, [field]: value } as typeof llm });
     debouncedSave();
   };
 
@@ -37,7 +39,7 @@ export function FoundryFields() {
         <input
           id="llm-endpoint"
           type="url"
-          value={config.llm.endpoint}
+          value={llm.endpoint}
           onChange={(e) => update("endpoint", e.target.value)}
           onFocus={(e) => handleFocus("endpoint", e.target.value)}
           onBlur={(e) => handleBlur("endpoint", e.target.value)}
@@ -48,10 +50,10 @@ export function FoundryFields() {
         <label htmlFor="llm-apikey">{t("llm.foundry.apiKey")}</label>
         <SecretInput
           id="llm-apikey"
-          value={config.llm.apiKey}
+          value={llm.apiKey}
           onChange={(v) => update("apiKey", v)}
-          onFocus={() => handleFocus("apiKey", config.llm.apiKey)}
-          onBlur={() => handleBlur("apiKey", config.llm.apiKey)}
+          onFocus={() => handleFocus("apiKey", llm.apiKey)}
+          onBlur={() => handleBlur("apiKey", llm.apiKey)}
           placeholder={t("llm.foundry.apiKeyPlaceholder")}
         />
       </div>
@@ -60,7 +62,7 @@ export function FoundryFields() {
         <input
           id="llm-model"
           type="text"
-          value={config.llm.model}
+          value={llm.model}
           onChange={(e) => update("model", e.target.value)}
           onFocus={(e) => handleFocus("model", e.target.value)}
           onBlur={(e) => handleBlur("model", e.target.value)}

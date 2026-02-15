@@ -18,9 +18,11 @@ export function LiteLLMFields() {
   const [focusedField, setFocusedField] = useState<{ field: string; value: string } | null>(null);
 
   if (!config) return null;
+  const { llm } = config;
+  if (llm.provider !== "litellm") return null;
 
   const update = (field: string, value: string) => {
-    updateConfig({ llm: { ...config.llm, [field]: value } as typeof config.llm });
+    updateConfig({ llm: { ...llm, [field]: value } as typeof llm });
     debouncedSave();
   };
 
@@ -42,7 +44,7 @@ export function LiteLLMFields() {
         <input
           id="llm-litellm-endpoint"
           type="url"
-          value={config.llm.openaiEndpoint || ""}
+          value={llm.openaiEndpoint || ""}
           onChange={(e) => update("openaiEndpoint", e.target.value)}
           onFocus={(e) => handleFocus("openaiEndpoint", e.target.value)}
           onBlur={(e) => handleBlur("openaiEndpoint", e.target.value)}
@@ -56,10 +58,10 @@ export function LiteLLMFields() {
         <label htmlFor="llm-litellm-apikey">{t("llm.litellm.apiKey")}</label>
         <SecretInput
           id="llm-litellm-apikey"
-          value={config.llm.openaiApiKey || ""}
+          value={llm.openaiApiKey || ""}
           onChange={(v) => update("openaiApiKey", v)}
-          onFocus={() => handleFocus("openaiApiKey", config.llm.openaiApiKey || "")}
-          onBlur={() => handleBlur("openaiApiKey", config.llm.openaiApiKey || "")}
+          onFocus={() => handleFocus("openaiApiKey", llm.openaiApiKey || "")}
+          onBlur={() => handleBlur("openaiApiKey", llm.openaiApiKey || "")}
           placeholder={t("llm.litellm.apiKeyPlaceholder")}
         />
         <p className={form.hint}>
@@ -71,7 +73,7 @@ export function LiteLLMFields() {
         <input
           id="llm-litellm-model"
           type="text"
-          value={config.llm.openaiModel || ""}
+          value={llm.openaiModel || ""}
           onChange={(e) => update("openaiModel", e.target.value)}
           onFocus={(e) => handleFocus("openaiModel", e.target.value)}
           onBlur={(e) => handleBlur("openaiModel", e.target.value)}

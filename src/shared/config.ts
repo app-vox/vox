@@ -58,11 +58,11 @@ export type LlmConfig =
   | CustomLlmConfig;
 
 /** Flat intersection of all variants — used ONLY at the persistence boundary. */
-export type LlmConfigFlat = FoundryLlmConfig &
-  BedrockLlmConfig &
-  OpenAICompatibleLlmConfig &
-  AnthropicLlmConfig &
-  CustomLlmConfig & { provider: LlmProviderType };
+export type LlmConfigFlat = Omit<FoundryLlmConfig, "provider"> &
+  Omit<BedrockLlmConfig, "provider"> &
+  Omit<OpenAICompatibleLlmConfig, "provider"> &
+  Omit<AnthropicLlmConfig, "provider"> &
+  Omit<CustomLlmConfig, "provider"> & { provider: LlmProviderType };
 
 export interface WhisperConfig {
   model: WhisperModelSize | "";
