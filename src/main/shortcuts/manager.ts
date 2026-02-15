@@ -6,6 +6,7 @@ import { pasteText, isAccessibilityGranted } from "../input/paster";
 import { type Pipeline, CanceledError, NoModelError } from "../pipeline";
 import { ShortcutStateMachine } from "./listener";
 import { IndicatorWindow } from "../indicator";
+import { HudWindow } from "../hud";
 import { setTrayListeningState } from "../tray";
 import { t } from "../../shared/i18n";
 import { generateCueSamples, isWavCue, getWavFilename, parseWavSamples } from "../../shared/audio-cue";
@@ -85,6 +86,7 @@ export interface ShortcutManagerDeps {
 export class ShortcutManager {
   private readonly deps: ShortcutManagerDeps;
   private readonly indicator: IndicatorWindow;
+  private readonly hud: HudWindow;
   private stateMachine: ShortcutStateMachine;
   private holdKeyCodes: Set<number> = new Set([UiohookKey.Space]);
   private accessibilityWasGranted = false;
@@ -94,6 +96,7 @@ export class ShortcutManager {
   constructor(deps: ShortcutManagerDeps) {
     this.deps = deps;
     this.indicator = new IndicatorWindow();
+    this.hud = new HudWindow();
 
     this.stateMachine = new ShortcutStateMachine({
       onStart: () => this.onRecordingStart(),
@@ -144,6 +147,7 @@ export class ShortcutManager {
         this.isInitializing = false;
         slog.info("Initialization complete (limited mode — no accessibility)");
       }, 1000);
+      this.updateHud();
       return;
     }
 
@@ -166,6 +170,7 @@ export class ShortcutManager {
         this.isInitializing = false;
         slog.info("Initialization complete (limited mode — hook failed)");
       }, 1000);
+      this.updateHud();
       return;
     }
 
@@ -177,6 +182,7 @@ export class ShortcutManager {
       this.isInitializing = false;
       slog.info("Initialization complete, shortcuts enabled");
     }, 1000);
+    this.updateHud();
   }
 
   showIndicator(mode: "initializing" | "listening" | "transcribing" | "enhancing" | "error"): void {
@@ -220,6 +226,8 @@ export class ShortcutManager {
       const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
       this.playCue(errorCueType);
       this.stateMachine.setIdle();
+      this.hud.setState("idle");
+      this.hud.triggerSparkles("down");
       this.updateTrayState();
     }
   }
@@ -234,12 +242,26 @@ export class ShortcutManager {
     return this.indicator;
   }
 
+  updateHud(): void {
+    const config = this.deps.configManager.load();
+    if (config.showHud) {
+      this.hud.show(config.hudShowOnHover);
+    } else {
+      this.hud.hide();
+    }
+  }
+
+  getHud(): HudWindow {
+    return this.hud;
+  }
+
   getStateMachineState(): string {
     return this.stateMachine.getState();
   }
 
   stop(): void {
     if (this.watchdogTimer) clearInterval(this.watchdogTimer);
+    this.hud.hide();
     globalShortcut.unregisterAll();
     uIOhook.stop();
   }
@@ -335,6 +357,14 @@ export class ShortcutManager {
     ipcMain.handle("indicator:cancel-recording", () => {
       this.cancelRecording();
     });
+
+    ipcMain.handle("hud:start-recording", () => {
+      this.triggerToggle();
+    });
+
+    ipcMain.handle("hud:stop-recording", () => {
+      this.stopAndProcess();
+    });
   }
 
   private startAccessibilityWatchdog(): void {
@@ -379,6 +409,8 @@ export class ShortcutManager {
     const pipeline = this.deps.getPipeline();
     slog.info("Recording requested — showing initializing indicator");
     this.indicator.show("initializing");
+    this.hud.setState("listening");
+    this.hud.triggerSparkles("up");
     this.updateTrayState();
 
     pipeline.startRecording().then(() => {
@@ -413,6 +445,7 @@ export class ShortcutManager {
     this.updateTrayState();
     slog.info("Recording stopped, processing pipeline");
     this.indicator.show("transcribing");
+    this.hud.setState("processing");
 
     const config = this.deps.configManager.load();
     const stopCueType = (config.recordingStopAudioCue ?? "pop") as AudioCueType;
@@ -452,6 +485,8 @@ export class ShortcutManager {
       }
     } finally {
       this.stateMachine.setIdle();
+      this.hud.setState("idle");
+      this.hud.triggerSparkles("down");
       this.updateTrayState();
       slog.info("Ready for next recording");
     }
