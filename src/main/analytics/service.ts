@@ -16,7 +16,7 @@ interface TypedStore {
   set<K extends keyof AnalyticsStoreSchema>(key: K, value: AnalyticsStoreSchema[K]): void;
 }
 
-const POSTHOG_API_KEY = "__POSTHOG_API_KEY__";
+const POSTHOG_API_KEY = "phc_xKMWJw3NXHbfxhW10c3QG3nKTFRGio4PtVeJVfo0lNu";
 const POSTHOG_HOST = "https://us.i.posthog.com";
 
 const SENSITIVE_PATTERNS = [
@@ -62,10 +62,6 @@ export class AnalyticsService {
       }
 
       this.posthog = new PostHog(POSTHOG_API_KEY, { host: POSTHOG_HOST });
-
-      if (POSTHOG_API_KEY === "__POSTHOG_API_KEY__") {
-        slog.warn("PostHog API key is still placeholder — events will not be recorded");
-      }
 
       slog.info("Analytics initialized", {
         enabled: this.enabled,
