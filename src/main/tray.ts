@@ -3,6 +3,7 @@ import { getResourcePath } from "./resources";
 import { type VoxConfig } from "../shared/config";
 import { getUpdateState, quitAndInstall } from "./updater";
 import { t } from "../shared/i18n";
+import { getLlmModelName } from "../shared/llm-utils";
 
 let tray: Tray | null = null;
 
@@ -77,25 +78,6 @@ function simplifyModelName(fullName: string): string {
   return simplified;
 }
 
-function getActiveModelName(config: VoxConfig): string {
-  let fullName: string;
-  switch (config.llm.provider) {
-    case "bedrock":
-      fullName = config.llm.modelId;
-      break;
-    case "openai":
-    case "deepseek":
-    case "litellm":
-      fullName = config.llm.openaiModel;
-      break;
-    case "foundry":
-    default:
-      fullName = config.llm.model;
-      break;
-  }
-  return simplifyModelName(fullName);
-}
-
 export function setupTray(trayCallbacks: TrayCallbacks): void {
   callbacks = trayCallbacks;
 
@@ -154,7 +136,7 @@ export function updateTrayMenu(): void {
       },
       {
         label: currentConfig.enableLlmEnhancement
-          ? t("tray.aiEnhancement", { model: getActiveModelName(currentConfig) })
+          ? t("tray.aiEnhancement", { model: simplifyModelName(getLlmModelName(currentConfig.llm)) })
           : t("tray.aiEnhancementOff"),
         enabled: false,
       },
