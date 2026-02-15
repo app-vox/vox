@@ -17,7 +17,7 @@ import { registerIpcHandlers } from "./ipc";
 import { isAccessibilityGranted } from "./input/paster";
 import { SetupChecker } from "./setup/checker";
 import { HistoryManager } from "./history/manager";
-import { type VoxConfig, type AudioCueType } from "../shared/config";
+import { type AudioCueType } from "../shared/config";
 import { generateCueSamples, isWavCue, getWavFilename, parseWavSamples } from "../shared/audio-cue";
 import { t, setLanguage, resolveSystemLanguage } from "../shared/i18n";
 import { getLlmModelName } from "../shared/llm-utils";
