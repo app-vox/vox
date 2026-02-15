@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { app } from "electron";
-import { type VoxConfig, type LlmConfig, createDefaultConfig } from "../../shared/config";
+import { type VoxConfig, type LlmConfigFlat, createDefaultConfig, createDefaultLlmFlat, narrowLlmConfig } from "../../shared/config";
 import { ENCRYPTED_PREFIX } from "./secrets";
 
 export interface SecretStore {
@@ -9,7 +9,7 @@ export interface SecretStore {
   decrypt(cipherText: string): string;
 }
 
-export const SENSITIVE_FIELDS: (keyof LlmConfig)[] = ["apiKey", "secretAccessKey", "accessKeyId", "openaiApiKey", "anthropicApiKey", "customToken"];
+export const SENSITIVE_FIELDS: string[] = ["apiKey", "secretAccessKey", "accessKeyId", "openaiApiKey", "anthropicApiKey", "customToken"];
 
 export class ConfigManager {
   private readonly configPath: string;
@@ -22,6 +22,7 @@ export class ConfigManager {
 
   load(): VoxConfig {
     const defaults = createDefaultConfig(app?.isPackaged ?? false);
+    const defaultsFlat = createDefaultLlmFlat();
 
     if (!fs.existsSync(this.configPath)) {
       return defaults;
@@ -30,8 +31,18 @@ export class ConfigManager {
     try {
       const raw = fs.readFileSync(this.configPath, "utf-8");
       const saved = JSON.parse(raw);
+
+      const llmFlat: LlmConfigFlat = { ...defaultsFlat, ...saved.llm };
+
+      for (const field of SENSITIVE_FIELDS) {
+        const value = (llmFlat as Record<string, unknown>)[field];
+        if (typeof value === "string" && value) {
+          (llmFlat as Record<string, string>)[field] = this.secrets.decrypt(value);
+        }
+      }
+
       const config: VoxConfig = {
-        llm: { ...defaults.llm, ...saved.llm },
+        llm: narrowLlmConfig(llmFlat),
         whisper: { ...defaults.whisper, ...saved.whisper },
         shortcuts: { ...defaults.shortcuts, ...saved.shortcuts },
         theme: saved.theme ?? defaults.theme,
@@ -47,13 +58,6 @@ export class ConfigManager {
         llmConfigHash: saved.llmConfigHash ?? defaults.llmConfigHash,
       };
 
-      for (const field of SENSITIVE_FIELDS) {
-        const value = config.llm[field];
-        if (typeof value === "string" && value) {
-          (config.llm as unknown as Record<string, string>)[field] = this.secrets.decrypt(value);
-        }
-      }
-
       return config;
     } catch {
       return defaults;
@@ -64,14 +68,33 @@ export class ConfigManager {
     const dir = path.dirname(this.configPath);
     fs.mkdirSync(dir, { recursive: true });
 
-    const toWrite = structuredClone(config);
+    let existingLlmFlat: LlmConfigFlat = createDefaultLlmFlat();
+    if (fs.existsSync(this.configPath)) {
+      try {
+        const raw = JSON.parse(fs.readFileSync(this.configPath, "utf-8"));
+        if (raw.llm) {
+          existingLlmFlat = { ...existingLlmFlat, ...raw.llm };
+          for (const field of SENSITIVE_FIELDS) {
+            const value = (existingLlmFlat as Record<string, unknown>)[field];
+            if (typeof value === "string" && value) {
+              (existingLlmFlat as Record<string, string>)[field] = this.secrets.decrypt(value);
+            }
+          }
+        }
+      } catch { /* use defaults */ }
+    }
 
+    const llmFlat: LlmConfigFlat = { ...existingLlmFlat, ...config.llm };
+
+    const toWriteFlat = { ...llmFlat };
     for (const field of SENSITIVE_FIELDS) {
-      const value = toWrite.llm[field];
+      const value = (toWriteFlat as Record<string, unknown>)[field];
       if (typeof value === "string" && value) {
-        (toWrite.llm as unknown as Record<string, string>)[field] = this.secrets.encrypt(value);
+        (toWriteFlat as Record<string, string>)[field] = this.secrets.encrypt(value);
       }
     }
+
+    const toWrite = structuredClone({ ...config, llm: toWriteFlat });
 
     fs.writeFileSync(this.configPath, JSON.stringify(toWrite, null, 2), "utf-8");
   }
