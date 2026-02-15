@@ -56,6 +56,7 @@ export class ConfigManager {
         errorAudioCue: saved.errorAudioCue ?? defaults.errorAudioCue,
         llmConnectionTested: saved.llmConnectionTested ?? defaults.llmConnectionTested,
         llmConfigHash: saved.llmConfigHash ?? defaults.llmConfigHash,
+        analyticsEnabled: saved.analyticsEnabled ?? defaults.analyticsEnabled,
       };
 
       return config;
