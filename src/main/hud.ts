@@ -2,8 +2,8 @@ import { BrowserWindow, screen } from "electron";
 import { t } from "../shared/i18n";
 import type { HudPosition } from "../shared/config";
 
-const HUD_WIDTH = 80;
-const HUD_HEIGHT = 96;
+const HUD_WIDTH = 100;
+const HUD_HEIGHT = 116;
 const DOCK_MARGIN = 24;
 const MIN_SCALE = 0.55;
 
@@ -16,16 +16,16 @@ function buildHudHtml(): string {
   html, body {
     background: transparent;
     overflow: hidden;
-    width: 80px;
-    height: 96px;
+    width: ${HUD_WIDTH}px;
+    height: ${HUD_HEIGHT}px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
   }
   .hud {
-    width: 36px;
-    height: 36px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     background: rgba(25, 25, 25, 0.92);
     backdrop-filter: blur(20px);
@@ -73,27 +73,26 @@ function buildHudHtml(): string {
     background: rgba(251, 191, 36, 0.9);
     border-color: rgba(251, 191, 36, 0.5);
     box-shadow: 0 4px 20px rgba(251, 191, 36, 0.4);
-    cursor: default;
-    pointer-events: none;
+    cursor: pointer;
   }
 
   .icon { display: flex; align-items: center; justify-content: center; }
   .hidden { display: none !important; }
 
   .mic-icon svg {
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
     transition: filter 0.15s ease;
   }
 
   .stop-icon {
-    width: 10px; height: 10px;
+    width: 12px; height: 12px;
     border-radius: 2px;
     background: rgba(255, 255, 255, 0.95);
   }
 
   .proc-icon {
-    width: 14px; height: 14px;
+    width: 16px; height: 16px;
     border: 2px solid rgba(255, 255, 255, 0.3);
     border-top-color: rgba(255, 255, 255, 0.9);
     border-radius: 50%;
@@ -101,14 +100,14 @@ function buildHudHtml(): string {
   }
 
   .error-icon svg {
-    width: 14px; height: 14px;
+    width: 16px; height: 16px;
   }
 
   @keyframes spin { to { transform: rotate(360deg); } }
 
   .cancel-btn {
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     background: rgba(50, 50, 50, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.12);
@@ -122,7 +121,7 @@ function buildHudHtml(): string {
     pointer-events: none;
   }
   .cancel-btn:hover { background: #ff4444; border-color: rgba(239, 68, 68, 0.5); }
-  .cancel-btn svg { width: 8px; height: 8px; }
+  .cancel-btn svg { width: 10px; height: 10px; }
   .cancel-btn.visible { opacity: 1; pointer-events: auto; }
   .scale-wrapper {
     display: flex;
@@ -151,7 +150,8 @@ function buildHudHtml(): string {
 var state = 'idle';
 
 document.getElementById('hud').addEventListener('click', function() {
-  if (state === 'processing' || state === 'enhancing' || state === 'error' || state === 'canceled') return;
+  if (state === 'processing' || state === 'enhancing') return;
+  if (state === 'error' || state === 'canceled') return;
   if (state === 'idle') {
     window.electronAPI?.hudStartRecording();
   } else if (state === 'listening') {
@@ -168,7 +168,7 @@ function setScale(factor) {
   var wrapper = document.getElementById('scale-wrapper');
   wrapper.style.transform = 'scale(' + factor + ')';
   wrapper.style.opacity = factor < 0.7 ? 0.4 + (factor - 0.55) / 0.15 * 0.6 : 1;
-  var blurPx = factor >= 1.0 ? 0 : Math.round((1.0 - factor) / (1.0 - 0.55) * 3);
+  var blurPx = factor >= 0.95 ? 0 : Math.round((1.0 - factor) / (1.0 - 0.55) * 4);
   setBlur(blurPx);
 }
 
@@ -188,7 +188,7 @@ function setState(newState, titles) {
   document.getElementById('error-icon').classList.toggle('hidden', !isError);
 
   var cancelBtn = document.getElementById('cancel-btn');
-  cancelBtn.classList.toggle('visible', isListening || isError);
+  cancelBtn.classList.toggle('visible', isListening);
 
   if (titles) {
     hud.setAttribute('title', titles.main || '');
@@ -398,12 +398,12 @@ export class HudWindow {
       const hudCenterY = wy + HUD_HEIGHT / 2;
       const dist = Math.hypot(cursor.x - hudCenterX, cursor.y - hudCenterY);
       let scale: number;
-      if (dist < 30) {
+      if (dist < 40) {
         scale = 1.0;
-      } else if (dist > 150) {
+      } else if (dist > 200) {
         scale = MIN_SCALE;
       } else {
-        scale = 1.0 - (dist - 30) / 120 * (1.0 - MIN_SCALE);
+        scale = 1.0 - (dist - 40) / 160 * (1.0 - MIN_SCALE);
       }
       this.execSetScale(scale);
     }, 50);
