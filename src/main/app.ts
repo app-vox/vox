@@ -56,6 +56,7 @@ function setupPipeline(): void {
     llmProvider,
     modelPath,
     dictionary: config.dictionary ?? [],
+    analytics,
     onStage: (stage) => shortcutManager?.showIndicator(stage),
     onComplete: (result) => {
       try {

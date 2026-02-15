@@ -157,4 +157,67 @@ describe("Pipeline", () => {
     await expect(pipeline.stopAndProcess()).rejects.toThrow("Operation was canceled");
     expect(onComplete).not.toHaveBeenCalled();
   });
+
+  it("should track analytics events through the pipeline", async () => {
+    const mockAnalytics = { track: vi.fn() };
+
+    const pipeline = new Pipeline({
+      recorder: mockRecorder,
+      transcribe: mockTranscribe,
+      llmProvider: mockProvider,
+      modelPath: "/models/ggml-small.bin",
+      analytics: mockAnalytics,
+    });
+
+    await pipeline.startRecording();
+    await pipeline.stopAndProcess();
+
+    const events = mockAnalytics.track.mock.calls.map((c) => c[0]);
+    expect(events).toContain("transcription_started");
+    expect(events).toContain("transcription_completed");
+    expect(events).toContain("llm_enhancement_started");
+    expect(events).toContain("llm_enhancement_completed");
+  });
+
+  it("should track llm_enhancement_skipped when using NoopProvider", async () => {
+    const { NoopProvider } = await import("../../src/main/llm/noop");
+    const mockAnalytics = { track: vi.fn() };
+
+    const pipeline = new Pipeline({
+      recorder: mockRecorder,
+      transcribe: mockTranscribe,
+      llmProvider: new NoopProvider(),
+      modelPath: "/models/ggml-small.bin",
+      analytics: mockAnalytics,
+    });
+
+    await pipeline.startRecording();
+    await pipeline.stopAndProcess();
+
+    const events = mockAnalytics.track.mock.calls.map((c) => c[0]);
+    expect(events).toContain("llm_enhancement_skipped");
+    expect(events).not.toContain("llm_enhancement_started");
+  });
+
+  it("should track llm_enhancement_failed when LLM errors", async () => {
+    const failingProvider: LlmProvider = {
+      correct: vi.fn().mockRejectedValue(new Error("LLM unavailable")),
+    };
+    const mockAnalytics = { track: vi.fn() };
+
+    const pipeline = new Pipeline({
+      recorder: mockRecorder,
+      transcribe: mockTranscribe,
+      llmProvider: failingProvider,
+      modelPath: "/models/ggml-small.bin",
+      analytics: mockAnalytics,
+    });
+
+    await pipeline.startRecording();
+    await pipeline.stopAndProcess();
+
+    const events = mockAnalytics.track.mock.calls.map((c) => c[0]);
+    expect(events).toContain("llm_enhancement_started");
+    expect(events).toContain("llm_enhancement_failed");
+  });
 });
