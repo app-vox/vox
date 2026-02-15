@@ -13,33 +13,13 @@ import { StatusBox } from "../ui/StatusBox";
 import { NewDot } from "../ui/NewDot";
 import { CustomSelect } from "../ui/CustomSelect";
 import { ExternalLinkIcon, CheckCircleIcon, InfoCircleAltIcon, CopyIcon, SparkleIcon, PlayIcon } from "../../../shared/icons";
-import type { LlmProviderType, LlmConfig } from "../../../shared/config";
+import type { LlmProviderType } from "../../../shared/config";
+import { isProviderConfigured } from "../../../shared/llm-utils";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
 import card from "../shared/card.module.scss";
 import form from "../shared/forms.module.scss";
 import buttons from "../shared/buttons.module.scss";
 import styles from "./LlmPanel.module.scss";
-
-function isProviderConfigured(provider: LlmProviderType, llm: LlmConfig): boolean {
-  switch (provider) {
-    case "foundry":
-      return !!(llm.endpoint && llm.apiKey && llm.model);
-    case "bedrock":
-      return !!(llm.region && llm.modelId && (llm.profile || (llm.accessKeyId && llm.secretAccessKey)));
-    case "openai":
-    case "deepseek":
-    case "glm":
-      return !!(llm.openaiApiKey && llm.openaiModel && llm.openaiEndpoint);
-    case "litellm":
-      return !!(llm.openaiEndpoint && llm.openaiModel);
-    case "anthropic":
-      return !!(llm.anthropicApiKey && llm.anthropicModel);
-    case "custom":
-      return !!(llm.customEndpoint && llm.customToken && llm.customTokenAttr);
-    default:
-      return false;
-  }
-}
 
 export function LlmPanel() {
   const t = useT();
