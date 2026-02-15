@@ -238,9 +238,9 @@ export class Pipeline {
       });
     }
 
-    this.deps.analytics?.track("custom_prompt_used", {
-      has_prompt: Boolean(this.deps.hasCustomPrompt),
-    });
+    if (this.deps.hasCustomPrompt) {
+      this.deps.analytics?.track("custom_prompt_used");
+    }
 
     const llmStartTime = performance.now();
     const llmProviderName = this.deps.llmProvider.constructor.name.replace("Provider", "").toLowerCase();
