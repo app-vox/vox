@@ -1,8 +1,9 @@
 import { create } from "zustand";
-import type { PermissionsStatus } from "../../preload/index";
+import type { PermissionsStatus, KeychainStatus } from "../../preload/index";
 
 interface PermissionsState {
   status: PermissionsStatus | null;
+  keychainStatus: KeychainStatus | null;
   refresh: () => Promise<void>;
   requestMicrophone: () => Promise<void>;
   requestAccessibility: () => Promise<void>;
@@ -10,10 +11,14 @@ interface PermissionsState {
 
 export const usePermissionsStore = create<PermissionsState>((set, get) => ({
   status: null,
+  keychainStatus: null,
 
   refresh: async () => {
-    const s = await window.voxApi.permissions.status();
-    set({ status: s });
+    const [s, ks] = await Promise.all([
+      window.voxApi.permissions.status(),
+      window.voxApi.permissions.keychainStatus(),
+    ]);
+    set({ status: s, keychainStatus: ks });
   },
 
   requestMicrophone: async () => {

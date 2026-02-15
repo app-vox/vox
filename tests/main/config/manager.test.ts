@@ -180,4 +180,24 @@ describe("ConfigManager", () => {
     expect(loaded.llmConnectionTested).toBe(true);
     expect(loaded.llmConfigHash).toBe("abc123");
   });
+
+  it("should count encrypted secrets from raw config", () => {
+    const config = createDefaultConfig();
+    config.llm.apiKey = "my-key";
+    config.llm.secretAccessKey = "my-secret";
+    config.llm.accessKeyId = "AKIA123";
+
+    manager.save(config);
+    expect(manager.countEncryptedSecrets()).toBe(3);
+  });
+
+  it("should return 0 when no secrets are stored", () => {
+    const config = createDefaultConfig();
+    manager.save(config);
+    expect(manager.countEncryptedSecrets()).toBe(0);
+  });
+
+  it("should return 0 when config file does not exist", () => {
+    expect(manager.countEncryptedSecrets()).toBe(0);
+  });
 });

@@ -1,7 +1,7 @@
 import { safeStorage } from "electron";
 import type { SecretStore } from "./manager";
 
-const ENCRYPTED_PREFIX = "enc:";
+export const ENCRYPTED_PREFIX = "enc:";
 
 export function createSecretStore(): SecretStore {
   return {

@@ -3,6 +3,7 @@ import { usePermissionsStore } from "../stores/permissions-store";
 
 export function usePermissions() {
   const status = usePermissionsStore((s) => s.status);
+  const keychainStatus = usePermissionsStore((s) => s.keychainStatus);
   const refresh = usePermissionsStore((s) => s.refresh);
   const requestMicrophone = usePermissionsStore((s) => s.requestMicrophone);
   const requestAccessibility = usePermissionsStore((s) => s.requestAccessibility);
@@ -11,5 +12,5 @@ export function usePermissions() {
     if (status === null) refresh();
   }, [status, refresh]);
 
-  return { status, refresh, requestMicrophone, requestAccessibility };
+  return { status, keychainStatus, refresh, requestMicrophone, requestAccessibility };
 }

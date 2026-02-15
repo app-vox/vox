@@ -2,13 +2,14 @@ import * as fs from "fs";
 import * as path from "path";
 import { app } from "electron";
 import { type VoxConfig, type LlmConfig, createDefaultConfig } from "../../shared/config";
+import { ENCRYPTED_PREFIX } from "./secrets";
 
 export interface SecretStore {
   encrypt(plainText: string): string;
   decrypt(cipherText: string): string;
 }
 
-const SENSITIVE_FIELDS: (keyof LlmConfig)[] = ["apiKey", "secretAccessKey", "accessKeyId", "openaiApiKey", "anthropicApiKey", "customToken"];
+export const SENSITIVE_FIELDS: (keyof LlmConfig)[] = ["apiKey", "secretAccessKey", "accessKeyId", "openaiApiKey", "anthropicApiKey", "customToken"];
 
 export class ConfigManager {
   private readonly configPath: string;
@@ -73,5 +74,19 @@ export class ConfigManager {
     }
 
     fs.writeFileSync(this.configPath, JSON.stringify(toWrite, null, 2), "utf-8");
+  }
+
+  countEncryptedSecrets(): number {
+    if (!fs.existsSync(this.configPath)) return 0;
+    try {
+      const raw = JSON.parse(fs.readFileSync(this.configPath, "utf-8"));
+      if (!raw.llm) return 0;
+      return SENSITIVE_FIELDS.filter((field) => {
+        const value = raw.llm[field];
+        return typeof value === "string" && value.startsWith(ENCRYPTED_PREFIX);
+      }).length;
+    } catch {
+      return 0;
+    }
   }
 }
