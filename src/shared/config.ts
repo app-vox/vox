@@ -12,37 +12,57 @@ export type LlmProviderType = "foundry" | "bedrock" | "openai" | "deepseek" | "g
 
 export type CustomTokenSendAs = "header" | "body" | "query";
 
-export interface LlmConfig {
-  provider: LlmProviderType;
-
-  // Foundry fields
+export interface FoundryLlmConfig {
+  provider: "foundry";
   endpoint: string;
   apiKey: string;
   model: string;
+}
 
-  // Bedrock fields
+export interface BedrockLlmConfig {
+  provider: "bedrock";
   region: string;
   profile: string;
   accessKeyId: string;
   secretAccessKey: string;
   modelId: string;
+}
 
-  // OpenAI-compatible fields (OpenAI, DeepSeek)
+export interface OpenAICompatibleLlmConfig {
+  provider: "openai" | "deepseek" | "glm" | "litellm";
   openaiApiKey: string;
   openaiModel: string;
   openaiEndpoint: string;
+}
 
-  // Anthropic fields
+export interface AnthropicLlmConfig {
+  provider: "anthropic";
   anthropicApiKey: string;
   anthropicModel: string;
+}
 
-  // Custom provider fields
+export interface CustomLlmConfig {
+  provider: "custom";
   customEndpoint: string;
   customToken: string;
   customTokenAttr: string;
   customTokenSendAs: CustomTokenSendAs;
   customModel: string;
 }
+
+export type LlmConfig =
+  | FoundryLlmConfig
+  | BedrockLlmConfig
+  | OpenAICompatibleLlmConfig
+  | AnthropicLlmConfig
+  | CustomLlmConfig;
+
+/** Flat intersection of all variants — used ONLY at the persistence boundary. */
+export type LlmConfigFlat = FoundryLlmConfig &
+  BedrockLlmConfig &
+  OpenAICompatibleLlmConfig &
+  AnthropicLlmConfig &
+  CustomLlmConfig & { provider: LlmProviderType };
 
 export interface WhisperConfig {
   model: WhisperModelSize | "";
@@ -79,21 +99,6 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
       endpoint: "",
       apiKey: "",
       model: "gpt-4o",
-      region: "us-east-1",
-      profile: "",
-      accessKeyId: "",
-      secretAccessKey: "",
-      modelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
-      openaiApiKey: "",
-      openaiModel: "gpt-4o",
-      openaiEndpoint: "https://api.openai.com",
-      anthropicApiKey: "",
-      anthropicModel: "claude-sonnet-4-20250514",
-      customEndpoint: "",
-      customToken: "",
-      customTokenAttr: "Authorization",
-      customTokenSendAs: "header",
-      customModel: "",
     },
     whisper: {
       model: "small",
@@ -114,4 +119,75 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     recordingStopAudioCue: "pop",
     errorAudioCue: "error",
   };
+}
+
+export function createDefaultLlmFlat(): LlmConfigFlat {
+  return {
+    provider: "foundry",
+    endpoint: "",
+    apiKey: "",
+    model: "gpt-4o",
+    region: "us-east-1",
+    profile: "",
+    accessKeyId: "",
+    secretAccessKey: "",
+    modelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    openaiApiKey: "",
+    openaiModel: "gpt-4o",
+    openaiEndpoint: "https://api.openai.com",
+    anthropicApiKey: "",
+    anthropicModel: "claude-sonnet-4-20250514",
+    customEndpoint: "",
+    customToken: "",
+    customTokenAttr: "Authorization",
+    customTokenSendAs: "header",
+    customModel: "",
+  };
+}
+
+export function narrowLlmConfig(flat: LlmConfigFlat): LlmConfig {
+  switch (flat.provider) {
+    case "bedrock":
+      return {
+        provider: "bedrock",
+        region: flat.region,
+        profile: flat.profile,
+        accessKeyId: flat.accessKeyId,
+        secretAccessKey: flat.secretAccessKey,
+        modelId: flat.modelId,
+      };
+    case "openai":
+    case "deepseek":
+    case "glm":
+    case "litellm":
+      return {
+        provider: flat.provider,
+        openaiApiKey: flat.openaiApiKey,
+        openaiModel: flat.openaiModel,
+        openaiEndpoint: flat.openaiEndpoint,
+      };
+    case "anthropic":
+      return {
+        provider: "anthropic",
+        anthropicApiKey: flat.anthropicApiKey,
+        anthropicModel: flat.anthropicModel,
+      };
+    case "custom":
+      return {
+        provider: "custom",
+        customEndpoint: flat.customEndpoint,
+        customToken: flat.customToken,
+        customTokenAttr: flat.customTokenAttr,
+        customTokenSendAs: flat.customTokenSendAs,
+        customModel: flat.customModel,
+      };
+    case "foundry":
+    default:
+      return {
+        provider: "foundry",
+        endpoint: flat.endpoint,
+        apiKey: flat.apiKey,
+        model: flat.model,
+      };
+  }
 }
