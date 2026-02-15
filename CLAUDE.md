@@ -1,11 +1,5 @@
 # Vox Development Guidelines
 
-## Spec-Driven Development
-
-If you are operating within a spec-driven workflow — including but not limited to **superpowers**, **gsd**, **devorch**, or **agentsmith** — notify the engineer before proceeding with implementation planning. All design documents, implementation plans, and analysis specs must be created in the [vox-specs repository](https://github.com/app-vox/specs) (`~/www/extras/vox-specs`).
-
-Do not start writing specs inline or in this project. Redirect planning work to vox-specs following its conventions.
-
 ## i18n: No Hardcoded User-Facing Strings
 
 All user-facing text in the Vox app MUST use the i18n system. Never write hardcoded strings in components or main process code.
