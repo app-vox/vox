@@ -9,7 +9,7 @@ export interface SecretStore {
   decrypt(cipherText: string): string;
 }
 
-export const SENSITIVE_FIELDS: string[] = ["apiKey", "secretAccessKey", "accessKeyId", "openaiApiKey", "anthropicApiKey", "customToken"];
+export const SENSITIVE_FIELDS: (keyof LlmConfigFlat)[] = ["apiKey", "secretAccessKey", "accessKeyId", "openaiApiKey", "anthropicApiKey", "customToken"];
 
 export class ConfigManager {
   private readonly configPath: string;

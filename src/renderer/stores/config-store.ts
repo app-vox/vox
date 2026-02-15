@@ -62,11 +62,18 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
   updateConfig: (partial) => {
     const current = get().config;
     if (!current) return;
+    // When switching providers, replace llm entirely to maintain discriminated union invariant.
+    // When updating fields within the same provider, merge as before.
+    const llm = partial.llm
+      ? partial.llm.provider !== current.llm.provider
+        ? partial.llm
+        : { ...current.llm, ...partial.llm }
+      : current.llm;
     set({
       config: {
         ...current,
         ...partial,
-        llm: { ...current.llm, ...(partial.llm ?? {}) },
+        llm,
         whisper: { ...current.whisper, ...(partial.whisper ?? {}) },
         shortcuts: { ...current.shortcuts, ...(partial.shortcuts ?? {}) },
       },
