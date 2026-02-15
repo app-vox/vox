@@ -124,6 +124,7 @@ export interface VoxAPI {
       isRecording: boolean;
       indicatorVisible: boolean;
       indicatorMode: string | null;
+      hudVisible: boolean;
       isListening: boolean;
       hasModel: boolean;
       trayActive: boolean;

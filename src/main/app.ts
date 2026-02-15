@@ -181,6 +181,7 @@ app.whenReady().then(async () => {
       isRecording: shortcutManager?.isRecording() ?? false,
       indicatorVisible: shortcutManager?.getIndicator().isVisible() ?? false,
       indicatorMode: shortcutManager?.getIndicator().getMode(),
+      hudVisible: shortcutManager?.getHud().isVisible() ?? false,
       ...getTrayState(),
     };
   });
