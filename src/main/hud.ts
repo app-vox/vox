@@ -22,6 +22,7 @@ function buildHudHtml(): string {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
   }
   .hud {
     width: 42px;
