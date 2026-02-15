@@ -24,7 +24,7 @@
   "general.hud.showHud": "Mostra pannello flottante",
   "general.hud.showHudDesc": "Visualizzare una barra flottante con i controlli di registrazione nella parte inferiore dello schermo.",
   "general.hud.showOnHover": "Mostra solo al passaggio del mouse",
-  "general.hud.showOnHoverDesc": "Nascondere il pannello finche il mouse non si sposta nella parte inferiore dello schermo.",
+  "general.hud.showOnHoverDesc": "Nascondere il pannello finché il mouse non si sposta nella parte inferiore dello schermo.",
   "general.about.title": "Informazioni",
   "general.about.versionInfo": "Informazioni sulla versione e supporto.",
   "general.about.checkForUpdates": "Controlla aggiornamenti",

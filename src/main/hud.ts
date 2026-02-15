@@ -199,6 +199,7 @@ export class HudWindow {
   private pendingUpdate: { state: HudState } | null = null;
   private currentState: HudState = "idle";
   private showOnHover = false;
+  private hoverTimer: ReturnType<typeof setInterval> | null = null;
 
   show(showOnHover: boolean): void {
     this.showOnHover = showOnHover;
@@ -255,11 +256,14 @@ export class HudWindow {
     this.window.once("ready-to-show", () => {
       if (!showOnHover) {
         this.window?.showInactive();
+      } else {
+        this.startHoverTracking();
       }
     });
   }
 
   hide(): void {
+    this.stopHoverTracking();
     if (this.window && !this.window.isDestroyed()) {
       this.window.close();
     }
@@ -313,7 +317,6 @@ export class HudWindow {
     if (!this.window || this.window.isDestroyed() || !this.contentReady) return;
     const titles = {
       main: t("hud.startRecording"),
-      stop: t("hud.stopRecording"),
       cancel: t("hud.cancelRecording"),
     };
     this.window.webContents.executeJavaScript(
@@ -325,7 +328,7 @@ export class HudWindow {
     if (!this.window || this.window.isDestroyed()) return;
     const titleKey = state === "idle" ? "hud.startRecording"
       : state === "listening" ? "hud.stopRecording"
-      : "hud.stopRecording";
+      : "indicator.transcribing";
     const titles = {
       main: t(titleKey),
       cancel: t("hud.cancelRecording"),
@@ -333,5 +336,25 @@ export class HudWindow {
     this.window.webContents.executeJavaScript(
       `setState("${state}", ${JSON.stringify(titles)})`
     ).catch(() => {});
+  }
+
+  private startHoverTracking(): void {
+    this.stopHoverTracking();
+    this.hoverTimer = setInterval(() => {
+      if (!this.window || this.window.isDestroyed()) return;
+      const cursor = screen.getCursorScreenPoint();
+      const display = screen.getDisplayNearestPoint(cursor);
+      const workArea = display.workArea;
+      const bottomEdge = workArea.y + workArea.height;
+      const isNearBottom = cursor.y >= bottomEdge - 80;
+      this.setHoverVisible(isNearBottom);
+    }, 200);
+  }
+
+  private stopHoverTracking(): void {
+    if (this.hoverTimer) {
+      clearInterval(this.hoverTimer);
+      this.hoverTimer = null;
+    }
   }
 }

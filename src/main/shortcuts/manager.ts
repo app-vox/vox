@@ -359,7 +359,9 @@ export class ShortcutManager {
     });
 
     ipcMain.handle("hud:start-recording", () => {
-      this.triggerToggle();
+      if (!this.isRecording()) {
+        this.triggerToggle();
+      }
     });
 
     ipcMain.handle("hud:stop-recording", () => {
