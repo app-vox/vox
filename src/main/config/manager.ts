@@ -57,6 +57,8 @@ export class ConfigManager {
         llmConnectionTested: saved.llmConnectionTested ?? defaults.llmConnectionTested,
         llmConfigHash: saved.llmConfigHash ?? defaults.llmConfigHash,
         analyticsEnabled: saved.analyticsEnabled ?? defaults.analyticsEnabled,
+        showHud: saved.showHud ?? defaults.showHud,
+        hudShowOnHover: saved.hudShowOnHover ?? defaults.hudShowOnHover,
       };
 
       return config;
