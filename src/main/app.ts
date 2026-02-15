@@ -243,6 +243,9 @@ app.on("activate", () => {
 
 app.on("before-quit", () => {
   shortcutManager?.stop();
+  for (const win of BrowserWindow.getAllWindows()) {
+    if (!win.isDestroyed()) win.destroy();
+  }
 });
 
 app.on("will-quit", () => {
@@ -255,17 +258,16 @@ app.on("will-quit", () => {
 app.on("window-all-closed", () => {});
 
 for (const sig of ["SIGINT", "SIGTERM", "SIGHUP"] as const) {
-  process.on(sig, () => process.exit(0));
+  process.on(sig, () => app.exit(0));
 }
 
 // In dev mode, electron-vite spawns Electron as a child process.
 // When Ctrl+C kills electron-vite, the Electron child becomes an orphan
 // reparented to launchd (PID 1) and never receives SIGINT.
-// Detect this by polling: if parent PID changes to 1, exit immediately.
+// Detect parent death by polling and exit immediately.
 if (!app.isPackaged) {
   const parentPid = process.ppid;
-  const orphanCheck = setInterval(() => {
-    try { process.kill(parentPid, 0); } catch { process.exit(0); }
-  }, 500);
-  orphanCheck.unref();
+  setInterval(() => {
+    try { process.kill(parentPid, 0); } catch { app.exit(0); }
+  }, 200).unref();
 }

@@ -140,7 +140,7 @@ function buildHudHtml(): string {
   <div class="icon mic-icon" id="mic-icon"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></div>
   <div class="icon hidden" id="stop-icon"><div class="stop-icon"></div></div>
   <div class="icon hidden" id="proc-icon"><div class="proc-icon"></div></div>
-  <div class="icon hidden" id="error-icon"><svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5" stroke="rgba(255,255,255,0.95)" stroke-width="2" stroke-linecap="round"/></svg></div>
+  <div class="icon error-icon hidden" id="error-icon"><svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5" stroke="rgba(255,255,255,0.95)" stroke-width="2" stroke-linecap="round"/></svg></div>
 </div>
 <div class="cancel-btn" id="cancel-btn" onclick="event.stopPropagation(); window.electronAPI?.cancelRecording()">
   <svg viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -240,6 +240,7 @@ export class HudWindow {
       skipTaskbar: true,
       resizable: false,
       focusable: false,
+      type: "panel",
       acceptFirstMouse: true,
       show: false,
       webPreferences: {
