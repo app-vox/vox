@@ -228,6 +228,7 @@
   "dictionary.copyToClipboard": "Kopiuj do schowka",
   "dictionary.remove": "Usuń",
   "dictionary.emptyState": "Brak wpisów. Dodaj nazwy, miejsca lub słowa, które są często źle rozpoznawane podczas transkrypcji.",
+  "dictionary.llmRequiredInfo": "Terminy ze słownika są używane do transkrypcji wspomaganej przez AI. Włącz Ulepszanie AI, aby korzystać z tej funkcji.",
   "llm.exampleInstructions": "Przykładowe instrukcje",
   "llm.exampleProfessional": "\"Używaj profesjonalnego języka biznesowego\"",
   "llm.exampleProfessionalLabel": "Profesjonalny:",

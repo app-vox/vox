@@ -228,6 +228,7 @@
   "dictionary.copyToClipboard": "Copy to Clipboard",
   "dictionary.remove": "Remove",
   "dictionary.emptyState": "No entries yet. Add names, places, or any words that are often misheard during transcription.",
+  "dictionary.llmRequiredInfo": "Dictionary terms are used for AI-enhanced transcription. Enable AI Enhancement to use this feature.",
   "llm.exampleInstructions": "Example Instructions",
   "llm.exampleProfessional": "\"Use professional business language\"",
   "llm.exampleProfessionalLabel": "Professional:",

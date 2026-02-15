@@ -564,6 +564,7 @@ export function DevPanel() {
       </div>
 
       <div className={styles.disclaimer}>
+        <strong>This panel is only visible in development mode.</strong>{" "}
         Some values may become outdated as configuration changes. Read-only states come from the main process and cannot be overridden.
       </div>
 

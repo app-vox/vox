@@ -228,6 +228,7 @@
   "dictionary.copyToClipboard": "Copiar al Portapapeles",
   "dictionary.remove": "Eliminar",
   "dictionary.emptyState": "Aún no hay entradas. Agregue nombres, lugares o cualquier palabra que se malinterprete a menudo durante la transcripción.",
+  "dictionary.llmRequiredInfo": "Los términos del diccionario se usan para la transcripción mejorada por IA. Active la Mejora por IA para usar esta función.",
   "llm.exampleInstructions": "Instrucciones de Ejemplo",
   "llm.exampleProfessional": "\"Use lenguaje profesional de negocios\"",
   "llm.exampleProfessionalLabel": "Profesional:",

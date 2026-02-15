@@ -2,6 +2,7 @@ import { type ReactNode } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
 import { usePermissions } from "../../hooks/use-permissions";
+import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useT } from "../../i18n-context";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
 import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon } from "../../../shared/icons";
@@ -40,11 +41,33 @@ export function GeneralPanel() {
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
-  const setupComplete = useConfigStore((s) => s.setupComplete);
+  const realSetupComplete = useConfigStore((s) => s.setupComplete);
   const loading = useConfigStore((s) => s.loading);
   const setActiveTab = useConfigStore((s) => s.setActiveTab);
   const triggerToast = useSaveToast((s) => s.trigger);
-  const { status: permissionStatus } = usePermissions();
+  const { status: realStatus } = usePermissions();
+
+  // Dev overrides (gated — tree-shaken in production)
+  const setupComplete = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("setupComplete", realSetupComplete)
+    : realSetupComplete;
+
+  const devMicOverride = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("microphonePermission", undefined)
+    : undefined;
+
+  const devAccOverride = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("accessibilityPermission", undefined)
+    : undefined;
+
+  const permissionStatus = {
+    ...realStatus,
+    ...(devMicOverride !== undefined ? { microphone: devMicOverride } : {}),
+    ...(devAccOverride !== undefined ? { accessibility: devAccOverride } : {}),
+  };
 
   const themeLabels: Record<ThemeMode, string> = {
     light: t("general.theme.light"),

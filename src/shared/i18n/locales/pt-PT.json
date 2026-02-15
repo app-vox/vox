@@ -228,6 +228,7 @@
   "dictionary.copyToClipboard": "Copiar para a Área de Transferência",
   "dictionary.remove": "Remover",
   "dictionary.emptyState": "Ainda sem entradas. Adicione nomes, lugares ou quaisquer palavras que são frequentemente mal interpretadas durante a transcrição.",
+  "dictionary.llmRequiredInfo": "Os termos do dicionário são usados para transcrição melhorada por IA. Ative o Melhoramento por IA para utilizar esta funcionalidade.",
   "llm.exampleInstructions": "Exemplos de Instruções",
   "llm.exampleProfessional": "\"Use linguagem profissional de negócios\"",
   "llm.exampleProfessionalLabel": "Profissional:",

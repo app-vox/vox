@@ -228,6 +228,7 @@
   "dictionary.copyToClipboard": "Copier dans le Presse-papiers",
   "dictionary.remove": "Supprimer",
   "dictionary.emptyState": "Aucune entrée pour le moment. Ajoutez des noms, des lieux ou des mots souvent mal compris lors de la transcription.",
+  "dictionary.llmRequiredInfo": "Les termes du dictionnaire sont utilisés pour la transcription améliorée par IA. Activez l'Amélioration IA pour utiliser cette fonctionnalité.",
   "llm.exampleInstructions": "Exemples d'Instructions",
   "llm.exampleProfessional": "\"Utilisez un langage professionnel\"",
   "llm.exampleProfessionalLabel": "Professionnel :",
