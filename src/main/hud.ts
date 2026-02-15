@@ -295,13 +295,15 @@ export class HudWindow {
     if (!this.window || this.window.isDestroyed()) return;
 
     if (state === "error" || state === "canceled") {
-      this.flashTimer = setTimeout(() => {
+      const ft = setTimeout(() => {
         this.flashTimer = null;
         this.currentState = "idle";
         if (this.contentReady && this.window && !this.window.isDestroyed()) {
           this.execSetState("idle");
         }
       }, 1500);
+      ft.unref();
+      this.flashTimer = ft;
     }
 
     if (this.contentReady) {
