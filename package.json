@@ -19,6 +19,7 @@
     "check:tokens": "./scripts/check-css-tokens.sh",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "dist": "electron-vite build && electron-builder",
     "postinstall": "make -C node_modules/whisper-node/lib/whisper.cpp main"
   },
