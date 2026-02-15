@@ -238,7 +238,6 @@ export class HudWindow {
       skipTaskbar: true,
       resizable: false,
       focusable: false,
-      type: "panel",
       acceptFirstMouse: true,
       show: false,
       webPreferences: {

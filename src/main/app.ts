@@ -241,15 +241,12 @@ app.on("activate", () => {
   }
 });
 
-app.on("before-quit", () => {
-  shortcutManager?.stop();
-});
-
 app.on("will-quit", () => {
   analytics.track("app_quit", {
     session_duration_ms: Math.round(performance.now()),
   });
   analytics.shutdown();
+  shortcutManager?.stop();
 });
 
 app.on("window-all-closed", () => {});
