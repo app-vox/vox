@@ -297,12 +297,16 @@ export class IndicatorWindow {
 
   showError(durationMs = 3000, customText?: string): void {
     this.show("error", customText);
-    this.hideTimer = setTimeout(() => this.hide(), durationMs);
+    const t = setTimeout(() => this.hide(), durationMs);
+    t.unref();
+    this.hideTimer = t;
   }
 
   showCanceled(durationMs = 1500): void {
     this.show("canceled");
-    this.hideTimer = setTimeout(() => this.hide(), durationMs);
+    const t = setTimeout(() => this.hide(), durationMs);
+    t.unref();
+    this.hideTimer = t;
   }
 
   hide(): void {

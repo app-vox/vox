@@ -73,7 +73,7 @@ export class AudioRecorder {
     this.recording = true;
 
     // Start audio level polling for waveform visualization
-    this.levelsInterval = setInterval(async () => {
+    const lvl = setInterval(async () => {
       if (!this.recording || !this.win || this.win.isDestroyed()) {
         this.stopLevels();
         return;
@@ -102,6 +102,8 @@ export class AudioRecorder {
         // Window may have been destroyed
       }
     }, 33);
+    lvl.unref();
+    this.levelsInterval = lvl;
   }
 
   async stop(): Promise<RecordingResult> {

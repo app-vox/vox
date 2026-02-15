@@ -374,7 +374,7 @@ export class ShortcutManager {
   }
 
   private startAccessibilityWatchdog(): void {
-    this.watchdogTimer = setInterval(() => {
+    const timer = setInterval(() => {
       const granted = isAccessibilityGranted();
 
       if (this.accessibilityWasGranted && !granted) {
@@ -409,6 +409,8 @@ export class ShortcutManager {
 
       this.accessibilityWasGranted = granted;
     }, 3000);
+    timer.unref();
+    this.watchdogTimer = timer;
   }
 
   private onRecordingStart(): void {
