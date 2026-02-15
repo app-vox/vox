@@ -438,11 +438,25 @@
 
 .devVisualsBanner {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
   padding: var(--spacing-2) var(--spacing-3);
   margin-bottom: var(--spacing-3);
-  font-size: var(--font-size-sm, 13px);
+  font-size: var(--font-size-xs, 12px);
   color: var(--color-text-tertiary);
   font-style: italic;
+  line-height: 1.5;
+
+  svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  code {
+    font-family: var(--font-mono, monospace);
+    font-style: normal;
+    background: var(--color-bg-hover);
+    padding: 0 4px;
+    border-radius: 3px;
+  }
 }

@@ -571,7 +571,10 @@ export function DevPanel() {
       {hideDevVisuals && (
         <div className={styles.devVisualsBanner}>
           <InfoCircleIcon width={13} height={13} />
-          <span>Dev visuals hidden.</span>
+          <span>
+            Dev visuals hidden. If you navigate away from this tab, restart your environment
+            (<code>npm run dev</code>) to access overrides again.
+          </span>
           <button
             className={styles.setBtn}
             onClick={() => clearOverride("hideDevVisuals")}
