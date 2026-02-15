@@ -18,7 +18,7 @@ export function CustomProviderFields() {
   if (!config) return null;
 
   const update = (field: string, value: string) => {
-    updateConfig({ llm: { ...config.llm, [field]: value } });
+    updateConfig({ llm: { ...config.llm, [field]: value } as typeof config.llm });
     debouncedSave();
   };
 
@@ -83,7 +83,7 @@ export function CustomProviderFields() {
               { value: "query", label: t("llm.custom.sendAsQuery") },
             ]}
             onChange={(value) => {
-              updateConfig({ llm: { ...config.llm, customTokenSendAs: value as CustomTokenSendAs } });
+              updateConfig({ llm: { ...config.llm, customTokenSendAs: value as CustomTokenSendAs } as typeof config.llm });
               saveConfig(true);
             }}
           />

@@ -23,7 +23,7 @@ export function OpenAICompatibleFields({ providerType }: { providerType: "openai
   const defaults = PROVIDER_DEFAULTS[providerType];
 
   const update = (field: string, value: string) => {
-    updateConfig({ llm: { ...config.llm, [field]: value } });
+    updateConfig({ llm: { ...config.llm, [field]: value } as typeof config.llm });
     debouncedSave();
   };
 
