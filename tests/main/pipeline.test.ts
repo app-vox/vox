@@ -2,6 +2,19 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Pipeline } from "../../src/main/pipeline";
 import { type LlmProvider } from "../../src/main/llm/provider";
 
+// Mock electron-log
+vi.mock("electron-log/main", () => ({
+  default: {
+    scope: vi.fn().mockReturnValue({
+      info: vi.fn(),
+      debug: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      verbose: vi.fn(),
+    }),
+  },
+}));
+
 // Mock fs module
 vi.mock("fs", () => ({
   existsSync: vi.fn().mockReturnValue(true),

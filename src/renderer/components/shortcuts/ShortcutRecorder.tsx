@@ -1,5 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useT } from "../../i18n-context";
+import log from "../../logger";
+
+const slog = log.scope("ShortcutRecorder");
+
 import styles from "./ShortcutRecorder.module.scss";
 import form from "../shared/forms.module.scss";
 
@@ -75,22 +79,11 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange }: S
       e.preventDefault();
       e.stopPropagation();
 
-      console.log("=".repeat(80));
-      console.log("[ShortcutRecorder] KEY PRESSED - COMPLETE EVENT DETAILS:");
-      console.log("  e.key:", e.key);
-      console.log("  e.code:", e.code);
-      console.log("  e.keyCode:", e.keyCode);
-      console.log("  e.which:", e.which);
-      console.log("  e.location:", e.location);
-      console.log("  e.repeat:", e.repeat);
-      console.log("  Modifiers:");
-      console.log("    metaKey (Command):", e.metaKey);
-      console.log("    ctrlKey:", e.ctrlKey);
-      console.log("    altKey (Option):", e.altKey);
-      console.log("    shiftKey:", e.shiftKey);
-      console.log("  Event type:", e.type);
-      console.log("  Timestamp:", e.timeStamp);
-      console.log("=".repeat(80));
+      slog.debug("Key pressed", {
+        key: e.key, code: e.code, keyCode: e.keyCode, location: e.location,
+        repeat: e.repeat, metaKey: e.metaKey, ctrlKey: e.ctrlKey,
+        altKey: e.altKey, shiftKey: e.shiftKey,
+      });
 
       if (e.code === "Escape") {
         stopRecording(true);
@@ -110,17 +103,17 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange }: S
 
       if (isFnDirect) {
         modifiers.push("Fn");
-        console.log("[ShortcutRecorder] ✓ Fn key detected directly!");
+        slog.debug("Fn key detected directly");
       }
 
       if (isFnBasedKey || isMediaKey) {
-        console.log("[ShortcutRecorder] ✓ Fn-based key detected (F13-F24 or media key)");
+        slog.debug("Fn-based key detected");
       }
 
       if (isFnDirect) {
         setPreviewParts(modifiers);
         if (modifiers.length === 1 && modifiers[0] === "Fn") {
-          console.log("[ShortcutRecorder] Fn key alone pressed - waiting for main key");
+          slog.debug("Fn key alone pressed, waiting for main key");
         }
         return;
       }
@@ -137,12 +130,11 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange }: S
       }
 
       if (!mainKey) {
-        console.log("[ShortcutRecorder] ❌ Unknown key, cannot record");
-        console.log("[ShortcutRecorder] Tried e.code:", e.code, "and e.key:", e.key);
+        slog.debug("Unknown key", { code: e.code, key: e.key });
         return;
       }
 
-      console.log("[ShortcutRecorder] ✓ Main key detected:", mainKey);
+      slog.debug("Main key detected", mainKey);
 
       const accelerator = modifiers.length > 0
         ? [...modifiers, mainKey].join("+")

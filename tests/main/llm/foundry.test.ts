@@ -1,4 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+
+vi.mock("electron-log/main", () => ({
+  default: {
+    scope: vi.fn().mockReturnValue({
+      info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn(),
+    }),
+  },
+}));
+
 import { FoundryProvider } from "../../../src/main/llm/foundry";
 import { type LlmProvider } from "../../../src/main/llm/provider";
 import { LLM_SYSTEM_PROMPT } from "../../../src/shared/constants";

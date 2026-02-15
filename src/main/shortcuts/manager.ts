@@ -1,5 +1,6 @@
 import { globalShortcut, ipcMain, Notification } from "electron";
 import { uIOhook, UiohookKey } from "uiohook-napi";
+import log from "electron-log/main";
 import { type ConfigManager } from "../config/manager";
 import { pasteText, isAccessibilityGranted } from "../input/paster";
 import { type Pipeline, CanceledError, NoModelError } from "../pipeline";
@@ -12,6 +13,8 @@ import type { AudioCueType } from "../../shared/config";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { app } from "electron";
+
+const slog = log.scope("Shortcuts");
 
 /** Map Electron accelerator key names to UiohookKey keycodes. */
 const KEY_TO_UIOHOOK: Record<string, number> = {
@@ -105,7 +108,7 @@ export class ShortcutManager {
       if (this.holdKeyCodes.has(e.keycode)) {
         // Ignore events during initialization to prevent spurious shortcuts
         if (this.isInitializing) {
-          console.log("[Vox] Ignoring shortcut during initialization");
+          slog.debug("Ignoring shortcut during initialization");
           return;
         }
         this.stateMachine.handleHoldKeyUp();
@@ -116,7 +119,7 @@ export class ShortcutManager {
       if (e.keycode === UiohookKey.Escape && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
         const state = this.stateMachine.getState();
         if (state === "hold" || state === "toggle" || state === "processing") {
-          console.log("[Vox] Escape pressed, canceling operation");
+          slog.info("Escape pressed, canceling operation");
           this.cancelRecording();
         }
       }
@@ -125,7 +128,7 @@ export class ShortcutManager {
     // Check accessibility permission before starting uIOhook
     const hasAccessibility = isAccessibilityGranted();
     if (!hasAccessibility) {
-      console.warn("[Vox] Accessibility permission not granted. Keyboard shortcuts will not work.");
+      slog.warn("Accessibility permission not granted — keyboard shortcuts will not work");
       new Notification({
         title: t("notification.accessibilityRequired.title"),
         body: t("notification.accessibilityRequired.body"),
@@ -138,7 +141,7 @@ export class ShortcutManager {
 
       setTimeout(() => {
         this.isInitializing = false;
-        console.log("[Vox] Initialization complete (limited mode - no accessibility)");
+        slog.info("Initialization complete (limited mode — no accessibility)");
       }, 1000);
       return;
     }
@@ -146,9 +149,9 @@ export class ShortcutManager {
     // Wrap uIOhook.start() in try-catch to handle potential crashes gracefully
     try {
       uIOhook.start();
-      console.log("[Vox] Keyboard hook started successfully");
+      slog.info("Keyboard hook started successfully");
     } catch (err: unknown) {
-      console.error("[Vox] Failed to start keyboard hook:", err);
+      slog.error("Failed to start keyboard hook", err);
       new Notification({
         title: t("notification.hookFailed.title"),
         body: t("notification.hookFailed.body"),
@@ -160,7 +163,7 @@ export class ShortcutManager {
 
       setTimeout(() => {
         this.isInitializing = false;
-        console.log("[Vox] Initialization complete (limited mode - hook failed)");
+        slog.info("Initialization complete (limited mode — hook failed)");
       }, 1000);
       return;
     }
@@ -171,7 +174,7 @@ export class ShortcutManager {
     // Allow shortcuts after a brief initialization period
     setTimeout(() => {
       this.isInitializing = false;
-      console.log("[Vox] Initialization complete, shortcuts enabled");
+      slog.info("Initialization complete, shortcuts enabled");
     }, 1000);
   }
 
@@ -186,7 +189,7 @@ export class ShortcutManager {
   /** Programmatically trigger the toggle shortcut (e.g., from tray menu) */
   triggerToggle(): void {
     if (this.isInitializing) {
-      console.log("[Vox] Cannot trigger toggle during initialization");
+      slog.debug("Cannot trigger toggle during initialization");
       return;
     }
     this.stateMachine.handleTogglePress();
@@ -198,7 +201,7 @@ export class ShortcutManager {
   stopAndProcess(): void {
     const state = this.stateMachine.getState();
     if (state === "hold" || state === "toggle") {
-      console.log("[Vox] Stop & process requested from tray");
+      slog.info("Stop & process requested from tray");
       this.stateMachine.handleTogglePress(); // Toggle off = stop and process
     }
   }
@@ -206,10 +209,10 @@ export class ShortcutManager {
   cancelRecording(): void {
     const state = this.stateMachine.getState();
     if (state === "hold" || state === "toggle" || state === "processing") {
-      console.log("[Vox] Cancel requested");
+      slog.info("Cancel requested");
       const pipeline = this.deps.getPipeline();
       pipeline.cancel().catch((err) => {
-        console.error("[Vox] Error during cancel:", err);
+        slog.error("Error during cancel", err);
       });
       this.indicator.showCanceled();
       const config = this.deps.configManager.load();
@@ -251,17 +254,17 @@ export class ShortcutManager {
         const { samples, sampleRate } = parseWavSamples(wavData);
         if (samples.length > 0) {
           pipeline.playAudioCue(samples, sampleRate).catch((err: Error) => {
-            console.error(`[Vox] WAV audio cue failed:`, err.message);
+            slog.error("WAV audio cue failed", err);
           });
         }
       } catch (err: unknown) {
-        console.error("[Vox] Failed to load WAV cue:", err instanceof Error ? err.message : err);
+        slog.error("Failed to load WAV cue", err);
       }
     } else {
       const samples = generateCueSamples(cueType, 44100);
       if (samples.length > 0) {
         pipeline.playAudioCue(samples).catch((err: Error) => {
-          console.error("[Vox] Audio cue failed:", err.message);
+          slog.error("Audio cue failed", err);
         });
       }
     }
@@ -283,7 +286,7 @@ export class ShortcutManager {
 
     const holdOk = globalShortcut.register(config.shortcuts.hold, () => {
       if (this.isInitializing) {
-        console.log("[Vox] Ignoring hold shortcut during initialization");
+        slog.debug("Ignoring hold shortcut during initialization");
         return;
       }
       this.stateMachine.handleHoldKeyDown();
@@ -291,23 +294,23 @@ export class ShortcutManager {
 
     const toggleOk = globalShortcut.register(config.shortcuts.toggle, () => {
       if (this.isInitializing) {
-        console.log("[Vox] Ignoring toggle shortcut during initialization");
+        slog.debug("Ignoring toggle shortcut during initialization");
         return;
       }
       this.stateMachine.handleTogglePress();
     });
 
-    if (!holdOk) console.warn(`[Vox] Failed to register hold shortcut: ${config.shortcuts.hold}`);
-    if (!toggleOk) console.warn(`[Vox] Failed to register toggle shortcut: ${config.shortcuts.toggle}`);
+    if (!holdOk) slog.warn("Failed to register hold shortcut:", config.shortcuts.hold);
+    if (!toggleOk) slog.warn("Failed to register toggle shortcut:", config.shortcuts.toggle);
 
     this.holdKeyCodes = getHoldKeyCodes(config.shortcuts.hold);
 
-    console.log(`[Vox] Shortcuts registered: hold=${config.shortcuts.hold}, toggle=${config.shortcuts.toggle}`);
+    slog.info("Shortcuts registered: hold=%s, toggle=%s", config.shortcuts.hold, config.shortcuts.toggle);
 
     // Re-enable shortcuts after a longer delay to prevent spurious activations
     setTimeout(() => {
       this.isInitializing = false;
-      console.log("[Vox] Shortcuts re-enabled after registration");
+      slog.info("Shortcuts re-enabled after registration");
     }, 1500);
   }
 
@@ -330,11 +333,11 @@ export class ShortcutManager {
       const granted = isAccessibilityGranted();
 
       if (this.accessibilityWasGranted && !granted) {
-        console.warn("[Vox] Accessibility permission revoked — stopping keyboard hook");
+        slog.warn("Accessibility permission revoked — stopping keyboard hook");
         try {
           uIOhook.stop();
         } catch (err: unknown) {
-          console.error("[Vox] Error stopping keyboard hook:", err);
+          slog.error("Error stopping keyboard hook", err);
         }
         globalShortcut.unregisterAll();
         new Notification({
@@ -342,7 +345,7 @@ export class ShortcutManager {
           body: t("notification.accessibilityRevoked.body"),
         }).show();
       } else if (!this.accessibilityWasGranted && granted) {
-        console.log("[Vox] Accessibility permission restored — restarting keyboard hook");
+        slog.info("Accessibility permission restored — restarting keyboard hook");
         try {
           uIOhook.start();
           this.registerShortcutKeys();
@@ -351,7 +354,7 @@ export class ShortcutManager {
             body: t("notification.shortcutsEnabled.body"),
           }).show();
         } catch (err: unknown) {
-          console.error("[Vox] Failed to restart keyboard hook:", err);
+          slog.error("Failed to restart keyboard hook", err);
           new Notification({
             title: t("notification.restartRequired.title"),
             body: t("notification.restartRequired.body"),
@@ -365,19 +368,19 @@ export class ShortcutManager {
 
   private onRecordingStart(): void {
     const pipeline = this.deps.getPipeline();
-    console.log("[Vox] Recording requested — showing initializing indicator");
+    slog.info("Recording requested — showing initializing indicator");
     this.indicator.show("initializing");
     this.updateTrayState();
 
     pipeline.startRecording().then(() => {
-      console.log("[Vox] Recording started — mic active");
+      slog.info("Recording started — mic active");
       this.indicator.show("listening");
 
       const config = this.deps.configManager.load();
       const cueType = (config.recordingAudioCue ?? "tap") as AudioCueType;
       this.playCue(cueType);
     }).catch((err: Error) => {
-      console.error("[Vox] Recording failed:", err.message);
+      slog.error("Recording failed", err);
       this.indicator.hide();
       this.updateTrayState();
 
@@ -399,7 +402,7 @@ export class ShortcutManager {
     const pipeline = this.deps.getPipeline();
     this.stateMachine.setProcessing();
     this.updateTrayState();
-    console.log("[Vox] Recording stopped, processing pipeline");
+    slog.info("Recording stopped, processing pipeline");
     this.indicator.show("transcribing");
 
     const config = this.deps.configManager.load();
@@ -408,28 +411,28 @@ export class ShortcutManager {
 
     try {
       const text = await pipeline.stopAndProcess();
-      console.log("[Vox] Pipeline complete, text:", text.slice(0, 80));
+      slog.info("Pipeline complete, text: %s", text.slice(0, 80));
       const trimmedText = text.trim();
 
       if (!trimmedText || trimmedText.length === 0) {
-        console.log("[Vox] No valid text to paste, showing error indicator");
+        slog.info("No valid text to paste, showing error indicator");
         this.indicator.showError();
         const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
         this.playCue(errorCueType);
       } else {
-        console.log("[Vox] Valid text received, proceeding with paste");
+        slog.info("Valid text received, proceeding with paste");
         await new Promise((r) => setTimeout(r, 200));
         pasteText(trimmedText);
         this.indicator.hide();
       }
     } catch (err: unknown) {
       if (err instanceof CanceledError) {
-        console.log("[Vox] Operation canceled by user");
+        slog.info("Operation canceled by user");
         this.indicator.showCanceled();
         const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
         this.playCue(errorCueType);
       } else {
-        console.error("[Vox] Pipeline failed:", err instanceof Error ? err.message : err);
+        slog.error("Pipeline failed", err);
         this.indicator.showError();
         const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
         this.playCue(errorCueType);
@@ -437,7 +440,7 @@ export class ShortcutManager {
     } finally {
       this.stateMachine.setIdle();
       this.updateTrayState();
-      console.log("[Vox] Ready for next recording");
+      slog.info("Ready for next recording");
     }
   }
 }

@@ -1,5 +1,5 @@
-import { type LlmProvider } from "./provider";
-import { logLlmRequest, logLlmResponse } from "./logging";
+import log from "electron-log/main";
+import { BaseLlmProvider } from "./base-provider";
 import type { CustomTokenSendAs } from "../../shared/config";
 
 export interface CustomProviderConfig {
@@ -16,18 +16,17 @@ interface ChatCompletionResponse {
   choices: { message: { content: string } }[];
 }
 
-export class CustomProvider implements LlmProvider {
+export class CustomProvider extends BaseLlmProvider {
+  protected readonly providerName = "Custom";
   private readonly config: CustomProviderConfig;
 
   constructor(config: CustomProviderConfig) {
+    super(config.customPrompt, config.hasCustomPrompt);
     this.config = config;
   }
 
-  async correct(rawText: string): Promise<string> {
-    const isDev = process.env.NODE_ENV === "development";
-
-    logLlmRequest("CustomProvider", rawText, this.config.customPrompt, this.config.hasCustomPrompt);
-
+  protected async enhance(rawText: string): Promise<string> {
+    const slog = log.scope(this.providerName);
     let url = this.config.endpoint.replace(/\/+$/, "");
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -62,11 +61,11 @@ export class CustomProvider implements LlmProvider {
       }
     }
 
-    if (isDev) {
-      console.log("[CustomProvider] [DEV] URL:", url);
-      console.log("[CustomProvider] [DEV] Send as:", this.config.tokenSendAs);
-      console.log("[CustomProvider] [DEV] Request body:", JSON.stringify(body, null, 2));
-    }
+    slog.debug("Custom request", {
+      url,
+      tokenSendAs: this.config.tokenSendAs,
+      body,
+    });
 
     const response = await fetch(url, {
       method: "POST",
@@ -85,9 +84,7 @@ export class CustomProvider implements LlmProvider {
       throw new Error("LLM returned no text content");
     }
 
-    const correctedText = content.trim();
-    logLlmResponse("CustomProvider", rawText, correctedText);
-
-    return correctedText;
+    return content.trim();
   }
+
 }

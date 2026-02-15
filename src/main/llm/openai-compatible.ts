@@ -1,5 +1,5 @@
-import { type LlmProvider } from "./provider";
-import { logLlmRequest, logLlmResponse } from "./logging";
+import log from "electron-log/main";
+import { BaseLlmProvider } from "./base-provider";
 
 export interface OpenAICompatibleConfig {
   endpoint: string;
@@ -13,18 +13,17 @@ interface ChatCompletionResponse {
   choices: { message: { content: string } }[];
 }
 
-export class OpenAICompatibleProvider implements LlmProvider {
+export class OpenAICompatibleProvider extends BaseLlmProvider {
+  protected readonly providerName = "OpenAICompatible";
   private readonly config: OpenAICompatibleConfig;
 
   constructor(config: OpenAICompatibleConfig) {
+    super(config.customPrompt, config.hasCustomPrompt);
     this.config = config;
   }
 
-  async correct(rawText: string): Promise<string> {
-    const isDev = process.env.NODE_ENV === "development";
-
-    logLlmRequest("OpenAICompatibleProvider", rawText, this.config.customPrompt, this.config.hasCustomPrompt);
-
+  protected async enhance(rawText: string): Promise<string> {
+    const slog = log.scope(this.providerName);
     const base = this.config.endpoint.replace(/\/+$/, "");
     const url = `${base}/v1/chat/completions`;
 
@@ -38,9 +37,7 @@ export class OpenAICompatibleProvider implements LlmProvider {
       max_tokens: 4096,
     };
 
-    if (isDev) {
-      console.log("[OpenAICompatibleProvider] [DEV] Request body:", JSON.stringify(requestBody, null, 2));
-    }
+    slog.debug("Request body", requestBody);
 
     const response = await fetch(url, {
       method: "POST",
@@ -62,9 +59,7 @@ export class OpenAICompatibleProvider implements LlmProvider {
       throw new Error("LLM returned no text content");
     }
 
-    const correctedText = content.trim();
-    logLlmResponse("OpenAICompatibleProvider", rawText, correctedText);
-
-    return correctedText;
+    return content.trim();
   }
+
 }

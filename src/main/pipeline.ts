@@ -4,6 +4,9 @@ import { type RecordingResult } from "./audio/recorder";
 import { type TranscriptionResult } from "./audio/whisper";
 import { existsSync } from "fs";
 import { t } from "../shared/i18n";
+import log from "electron-log/main";
+
+const slog = log.scope("Pipeline");
 
 export type PipelineStage = "transcribing" | "enhancing";
 
@@ -62,7 +65,7 @@ function isGarbageTranscription(text: string): boolean {
 
   // Check against common hallucinations
   if (COMMON_HALLUCINATIONS.includes(normalized)) {
-    console.log(`[Vox] Rejected common Whisper hallucination: "${text}"`);
+    slog.info("Rejected Whisper hallucination", text);
     return true;
   }
 
@@ -119,7 +122,7 @@ export class Pipeline {
   constructor(deps: PipelineDeps) {
     this.deps = deps;
     if (!existsSync(deps.modelPath)) {
-      console.warn("[Pipeline] Model path does not exist:", deps.modelPath);
+      slog.warn("Model path does not exist", deps.modelPath);
     }
   }
 
@@ -128,7 +131,7 @@ export class Pipeline {
     try {
       await this.deps.recorder.cancel();
     } catch (err) {
-      console.error("[Pipeline] Error canceling recorder:", err);
+      slog.error("Error canceling recorder", err);
     }
   }
 
@@ -146,18 +149,17 @@ export class Pipeline {
 
   async stopAndProcess(): Promise<string> {
     const processingStartTime = performance.now();
-    const isDev = process.env.NODE_ENV === "development";
     const recording = await this.deps.recorder.stop();
 
     if (this.canceled) {
       throw new CanceledError();
     }
 
-    console.log("[Vox] ========== Starting Transcription Pipeline ==========");
-    if (isDev) {
-      console.log("[Vox] [DEV] Audio buffer length:", recording.audioBuffer.length);
-      console.log("[Vox] [DEV] Sample rate:", recording.sampleRate);
-    }
+    slog.info("Starting transcription pipeline");
+    slog.debug("Audio details", {
+      bufferLength: recording.audioBuffer.length,
+      sampleRate: recording.sampleRate,
+    });
 
     this.deps.onStage?.("transcribing");
     const transcription = await this.deps.transcribe(
@@ -172,32 +174,28 @@ export class Pipeline {
     }
 
     const rawText = transcription.text.trim();
-    if (isDev) {
-      console.log("[Vox] Whisper transcription:", rawText);
-      console.log("[Vox] [DEV] Raw text length:", rawText.length);
-      console.log("[Vox] [DEV] LLM provider type:", this.deps.llmProvider.constructor.name);
-    } else {
-      console.log("[Vox] Whisper transcription:", `${rawText.slice(0, 40)}...`, `(${rawText.length})`);
-    }
+    slog.info("Whisper transcription", rawText);
+    slog.debug("Transcription details", {
+      rawTextLength: rawText.length,
+      llmProviderType: this.deps.llmProvider.constructor.name,
+    });
 
     // Skip garbage detection when LLM enhancement is disabled (Whisper-only mode)
     if (this.deps.llmProvider instanceof NoopProvider) {
-      const processingTime = (performance.now() - processingStartTime).toFixed(1);
-      console.log(`[Vox] LLM enhancement disabled (${processingTime}ms), returning raw transcription`);
-      console.log("[Vox] ========== Pipeline Complete (Whisper-only) ==========");
+      const processingTimeMs = Number((performance.now() - processingStartTime).toFixed(1));
+      slog.info("LLM enhancement disabled", { processingTimeMs });
       if (!rawText) return "";
       const audioDurationMs = Math.round((recording.audioBuffer.length / recording.sampleRate) * 1000);
       this.deps.onComplete?.({ text: rawText, originalText: rawText, audioDurationMs });
       return rawText;
     }
 
-    console.log("[Vox] LLM enhancement enabled, checking for garbage...");
+    slog.info("Checking for garbage transcription");
     if (!rawText || isGarbageTranscription(rawText)) {
-      console.log("[Vox] Transcription rejected as empty or garbage");
-      console.log("[Vox] ========== Pipeline Complete (Rejected) ==========");
+      slog.info("Transcription rejected as empty or garbage");
       return "";
     }
-    console.log("[Vox] Transcription passed garbage check, sending to LLM...");
+    slog.info("Transcription passed, sending to LLM");
 
     if (this.canceled) {
       throw new CanceledError();
@@ -207,20 +205,16 @@ export class Pipeline {
     try {
       this.deps.onStage?.("enhancing");
       finalText = await this.deps.llmProvider.correct(rawText);
-      if (isDev) {
-        console.log("[Vox] LLM enhanced text:", finalText);
-        console.log("[Vox] [DEV] Enhanced text length:", finalText.length);
-        console.log("[Vox] [DEV] Text changed:", rawText !== finalText);
-        if (rawText !== finalText) {
-          console.log("[Vox] [DEV] Original words:", rawText.split(/\s+/).length);
-          console.log("[Vox] [DEV] Enhanced words:", finalText.split(/\s+/).length);
-        }
-      } else {
-        console.log("[Vox] LLM enhanced text:", `${finalText.slice(0, 40)}...`, `(${finalText.length})`);
-      }
+      slog.debug("LLM enhanced text", {
+        finalText,
+        length: finalText.length,
+        changed: rawText !== finalText,
+        originalWords: rawText.split(/\s+/).length,
+        enhancedWords: finalText.split(/\s+/).length,
+      });
     } catch (err: unknown) {
       // LLM failed — fall back to raw transcription
-      console.log("[Vox] LLM enhancement failed, using raw transcription:", err instanceof Error ? err.message : err);
+      slog.warn("LLM enhancement failed, using raw transcription", err instanceof Error ? err.message : err);
       finalText = rawText;
     }
 
@@ -228,9 +222,8 @@ export class Pipeline {
       throw new CanceledError();
     }
 
-    const totalTime = (performance.now() - processingStartTime).toFixed(1);
-    console.log(`[Vox] Total processing time: ${totalTime}ms`);
-    console.log("[Vox] ========== Pipeline Complete ==========");
+    const totalTimeMs = Number((performance.now() - processingStartTime).toFixed(1));
+    slog.info("Pipeline complete", { totalTimeMs });
 
     const audioDurationMs = Math.round((recording.audioBuffer.length / recording.sampleRate) * 1000);
     this.deps.onComplete?.({ text: finalText, originalText: rawText, audioDurationMs });

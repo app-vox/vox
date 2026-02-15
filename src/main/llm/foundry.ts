@@ -1,5 +1,5 @@
-import { type LlmProvider } from "./provider";
-import { logLlmRequest, logLlmResponse } from "./logging";
+import log from "electron-log/main";
+import { BaseLlmProvider } from "./base-provider";
 
 export interface FoundryConfig {
   endpoint: string;
@@ -13,18 +13,17 @@ interface AnthropicResponse {
   content: { type: string; text: string }[];
 }
 
-export class FoundryProvider implements LlmProvider {
+export class FoundryProvider extends BaseLlmProvider {
+  protected readonly providerName = "Foundry";
   private readonly config: FoundryConfig;
 
   constructor(config: FoundryConfig) {
+    super(config.customPrompt, config.hasCustomPrompt);
     this.config = config;
   }
 
-  async correct(rawText: string): Promise<string> {
-    const isDev = process.env.NODE_ENV === "development";
-
-    logLlmRequest("FoundryProvider", rawText, this.config.customPrompt, this.config.hasCustomPrompt);
-
+  protected async enhance(rawText: string): Promise<string> {
+    const slog = log.scope(this.providerName);
     const base = this.config.endpoint.replace(/\/+$/, "");
     const url = `${base}/v1/messages`;
 
@@ -38,9 +37,7 @@ export class FoundryProvider implements LlmProvider {
       max_tokens: 4096,
     };
 
-    if (isDev) {
-      console.log("[FoundryProvider] [DEV] Request body:", JSON.stringify(requestBody, null, 2));
-    }
+    slog.debug("Request body", requestBody);
 
     const response = await fetch(url, {
       method: "POST",
@@ -63,9 +60,7 @@ export class FoundryProvider implements LlmProvider {
       throw new Error("LLM returned no text content");
     }
 
-    const correctedText = textBlock.text.trim();
-    logLlmResponse("FoundryProvider", rawText, correctedText);
-
-    return correctedText;
+    return textBlock.text.trim();
   }
+
 }
