@@ -51,6 +51,11 @@ export class AnalyticsService {
     this.enabled = options.enabled;
     this.locale = options.locale;
 
+    if (!app.isPackaged) {
+      slog.info("Analytics disabled in development mode");
+      return;
+    }
+
     try {
       this.store = new ElectronStore({ name: "analytics" }) as unknown as TypedStore;
       const existingId = this.store.get("analyticsDeviceId");

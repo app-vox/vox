@@ -40,10 +40,12 @@ vi.mock("posthog-node", () => {
 vi.mock("electron", () => ({
   app: {
     getVersion: vi.fn().mockReturnValue("0.6.1"),
+    isPackaged: true,
   },
 }));
 
 import { AnalyticsService } from "../../../src/main/analytics/service";
+import { app } from "electron";
 import ElectronStore from "electron-store";
 
 describe("AnalyticsService", () => {
@@ -189,6 +191,17 @@ describe("AnalyticsService", () => {
       service.init({ enabled: true, locale: "en" });
       await service.shutdown();
       expect(mockShutdown).toHaveBeenCalled();
+    });
+  });
+
+  describe("dev mode", () => {
+    it("should skip initialization when app is not packaged", () => {
+      Object.defineProperty(app, "isPackaged", { value: false, configurable: true });
+      service.init({ enabled: true, locale: "en" });
+      service.track("test_event");
+      expect(mockCapture).not.toHaveBeenCalled();
+      expect(mockStoreGet).not.toHaveBeenCalled();
+      Object.defineProperty(app, "isPackaged", { value: true, configurable: true });
     });
   });
 
