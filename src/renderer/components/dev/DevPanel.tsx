@@ -23,6 +23,23 @@ interface RuntimeState {
   trayActive: boolean;
 }
 
+interface SystemInfo {
+  electronVersion: string;
+  nodeVersion: string;
+  chromeVersion: string;
+  v8Version: string;
+  platform: string;
+  arch: string;
+  isPackaged: boolean;
+  appVersion: string;
+  appPath: string;
+  userDataPath: string;
+  logsPath: string;
+  logLevelFile: string;
+  logLevelConsole: string;
+  whisperLib: string;
+}
+
 /* ── Helpers ─────────────────────────────────────────────────────── */
 
 function Dot({ color }: { color: "green" | "yellow" | "red" | "gray" }) {
@@ -190,6 +207,7 @@ export function DevPanel() {
   const clearAll = useDevOverrides((s) => s.clearAll);
 
   const permStatus = usePermissionsStore((s) => s.status);
+  const keychainStatus = usePermissionsStore((s) => s.keychainStatus);
   const refreshPerms = usePermissionsStore((s) => s.refresh);
 
   const transcriptionTotal = useTranscriptionsStore((s) => s.total);
@@ -204,6 +222,7 @@ export function DevPanel() {
   const [updateState, setUpdateState] = useState<UpdateState | null>(null);
   const [version, setVersion] = useState("");
   const [systemLocale, setSystemLocale] = useState("");
+  const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
   const [search, setSearch] = useState("");
 
   const fetchRuntime = useCallback(async () => {
@@ -229,6 +248,7 @@ export function DevPanel() {
     void window.voxApi.updates.getState().then(setUpdateState);
     void window.voxApi.updates.getVersion().then(setVersion);
     void window.voxApi.i18n.getSystemLocale().then(setSystemLocale);
+    void window.voxApi.dev.getSystemInfo().then(setSystemInfo).catch(() => {});
     if (!permStatus) void refreshPerms();
     void fetchTranscriptions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -374,6 +394,8 @@ export function DevPanel() {
             </>
           ),
         },
+        { label: "Keychain", render: () => <>{boolDot(keychainStatus?.available)}</> },
+        { label: "Encrypted Secrets", render: () => <>{keychainStatus?.encryptedCount ?? 0}</> },
       ],
     },
     {
@@ -532,9 +554,26 @@ export function DevPanel() {
         { label: "Supported", render: () => <>{SUPPORTED_LANGUAGES.join(", ")}</> },
       ],
     },
+    {
+      title: "System",
+      rows: [
+        { label: "Electron", render: () => <>{systemInfo?.electronVersion ?? "(loading)"}</> },
+        { label: "Node", render: () => <>{systemInfo?.nodeVersion ?? "(loading)"}</> },
+        { label: "Chrome", render: () => <>{systemInfo?.chromeVersion ?? "(loading)"}</> },
+        { label: "Platform", render: () => <>{systemInfo ? `${systemInfo.platform} (${systemInfo.arch})` : "(loading)"}</> },
+        { label: "Packaged", render: () => <>{systemInfo ? boolDot(systemInfo.isPackaged) : <Dot color="gray" />}</> },
+        { label: "Whisper Library", render: () => <>{systemInfo?.whisperLib ?? "(loading)"}</> },
+        { label: "Whisper Model", render: () => <>{selectedModel}</> },
+        { label: "Log Level (file)", render: () => <>{systemInfo?.logLevelFile ?? "(loading)"}</> },
+        { label: "Log Level (console)", render: () => <>{systemInfo?.logLevelConsole ?? "(loading)"}</> },
+        { label: "Logger", render: () => <>electron-log</> },
+        { label: "User Data", render: () => <span className={styles.pathValue}>{systemInfo?.userDataPath ?? "(loading)"}</span> },
+        { label: "Logs Path", render: () => <span className={styles.pathValue}>{systemInfo?.logsPath ?? "(loading)"}</span> },
+      ],
+    },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [config, setupComplete, permStatus, online, runtime, updateState, version,
-      models, systemLocale, ov, overrides, transcriptionTotal, transcriptionSearch,
+  ], [config, setupComplete, permStatus, keychainStatus, online, runtime, updateState, version,
+      models, systemLocale, systemInfo, ov, overrides, transcriptionTotal, transcriptionSearch,
       activeTab, collapsed, llmProvider, llmEnhancement, llmConnectionTested,
       llmConfigHash, currentHash, hashMatch, hasApiKey, modelName, selectedModel,
       downloadedModels]);

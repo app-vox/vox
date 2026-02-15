@@ -176,6 +176,25 @@ app.whenReady().then(async () => {
     };
   });
 
+  ipcMain.handle("dev:get-system-info", () => {
+    return {
+      electronVersion: process.versions.electron,
+      nodeVersion: process.versions.node,
+      chromeVersion: process.versions.chrome,
+      v8Version: process.versions.v8,
+      platform: process.platform,
+      arch: process.arch,
+      isPackaged: app.isPackaged,
+      appVersion: app.getVersion(),
+      appPath: app.getAppPath(),
+      userDataPath: app.getPath("userData"),
+      logsPath: app.getPath("logs"),
+      logLevelFile: String(log.transports.file.level),
+      logLevelConsole: String(log.transports.console.level),
+      whisperLib: "whisper-node (whisper.cpp)",
+    };
+  });
+
   const setupChecker = new SetupChecker(modelManager);
   setupTray({
     onOpenHome: () => openHome(reloadConfig),

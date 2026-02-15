@@ -128,6 +128,22 @@ export interface VoxAPI {
       hasModel: boolean;
       trayActive: boolean;
     }>;
+    getSystemInfo(): Promise<{
+      electronVersion: string;
+      nodeVersion: string;
+      chromeVersion: string;
+      v8Version: string;
+      platform: string;
+      arch: string;
+      isPackaged: boolean;
+      appVersion: string;
+      appPath: string;
+      userDataPath: string;
+      logsPath: string;
+      logLevelFile: string;
+      logLevelConsole: string;
+      whisperLib: string;
+    }>;
   };
 }
 
@@ -220,6 +236,7 @@ const voxApi: VoxAPI = {
   },
   dev: {
     getRuntimeState: () => ipcRenderer.invoke("dev:get-runtime-state"),
+    getSystemInfo: () => ipcRenderer.invoke("dev:get-system-info"),
   },
 };
 
