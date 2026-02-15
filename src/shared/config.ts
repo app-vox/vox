@@ -12,6 +12,9 @@ export type LlmProviderType = "foundry" | "bedrock" | "openai" | "deepseek" | "g
 
 export type CustomTokenSendAs = "header" | "body" | "query";
 
+export type HudPosition = "left" | "center" | "right";
+export type OverlayPosition = "top" | "bottom";
+
 export interface FoundryLlmConfig {
   provider: "foundry";
   endpoint: string;
@@ -93,6 +96,8 @@ export interface VoxConfig {
   errorAudioCue: AudioCueType;
   showHud: boolean;
   hudShowOnHover: boolean;
+  hudPosition: HudPosition;
+  overlayPosition: OverlayPosition;
 }
 
 export function createDefaultConfig(isProduction = false): VoxConfig {
@@ -124,6 +129,8 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     errorAudioCue: "error",
     showHud: false,
     hudShowOnHover: false,
+    hudPosition: "center",
+    overlayPosition: "top",
   };
 }
 

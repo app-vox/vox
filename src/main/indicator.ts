@@ -1,5 +1,6 @@
 import { BrowserWindow, screen } from "electron";
 import { t } from "../shared/i18n";
+import type { OverlayPosition } from "../shared/config";
 
 type IndicatorMode = "initializing" | "listening" | "transcribing" | "enhancing" | "error" | "canceled";
 
@@ -201,6 +202,7 @@ export class IndicatorWindow {
   private contentReady = false;
   private pendingUpdate: object | null = null;
   private currentMode: IndicatorMode | null = null;
+  private overlayPosition: OverlayPosition = "top";
 
   show(mode: IndicatorMode, customLabel?: string): void {
     if (this.hideTimer) {
@@ -257,8 +259,12 @@ export class IndicatorWindow {
 
     const cursorPoint = screen.getCursorScreenPoint();
     const display = screen.getDisplayNearestPoint(cursorPoint);
+    const workArea = display.workArea;
     const x = Math.round(display.bounds.x + display.bounds.width / 2 - WINDOW_WIDTH / 2);
-    this.window.setPosition(x, display.bounds.y + 10);
+    const y = this.overlayPosition === "bottom"
+      ? workArea.y + workArea.height - WINDOW_HEIGHT - 10
+      : display.bounds.y + 10;
+    this.window.setPosition(x, y);
 
     this.window.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(buildStaticHtml())}`);
 
@@ -319,6 +325,10 @@ export class IndicatorWindow {
 
   getMode(): string | null {
     return this.currentMode;
+  }
+
+  setOverlayPosition(position: OverlayPosition): void {
+    this.overlayPosition = position;
   }
 
   private execSetMode(update: object): void {

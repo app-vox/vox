@@ -59,6 +59,8 @@ export class ConfigManager {
         analyticsEnabled: saved.analyticsEnabled ?? defaults.analyticsEnabled,
         showHud: saved.showHud ?? defaults.showHud,
         hudShowOnHover: saved.hudShowOnHover ?? defaults.hudShowOnHover,
+        hudPosition: saved.hudPosition ?? defaults.hudPosition,
+        overlayPosition: saved.overlayPosition ?? defaults.overlayPosition,
       };
 
       return config;

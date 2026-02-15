@@ -227,7 +227,6 @@ export class ShortcutManager {
       this.playCue(errorCueType);
       this.stateMachine.setIdle();
       this.hud.setState("canceled");
-      this.hud.triggerSparkles("down");
       this.updateTrayState();
     }
   }
@@ -245,10 +244,15 @@ export class ShortcutManager {
   updateHud(): void {
     const config = this.deps.configManager.load();
     if (config.showHud) {
-      this.hud.show(config.hudShowOnHover);
+      this.hud.show(config.hudShowOnHover, config.hudPosition);
     } else {
       this.hud.hide();
     }
+    let overlayPos = config.overlayPosition;
+    if (config.showHud && config.hudPosition === "center" && overlayPos === "bottom") {
+      overlayPos = "top";
+    }
+    this.indicator.setOverlayPosition(overlayPos);
   }
 
   getHud(): HudWindow {
@@ -412,7 +416,6 @@ export class ShortcutManager {
     slog.info("Recording requested — showing initializing indicator");
     this.indicator.show("initializing");
     this.hud.setState("listening");
-    this.hud.triggerSparkles("up");
     this.updateTrayState();
 
     pipeline.startRecording().then(() => {
@@ -492,7 +495,6 @@ export class ShortcutManager {
     } finally {
       this.stateMachine.setIdle();
       this.hud.setState(hudEndState);
-      this.hud.triggerSparkles("down");
       this.updateTrayState();
       slog.info("Ready for next recording");
     }

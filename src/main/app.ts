@@ -232,11 +232,10 @@ app.whenReady().then(async () => {
 });
 
 app.on("activate", () => {
-  const hasHomeWindow = BrowserWindow.getAllWindows().some(win =>
-    win.isVisible() && !win.isDestroyed() && win.getTitle() === "Vox"
+  const hasVisibleWindow = BrowserWindow.getAllWindows().some(win =>
+    win.isVisible() && !win.isDestroyed()
   );
-  const hudActive = shortcutManager?.getHud().isVisible() ?? false;
-  if (!hasHomeWindow && !hudActive) {
+  if (!hasVisibleWindow) {
     openHome(reloadConfig);
   }
 });

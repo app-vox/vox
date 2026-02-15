@@ -1,5 +1,6 @@
 import { BrowserWindow, screen } from "electron";
 import { t } from "../shared/i18n";
+import type { HudPosition } from "../shared/config";
 
 const HUD_WIDTH = 80;
 const HUD_HEIGHT = 96;
@@ -14,13 +15,12 @@ function buildHudHtml(): string {
   html, body {
     background: transparent;
     overflow: hidden;
-    width: 100%;
-    height: 100%;
+    width: 80px;
+    height: 96px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 4px;
+    justify-content: flex-end;
   }
   .hud {
     width: 36px;
@@ -47,17 +47,17 @@ function buildHudHtml(): string {
     transform: scale(0.95);
   }
   .hud.listening {
-    background: rgba(239, 68, 68, 0.9);
-    border-color: rgba(239, 68, 68, 0.5);
-    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+    background: rgba(255, 68, 68, 0.9);
+    border-color: rgba(255, 68, 68, 0.5);
+    box-shadow: 0 4px 20px rgba(255, 68, 68, 0.4);
   }
   .hud.listening:hover {
-    box-shadow: 0 4px 24px rgba(239, 68, 68, 0.5);
+    box-shadow: 0 4px 24px rgba(255, 68, 68, 0.5);
   }
   .hud.processing {
-    background: rgba(245, 158, 11, 0.9);
-    border-color: rgba(245, 158, 11, 0.5);
-    box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
+    background: rgba(255, 170, 0, 0.9);
+    border-color: rgba(255, 170, 0, 0.5);
+    box-shadow: 0 4px 20px rgba(255, 170, 0, 0.3);
     cursor: default;
     pointer-events: none;
   }
@@ -69,9 +69,9 @@ function buildHudHtml(): string {
     pointer-events: none;
   }
   .hud.error, .hud.canceled {
-    background: rgba(239, 68, 68, 0.9);
-    border-color: rgba(239, 68, 68, 0.5);
-    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+    background: rgba(251, 191, 36, 0.9);
+    border-color: rgba(251, 191, 36, 0.5);
+    box-shadow: 0 4px 20px rgba(251, 191, 36, 0.4);
     cursor: default;
     pointer-events: none;
   }
@@ -127,37 +127,20 @@ function buildHudHtml(): string {
     transition: background 0.15s ease;
     flex-shrink: 0;
   }
-  .cancel-btn:hover { background: #ef4444; border-color: rgba(239, 68, 68, 0.5); }
+  .cancel-btn:hover { background: #ff4444; border-color: rgba(239, 68, 68, 0.5); }
   .cancel-btn svg { width: 8px; height: 8px; }
   .cancel-btn.visible { display: flex; }
-
-  .sparkle-container {
-    position: fixed;
-    left: 0; top: 0; right: 0; bottom: 0;
-    pointer-events: none;
-    overflow: visible;
-    z-index: 999;
-  }
-  .sparkle {
-    position: absolute;
-    pointer-events: none;
-    opacity: 0;
-  }
-  @keyframes sparkle-rise {
-    0%   { opacity: 0; transform: translateY(0) scale(0.3) rotate(0deg); }
-    15%  { opacity: 1; transform: translateY(-40px) scale(1) rotate(45deg); }
-    80%  { opacity: 0.8; transform: translateY(-280px) scale(0.7) rotate(135deg); }
-    100% { opacity: 0; transform: translateY(-350px) scale(0.2) rotate(180deg); }
-  }
-  @keyframes sparkle-fall {
-    0%   { opacity: 0; transform: translateY(-350px) scale(0.2) rotate(180deg); }
-    15%  { opacity: 1; transform: translateY(-280px) scale(0.7) rotate(135deg); }
-    80%  { opacity: 0.8; transform: translateY(-40px) scale(1) rotate(45deg); }
-    100% { opacity: 0; transform: translateY(0) scale(0.3) rotate(0deg); }
+  .scale-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    transform-origin: center bottom;
+    transition: transform 0.1s ease, opacity 0.1s ease;
   }
 </style></head>
 <body>
-<div class="sparkle-container" id="sparkles"></div>
+<div class="scale-wrapper" id="scale-wrapper">
 <div class="hud" id="hud" role="button" tabindex="0">
   <div class="icon" id="play-icon"><div class="play-icon"></div></div>
   <div class="icon hidden" id="dot-icon"><div class="idle-dot"></div></div>
@@ -169,6 +152,7 @@ function buildHudHtml(): string {
   <svg viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M8 2L2 8M2 2L8 8" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
   </svg>
+</div>
 </div>
 <script>
 var state = 'idle';
@@ -201,6 +185,12 @@ function updateIdleIcon() {
   }
 }
 
+function setScale(factor) {
+  var wrapper = document.getElementById('scale-wrapper');
+  wrapper.style.transform = 'scale(' + factor + ')';
+  wrapper.style.opacity = factor < 0.5 ? 0.3 + (factor - 0.25) * (0.7 / 0.25) : 1;
+}
+
 function setState(newState, titles) {
   state = newState;
   var hud = document.getElementById('hud');
@@ -227,24 +217,6 @@ function setState(newState, titles) {
   }
 }
 
-function spawnSparkles(direction) {
-  var container = document.getElementById('sparkles');
-  var count = 5;
-  var animName = direction === 'up' ? 'sparkle-rise' : 'sparkle-fall';
-  for (var i = 0; i < count; i++) {
-    var el = document.createElement('div');
-    el.className = 'sparkle';
-    var xOffset = (Math.random() - 0.5) * 30;
-    var delay = i * 80 + Math.random() * 60;
-    var hue = 240 + Math.random() * 60;
-    el.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 0L7.4 4.6L12 6L7.4 7.4L6 12L4.6 7.4L0 6L4.6 4.6Z" fill="hsl(' + hue + ',70%,70%)" opacity="0.9"/></svg>';
-    el.style.left = 'calc(50% + ' + xOffset + 'px)';
-    el.style.bottom = '50px';
-    el.style.animation = animName + ' 0.7s ease-out ' + delay + 'ms forwards';
-    container.appendChild(el);
-    setTimeout(function(e) { e.remove(); }, 900 + delay, el);
-  }
-}
 </script>
 </body></html>`;
 }
@@ -255,14 +227,17 @@ export class HudWindow {
   private pendingUpdate: { state: HudState } | null = null;
   private currentState: HudState = "idle";
   private showOnHover = false;
+  private position: HudPosition = "center";
   private hoverTimer: ReturnType<typeof setInterval> | null = null;
   private flashTimer: ReturnType<typeof setTimeout> | null = null;
 
-  show(showOnHover: boolean): void {
+  show(showOnHover: boolean, position: HudPosition = "center"): void {
     this.showOnHover = showOnHover;
+    this.position = position;
 
     if (this.window && !this.window.isDestroyed()) {
       this.execSetHoverMode(showOnHover);
+      this.positionWindow();
       if (!showOnHover) {
         this.stopHoverTracking();
         this.window.showInactive();
@@ -357,29 +332,14 @@ export class HudWindow {
       this.pendingUpdate = { state };
     }
 
-    if (this.showOnHover && (state === "listening" || state === "processing" || state === "enhancing")) {
+    if (this.showOnHover && state !== "idle") {
       this.window.showInactive();
+      this.execSetScale(1.0);
     }
-  }
-
-  triggerSparkles(direction: "up" | "down"): void {
-    if (!this.window || this.window.isDestroyed() || !this.contentReady) return;
-    this.window.webContents.executeJavaScript(
-      `spawnSparkles("${direction}")`
-    ).catch(() => {});
   }
 
   isVisible(): boolean {
     return this.window !== null && !this.window.isDestroyed();
-  }
-
-  setHoverVisible(visible: boolean): void {
-    if (!this.showOnHover || !this.window || this.window.isDestroyed()) return;
-    if (visible) {
-      this.window.showInactive();
-    } else if (this.currentState === "idle") {
-      this.window.hide();
-    }
   }
 
   private positionWindow(): void {
@@ -387,7 +347,14 @@ export class HudWindow {
     const cursorPoint = screen.getCursorScreenPoint();
     const display = screen.getDisplayNearestPoint(cursorPoint);
     const workArea = display.workArea;
-    const x = Math.round(workArea.x + workArea.width / 2 - HUD_WIDTH / 2);
+    let x: number;
+    if (this.position === "left") {
+      x = workArea.x + DOCK_MARGIN;
+    } else if (this.position === "right") {
+      x = workArea.x + workArea.width - HUD_WIDTH - DOCK_MARGIN;
+    } else {
+      x = Math.round(workArea.x + workArea.width / 2 - HUD_WIDTH / 2);
+    }
     const y = workArea.y + workArea.height - HUD_HEIGHT - DOCK_MARGIN;
     this.window.setPosition(x, y);
   }
@@ -434,17 +401,39 @@ export class HudWindow {
     }
   }
 
+  private execSetScale(factor: number): void {
+    if (!this.window || this.window.isDestroyed() || !this.contentReady) return;
+    this.window.webContents.executeJavaScript(
+      `setScale(${factor})`
+    ).catch(() => {});
+  }
+
   private startHoverTracking(): void {
     this.stopHoverTracking();
+    if (!this.window || this.window.isDestroyed()) return;
+    this.window.showInactive();
+    this.execSetScale(0.25);
     this.hoverTimer = setInterval(() => {
       if (!this.window || this.window.isDestroyed()) return;
+      if (this.currentState !== "idle") {
+        this.execSetScale(1.0);
+        return;
+      }
       const cursor = screen.getCursorScreenPoint();
       const display = screen.getDisplayNearestPoint(cursor);
       const workArea = display.workArea;
       const bottomEdge = workArea.y + workArea.height;
-      const isNearBottom = cursor.y >= bottomEdge - 80;
-      this.setHoverVisible(isNearBottom);
-    }, 200);
+      const distFromBottom = bottomEdge - cursor.y;
+      let scale: number;
+      if (distFromBottom > 80) {
+        scale = 0.25;
+      } else if (distFromBottom < 20) {
+        scale = 1.0;
+      } else {
+        scale = 0.25 + (80 - distFromBottom) / 60 * 0.75;
+      }
+      this.execSetScale(scale);
+    }, 50);
   }
 
   private stopHoverTracking(): void {
