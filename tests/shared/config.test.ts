@@ -47,6 +47,11 @@ describe("VoxConfig", () => {
     const config = createDefaultConfig();
     expect(config.llmConfigHash).toBe("");
   });
+
+  it("should include analyticsEnabled defaulting to true", () => {
+    const config = createDefaultConfig();
+    expect(config.analyticsEnabled).toBe(true);
+  });
 });
 
 describe("createDefaultLlmFlat", () => {
