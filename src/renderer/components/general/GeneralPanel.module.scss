@@ -249,6 +249,19 @@
   }
 }
 
+.sectionDivider {
+  height: 1px;
+  background: var(--color-border);
+  margin: var(--spacing-4) 0;
+}
+
+.sectionSubheading {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-1);
+}
+
 .selectFieldRow {
   display: flex;
   flex-direction: column;

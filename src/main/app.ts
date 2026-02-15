@@ -251,6 +251,13 @@ app.on("will-quit", () => {
 
 app.on("window-all-closed", () => {});
 
+let quitting = false;
 for (const sig of ["SIGINT", "SIGTERM", "SIGHUP"] as const) {
-  process.on(sig, () => app.quit());
+  process.on(sig, () => {
+    if (quitting) process.exit(0);
+    quitting = true;
+    shortcutManager?.stop();
+    app.quit();
+    setTimeout(() => process.exit(0), 2000).unref();
+  });
 }

@@ -13,7 +13,7 @@ import card from "../shared/card.module.scss";
 import buttons from "../shared/buttons.module.scss";
 import styles from "./GeneralPanel.module.scss";
 
-const HUD_COLLAPSED_KEY = "vox:hud-collapsed";
+const DISPLAY_COLLAPSED_KEY = "vox:display-collapsed";
 
 const THEME_ICONS: { value: ThemeMode; icon: ReactNode }[] = [
   { value: "light", icon: <SunIcon width={16} height={16} /> },
@@ -116,7 +116,7 @@ export function GeneralPanel() {
     { value: "bottom", label: t("general.overlay.bottom") },
   ];
 
-  const [hudCollapsed, setHudCollapsed] = useState(() => localStorage.getItem(HUD_COLLAPSED_KEY) === "true");
+  const [displayCollapsed, setDisplayCollapsed] = useState(() => localStorage.getItem(DISPLAY_COLLAPSED_KEY) !== "false");
 
   const isDevMode = import.meta.env.DEV;
 
@@ -197,13 +197,13 @@ export function GeneralPanel() {
         <button
           className={styles.collapsibleHeader}
           onClick={() => {
-            setHudCollapsed((prev) => {
+            setDisplayCollapsed((prev) => {
               const next = !prev;
-              localStorage.setItem(HUD_COLLAPSED_KEY, String(next));
+              localStorage.setItem(DISPLAY_COLLAPSED_KEY, String(next));
               return next;
             });
           }}
-          aria-expanded={!hudCollapsed}
+          aria-expanded={!displayCollapsed}
         >
           <div>
             <h2>{t("general.hud.title")}</h2>
@@ -212,10 +212,10 @@ export function GeneralPanel() {
           <ChevronDownIcon
             width={16}
             height={16}
-            className={`${styles.collapseChevron} ${hudCollapsed ? styles.collapsed : ""}`}
+            className={`${styles.collapseChevron} ${displayCollapsed ? styles.collapsed : ""}`}
           />
         </button>
-        {!hudCollapsed && (
+        {!displayCollapsed && (
           <div className={card.body}>
             <label className={styles.checkboxRow}>
               <input
@@ -266,53 +266,49 @@ export function GeneralPanel() {
                 }}
               />
             </div>
-          </div>
-        )}
-      </div>
 
-      <div className={card.card}>
-        <div className={card.header}>
-          <h2>{t("general.overlay.title")}</h2>
-          <p className={card.description}>{t("general.overlay.description")}</p>
-        </div>
-        <div className={card.body}>
-          <div className={styles.fieldRow}>
-            <label>{t("general.overlay.position")}</label>
-            <div className={styles.selectDesc}>{t("general.overlay.positionDesc")}</div>
-            <CustomSelect
-              value={config.overlayPosition}
-              items={overlayPositionItems}
-              onChange={(val) => {
-                updateConfig({ overlayPosition: val as OverlayPosition });
-                saveConfig(false).then(() => triggerToast());
-              }}
-            />
-          </div>
-          {showAutoInvertDisclaimer && (
-            <div className={styles.disclaimer}>{t("general.overlay.autoInvertDisclaimer")}</div>
-          )}
+            <div className={styles.sectionDivider} />
 
-          <div className={styles.previewRow}>
-            <div>
-              <div className={styles.previewScreen}>
-                <div className={`${styles.previewOverlay} ${config.overlayPosition === "bottom" ? styles.previewOverlayBottom : styles.previewOverlayTop}`} />
-              </div>
-              <div className={styles.previewLabel}>{t("general.overlay.title")}</div>
+            <div className={styles.sectionSubheading}>{t("general.overlay.title")}</div>
+            <div className={styles.selectDesc}>{t("general.overlay.description")}</div>
+
+            <div className={styles.fieldRow} style={{ marginTop: "var(--spacing-3)" }}>
+              <label>{t("general.overlay.position")}</label>
+              <div className={styles.selectDesc}>{t("general.overlay.positionDesc")}</div>
+              <CustomSelect
+                value={config.overlayPosition}
+                items={overlayPositionItems}
+                onChange={(val) => {
+                  updateConfig({ overlayPosition: val as OverlayPosition });
+                  saveConfig(false).then(() => triggerToast());
+                }}
+              />
             </div>
-            {config.showHud && (
+            {showAutoInvertDisclaimer && (
+              <div className={styles.disclaimer}>{t("general.overlay.autoInvertDisclaimer")}</div>
+            )}
+
+            <div className={styles.previewRow}>
               <div>
                 <div className={styles.previewScreen}>
-                  <div className={`${styles.previewHud} ${
-                    config.hudPosition === "left" ? styles.previewHudLeft
-                    : config.hudPosition === "right" ? styles.previewHudRight
-                    : styles.previewHudCenter
+                  <div className={`${styles.previewOverlay} ${
+                    showAutoInvertDisclaimer
+                      ? styles.previewOverlayTop
+                      : config.overlayPosition === "bottom" ? styles.previewOverlayBottom : styles.previewOverlayTop
                   }`} />
+                  {config.showHud && (
+                    <div className={`${styles.previewHud} ${
+                      config.hudPosition === "left" ? styles.previewHudLeft
+                      : config.hudPosition === "right" ? styles.previewHudRight
+                      : styles.previewHudCenter
+                    }`} />
+                  )}
                 </div>
-                <div className={styles.previewLabel}>{t("general.hud.title")}</div>
+                <div className={styles.previewLabel}>{t("general.overlay.title")}{config.showHud ? ` + ${t("general.hud.title")}` : ""}</div>
               </div>
-            )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className={card.card}>
