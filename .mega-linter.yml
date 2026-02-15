@@ -21,7 +21,8 @@ DISABLE:
 REPOSITORY_CHECKOV_ARGUMENTS: --skip-check CKV_GHA_7
 
 # kingfisher: exclude .git dir and workflow files (secret references trigger false positives)
-REPOSITORY_KINGFISHER_ARGUMENTS: --exclude .git --exclude .github/workflows
+# baseline: PostHog project API key allowlisted (public, write-only token)
+REPOSITORY_KINGFISHER_ARGUMENTS: --exclude .git --exclude .github/workflows --baseline-file .kingfisher-baseline.yml
 
 # Excluded paths
 EXCLUDED_DIRECTORIES:
