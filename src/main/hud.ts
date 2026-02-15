@@ -5,6 +5,7 @@ import type { HudPosition } from "../shared/config";
 const HUD_WIDTH = 80;
 const HUD_HEIGHT = 96;
 const DOCK_MARGIN = 24;
+const MIN_SCALE = 0.55;
 
 type HudState = "idle" | "listening" | "processing" | "enhancing" | "error" | "canceled";
 
@@ -79,12 +80,9 @@ function buildHudHtml(): string {
   .icon { display: flex; align-items: center; justify-content: center; }
   .hidden { display: none !important; }
 
-  .play-icon {
-    width: 0; height: 0;
-    border-style: solid;
-    border-width: 6px 0 6px 11px;
-    border-color: transparent transparent transparent rgba(255, 255, 255, 0.9);
-    margin-left: 2px;
+  .mic-icon svg {
+    width: 14px;
+    height: 14px;
   }
 
   .idle-dot {
@@ -134,7 +132,7 @@ function buildHudHtml(): string {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 7px;
+    gap: 10px;
     transform-origin: center center;
     transition: transform 0.1s ease, opacity 0.1s ease;
   }
@@ -142,7 +140,7 @@ function buildHudHtml(): string {
 <body>
 <div class="scale-wrapper" id="scale-wrapper">
 <div class="hud" id="hud" role="button" tabindex="0">
-  <div class="icon" id="play-icon"><div class="play-icon"></div></div>
+  <div class="icon mic-icon" id="play-icon"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></div>
   <div class="icon hidden" id="dot-icon"><div class="idle-dot"></div></div>
   <div class="icon hidden" id="stop-icon"><div class="stop-icon"></div></div>
   <div class="icon hidden" id="proc-icon"><div class="proc-icon"></div></div>
@@ -188,7 +186,7 @@ function updateIdleIcon() {
 function setScale(factor) {
   var wrapper = document.getElementById('scale-wrapper');
   wrapper.style.transform = 'scale(' + factor + ')';
-  wrapper.style.opacity = factor < 0.5 ? 0.3 + (factor - 0.25) * (0.7 / 0.25) : 1;
+  wrapper.style.opacity = factor < 0.7 ? 0.4 + (factor - 0.55) / 0.15 * 0.6 : 1;
 }
 
 function setState(newState, titles) {
@@ -412,7 +410,7 @@ export class HudWindow {
     this.stopHoverTracking();
     if (!this.window || this.window.isDestroyed()) return;
     this.window.showInactive();
-    this.execSetScale(0.25);
+    this.execSetScale(MIN_SCALE);
     this.hoverTimer = setInterval(() => {
       if (!this.window || this.window.isDestroyed()) return;
       if (this.currentState !== "idle") {
@@ -420,17 +418,17 @@ export class HudWindow {
         return;
       }
       const cursor = screen.getCursorScreenPoint();
-      const display = screen.getDisplayNearestPoint(cursor);
-      const workArea = display.workArea;
-      const bottomEdge = workArea.y + workArea.height;
-      const distFromBottom = bottomEdge - cursor.y;
+      const [wx, wy] = this.window!.getPosition();
+      const hudCenterX = wx + HUD_WIDTH / 2;
+      const hudCenterY = wy + HUD_HEIGHT / 2;
+      const dist = Math.hypot(cursor.x - hudCenterX, cursor.y - hudCenterY);
       let scale: number;
-      if (distFromBottom > 80) {
-        scale = 0.25;
-      } else if (distFromBottom < 20) {
+      if (dist < 30) {
         scale = 1.0;
+      } else if (dist > 150) {
+        scale = MIN_SCALE;
       } else {
-        scale = 0.25 + (80 - distFromBottom) / 60 * 0.75;
+        scale = 1.0 - (dist - 30) / 120 * (1.0 - MIN_SCALE);
       }
       this.execSetScale(scale);
     }, 50);

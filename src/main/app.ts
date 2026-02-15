@@ -228,6 +228,7 @@ app.whenReady().then(async () => {
 
   initAutoUpdater(() => updateTrayMenu());
 
+  shortcutManager.updateHud();
   openHome(reloadConfig);
 });
 
@@ -246,6 +247,9 @@ app.on("will-quit", () => {
   });
   analytics.shutdown();
   shortcutManager?.stop();
+  for (const win of BrowserWindow.getAllWindows()) {
+    if (!win.isDestroyed()) win.destroy();
+  }
 });
 
 app.on("window-all-closed", () => {});
