@@ -1,6 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useT } from "../../i18n-context";
 import log from "../../logger";
+
+const slog = log.scope("ShortcutRecorder");
+
 import styles from "./ShortcutRecorder.module.scss";
 import form from "../shared/forms.module.scss";
 
@@ -76,7 +79,7 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange }: S
       e.preventDefault();
       e.stopPropagation();
 
-      log.debug("Key pressed", {
+      slog.debug("Key pressed", {
         key: e.key, code: e.code, keyCode: e.keyCode, location: e.location,
         repeat: e.repeat, metaKey: e.metaKey, ctrlKey: e.ctrlKey,
         altKey: e.altKey, shiftKey: e.shiftKey,
@@ -100,17 +103,17 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange }: S
 
       if (isFnDirect) {
         modifiers.push("Fn");
-        log.debug("Fn key detected directly");
+        slog.debug("Fn key detected directly");
       }
 
       if (isFnBasedKey || isMediaKey) {
-        log.debug("Fn-based key detected");
+        slog.debug("Fn-based key detected");
       }
 
       if (isFnDirect) {
         setPreviewParts(modifiers);
         if (modifiers.length === 1 && modifiers[0] === "Fn") {
-          log.debug("Fn key alone pressed, waiting for main key");
+          slog.debug("Fn key alone pressed, waiting for main key");
         }
         return;
       }
@@ -127,11 +130,11 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange }: S
       }
 
       if (!mainKey) {
-        log.debug("Unknown key", { code: e.code, key: e.key });
+        slog.debug("Unknown key", { code: e.code, key: e.key });
         return;
       }
 
-      log.debug("Main key detected", mainKey);
+      slog.debug("Main key detected", mainKey);
 
       const accelerator = modifiers.length > 0
         ? [...modifiers, mainKey].join("+")

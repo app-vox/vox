@@ -50,6 +50,7 @@ export class BedrockProvider extends BaseLlmProvider {
   }
 
   protected async enhance(rawText: string): Promise<string> {
+    const slog = log.scope(this.providerName);
     const command = new ConverseCommand({
       modelId: this.modelId,
       system: [{ text: this.customPromptText }],
@@ -65,7 +66,7 @@ export class BedrockProvider extends BaseLlmProvider {
       },
     });
 
-    log.scope(this.providerName).debug("Bedrock request", {
+    slog.debug("Bedrock request", {
       modelId: this.modelId,
       temperature: 0.1,
     });

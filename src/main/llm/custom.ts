@@ -26,6 +26,7 @@ export class CustomProvider extends BaseLlmProvider {
   }
 
   protected async enhance(rawText: string): Promise<string> {
+    const slog = log.scope(this.providerName);
     let url = this.config.endpoint.replace(/\/+$/, "");
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -60,7 +61,7 @@ export class CustomProvider extends BaseLlmProvider {
       }
     }
 
-    log.scope(this.providerName).debug("Custom request", {
+    slog.debug("Custom request", {
       url,
       tokenSendAs: this.config.tokenSendAs,
       body,

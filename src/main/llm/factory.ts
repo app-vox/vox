@@ -10,7 +10,7 @@ import { AnthropicProvider } from "./anthropic";
 import { CustomProvider } from "./custom";
 import { NoopProvider } from "./noop";
 
-const factoryLog = log.scope("LlmFactory");
+const slog = log.scope("LlmFactory");
 
 interface CreateLlmProviderOptions {
   forTest?: boolean;
@@ -19,14 +19,14 @@ interface CreateLlmProviderOptions {
 export function createLlmProvider(config: VoxConfig, options?: CreateLlmProviderOptions): LlmProvider {
   // If LLM enhancement is disabled, return no-op provider
   if (!config.enableLlmEnhancement) {
-    factoryLog.info("LLM enhancement disabled, using NoopProvider");
+    slog.info("LLM enhancement disabled, using NoopProvider");
     return new NoopProvider();
   }
 
   // If not tested or config changed since last test, block unless running a test
   if (!options?.forTest) {
     if (!config.llmConnectionTested || computeLlmConfigHash(config) !== config.llmConfigHash) {
-      factoryLog.info("LLM connection not tested or config changed, using NoopProvider");
+      slog.info("LLM connection not tested or config changed, using NoopProvider");
       return new NoopProvider();
     }
   }
@@ -36,10 +36,10 @@ export function createLlmProvider(config: VoxConfig, options?: CreateLlmProvider
   const hasCustomPrompt = !!customPrompt;
   const prompt = buildSystemPrompt(customPrompt || "", config.dictionary ?? []);
 
-  factoryLog.info("Creating provider: %s", config.llm.provider);
-  factoryLog.info("Custom prompt: %s", hasCustomPrompt ? "YES" : "NO");
-  factoryLog.debug("Custom prompt content", customPrompt);
-  factoryLog.debug("Full system prompt length: %d", prompt.length);
+  slog.info("Creating provider: %s", config.llm.provider);
+  slog.info("Custom prompt: %s", hasCustomPrompt ? "YES" : "NO");
+  slog.debug("Custom prompt content", customPrompt);
+  slog.debug("Full system prompt length: %d", prompt.length);
 
   // Otherwise route to configured provider
   switch (config.llm.provider) {

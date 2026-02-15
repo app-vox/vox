@@ -2,6 +2,8 @@ import { app, BrowserWindow, Menu, nativeTheme, screen } from "electron";
 import * as path from "path";
 import log from "electron-log/main";
 
+const slog = log.scope("Vox");
+
 function setAppMenu(): void {
   const template: Electron.MenuItemConstructorOptions[] = [
     { role: "appMenu" },
@@ -78,7 +80,7 @@ export function openHome(onClosed: () => void, initialTab?: string): void {
     homeWindow.webContents.on("before-input-event", (event, input) => {
       if ((input.meta || input.control) && input.key.toLowerCase() === "r") {
         event.preventDefault();
-        log.scope("Vox").debug("Reload blocked in production mode");
+        slog.debug("Reload blocked in production mode");
       }
     });
   }

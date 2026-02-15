@@ -5,9 +5,9 @@ export abstract class BaseLlmProvider implements LlmProvider {
   protected abstract readonly providerName: string;
 
   async correct(rawText: string): Promise<string> {
-    const scopedLog = log.scope(this.providerName);
-    scopedLog.info("Enhancing text", { hasCustomPrompt: this.hasCustomPrompt() });
-    scopedLog.debug("Request details", {
+    const slog = log.scope(this.providerName);
+    slog.info("Enhancing text", { hasCustomPrompt: this.hasCustomPrompt() });
+    slog.debug("Request details", {
       rawTextLength: rawText.length,
       rawText,
       systemPrompt: this.getCustomPrompt(),
@@ -15,8 +15,8 @@ export abstract class BaseLlmProvider implements LlmProvider {
 
     const correctedText = await this.enhance(rawText);
 
-    scopedLog.info("Enhanced text", { correctedText });
-    scopedLog.debug("Response stats", {
+    slog.info("Enhanced text", { correctedText });
+    slog.debug("Response stats", {
       length: correctedText.length,
       charDiff: correctedText.length - rawText.length,
     });

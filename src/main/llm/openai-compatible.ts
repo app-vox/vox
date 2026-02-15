@@ -23,6 +23,7 @@ export class OpenAICompatibleProvider extends BaseLlmProvider {
   }
 
   protected async enhance(rawText: string): Promise<string> {
+    const slog = log.scope(this.providerName);
     const base = this.config.endpoint.replace(/\/+$/, "");
     const url = `${base}/v1/chat/completions`;
 
@@ -36,7 +37,7 @@ export class OpenAICompatibleProvider extends BaseLlmProvider {
       max_tokens: 4096,
     };
 
-    log.scope(this.providerName).debug("Request body", requestBody);
+    slog.debug("Request body", requestBody);
 
     const response = await fetch(url, {
       method: "POST",

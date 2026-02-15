@@ -23,6 +23,7 @@ import { t, setLanguage, resolveSystemLanguage } from "../shared/i18n";
 import log from "./logger";
 
 log.initialize();
+const slog = log.scope("Vox");
 
 const configDir = path.join(app.getPath("userData"));
 const modelsDir = path.join(configDir, "models");
@@ -77,7 +78,7 @@ function setupPipeline(): void {
           win.webContents.send("history:entry-added");
         }
       } catch (err) {
-        log.scope("Vox").error("Failed to save transcription to history", err);
+        slog.error("Failed to save transcription to history", err);
       }
     },
   });
@@ -153,9 +154,9 @@ app.whenReady().then(async () => {
 
     if (response.response === 0) {
       shell.openExternal("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility");
-      log.scope("Vox").info("Opening Accessibility settings");
+      slog.info("Opening Accessibility settings");
     } else {
-      log.scope("Vox").info("User chose to continue without Accessibility permission");
+      slog.info("User chose to continue without Accessibility permission");
     }
   }
 
