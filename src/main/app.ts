@@ -90,6 +90,7 @@ function reloadConfig(): void {
 
   setupPipeline();
   shortcutManager?.registerShortcutKeys();
+  shortcutManager?.updateHud();
   updateTrayConfig(config);
   analytics.setEnabled(config.analyticsEnabled);
 
