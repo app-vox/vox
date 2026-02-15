@@ -17,9 +17,10 @@ import { registerIpcHandlers } from "./ipc";
 import { isAccessibilityGranted } from "./input/paster";
 import { SetupChecker } from "./setup/checker";
 import { HistoryManager } from "./history/manager";
-import { type VoxConfig, type AudioCueType } from "../shared/config";
+import { type AudioCueType } from "../shared/config";
 import { generateCueSamples, isWavCue, getWavFilename, parseWavSamples } from "../shared/audio-cue";
 import { t, setLanguage, resolveSystemLanguage } from "../shared/i18n";
+import { getLlmModelName } from "../shared/llm-utils";
 import log from "./logger";
 
 log.initialize();
@@ -33,17 +34,6 @@ const historyManager = new HistoryManager();
 
 let pipeline: Pipeline | null = null;
 let shortcutManager: ShortcutManager | null = null;
-
-function getLlmModelName(config: VoxConfig): string {
-  switch (config.llm.provider) {
-    case "bedrock": return config.llm.modelId;
-    case "openai":
-    case "deepseek":
-    case "litellm": return config.llm.openaiModel;
-    case "foundry":
-    default: return config.llm.model;
-  }
-}
 
 function setupPipeline(): void {
   const config = configManager.load();
@@ -72,7 +62,7 @@ function setupPipeline(): void {
           whisperModel: config.whisper.model || "unknown",
           llmEnhanced: config.enableLlmEnhancement,
           llmProvider: config.enableLlmEnhancement ? config.llm.provider : undefined,
-          llmModel: config.enableLlmEnhancement ? getLlmModelName(config) : undefined,
+          llmModel: config.enableLlmEnhancement ? getLlmModelName(config.llm) : undefined,
         });
         for (const win of BrowserWindow.getAllWindows()) {
           win.webContents.send("history:entry-added");

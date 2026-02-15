@@ -16,9 +16,11 @@ export function CustomProviderFields() {
   const [focusedField, setFocusedField] = useState<{ field: string; value: string } | null>(null);
 
   if (!config) return null;
+  const { llm } = config;
+  if (llm.provider !== "custom") return null;
 
   const update = (field: string, value: string) => {
-    updateConfig({ llm: { ...config.llm, [field]: value } });
+    updateConfig({ llm: { ...llm, [field]: value } as typeof llm });
     debouncedSave();
   };
 
@@ -40,7 +42,7 @@ export function CustomProviderFields() {
         <input
           id="llm-custom-endpoint"
           type="url"
-          value={config.llm.customEndpoint || ""}
+          value={llm.customEndpoint || ""}
           onChange={(e) => update("customEndpoint", e.target.value)}
           onFocus={(e) => handleFocus("customEndpoint", e.target.value)}
           onBlur={(e) => handleBlur("customEndpoint", e.target.value)}
@@ -52,10 +54,10 @@ export function CustomProviderFields() {
         <label htmlFor="llm-custom-token">{t("llm.custom.token")}</label>
         <SecretInput
           id="llm-custom-token"
-          value={config.llm.customToken || ""}
+          value={llm.customToken || ""}
           onChange={(v) => update("customToken", v)}
-          onFocus={() => handleFocus("customToken", config.llm.customToken || "")}
-          onBlur={() => handleBlur("customToken", config.llm.customToken || "")}
+          onFocus={() => handleFocus("customToken", llm.customToken || "")}
+          onBlur={() => handleBlur("customToken", llm.customToken || "")}
           placeholder={t("llm.custom.tokenPlaceholder")}
         />
       </div>
@@ -65,7 +67,7 @@ export function CustomProviderFields() {
           <input
             id="llm-custom-token-attr"
             type="text"
-            value={config.llm.customTokenAttr || ""}
+            value={llm.customTokenAttr || ""}
             onChange={(e) => update("customTokenAttr", e.target.value)}
             onFocus={(e) => handleFocus("customTokenAttr", e.target.value)}
             onBlur={(e) => handleBlur("customTokenAttr", e.target.value)}
@@ -76,14 +78,14 @@ export function CustomProviderFields() {
           <label htmlFor="llm-custom-send-as">{t("llm.custom.sendAs")}</label>
           <CustomSelect
             id="llm-custom-send-as"
-            value={config.llm.customTokenSendAs || "header"}
+            value={llm.customTokenSendAs || "header"}
             items={[
               { value: "header", label: t("llm.custom.sendAsHeader") },
               { value: "body", label: t("llm.custom.sendAsBody") },
               { value: "query", label: t("llm.custom.sendAsQuery") },
             ]}
             onChange={(value) => {
-              updateConfig({ llm: { ...config.llm, customTokenSendAs: value as CustomTokenSendAs } });
+              updateConfig({ llm: { ...llm, customTokenSendAs: value as CustomTokenSendAs } as typeof llm });
               saveConfig(true);
             }}
           />
@@ -94,7 +96,7 @@ export function CustomProviderFields() {
         <input
           id="llm-custom-model"
           type="text"
-          value={config.llm.customModel || ""}
+          value={llm.customModel || ""}
           onChange={(e) => update("customModel", e.target.value)}
           onFocus={(e) => handleFocus("customModel", e.target.value)}
           onBlur={(e) => handleBlur("customModel", e.target.value)}

@@ -13,9 +13,11 @@ export function AnthropicFields() {
   const [focusedField, setFocusedField] = useState<{ field: string; value: string } | null>(null);
 
   if (!config) return null;
+  const { llm } = config;
+  if (llm.provider !== "anthropic") return null;
 
   const update = (field: string, value: string) => {
-    updateConfig({ llm: { ...config.llm, [field]: value } });
+    updateConfig({ llm: { ...llm, [field]: value } as typeof llm });
     debouncedSave();
   };
 
@@ -36,10 +38,10 @@ export function AnthropicFields() {
         <label htmlFor="llm-anthropic-apikey">{t("llm.anthropic.apiKey")}</label>
         <SecretInput
           id="llm-anthropic-apikey"
-          value={config.llm.anthropicApiKey || ""}
+          value={llm.anthropicApiKey || ""}
           onChange={(v) => update("anthropicApiKey", v)}
-          onFocus={() => handleFocus("anthropicApiKey", config.llm.anthropicApiKey || "")}
-          onBlur={() => handleBlur("anthropicApiKey", config.llm.anthropicApiKey || "")}
+          onFocus={() => handleFocus("anthropicApiKey", llm.anthropicApiKey || "")}
+          onBlur={() => handleBlur("anthropicApiKey", llm.anthropicApiKey || "")}
           placeholder={t("llm.anthropic.apiKeyPlaceholder")}
         />
       </div>
@@ -48,7 +50,7 @@ export function AnthropicFields() {
         <input
           id="llm-anthropic-model"
           type="text"
-          value={config.llm.anthropicModel || ""}
+          value={llm.anthropicModel || ""}
           onChange={(e) => update("anthropicModel", e.target.value)}
           onFocus={(e) => handleFocus("anthropicModel", e.target.value)}
           onBlur={(e) => handleBlur("anthropicModel", e.target.value)}
