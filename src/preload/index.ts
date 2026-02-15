@@ -118,6 +118,33 @@ export interface VoxAPI {
   i18n: {
     getSystemLocale(): Promise<string>;
   };
+  dev: {
+    getRuntimeState(): Promise<{
+      shortcutState: string;
+      isRecording: boolean;
+      indicatorVisible: boolean;
+      indicatorMode: string | null;
+      isListening: boolean;
+      hasModel: boolean;
+      trayActive: boolean;
+    }>;
+    getSystemInfo(): Promise<{
+      electronVersion: string;
+      nodeVersion: string;
+      chromeVersion: string;
+      v8Version: string;
+      platform: string;
+      arch: string;
+      isPackaged: boolean;
+      appVersion: string;
+      appPath: string;
+      userDataPath: string;
+      logsPath: string;
+      logLevelFile: string;
+      logLevelConsole: string;
+      whisperLib: string;
+    }>;
+  };
 }
 
 const voxApi: VoxAPI = {
@@ -206,6 +233,10 @@ const voxApi: VoxAPI = {
   },
   i18n: {
     getSystemLocale: () => ipcRenderer.invoke("i18n:system-locale"),
+  },
+  dev: {
+    getRuntimeState: () => ipcRenderer.invoke("dev:get-runtime-state"),
+    getSystemInfo: () => ipcRenderer.invoke("dev:get-system-info"),
   },
 };
 

@@ -1,6 +1,11 @@
-import { useEffect, useRef, type JSX } from "react";
+import { useEffect, useRef, lazy, Suspense, type JSX } from "react";
 import { useConfigStore } from "./stores/config-store";
 import { SpinnerIcon } from "../shared/icons";
+
+// Clear dev overrides on startup so the app always starts clean (before any component mounts)
+if (import.meta.env.DEV) {
+  localStorage.removeItem("vox:dev-overrides");
+}
 import { Sidebar } from "./components/layout/Sidebar";
 import { Titlebar } from "./components/layout/Titlebar";
 import { AboutPanel } from "./components/about/AboutPanel";
@@ -15,6 +20,21 @@ import { ScrollButtons } from "./components/ui/ScrollButtons";
 import { useTheme } from "./hooks/use-theme";
 import { I18nProvider } from "./i18n-context";
 
+// Lazy-load DevPanel so the entire module tree is excluded from production bundles.
+// In production, import.meta.env.DEV is false and this code path is dead-code-eliminated.
+const LazyDevPanel = import.meta.env.DEV
+  ? lazy(() => import("./components/dev/DevPanel").then((m) => ({ default: m.DevPanel })))
+  : null;
+
+function DevPanelWrapper() {
+  if (!LazyDevPanel) return null;
+  return (
+    <Suspense fallback={null}>
+      <LazyDevPanel />
+    </Suspense>
+  );
+}
+
 const PANELS: Record<string, () => JSX.Element | null> = {
   general: GeneralPanel,
   whisper: WhisperPanel,
@@ -24,6 +44,7 @@ const PANELS: Record<string, () => JSX.Element | null> = {
   shortcuts: ShortcutsPanel,
   transcriptions: TranscriptionsPanel,
   about: AboutPanel,
+  ...(import.meta.env.DEV ? { dev: DevPanelWrapper } : {}),
 };
 
 export function App() {
@@ -47,8 +68,11 @@ export function App() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full text-text-secondary text-sm" style={{ gap: "8px" }}>
-        <SpinnerIcon width={16} height={16} style={{ animation: "spin 1s linear infinite" }} />
+      <div className="flex flex-col items-center justify-center h-full text-text-secondary text-sm" style={{ gap: "12px" }}>
+        <SpinnerIcon width={32} height={32} style={{ animation: "spin 1s linear infinite" }} />
+        {/* Renders before I18nProvider — hardcoded is intentional */}
+        {/* eslint-disable-next-line i18next/no-literal-string */}
+        <span>Loading…</span>
       </div>
     );
   }

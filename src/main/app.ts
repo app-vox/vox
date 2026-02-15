@@ -10,7 +10,7 @@ import { transcribe } from "./audio/whisper";
 import { createLlmProvider } from "./llm/factory";
 import { Pipeline } from "./pipeline";
 import { ShortcutManager } from "./shortcuts/manager";
-import { setupTray, setTrayModelState, updateTrayConfig, updateTrayMenu } from "./tray";
+import { setupTray, setTrayModelState, updateTrayConfig, updateTrayMenu, getTrayState } from "./tray";
 import { initAutoUpdater } from "./updater";
 import { openHome } from "./windows/home";
 import { registerIpcHandlers } from "./ipc";
@@ -165,6 +165,35 @@ app.whenReady().then(async () => {
     getPipeline: () => pipeline!,
   });
   shortcutManager.start();
+
+  ipcMain.handle("dev:get-runtime-state", () => {
+    return {
+      shortcutState: shortcutManager?.getStateMachineState() ?? "idle",
+      isRecording: shortcutManager?.isRecording() ?? false,
+      indicatorVisible: shortcutManager?.getIndicator().isVisible() ?? false,
+      indicatorMode: shortcutManager?.getIndicator().getMode(),
+      ...getTrayState(),
+    };
+  });
+
+  ipcMain.handle("dev:get-system-info", () => {
+    return {
+      electronVersion: process.versions.electron,
+      nodeVersion: process.versions.node,
+      chromeVersion: process.versions.chrome,
+      v8Version: process.versions.v8,
+      platform: process.platform,
+      arch: process.arch,
+      isPackaged: app.isPackaged,
+      appVersion: app.getVersion(),
+      appPath: app.getAppPath(),
+      userDataPath: app.getPath("userData"),
+      logsPath: app.getPath("logs"),
+      logLevelFile: String(log.transports.file.level),
+      logLevelConsole: String(log.transports.console.level),
+      whisperLib: "whisper-node (whisper.cpp)",
+    };
+  });
 
   const setupChecker = new SetupChecker(modelManager);
   setupTray({

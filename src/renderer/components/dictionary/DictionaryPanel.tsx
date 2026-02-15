@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { useConfigStore } from "../../stores/config-store";
+import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useT } from "../../i18n-context";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
-import { XIcon, ChevronLeftIcon, ChevronRightIcon } from "../../../shared/icons";
+import { XIcon, ChevronLeftIcon, ChevronRightIcon, InfoCircleIcon } from "../../../shared/icons";
 import { CustomSelect } from "../ui/CustomSelect";
 import card from "../shared/card.module.scss";
 import form from "../shared/forms.module.scss";
@@ -35,6 +36,22 @@ export function DictionaryPanel() {
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
+  const setActiveTab = useConfigStore((s) => s.setActiveTab);
+  const realSetupComplete = useConfigStore((s) => s.setupComplete);
+  const realLlmEnabled = useConfigStore((s) => s.config?.enableLlmEnhancement ?? false);
+
+  const setupComplete = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("setupComplete", realSetupComplete)
+    : realSetupComplete;
+
+  const llmEnabled = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("llmEnhancementEnabled", realLlmEnabled)
+    : realLlmEnabled;
+
+  const showInfoBanner = !setupComplete || !llmEnabled;
+
   const [inputValue, setInputValue] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(() => Number(localStorage.getItem("vox:dictionary-pageSize")) || 10);
@@ -114,7 +131,30 @@ export function DictionaryPanel() {
         </p>
       </div>
 
-      {!llmReady && (
+      {showInfoBanner && (
+        <div className={card.infoBanner}>
+          <InfoCircleIcon width={16} height={16} />
+          <span>
+            {!setupComplete
+              ? t("dictionary.speechRequiredInfo")
+              : t("dictionary.llmRequiredInfo")
+            }
+            {" "}
+            {setupComplete && (
+              <button className={card.infoBannerLink} onClick={() => setActiveTab("llm")}>
+                {t("dictionary.goToAiEnhancement")}
+              </button>
+            )}
+            {!setupComplete && (
+              <button className={card.infoBannerLink} onClick={() => setActiveTab("whisper")}>
+                {t("dictionary.goToSpeech")}
+              </button>
+            )}
+          </span>
+        </div>
+      )}
+
+      {llmEnabled && !llmReady && (
         <div className={card.warningBanner}>
           <span>
             {t("dictionary.llmRequired")}{" "}

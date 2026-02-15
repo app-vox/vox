@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { usePermissions } from "../../hooks/use-permissions";
+import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useT } from "../../i18n-context";
 import { PermissionRow } from "./PermissionRow";
 import { PipelineTest } from "./PipelineTest";
@@ -10,9 +11,31 @@ import card from "../shared/card.module.scss";
 export function PermissionsPanel() {
   const t = useT();
   const activeTab = useConfigStore((s) => s.activeTab);
-  const setupComplete = useConfigStore((s) => s.setupComplete);
-  const { status, keychainStatus, refresh, requestMicrophone, requestAccessibility } = usePermissions();
+  const realSetupComplete = useConfigStore((s) => s.setupComplete);
+  const { status: realStatus, keychainStatus, refresh, requestMicrophone, requestAccessibility } = usePermissions();
   const [requestingMic, setRequestingMic] = useState(false);
+
+  // Dev overrides (gated — tree-shaken in production)
+  const setupComplete = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("setupComplete", realSetupComplete)
+    : realSetupComplete;
+
+  const devMicOverride = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("microphonePermission", undefined)
+    : undefined;
+
+  const devAccOverride = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("accessibilityPermission", undefined)
+    : undefined;
+
+  const status = {
+    ...realStatus,
+    ...(devMicOverride !== undefined ? { microphone: devMicOverride } : {}),
+    ...(devAccOverride !== undefined ? { accessibility: devAccOverride } : {}),
+  };
 
   useEffect(() => {
     if (activeTab === "permissions") refresh();

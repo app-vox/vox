@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useDevOverrideValue } from "./use-dev-override";
 
 export function useOnlineStatus(): boolean {
   const [online, setOnline] = useState(navigator.onLine);
@@ -14,5 +15,11 @@ export function useOnlineStatus(): boolean {
     };
   }, []);
 
-  return online;
+  // Dev override (gated — tree-shaken in production)
+  const effective = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("online", online)
+    : online;
+
+  return effective as boolean;
 }

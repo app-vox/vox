@@ -20,6 +20,7 @@ import {
 import { WarningBadge } from "../ui/WarningBadge";
 import { NewDot } from "../ui/NewDot";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
+import { useDevOverrideValue, useDevOverridesActive } from "../../hooks/use-dev-override";
 import styles from "./Sidebar.module.scss";
 
 const VOX_WEBSITE_URL = "https://app-vox.github.io/vox/";
@@ -90,9 +91,56 @@ export function Sidebar() {
   const [visitedDictionary, setVisitedDictionary] = useState(() => localStorage.getItem(VISITED_DICTIONARY_KEY) === "true");
   const activeTab = useConfigStore((s) => s.activeTab);
   const setActiveTab = useConfigStore((s) => s.setActiveTab);
-  const setupComplete = useConfigStore((s) => s.setupComplete);
+  const realSetupComplete = useConfigStore((s) => s.setupComplete);
   const config = useConfigStore((s) => s.config);
-  const { status: permissionStatus } = usePermissions();
+  const { status: realPermissionStatus } = usePermissions();
+
+  // Dev overrides (gated — tree-shaken in production)
+  const setupComplete = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("setupComplete", realSetupComplete)
+    : realSetupComplete;
+
+  const devMicOverride = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("microphonePermission", undefined)
+    : undefined;
+
+  const devAccessibilityOverride = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("accessibilityPermission", undefined)
+    : undefined;
+
+  const devUpdateStatus = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("updateStatus", undefined)
+    : undefined;
+
+  const devLlmEnhancement = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("llmEnhancementEnabled", undefined)
+    : undefined;
+
+  const devLlmTested = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("llmConnectionTested", undefined)
+    : undefined;
+
+  const devOverridesActive = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverridesActive()
+    : false;
+
+  const hideDevVisuals = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("hideDevVisuals", undefined)
+    : undefined;
+
+  const permissionStatus = {
+    ...realPermissionStatus,
+    ...(devMicOverride !== undefined ? { microphone: devMicOverride } : {}),
+    ...(devAccessibilityOverride !== undefined ? { accessibility: devAccessibilityOverride } : {}),
+  };
 
   const handleTabClick = useCallback((id: string) => {
     if (id === "dictionary" && !visitedDictionary) {
@@ -127,7 +175,11 @@ export function Sidebar() {
     return window.voxApi.updates.onStateChanged(setUpdateState);
   }, []);
 
-  const hasUpdate = updateState?.status === "available" || updateState?.status === "downloading" || updateState?.status === "ready";
+  const effectiveUpdateStatus = devUpdateStatus ?? updateState?.status;
+  const hasUpdate = effectiveUpdateStatus === "available" || effectiveUpdateStatus === "downloading" || effectiveUpdateStatus === "ready";
+
+  const effectiveLlmEnhancement = devLlmEnhancement ?? config?.enableLlmEnhancement;
+  const effectiveLlmTested = devLlmTested ?? config?.llmConnectionTested;
 
   const isConfigured = (type?: "speech" | "permissions" | "ai-enhancement") => {
     if (!type) return false;
@@ -135,9 +187,9 @@ export function Sidebar() {
     if (type === "permissions") return permissionStatus?.accessibility === true && permissionStatus?.microphone === "granted";
     if (type === "ai-enhancement") {
       return setupComplete
-        && config?.enableLlmEnhancement === true
-        && config?.llmConnectionTested === true
-        && computeLlmConfigHash(config) === config?.llmConfigHash;
+        && effectiveLlmEnhancement === true
+        && effectiveLlmTested === true
+        && config != null && computeLlmConfigHash(config) === config.llmConfigHash;
     }
     return false;
   };
@@ -147,6 +199,11 @@ export function Sidebar() {
   };
 
   const showDictionaryDot = !visitedDictionary && setupComplete;
+
+  const hasWarning = (item: NavItemDef) =>
+    (item.requiresModel === true && !setupComplete)
+    || (item.requiresPermissions === true && needsPermissions())
+    || (item.requiresTest === true && effectiveLlmEnhancement === true && !isConfigured("ai-enhancement"));
 
   const renderItem = (item: NavItem) => (
     <button
@@ -160,6 +217,9 @@ export function Sidebar() {
         {isConfigured(item.checkConfigured) && (
           <CheckmarkBadgeIcon className={styles.checkmark} width={10} height={10} />
         )}
+        {collapsed && hasWarning(item) && (
+          <span className={styles.warningDot} />
+        )}
       </div>
       {!collapsed && (
         <span className={styles.label}>
@@ -168,7 +228,7 @@ export function Sidebar() {
           <WarningBadge show={
             (item.requiresModel === true && !setupComplete)
             || (item.requiresPermissions === true && needsPermissions())
-            || (item.requiresTest === true && config?.enableLlmEnhancement === true && !isConfigured("ai-enhancement"))
+            || (item.requiresTest === true && effectiveLlmEnhancement === true && !isConfigured("ai-enhancement"))
             || (item.requiresLlm === true && !isConfigured("ai-enhancement"))
           } />
         </span>
@@ -217,7 +277,35 @@ export function Sidebar() {
       </nav>
 
       <div className={styles.bottom}>
-        <div className={styles.divider} />
+        {import.meta.env.DEV && (
+          <>
+            <button
+              className={`${styles.navItem} ${styles.devItem} ${activeTab === "dev" ? styles.devItemActive : ""} ${hideDevVisuals === true ? styles.devHidden : ""}`}
+              onClick={() => handleTabClick("dev")}
+              title={collapsed ? "Dev Panel" : undefined}
+            >
+              <div className={styles.iconWrap}>
+                <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="16 18 22 12 16 6" />
+                  <polyline points="8 6 2 12 8 18" />
+                </svg>
+                {devOverridesActive && (
+                  <span className={styles.devOverrideDot} />
+                )}
+              </div>
+              {!collapsed && (
+                <span className={styles.label}>
+                  {"Dev Panel"}
+                  {devOverridesActive && (
+                    // eslint-disable-next-line i18next/no-literal-string
+                    <span className={styles.devOverrideLabel}>Overriding</span>
+                  )}
+                </span>
+              )}
+            </button>
+            <div className={styles.divider} />
+          </>
+        )}
         <button
           className={`${styles.navItem} ${activeTab === "about" ? styles.navItemActive : ""}`}
           onClick={() => setActiveTab("about")}

@@ -1,11 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import type { UpdateState } from "../../../preload/index";
 import { useConfigStore } from "../../stores/config-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
 import { useT } from "../../i18n-context";
 import { GearIcon, InfoCircleIcon, DownloadIcon } from "../../../shared/icons";
 import { SaveToast } from "../ui/SaveToast";
+import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import styles from "./Titlebar.module.scss";
+
+// Lazy-load the dev override badge so the store is excluded from production bundles.
+const LazyDevOverrideBadge = import.meta.env.DEV
+  ? lazy(() => import("../dev/DevOverrideBadge").then((m) => ({ default: m.DevOverrideBadge })))
+  : null;
 
 export function Titlebar() {
   const t = useT();
@@ -31,7 +37,18 @@ export function Titlebar() {
   }, [showToast, hideToast]);
 
   const isDevMode = import.meta.env.DEV;
-  const status = updateState?.status ?? "idle";
+
+  const devUpdateStatus = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("updateStatus", undefined)
+    : undefined;
+
+  const devDownloadProgress = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("updateDownloadProgress", undefined)
+    : undefined;
+
+  const status = devUpdateStatus ?? updateState?.status ?? "idle";
 
   const renderUpdateButton = () => {
     if (status === "ready") {
@@ -48,7 +65,7 @@ export function Titlebar() {
     if (status === "downloading") {
       return (
         <span className={styles.updateProgress}>
-          {`${Math.round(updateState?.downloadProgress ?? 0)}%`}
+          {`${Math.round(devDownloadProgress ?? updateState?.downloadProgress ?? 0)}%`}
         </span>
       );
     }
@@ -75,6 +92,11 @@ export function Titlebar() {
     <div className={styles.titlebar}>
       <div className={styles.spacer} />
       <SaveToast show={showToast} timestamp={toastTimestamp} onHide={hideToast} />
+      {LazyDevOverrideBadge && (
+        <Suspense fallback={null}>
+          <LazyDevOverrideBadge />
+        </Suspense>
+      )}
       {renderUpdateButton()}
       <button
         className={`${styles.actionBtn} ${activeTab === "about" ? styles.actionBtnActive : ""}`}

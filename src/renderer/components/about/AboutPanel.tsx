@@ -9,6 +9,7 @@ import {
   RefreshIcon,
   InfoCircleAltIcon,
 } from "../../../shared/icons";
+import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useT } from "../../i18n-context";
 import card from "../shared/card.module.scss";
 import styles from "./AboutPanel.module.scss";
@@ -19,6 +20,17 @@ export function AboutPanel() {
   const [dismissed, setDismissed] = useState(false);
   const [currentVersion, setCurrentVersion] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
+
+  // Dev overrides (gated — tree-shaken in production)
+  const devUpdateStatus = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("updateStatus", undefined)
+    : undefined;
+
+  const devDownloadProgress = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("updateDownloadProgress", undefined)
+    : undefined;
 
   useEffect(() => {
     window.voxApi.updates.getVersion().then(setCurrentVersion);
@@ -43,7 +55,7 @@ export function AboutPanel() {
 
   const isDevMode = import.meta.env.DEV;
 
-  const status = updateState?.status ?? "idle";
+  const status = devUpdateStatus ?? updateState?.status ?? "idle";
   const checking = status === "checking";
   const showUpdateBanner = (status === "available" || status === "downloading" || status === "ready") && !dismissed;
 
@@ -80,7 +92,7 @@ export function AboutPanel() {
                 ) : status === "downloading" ? (
                   <>
                     <InfoCircleIcon width={16} height={16} />
-                    <span>{t("general.about.downloading", { version: updateState?.latestVersion ?? "", progress: updateState?.downloadProgress ?? 0 })}</span>
+                    <span>{t("general.about.downloading", { version: updateState?.latestVersion ?? "", progress: devDownloadProgress ?? updateState?.downloadProgress ?? 0 })}</span>
                   </>
                 ) : (
                   <>
@@ -93,7 +105,7 @@ export function AboutPanel() {
                 <div className={styles.progressBar}>
                   <div
                     className={styles.progressFill}
-                    style={{ width: `${updateState?.downloadProgress ?? 0}%` }}
+                    style={{ width: `${devDownloadProgress ?? updateState?.downloadProgress ?? 0}%` }}
                   />
                 </div>
               )}
