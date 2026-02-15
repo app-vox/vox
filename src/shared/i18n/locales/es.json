@@ -289,5 +289,9 @@
   "general.permissions.action": "Configurar permisos",
   "general.dictionary.title": "Mejorar Precisión",
   "general.dictionary.description": "Agrega nombres, términos técnicos y jerga al diccionario para mejorar la precisión de la transcripción.",
-  "general.dictionary.action": "Configurar diccionario"
+  "general.dictionary.action": "Configurar diccionario",
+  "general.analytics.title": "Analytics",
+  "general.analytics.description": "Datos de uso anónimos para ayudar a mejorar Vox.",
+  "general.analytics.enable": "Compartir datos de uso anónimos",
+  "general.analytics.hint": "Ayuda a mejorar Vox compartiendo datos de uso anónimos. No se recopila información personal ni contenido de transcripción."
 }

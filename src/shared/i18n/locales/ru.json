@@ -289,5 +289,9 @@
   "general.permissions.action": "Настроить разрешения",
   "general.dictionary.title": "Повысить Точность",
   "general.dictionary.description": "Добавьте имена, технические термины и жаргон в словарь для повышения точности транскрипции.",
-  "general.dictionary.action": "Настроить словарь"
+  "general.dictionary.action": "Настроить словарь",
+  "general.analytics.title": "Аналитика",
+  "general.analytics.description": "Анонимные данные об использовании для улучшения Vox.",
+  "general.analytics.enable": "Делиться анонимными данными об использовании",
+  "general.analytics.hint": "Помогите улучшить Vox, делясь анонимными данными об использовании. Личная информация и содержимое транскрипций никогда не собираются."
 }

@@ -289,5 +289,9 @@
   "general.permissions.action": "İzinleri ayarla",
   "general.dictionary.title": "Doğruluğu Artır",
   "general.dictionary.description": "Transkripsiyon doğruluğunu artırmak için sözlüğe isimler, teknik terimler ve jargon ekleyin.",
-  "general.dictionary.action": "Sözlüğü ayarla"
+  "general.dictionary.action": "Sözlüğü ayarla",
+  "general.analytics.title": "Analitik",
+  "general.analytics.description": "Vox'u iyileştirmeye yardımcı olacak anonim kullanım verileri.",
+  "general.analytics.enable": "Anonim kullanım verilerini paylaş",
+  "general.analytics.hint": "Anonim kullanım verilerini paylaşarak Vox'u iyileştirmeye yardımcı olun. Kişisel bilgi veya transkripsiyon içeriği asla toplanmaz."
 }
