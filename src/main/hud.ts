@@ -1,11 +1,11 @@
 import { BrowserWindow, screen } from "electron";
 import { t } from "../shared/i18n";
 
-const HUD_WIDTH = 48;
-const HUD_HEIGHT = 48;
-const DOCK_MARGIN = 10;
+const HUD_WIDTH = 80;
+const HUD_HEIGHT = 96;
+const DOCK_MARGIN = 24;
 
-type HudState = "idle" | "listening" | "processing";
+type HudState = "idle" | "listening" | "processing" | "enhancing" | "error" | "canceled";
 
 function buildHudHtml(): string {
   return `<!DOCTYPE html>
@@ -17,8 +17,10 @@ function buildHudHtml(): string {
     width: 100%;
     height: 100%;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 4px;
   }
   .hud {
     width: 36px;
@@ -33,7 +35,7 @@ function buildHudHtml(): string {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.3s ease, border-color 0.3s ease;
     position: relative;
   }
   .hud:hover {
@@ -44,18 +46,32 @@ function buildHudHtml(): string {
   .hud:active {
     transform: scale(0.95);
   }
-  .hud.recording {
-    background: rgba(255, 68, 68, 0.9);
-    border-color: rgba(255, 68, 68, 0.5);
-    box-shadow: 0 4px 20px rgba(255, 68, 68, 0.4);
+  .hud.listening {
+    background: rgba(239, 68, 68, 0.9);
+    border-color: rgba(239, 68, 68, 0.5);
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
   }
-  .hud.recording:hover {
-    box-shadow: 0 4px 24px rgba(255, 68, 68, 0.5);
+  .hud.listening:hover {
+    box-shadow: 0 4px 24px rgba(239, 68, 68, 0.5);
   }
   .hud.processing {
-    background: rgba(255, 170, 0, 0.9);
-    border-color: rgba(255, 170, 0, 0.5);
-    box-shadow: 0 4px 20px rgba(255, 170, 0, 0.3);
+    background: rgba(245, 158, 11, 0.9);
+    border-color: rgba(245, 158, 11, 0.5);
+    box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
+    cursor: default;
+    pointer-events: none;
+  }
+  .hud.enhancing {
+    background: rgba(68, 170, 255, 0.9);
+    border-color: rgba(68, 170, 255, 0.5);
+    box-shadow: 0 4px 20px rgba(68, 170, 255, 0.3);
+    cursor: default;
+    pointer-events: none;
+  }
+  .hud.error, .hud.canceled {
+    background: rgba(239, 68, 68, 0.9);
+    border-color: rgba(239, 68, 68, 0.5);
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
     cursor: default;
     pointer-events: none;
   }
@@ -71,6 +87,13 @@ function buildHudHtml(): string {
     margin-left: 2px;
   }
 
+  .idle-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+  }
+
   .stop-icon {
     width: 10px; height: 10px;
     border-radius: 2px;
@@ -84,26 +107,29 @@ function buildHudHtml(): string {
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
+
+  .error-icon svg {
+    width: 14px; height: 14px;
+  }
+
   @keyframes spin { to { transform: rotate(360deg); } }
 
   .cancel-btn {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
-    background: rgba(75, 75, 75, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     display: none;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: background 0.15s ease;
+    flex-shrink: 0;
   }
-  .cancel-btn:hover { background: #ef4444; }
+  .cancel-btn:hover { background: #ef4444; border-color: rgba(239, 68, 68, 0.5); }
   .cancel-btn svg { width: 8px; height: 8px; }
-  .hud.recording:hover .cancel-btn { display: flex; }
+  .cancel-btn.visible { display: flex; }
 
   .sparkle-container {
     position: fixed;
@@ -134,19 +160,22 @@ function buildHudHtml(): string {
 <div class="sparkle-container" id="sparkles"></div>
 <div class="hud" id="hud" role="button" tabindex="0">
   <div class="icon" id="play-icon"><div class="play-icon"></div></div>
+  <div class="icon hidden" id="dot-icon"><div class="idle-dot"></div></div>
   <div class="icon hidden" id="stop-icon"><div class="stop-icon"></div></div>
   <div class="icon hidden" id="proc-icon"><div class="proc-icon"></div></div>
-  <div class="cancel-btn" id="cancel-btn" onclick="event.stopPropagation(); window.electronAPI?.cancelRecording()">
-    <svg viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M8 2L2 8M2 2L8 8" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-    </svg>
-  </div>
+  <div class="icon hidden" id="error-icon"><svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5" stroke="rgba(255,255,255,0.95)" stroke-width="2" stroke-linecap="round"/></svg></div>
+</div>
+<div class="cancel-btn" id="cancel-btn" onclick="event.stopPropagation(); window.electronAPI?.cancelRecording()">
+  <svg viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 2L2 8M2 2L8 8" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>
 </div>
 <script>
 var state = 'idle';
+var hoverMode = false;
 
 document.getElementById('hud').addEventListener('click', function() {
-  if (state === 'processing') return;
+  if (state === 'processing' || state === 'enhancing' || state === 'error' || state === 'canceled') return;
   if (state === 'idle') {
     window.electronAPI?.hudStartRecording();
   } else if (state === 'listening') {
@@ -154,20 +183,47 @@ document.getElementById('hud').addEventListener('click', function() {
   }
 });
 
+function setHoverMode(enabled) {
+  hoverMode = enabled;
+  updateIdleIcon();
+}
+
+function updateIdleIcon() {
+  if (state !== 'idle') return;
+  var playIcon = document.getElementById('play-icon');
+  var dotIcon = document.getElementById('dot-icon');
+  if (hoverMode) {
+    playIcon.classList.add('hidden');
+    dotIcon.classList.remove('hidden');
+  } else {
+    playIcon.classList.remove('hidden');
+    dotIcon.classList.add('hidden');
+  }
+}
+
 function setState(newState, titles) {
   state = newState;
   var hud = document.getElementById('hud');
   hud.className = 'hud' + (newState !== 'idle' ? ' ' + newState : '');
 
-  document.getElementById('play-icon').classList.toggle('hidden', newState !== 'idle');
-  document.getElementById('stop-icon').classList.toggle('hidden', newState !== 'listening');
-  document.getElementById('proc-icon').classList.toggle('hidden', newState !== 'processing');
+  var isIdle = newState === 'idle';
+  var isListening = newState === 'listening';
+  var isProc = newState === 'processing' || newState === 'enhancing';
+  var isError = newState === 'error' || newState === 'canceled';
+
+  document.getElementById('play-icon').classList.toggle('hidden', !isIdle || hoverMode);
+  document.getElementById('dot-icon').classList.toggle('hidden', !isIdle || !hoverMode);
+  document.getElementById('stop-icon').classList.toggle('hidden', !isListening);
+  document.getElementById('proc-icon').classList.toggle('hidden', !isProc);
+  document.getElementById('error-icon').classList.toggle('hidden', !isError);
+
+  var cancelBtn = document.getElementById('cancel-btn');
+  cancelBtn.classList.toggle('visible', isListening);
 
   if (titles) {
     hud.setAttribute('title', titles.main || '');
     hud.setAttribute('aria-label', titles.main || '');
-    var cb = document.getElementById('cancel-btn');
-    if (titles.cancel) cb.setAttribute('title', titles.cancel);
+    if (titles.cancel) cancelBtn.setAttribute('title', titles.cancel);
   }
 }
 
@@ -183,7 +239,7 @@ function spawnSparkles(direction) {
     var hue = 240 + Math.random() * 60;
     el.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 0L7.4 4.6L12 6L7.4 7.4L6 12L4.6 7.4L0 6L4.6 4.6Z" fill="hsl(' + hue + ',70%,70%)" opacity="0.9"/></svg>';
     el.style.left = 'calc(50% + ' + xOffset + 'px)';
-    el.style.bottom = '24px';
+    el.style.bottom = '50px';
     el.style.animation = animName + ' 0.7s ease-out ' + delay + 'ms forwards';
     container.appendChild(el);
     setTimeout(function(e) { e.remove(); }, 900 + delay, el);
@@ -200,13 +256,18 @@ export class HudWindow {
   private currentState: HudState = "idle";
   private showOnHover = false;
   private hoverTimer: ReturnType<typeof setInterval> | null = null;
+  private flashTimer: ReturnType<typeof setTimeout> | null = null;
 
   show(showOnHover: boolean): void {
     this.showOnHover = showOnHover;
 
     if (this.window && !this.window.isDestroyed()) {
+      this.execSetHoverMode(showOnHover);
       if (!showOnHover) {
+        this.stopHoverTracking();
         this.window.showInactive();
+      } else {
+        this.startHoverTracking();
       }
       return;
     }
@@ -246,6 +307,7 @@ export class HudWindow {
 
     this.window.webContents.on("did-finish-load", () => {
       this.contentReady = true;
+      this.execSetHoverMode(showOnHover);
       this.sendTitles();
       if (this.pendingUpdate) {
         this.execSetState(this.pendingUpdate.state);
@@ -264,6 +326,7 @@ export class HudWindow {
 
   hide(): void {
     this.stopHoverTracking();
+    this.clearFlashTimer();
     if (this.window && !this.window.isDestroyed()) {
       this.window.close();
     }
@@ -274,12 +337,28 @@ export class HudWindow {
   }
 
   setState(state: HudState): void {
+    this.clearFlashTimer();
     this.currentState = state;
     if (!this.window || this.window.isDestroyed()) return;
+
+    if (state === "error" || state === "canceled") {
+      this.flashTimer = setTimeout(() => {
+        this.flashTimer = null;
+        this.currentState = "idle";
+        if (this.contentReady && this.window && !this.window.isDestroyed()) {
+          this.execSetState("idle");
+        }
+      }, 1500);
+    }
+
     if (this.contentReady) {
       this.execSetState(state);
     } else {
       this.pendingUpdate = { state };
+    }
+
+    if (this.showOnHover && (state === "listening" || state === "processing" || state === "enhancing")) {
+      this.window.showInactive();
     }
   }
 
@@ -328,6 +407,9 @@ export class HudWindow {
     if (!this.window || this.window.isDestroyed()) return;
     const titleKey = state === "idle" ? "hud.startRecording"
       : state === "listening" ? "hud.stopRecording"
+      : state === "enhancing" ? "indicator.enhancing"
+      : state === "error" ? "indicator.nothingHeard"
+      : state === "canceled" ? "indicator.canceled"
       : "indicator.transcribing";
     const titles = {
       main: t(titleKey),
@@ -336,6 +418,20 @@ export class HudWindow {
     this.window.webContents.executeJavaScript(
       `setState("${state}", ${JSON.stringify(titles)})`
     ).catch(() => {});
+  }
+
+  private execSetHoverMode(enabled: boolean): void {
+    if (!this.window || this.window.isDestroyed() || !this.contentReady) return;
+    this.window.webContents.executeJavaScript(
+      `setHoverMode(${enabled})`
+    ).catch(() => {});
+  }
+
+  private clearFlashTimer(): void {
+    if (this.flashTimer) {
+      clearTimeout(this.flashTimer);
+      this.flashTimer = null;
+    }
   }
 
   private startHoverTracking(): void {

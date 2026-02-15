@@ -226,7 +226,7 @@ export class ShortcutManager {
       const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
       this.playCue(errorCueType);
       this.stateMachine.setIdle();
-      this.hud.setState("idle");
+      this.hud.setState("canceled");
       this.hud.triggerSparkles("down");
       this.updateTrayState();
     }
@@ -453,6 +453,7 @@ export class ShortcutManager {
     const stopCueType = (config.recordingStopAudioCue ?? "pop") as AudioCueType;
     this.playCue(stopCueType);
 
+    let hudEndState: "idle" | "error" | "canceled" = "idle";
     try {
       const text = await pipeline.stopAndProcess();
       slog.info("Pipeline complete, text: %s", text.slice(0, 80));
@@ -463,6 +464,7 @@ export class ShortcutManager {
         this.indicator.showError();
         const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
         this.playCue(errorCueType);
+        hudEndState = "error";
       } else {
         slog.info("Valid text received, proceeding with paste");
         await new Promise((r) => setTimeout(r, 200));
@@ -476,6 +478,7 @@ export class ShortcutManager {
         this.indicator.showCanceled();
         const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
         this.playCue(errorCueType);
+        hudEndState = "canceled";
       } else {
         slog.error("Pipeline failed", err);
         this.deps.analytics?.track("paste_failed", {
@@ -484,10 +487,11 @@ export class ShortcutManager {
         this.indicator.showError();
         const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
         this.playCue(errorCueType);
+        hudEndState = "error";
       }
     } finally {
       this.stateMachine.setIdle();
-      this.hud.setState("idle");
+      this.hud.setState(hudEndState);
       this.hud.triggerSparkles("down");
       this.updateTrayState();
       slog.info("Ready for next recording");

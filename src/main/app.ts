@@ -59,7 +59,12 @@ function setupPipeline(): void {
     hasCustomPrompt: Boolean(config.customPrompt),
     llmModelName: config.enableLlmEnhancement ? getLlmModelName(config.llm) : undefined,
     analytics,
-    onStage: (stage) => shortcutManager?.showIndicator(stage),
+    onStage: (stage) => {
+      shortcutManager?.showIndicator(stage);
+      if (stage === "enhancing") {
+        shortcutManager?.getHud().setState("enhancing");
+      }
+    },
     onComplete: (result) => {
       try {
         historyManager.add({
@@ -227,10 +232,11 @@ app.whenReady().then(async () => {
 });
 
 app.on("activate", () => {
-  const visibleWindows = BrowserWindow.getAllWindows().filter(win =>
+  const hasHomeWindow = BrowserWindow.getAllWindows().some(win =>
     win.isVisible() && !win.isDestroyed() && win.getTitle() === "Vox"
   );
-  if (visibleWindows.length === 0) {
+  const hudActive = shortcutManager?.getHud().isVisible() ?? false;
+  if (!hasHomeWindow && !hudActive) {
     openHome(reloadConfig);
   }
 });
