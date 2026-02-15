@@ -26,6 +26,8 @@ export interface PipelineDeps {
   llmProvider: LlmProvider;
   modelPath: string;
   dictionary?: string[];
+  hasCustomPrompt?: boolean;
+  llmModelName?: string;
   analytics?: {
     track(event: string, properties?: Record<string, unknown>): void;
   };
@@ -172,12 +174,21 @@ export class Pipeline {
     });
 
     this.deps.onStage?.("transcribing");
-    const transcription = await this.deps.transcribe(
-      recording.audioBuffer,
-      recording.sampleRate,
-      this.deps.modelPath,
-      this.deps.dictionary ?? []
-    );
+    let transcription: TranscriptionResult;
+    try {
+      transcription = await this.deps.transcribe(
+        recording.audioBuffer,
+        recording.sampleRate,
+        this.deps.modelPath,
+        this.deps.dictionary ?? []
+      );
+    } catch (err: unknown) {
+      this.deps.analytics?.track("transcription_failed", {
+        whisper_model: this.whisperModelName,
+        error_type: err instanceof Error ? err.name : "unknown",
+      });
+      throw err;
+    }
 
     if (this.canceled) {
       throw new CanceledError();
@@ -227,6 +238,10 @@ export class Pipeline {
       });
     }
 
+    this.deps.analytics?.track("custom_prompt_used", {
+      has_prompt: Boolean(this.deps.hasCustomPrompt),
+    });
+
     const llmStartTime = performance.now();
     const llmProviderName = this.deps.llmProvider.constructor.name.replace("Provider", "").toLowerCase();
 
@@ -234,6 +249,7 @@ export class Pipeline {
     try {
       this.deps.analytics?.track("llm_enhancement_started", {
         provider: llmProviderName,
+        model: this.deps.llmModelName,
       });
       this.deps.onStage?.("enhancing");
       finalText = await this.deps.llmProvider.correct(rawText);
@@ -246,6 +262,7 @@ export class Pipeline {
       });
       this.deps.analytics?.track("llm_enhancement_completed", {
         provider: llmProviderName,
+        model: this.deps.llmModelName,
         duration_ms: Number((performance.now() - llmStartTime).toFixed(1)),
       });
     } catch (err: unknown) {
@@ -253,6 +270,7 @@ export class Pipeline {
       slog.warn("LLM enhancement failed, using raw transcription", err instanceof Error ? err.message : err);
       this.deps.analytics?.track("llm_enhancement_failed", {
         provider: llmProviderName,
+        model: this.deps.llmModelName,
         error_type: err instanceof Error ? err.name : "unknown",
       });
       finalText = rawText;
