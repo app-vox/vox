@@ -191,6 +191,7 @@ interface CardDef {
   title: string;
   rows: { label: string; render: (q: string) => ReactNode; overrideField?: keyof DevOverrides }[];
   overrideFields?: (keyof DevOverrides)[];
+  fullWidth?: boolean;
 }
 
 /* ── Main Panel ──────────────────────────────────────────────────── */
@@ -556,6 +557,7 @@ export function DevPanel() {
     },
     {
       title: "System",
+      fullWidth: true,
       rows: [
         { label: "Electron", render: () => <>{systemInfo?.electronVersion ?? "(loading)"}</> },
         { label: "Node", render: () => <>{systemInfo?.nodeVersion ?? "(loading)"}</> },
@@ -624,6 +626,14 @@ export function DevPanel() {
       )}
 
       <div className={hideDevVisuals ? styles.devBlurred : undefined}>
+      <div className={styles.disclaimer}>
+        <InfoCircleIcon width={13} height={13} />
+        <span>
+          <strong>This panel is only visible in development mode.</strong>{" "}
+          Some values may become outdated as configuration changes. Read-only states come from the main process and cannot be overridden.
+        </span>
+      </div>
+
       {/* Header row: override toggle + search */}
       <div className={styles.panelHeader}>
         <label className={styles.masterToggle}>
@@ -655,14 +665,6 @@ export function DevPanel() {
         </div>
       </div>
 
-      <div className={styles.disclaimer}>
-        <InfoCircleIcon width={13} height={13} />
-        <span>
-          <strong>This panel is only visible in development mode.</strong>{" "}
-          Some values may become outdated as configuration changes. Read-only states come from the main process and cannot be overridden.
-        </span>
-      </div>
-
       {/* Presets */}
       <div className={styles.presetsLabel}>Presets</div>
       <div className={styles.presets}>
@@ -680,7 +682,7 @@ export function DevPanel() {
       {/* Grid — always shows all cards, search highlights + scrolls */}
       <div className={styles.grid} ref={gridRef}>
         {cards.map((c) => (
-          <div key={c.title} className={`${card.card} ${hasCardOverrides(c.overrideFields) ? styles.cardOverridden : ""}`}>
+          <div key={c.title} className={`${card.card} ${hasCardOverrides(c.overrideFields) ? styles.cardOverridden : ""} ${c.fullWidth ? styles.cardFullWidth : ""}`}>
             <div className={`${card.header} ${styles.cardHeader}`}>
               <h2><Highlight text={c.title} query={q} /></h2>
               {hasCardOverrides(c.overrideFields) && (

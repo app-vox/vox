@@ -93,7 +93,7 @@
   gap: 6px;
   font-size: var(--font-size-xs, 12px);
   color: var(--color-text-tertiary);
-  margin-top: var(--spacing-2);
+  margin-bottom: var(--spacing-2);
   font-style: italic;
 
   svg {
@@ -218,6 +218,10 @@
 
 .cardOverridden {
   border-color: color-mix(in srgb, #8b5cf6 35%, var(--color-border));
+}
+
+.cardFullWidth {
+  grid-column: 1 / -1;
 }
 
 .cardHeader {
