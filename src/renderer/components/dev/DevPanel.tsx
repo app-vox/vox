@@ -8,7 +8,7 @@ import { useTranscriptionsStore } from "../../stores/transcriptions-store";
 import { useOnlineStatus } from "../../hooks/use-online-status";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
-import { RefreshIcon } from "../../../shared/icons";
+import { RefreshIcon, InfoCircleIcon } from "../../../shared/icons";
 import card from "../shared/card.module.scss";
 import styles from "./DevPanel.module.scss";
 
@@ -193,6 +193,7 @@ export function DevPanel() {
 
   const transcriptionTotal = useTranscriptionsStore((s) => s.total);
   const transcriptionSearch = useTranscriptionsStore((s) => s.searchQuery);
+  const fetchTranscriptions = useTranscriptionsStore((s) => s.fetchPage);
 
   const online = useOnlineStatus();
 
@@ -227,6 +228,7 @@ export function DevPanel() {
     void window.voxApi.updates.getVersion().then(setVersion);
     void window.voxApi.i18n.getSystemLocale().then(setSystemLocale);
     if (!permStatus) void refreshPerms();
+    void fetchTranscriptions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -281,7 +283,18 @@ export function DevPanel() {
   const ov = overrides.enabled;
   const ovProps = { overrides, setOverride, clearOverride };
 
+  const isPresetActive = (preset: Partial<DevOverrides>) =>
+    ov && Object.entries(preset).every(([key, value]) =>
+      overrides[key as keyof DevOverrides] === value,
+    );
+
   const applyPreset = (preset: Partial<DevOverrides>) => {
+    if (isPresetActive(preset)) {
+      for (const key of Object.keys(preset)) {
+        clearOverride(key as keyof DevOverrides);
+      }
+      return;
+    }
     if (!ov) setEnabled(true);
     for (const [key, value] of Object.entries(preset)) {
       setOverride(key as keyof DevOverrides, value as DevOverrides[keyof DevOverrides]);
@@ -564,15 +577,22 @@ export function DevPanel() {
       </div>
 
       <div className={styles.disclaimer}>
-        <strong>This panel is only visible in development mode.</strong>{" "}
-        Some values may become outdated as configuration changes. Read-only states come from the main process and cannot be overridden.
+        <InfoCircleIcon width={13} height={13} />
+        <span>
+          <strong>This panel is only visible in development mode.</strong>{" "}
+          Some values may become outdated as configuration changes. Read-only states come from the main process and cannot be overridden.
+        </span>
       </div>
 
       {/* Presets */}
       <div className={styles.presetsLabel}>Presets</div>
       <div className={styles.presets}>
         {presets.map((p) => (
-          <button key={p.label} className={styles.presetBtn} onClick={() => applyPreset(p.preset)}>
+          <button
+            key={p.label}
+            className={`${styles.presetBtn} ${isPresetActive(p.preset) ? styles.presetBtnActive : ""}`}
+            onClick={() => applyPreset(p.preset)}
+          >
             {p.label}
           </button>
         ))}
