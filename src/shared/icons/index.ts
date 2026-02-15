@@ -29,6 +29,8 @@ export { default as ChevronLeftIcon } from "./svg/chevron-left.svg?react";
 export { default as ChevronRightIcon } from "./svg/chevron-right.svg?react";
 export { default as ChevronUpIcon } from "./svg/chevron-up.svg?react";
 export { default as ChevronDownIcon } from "./svg/chevron-down.svg?react";
+export { default as ChevronsLeftIcon } from "./svg/chevrons-left.svg?react";
+export { default as ChevronsRightIcon } from "./svg/chevrons-right.svg?react";
 export { default as EyeIcon } from "./svg/eye.svg?react";
 export { default as LockIcon } from "./svg/lock.svg?react";
 export { default as RecordIcon } from "./svg/record.svg?react";

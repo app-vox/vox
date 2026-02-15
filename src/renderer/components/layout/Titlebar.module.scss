@@ -85,6 +85,42 @@
   white-space: nowrap;
 }
 
+.overrideBadgeGroup {
+  -webkit-app-region: no-drag;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+
+  &:hover .overrideClear {
+    width: 22px;
+    opacity: 1;
+    margin-right: 4px;
+  }
+}
+
+.overrideClear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 0;
+  height: 22px;
+  padding: 0;
+  background: #dc2626;
+  border: none;
+  border-radius: var(--radius-md);
+  color: white;
+  cursor: pointer;
+  opacity: 0;
+  overflow: hidden;
+  margin-right: 0;
+  flex-shrink: 0;
+  transition: width 150ms ease, opacity 150ms ease, margin-right 150ms ease;
+
+  &:hover {
+    background: #b91c1c;
+  }
+}
+
 .overrideBadge {
   -webkit-app-region: no-drag;
   display: flex;

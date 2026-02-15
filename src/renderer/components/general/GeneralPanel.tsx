@@ -5,7 +5,7 @@ import { usePermissions } from "../../hooks/use-permissions";
 import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useT } from "../../i18n-context";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
-import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon } from "../../../shared/icons";
+import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, ChevronDownIcon } from "../../../shared/icons";
 import type { ThemeMode, SupportedLanguage } from "../../../shared/config";
 import { CustomSelect, type SelectItem } from "../ui/CustomSelect";
 import { OfflineBanner } from "../ui/OfflineBanner";
@@ -214,11 +214,14 @@ export function GeneralPanel() {
         </div>
       </div>
 
-      <div className={card.card}>
-        <div className={card.header}>
-          <h2>{t("general.recordingFeedback.title")}</h2>
-          <p className={card.description}>{t("general.recordingFeedback.description")}</p>
-        </div>
+      <details className={card.collapsible}>
+        <summary className={card.collapsibleHeader}>
+          <div>
+            <h2>{t("general.recordingFeedback.title")}</h2>
+            <p className={card.description}>{t("general.recordingFeedback.description")}</p>
+          </div>
+          <ChevronDownIcon width={16} height={16} className={card.chevron} />
+        </summary>
         <div className={card.body}>
           <div className={styles.fieldRow}>
             <label htmlFor="recording-start-sound">{t("general.recordingFeedback.startSound")}</label>
@@ -251,7 +254,7 @@ export function GeneralPanel() {
             />
           </div>
         </div>
-      </div>
+      </details>
 
       <div className={card.card}>
         <div className={card.header}>

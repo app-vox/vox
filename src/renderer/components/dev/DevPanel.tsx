@@ -427,28 +427,6 @@ export function DevPanel() {
       ],
     },
     {
-      title: "Recording / Pipeline",
-      rows: [
-        { label: "Recording", render: () => <>{runtime ? boolDot(runtime.isRecording) : <Dot color="gray" />}</> },
-        { label: "Shortcut State", render: () => <>{runtime ? statusDot(runtime.shortcutState) : <Dot color="gray" />}</> },
-      ],
-    },
-    {
-      title: "Indicator",
-      rows: [
-        { label: "Visible", render: () => <>{runtime ? boolDot(runtime.indicatorVisible) : <Dot color="gray" />}</> },
-        { label: "Mode", render: () => <>{runtime ? statusDot(runtime.indicatorMode) : <Dot color="gray" />}</> },
-      ],
-    },
-    {
-      title: "Tray",
-      rows: [
-        { label: "Active", render: () => <>{runtime ? boolDot(runtime.trayActive) : <Dot color="gray" />}</> },
-        { label: "Listening", render: () => <>{runtime ? boolDot(runtime.isListening) : <Dot color="gray" />}</> },
-        { label: "Has Model", render: () => <>{runtime ? boolDot(runtime.hasModel) : <Dot color="gray" />}</> },
-      ],
-    },
-    {
       title: "LLM",
       overrideFields: ["llmEnhancementEnabled", "llmConnectionTested"],
       rows: [
@@ -488,6 +466,28 @@ export function DevPanel() {
       rows: [
         { label: "Model", render: () => <>{selectedModel}</> },
         { label: "Downloaded", render: () => <>{downloadedModels.length > 0 ? downloadedModels.join(", ") : "(none)"}</> },
+      ],
+    },
+    {
+      title: "Recording / Pipeline",
+      rows: [
+        { label: "Recording", render: () => <>{runtime ? boolDot(runtime.isRecording) : <Dot color="gray" />}</> },
+        { label: "Shortcut State", render: () => <>{runtime ? statusDot(runtime.shortcutState) : <Dot color="gray" />}</> },
+      ],
+    },
+    {
+      title: "Indicator",
+      rows: [
+        { label: "Visible", render: () => <>{runtime ? boolDot(runtime.indicatorVisible) : <Dot color="gray" />}</> },
+        { label: "Mode", render: () => <>{runtime ? statusDot(runtime.indicatorMode) : <Dot color="gray" />}</> },
+      ],
+    },
+    {
+      title: "Tray",
+      rows: [
+        { label: "Active", render: () => <>{runtime ? boolDot(runtime.trayActive) : <Dot color="gray" />}</> },
+        { label: "Listening", render: () => <>{runtime ? boolDot(runtime.isListening) : <Dot color="gray" />}</> },
+        { label: "Has Model", render: () => <>{runtime ? boolDot(runtime.hasModel) : <Dot color="gray" />}</> },
       ],
     },
     {
