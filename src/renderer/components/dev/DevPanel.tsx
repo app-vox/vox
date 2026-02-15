@@ -546,7 +546,7 @@ export function DevPanel() {
     },
     {
       title: "Window / UI",
-      overrideFields: ["hideDevVisuals"],
+      overrideFields: ["hideDevVisuals", "visitedDictionary"],
       rows: [
         { label: "Active Tab", render: () => <>{activeTab}</> },
         { label: "Collapsed", render: () => <>{boolDot(collapsed)}</> },
@@ -559,6 +559,21 @@ export function DevPanel() {
               {ov && <OverrideBool field="hideDevVisuals" {...ovProps} />}
             </>
           ),
+        },
+        {
+          label: "Visited Dictionary",
+          overrideField: "visitedDictionary",
+          render: () => {
+            const real = typeof window !== "undefined"
+              ? localStorage.getItem("vox:visited-dictionary") === "true"
+              : false;
+            return (
+              <>
+                <span className={styles.realValue}>{boolDot(real)}</span>
+                {ov && <OverrideBool field="visitedDictionary" {...ovProps} />}
+              </>
+            );
+          },
         },
         { label: "Online", render: () => <>{boolDot(online)}</> },
         {
