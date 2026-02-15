@@ -57,7 +57,7 @@ function setupPipeline(): void {
     modelPath,
     dictionary: config.dictionary ?? [],
     hasCustomPrompt: Boolean(config.customPrompt),
-    llmModelName: config.enableLlmEnhancement ? getLlmModelName(config) : undefined,
+    llmModelName: config.enableLlmEnhancement ? getLlmModelName(config.llm) : undefined,
     analytics,
     onStage: (stage) => shortcutManager?.showIndicator(stage),
     onComplete: (result) => {

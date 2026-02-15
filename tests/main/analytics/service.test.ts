@@ -25,13 +25,15 @@ vi.mock("electron-store", () => {
 
 // Mock posthog-node
 const mockCapture = vi.fn();
+const mockCaptureImmediate = vi.fn().mockResolvedValue(undefined);
 const mockIdentify = vi.fn();
 const mockShutdown = vi.fn().mockResolvedValue(undefined);
 vi.mock("posthog-node", () => {
   const MockPostHog = class {
     capture = mockCapture;
+    captureImmediate = mockCaptureImmediate;
     identify = mockIdentify;
-    shutdown = mockShutdown;
+    _shutdown = mockShutdown;
   };
   return { PostHog: MockPostHog };
 });
@@ -208,7 +210,7 @@ describe("AnalyticsService", () => {
       service.init({ enabled: true, locale: "en" });
       service.setEnabled(true);
       service.track("test_event");
-      expect(mockCapture).toHaveBeenCalledWith(
+      expect(mockCaptureImmediate).toHaveBeenCalledWith(
         expect.objectContaining({ event: "test_event" })
       );
       Object.defineProperty(app, "isPackaged", { value: true, configurable: true });

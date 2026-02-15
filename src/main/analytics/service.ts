@@ -91,11 +91,21 @@ export class AnalyticsService {
 
       const userProps = properties ? sanitizeProperties(properties) : {};
 
-      this.posthog.capture({
+      const msg = {
         distinctId: this.deviceId,
         event,
         properties: { ...baseProps, ...userProps },
-      });
+      };
+
+      if (this.isDevMode) {
+        void this.posthog.captureImmediate(msg).catch((err) => {
+          slog.warn("Failed to send analytics event", { event, error: err });
+        });
+      } else {
+        this.posthog.capture(msg);
+      }
+
+      slog.debug("Event captured", { event });
     } catch (err) {
       slog.warn("Failed to capture analytics event", { event, error: err });
     }
@@ -152,7 +162,7 @@ export class AnalyticsService {
 
   async shutdown(): Promise<void> {
     try {
-      await this.posthog?.shutdown();
+      await this.posthog?._shutdown();
     } catch (err) {
       slog.warn("Failed to shutdown analytics", err);
     }
