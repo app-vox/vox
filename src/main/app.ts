@@ -233,10 +233,10 @@ app.whenReady().then(async () => {
 });
 
 app.on("activate", () => {
-  const hasVisibleWindow = BrowserWindow.getAllWindows().some(win =>
-    win.isVisible() && !win.isDestroyed()
+  const visibleWindows = BrowserWindow.getAllWindows().filter(win =>
+    win.isVisible() && !win.isDestroyed() && win.getTitle() === "Vox"
   );
-  if (!hasVisibleWindow) {
+  if (visibleWindows.length === 0) {
     openHome(reloadConfig);
   }
 });
@@ -247,9 +247,6 @@ app.on("will-quit", () => {
   });
   analytics.shutdown();
   shortcutManager?.stop();
-  for (const win of BrowserWindow.getAllWindows()) {
-    if (!win.isDestroyed()) win.destroy();
-  }
 });
 
 app.on("window-all-closed", () => {});

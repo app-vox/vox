@@ -36,11 +36,11 @@ function buildHudHtml(): string {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.3s ease, border-color 0.3s ease;
+    transition: box-shadow 0.15s ease, background 0.3s ease, border-color 0.3s ease;
     position: relative;
+    flex-shrink: 0;
   }
   .hud:hover {
-    transform: scale(1.1);
     box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
     border-color: rgba(99, 102, 241, 0.4);
   }
@@ -83,13 +83,7 @@ function buildHudHtml(): string {
   .mic-icon svg {
     width: 14px;
     height: 14px;
-  }
-
-  .idle-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.5);
+    transition: filter 0.15s ease;
   }
 
   .stop-icon {
@@ -118,16 +112,18 @@ function buildHudHtml(): string {
     border-radius: 50%;
     background: rgba(50, 50, 50, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    display: none;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background 0.15s ease;
+    transition: background 0.15s ease, opacity 0.15s ease;
     flex-shrink: 0;
+    display: flex;
+    opacity: 0;
+    pointer-events: none;
   }
   .cancel-btn:hover { background: #ff4444; border-color: rgba(239, 68, 68, 0.5); }
   .cancel-btn svg { width: 8px; height: 8px; }
-  .cancel-btn.visible { display: flex; }
+  .cancel-btn.visible { opacity: 1; pointer-events: auto; }
   .scale-wrapper {
     display: flex;
     flex-direction: column;
@@ -140,8 +136,7 @@ function buildHudHtml(): string {
 <body>
 <div class="scale-wrapper" id="scale-wrapper">
 <div class="hud" id="hud" role="button" tabindex="0">
-  <div class="icon mic-icon" id="play-icon"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></div>
-  <div class="icon hidden" id="dot-icon"><div class="idle-dot"></div></div>
+  <div class="icon mic-icon" id="mic-icon"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></div>
   <div class="icon hidden" id="stop-icon"><div class="stop-icon"></div></div>
   <div class="icon hidden" id="proc-icon"><div class="proc-icon"></div></div>
   <div class="icon hidden" id="error-icon"><svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5" stroke="rgba(255,255,255,0.95)" stroke-width="2" stroke-linecap="round"/></svg></div>
@@ -154,7 +149,6 @@ function buildHudHtml(): string {
 </div>
 <script>
 var state = 'idle';
-var hoverMode = false;
 
 document.getElementById('hud').addEventListener('click', function() {
   if (state === 'processing' || state === 'enhancing' || state === 'error' || state === 'canceled') return;
@@ -165,28 +159,17 @@ document.getElementById('hud').addEventListener('click', function() {
   }
 });
 
-function setHoverMode(enabled) {
-  hoverMode = enabled;
-  updateIdleIcon();
-}
-
-function updateIdleIcon() {
-  if (state !== 'idle') return;
-  var playIcon = document.getElementById('play-icon');
-  var dotIcon = document.getElementById('dot-icon');
-  if (hoverMode) {
-    playIcon.classList.add('hidden');
-    dotIcon.classList.remove('hidden');
-  } else {
-    playIcon.classList.remove('hidden');
-    dotIcon.classList.add('hidden');
-  }
+function setBlur(px) {
+  var svg = document.querySelector('#mic-icon svg');
+  if (svg) svg.style.filter = px > 0 ? 'blur(' + px + 'px)' : 'none';
 }
 
 function setScale(factor) {
   var wrapper = document.getElementById('scale-wrapper');
   wrapper.style.transform = 'scale(' + factor + ')';
   wrapper.style.opacity = factor < 0.7 ? 0.4 + (factor - 0.55) / 0.15 * 0.6 : 1;
+  var blurPx = factor >= 1.0 ? 0 : Math.round((1.0 - factor) / (1.0 - 0.55) * 3);
+  setBlur(blurPx);
 }
 
 function setState(newState, titles) {
@@ -199,14 +182,13 @@ function setState(newState, titles) {
   var isProc = newState === 'processing' || newState === 'enhancing';
   var isError = newState === 'error' || newState === 'canceled';
 
-  document.getElementById('play-icon').classList.toggle('hidden', !isIdle || hoverMode);
-  document.getElementById('dot-icon').classList.toggle('hidden', !isIdle || !hoverMode);
+  document.getElementById('mic-icon').classList.toggle('hidden', !isIdle);
   document.getElementById('stop-icon').classList.toggle('hidden', !isListening);
   document.getElementById('proc-icon').classList.toggle('hidden', !isProc);
   document.getElementById('error-icon').classList.toggle('hidden', !isError);
 
   var cancelBtn = document.getElementById('cancel-btn');
-  cancelBtn.classList.toggle('visible', isListening);
+  cancelBtn.classList.toggle('visible', isListening || isError);
 
   if (titles) {
     hud.setAttribute('title', titles.main || '');
@@ -234,7 +216,6 @@ export class HudWindow {
     this.position = position;
 
     if (this.window && !this.window.isDestroyed()) {
-      this.execSetHoverMode(showOnHover);
       this.positionWindow();
       if (!showOnHover) {
         this.stopHoverTracking();
@@ -280,7 +261,6 @@ export class HudWindow {
 
     this.window.webContents.on("did-finish-load", () => {
       this.contentReady = true;
-      this.execSetHoverMode(showOnHover);
       this.sendTitles();
       if (this.pendingUpdate) {
         this.execSetState(this.pendingUpdate.state);
@@ -301,7 +281,7 @@ export class HudWindow {
     this.stopHoverTracking();
     this.clearFlashTimer();
     if (this.window && !this.window.isDestroyed()) {
-      this.window.close();
+      this.window.destroy();
     }
     this.window = null;
     this.contentReady = false;
@@ -385,13 +365,6 @@ export class HudWindow {
     ).catch(() => {});
   }
 
-  private execSetHoverMode(enabled: boolean): void {
-    if (!this.window || this.window.isDestroyed() || !this.contentReady) return;
-    this.window.webContents.executeJavaScript(
-      `setHoverMode(${enabled})`
-    ).catch(() => {});
-  }
-
   private clearFlashTimer(): void {
     if (this.flashTimer) {
       clearTimeout(this.flashTimer);
@@ -411,7 +384,7 @@ export class HudWindow {
     if (!this.window || this.window.isDestroyed()) return;
     this.window.showInactive();
     this.execSetScale(MIN_SCALE);
-    this.hoverTimer = setInterval(() => {
+    const timer = setInterval(() => {
       if (!this.window || this.window.isDestroyed()) return;
       if (this.currentState !== "idle") {
         this.execSetScale(1.0);
@@ -432,6 +405,8 @@ export class HudWindow {
       }
       this.execSetScale(scale);
     }, 50);
+    timer.unref();
+    this.hoverTimer = timer;
   }
 
   private stopHoverTracking(): void {
