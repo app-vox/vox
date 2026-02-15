@@ -20,7 +20,7 @@ function buildHudHtml(): string {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
   }
   .hud {
     width: 36px;
@@ -135,7 +135,7 @@ function buildHudHtml(): string {
     flex-direction: column;
     align-items: center;
     gap: 7px;
-    transform-origin: center bottom;
+    transform-origin: center center;
     transition: transform 0.1s ease, opacity 0.1s ease;
   }
 </style></head>
@@ -355,7 +355,7 @@ export class HudWindow {
     } else {
       x = Math.round(workArea.x + workArea.width / 2 - HUD_WIDTH / 2);
     }
-    const y = workArea.y + workArea.height - HUD_HEIGHT - DOCK_MARGIN;
+    const y = workArea.y + workArea.height - HUD_HEIGHT - DOCK_MARGIN * 2;
     this.window.setPosition(x, y);
   }
 
