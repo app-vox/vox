@@ -12,6 +12,7 @@ export interface DevOverrides {
   online?: boolean;
   llmEnhancementEnabled?: boolean;
   llmConnectionTested?: boolean;
+  hideDevVisuals?: boolean;
 }
 
 interface DevOverridesState {

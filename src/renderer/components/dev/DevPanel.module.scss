@@ -425,3 +425,24 @@
     background: var(--color-bg-hover);
   }
 }
+
+/* ── Dev Visuals blur ────────────────────────────────────────────── */
+
+.devBlurred {
+  filter: blur(3px);
+  opacity: 0.15;
+  pointer-events: none;
+  user-select: none;
+  transition: filter 200ms ease, opacity 200ms ease;
+}
+
+.devVisualsBanner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--spacing-2) var(--spacing-3);
+  margin-bottom: var(--spacing-3);
+  font-size: var(--font-size-sm, 13px);
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}

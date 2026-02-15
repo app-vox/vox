@@ -258,6 +258,13 @@
   background: #ef4444;
 }
 
+.devHidden {
+  filter: blur(3px);
+  opacity: 0.15;
+  pointer-events: none;
+  user-select: none;
+}
+
 .devOverrideDot {
   position: absolute;
   top: -2px;

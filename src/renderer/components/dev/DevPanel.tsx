@@ -5,6 +5,7 @@ import { useConfigStore } from "../../stores/config-store";
 import { useDevOverrides, type DevOverrides } from "../../stores/dev-overrides-store";
 import { usePermissionsStore } from "../../stores/permissions-store";
 import { useTranscriptionsStore } from "../../stores/transcriptions-store";
+import { useSaveToast } from "../../hooks/use-save-toast";
 import { useOnlineStatus } from "../../hooks/use-online-status";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
@@ -194,6 +195,7 @@ export function DevPanel() {
   const transcriptionTotal = useTranscriptionsStore((s) => s.total);
   const transcriptionSearch = useTranscriptionsStore((s) => s.searchQuery);
   const fetchTranscriptions = useTranscriptionsStore((s) => s.fetchPage);
+  const triggerToast = useSaveToast((s) => s.trigger);
 
   const online = useOnlineStatus();
 
@@ -497,11 +499,29 @@ export function DevPanel() {
     },
     {
       title: "Window / UI",
+      overrideFields: ["hideDevVisuals"],
       rows: [
         { label: "Active Tab", render: () => <>{activeTab}</> },
         { label: "Collapsed", render: () => <>{boolDot(collapsed)}</> },
-        { label: "Dev Mode", render: () => <>{boolDot(import.meta.env.DEV)}</> },
+        {
+          label: "Dev Visuals",
+          overrideField: "hideDevVisuals",
+          render: () => (
+            <>
+              <span className={styles.realValue}>{boolDot(true)} visible</span>
+              {ov && <OverrideBool field="hideDevVisuals" {...ovProps} />}
+            </>
+          ),
+        },
         { label: "Online", render: () => <>{boolDot(online)}</> },
+        {
+          label: "Save Toast",
+          render: () => (
+            <button className={styles.setBtn} onClick={triggerToast}>
+              Trigger
+            </button>
+          ),
+        },
       ],
     },
     {
@@ -543,8 +563,25 @@ export function DevPanel() {
     for (const f of fields) clearOverride(f);
   };
 
+  const hideDevVisuals = ov && overrides.hideDevVisuals === true;
+
   return (
     <>
+      {/* Dev Visuals toggle — always visible, outside the blur wrapper */}
+      {hideDevVisuals && (
+        <div className={styles.devVisualsBanner}>
+          <InfoCircleIcon width={13} height={13} />
+          <span>Dev visuals hidden.</span>
+          <button
+            className={styles.setBtn}
+            onClick={() => clearOverride("hideDevVisuals")}
+          >
+            Show
+          </button>
+        </div>
+      )}
+
+      <div className={hideDevVisuals ? styles.devBlurred : undefined}>
       {/* Header row: override toggle + search */}
       <div className={styles.panelHeader}>
         <label className={styles.masterToggle}>
@@ -623,6 +660,7 @@ export function DevPanel() {
             </div>
           </div>
         ))}
+      </div>
       </div>
     </>
   );

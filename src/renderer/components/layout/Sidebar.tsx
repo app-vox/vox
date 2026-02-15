@@ -131,6 +131,11 @@ export function Sidebar() {
     ? useDevOverridesActive()
     : false;
 
+  const hideDevVisuals = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("hideDevVisuals", undefined)
+    : undefined;
+
   const permissionStatus = {
     ...realPermissionStatus,
     ...(devMicOverride !== undefined ? { microphone: devMicOverride } : {}),
@@ -275,7 +280,7 @@ export function Sidebar() {
         {import.meta.env.DEV && (
           <>
             <button
-              className={`${styles.navItem} ${styles.devItem} ${activeTab === "dev" ? styles.devItemActive : ""}`}
+              className={`${styles.navItem} ${styles.devItem} ${activeTab === "dev" ? styles.devItemActive : ""} ${hideDevVisuals === true ? styles.devHidden : ""}`}
               onClick={() => handleTabClick("dev")}
               title={collapsed ? "Dev Panel" : undefined}
             >

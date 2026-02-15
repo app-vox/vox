@@ -55,7 +55,7 @@ export function useDevOverridesActive(): boolean {
   const [active, setActive] = useState(() => {
     const ov = readOverrides();
     if (!ov) return false;
-    return Object.keys(ov).some((k) => k !== "enabled" && ov[k as keyof DevOverrides] !== undefined);
+    return Object.keys(ov).some((k) => k !== "enabled" && k !== "hideDevVisuals" && ov[k as keyof DevOverrides] !== undefined);
   });
 
   useEffect(() => {
