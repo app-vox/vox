@@ -7,8 +7,10 @@ import {
   CheckIcon,
   CopyIcon,
   TrashAltIcon,
+  ChevronsLeftIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  ChevronsRightIcon,
 } from "../../../shared/icons";
 import { CustomSelect } from "../ui/CustomSelect";
 import card from "../shared/card.module.scss";
@@ -204,12 +206,22 @@ export function TranscriptionsPanel() {
                 {page} / {totalPages || 1}
               </div>
               <div className={styles.pageControls}>
+                {page > 2 && (
+                  <button onClick={() => setPage(1)}>
+                    <ChevronsLeftIcon width={12} height={12} />
+                  </button>
+                )}
                 <button disabled={page <= 1} onClick={() => setPage(page - 1)}>
                   <ChevronLeftIcon width={12} height={12} />
                 </button>
                 <button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
                   <ChevronRightIcon width={12} height={12} />
                 </button>
+                {page < totalPages - 1 && (
+                  <button onClick={() => setPage(totalPages)}>
+                    <ChevronsRightIcon width={12} height={12} />
+                  </button>
+                )}
               </div>
               {/* eslint-disable i18next/no-literal-string */}
               <div className={styles.pageSizeSelect}>

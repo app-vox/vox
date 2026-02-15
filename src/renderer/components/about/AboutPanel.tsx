@@ -101,32 +101,38 @@ export function AboutPanel() {
                   </>
                 )}
               </div>
-              {status === "downloading" && (
-                <div className={styles.progressBar}>
-                  <div
-                    className={styles.progressFill}
-                    style={{ width: `${devDownloadProgress ?? updateState?.downloadProgress ?? 0}%` }}
-                  />
+              {status === "downloading" ? (
+                <div className={styles.progressRow}>
+                  <div className={styles.progressBar}>
+                    <div
+                      className={styles.progressFill}
+                      style={{ width: `${devDownloadProgress ?? updateState?.downloadProgress ?? 0}%` }}
+                    />
+                  </div>
+                  <button onClick={() => setDismissed(true)} className={styles.dismissButton} aria-label="Dismiss">
+                    <XIcon width={14} height={14} />
+                  </button>
+                </div>
+              ) : (
+                <div className={styles.updateBannerActions}>
+                  {status === "ready" ? (
+                    <button onClick={handleRestart} className={styles.downloadButton}>
+                      {t("general.about.restartNow")}
+                    </button>
+                  ) : status === "available" && isDevMode && updateState?.releaseUrl ? (
+                    <button
+                      onClick={() => window.voxApi.shell.openExternal(updateState.releaseUrl)}
+                      className={styles.downloadButton}
+                    >
+                      {t("general.about.download")}
+                      <ExternalLinkIcon width={14} height={14} />
+                    </button>
+                  ) : null}
+                  <button onClick={() => setDismissed(true)} className={styles.dismissButton} aria-label="Dismiss">
+                    <XIcon width={14} height={14} />
+                  </button>
                 </div>
               )}
-              <div className={styles.updateBannerActions}>
-                {status === "ready" ? (
-                  <button onClick={handleRestart} className={styles.downloadButton}>
-                    {t("general.about.restartNow")}
-                  </button>
-                ) : status === "available" && isDevMode && updateState?.releaseUrl ? (
-                  <button
-                    onClick={() => window.voxApi.shell.openExternal(updateState.releaseUrl)}
-                    className={styles.downloadButton}
-                  >
-                    {t("general.about.download")}
-                    <ExternalLinkIcon width={14} height={14} />
-                  </button>
-                ) : null}
-                <button onClick={() => setDismissed(true)} className={styles.dismissButton} aria-label="Dismiss">
-                  <XIcon width={14} height={14} />
-                </button>
-              </div>
             </div>
             <button onClick={openIssueTracker} className={styles.reportIssueBelow}>
               <InfoCircleAltIcon width={16} height={16} />

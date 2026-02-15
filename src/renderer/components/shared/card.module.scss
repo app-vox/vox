@@ -96,6 +96,43 @@
   }
 }
 
+.collapsible {
+  composes: card;
+
+  summary {
+    list-style: none;
+    cursor: pointer;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+}
+
+.collapsibleHeader {
+  composes: header;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  padding-bottom: var(--spacing-5);
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.chevron {
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+  transition: transform 200ms ease;
+
+  details[open] > summary & {
+    transform: rotate(180deg);
+  }
+}
+
 .infoBannerLink {
   background: none;
   border: none;

@@ -3,7 +3,7 @@ import { useConfigStore } from "../../stores/config-store";
 import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useT } from "../../i18n-context";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
-import { XIcon, ChevronLeftIcon, ChevronRightIcon, InfoCircleIcon } from "../../../shared/icons";
+import { XIcon, ChevronsLeftIcon, ChevronLeftIcon, ChevronRightIcon, ChevronsRightIcon, InfoCircleIcon } from "../../../shared/icons";
 import { CustomSelect } from "../ui/CustomSelect";
 import card from "../shared/card.module.scss";
 import form from "../shared/forms.module.scss";
@@ -50,6 +50,12 @@ export function DictionaryPanel() {
     ? useDevOverrideValue("llmEnhancementEnabled", realLlmEnabled)
     : realLlmEnabled;
 
+  const realLlmTested = useConfigStore((s) => s.config?.llmConnectionTested ?? false);
+  const llmTested = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("llmConnectionTested", realLlmTested)
+    : realLlmTested;
+
   const showInfoBanner = !setupComplete || !llmEnabled;
 
   const [inputValue, setInputValue] = useState("");
@@ -64,8 +70,8 @@ export function DictionaryPanel() {
 
   if (!config) return null;
 
-  const llmReady = config.enableLlmEnhancement === true
-    && config.llmConnectionTested === true
+  const llmReady = llmEnabled === true
+    && llmTested === true
     && computeLlmConfigHash(config) === config.llmConfigHash;
 
   const dictionary = config.dictionary ?? [];
@@ -156,18 +162,12 @@ export function DictionaryPanel() {
 
       {llmEnabled && !llmReady && (
         <div className={card.warningBanner}>
+          <InfoCircleIcon width={16} height={16} />
           <span>
             {t("dictionary.llmRequired")}{" "}
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                useConfigStore.getState().setActiveTab("llm");
-              }}
-              style={{ color: "inherit", textDecoration: "underline", cursor: "pointer" }}
-            >
-              {t("tabs.aiEnhancement")}
-            </a>
+            <button className={card.infoBannerLink} onClick={() => setActiveTab("llm")}>
+              {t("dictionary.goToAiEnhancement")}
+            </button>
           </span>
         </div>
       )}
@@ -227,12 +227,22 @@ export function DictionaryPanel() {
                   {page} / {totalPages || 1}
                 </div>
                 <div className={styles.pageControls}>
+                  {page > 2 && (
+                    <button onClick={() => setPage(1)}>
+                      <ChevronsLeftIcon width={12} height={12} />
+                    </button>
+                  )}
                   <button disabled={page <= 1} onClick={() => setPage(page - 1)}>
                     <ChevronLeftIcon width={12} height={12} />
                   </button>
                   <button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
                     <ChevronRightIcon width={12} height={12} />
                   </button>
+                  {page < totalPages - 1 && (
+                    <button onClick={() => setPage(totalPages)}>
+                      <ChevronsRightIcon width={12} height={12} />
+                    </button>
+                  )}
                 </div>
                 {/* eslint-disable i18next/no-literal-string */}
                 <div className={styles.pageSizeSelect}>
