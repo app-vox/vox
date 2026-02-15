@@ -26,3 +26,6 @@ docs/plans/
 
 # Git worktrees
 .worktrees/
+
+# Coverage reports
+coverage/

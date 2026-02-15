@@ -19,6 +19,7 @@
     "check:tokens": "./scripts/check-css-tokens.sh",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "dist": "electron-vite build && electron-builder",
     "postinstall": "make -C node_modules/whisper-node/lib/whisper.cpp main"
   },
@@ -31,6 +32,7 @@
     "@types/react": "^19.2.13",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.3",
+    "@vitest/coverage-v8": "^4.0.18",
     "electron": "^40.2.1",
     "electron-builder": "^26.7.0",
     "electron-vite": "^5.0.0",
