@@ -1,8 +1,6 @@
-import type { VoxConfig } from "./config";
+import type { LlmConfig, VoxConfig } from "./config";
 
-function getProviderFields(config: VoxConfig): Record<string, string> {
-  const llm = config.llm;
-
+function getProviderFields(llm: LlmConfig): Record<string, string> {
   switch (llm.provider) {
     case "bedrock":
       return {
@@ -56,7 +54,7 @@ function simpleHash(str: string): string {
 export function computeLlmConfigHash(config: VoxConfig): string {
   const relevant = {
     provider: config.llm.provider,
-    ...getProviderFields(config),
+    ...getProviderFields(config.llm),
   };
   return simpleHash(JSON.stringify(relevant));
 }
