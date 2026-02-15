@@ -19,7 +19,9 @@ uninstall:
 	rm -rf /Applications/Vox.app
 
 run:
+	npm install
 	npm run start
 
 dev:
+	npm install
 	npm run dev
