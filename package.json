@@ -58,6 +58,7 @@
     "electron-store": "^11.0.2",
     "electron-updater": "^6.7.3",
     "koffi": "^2.15.1",
+    "posthog-node": "^5.24.15",
     "uiohook-napi": "^1.5.4",
     "whisper-node": "^1.1.1"
   },
