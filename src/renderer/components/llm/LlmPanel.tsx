@@ -15,6 +15,10 @@ import { CustomSelect } from "../ui/CustomSelect";
 import { ExternalLinkIcon, CheckCircleIcon, InfoCircleAltIcon, CopyIcon, SparkleIcon, PlayIcon } from "../../../shared/icons";
 import type { LlmProviderType, LlmConfig } from "../../../shared/config";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
+import card from "../shared/card.module.scss";
+import form from "../shared/forms.module.scss";
+import buttons from "../shared/buttons.module.scss";
+import styles from "./LlmPanel.module.scss";
 
 function isProviderConfigured(provider: LlmProviderType, llm: LlmConfig): boolean {
   if (provider !== llm.provider) return false;
@@ -37,10 +41,6 @@ function isProviderConfigured(provider: LlmProviderType, llm: LlmConfig): boolea
       return false;
   }
 }
-import card from "../shared/card.module.scss";
-import form from "../shared/forms.module.scss";
-import buttons from "../shared/buttons.module.scss";
-import styles from "./LlmPanel.module.scss";
 
 export function LlmPanel() {
   const t = useT();
