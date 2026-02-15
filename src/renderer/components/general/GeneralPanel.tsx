@@ -116,8 +116,6 @@ export function GeneralPanel() {
     { value: "bottom", label: t("general.overlay.bottom") },
   ];
 
-  const showAutoInvertDisclaimer = config.showHud && config.hudPosition === "center" && config.overlayPosition === "bottom";
-
   const [hudCollapsed, setHudCollapsed] = useState(() => localStorage.getItem(HUD_COLLAPSED_KEY) === "true");
 
   const isDevMode = import.meta.env.DEV;
@@ -125,6 +123,8 @@ export function GeneralPanel() {
   const needsPermissions = !loading && setupComplete && permissionStatus !== null && (permissionStatus.accessibility !== true || permissionStatus.microphone !== "granted");
 
   if (!config) return null;
+
+  const showAutoInvertDisclaimer = config.showHud && config.hudPosition === "center" && config.overlayPosition === "bottom";
 
   const handleSoundChange = async (field: "recordingAudioCue" | "recordingStopAudioCue" | "errorAudioCue", cue: string) => {
     updateConfig({ [field]: cue });
