@@ -178,6 +178,51 @@ export function GeneralPanel() {
 
       <div className={card.card}>
         <div className={card.header}>
+          <h2>{t("general.hud.title")}</h2>
+          <p className={card.description}>{t("general.hud.description")}</p>
+        </div>
+        <div className={card.body}>
+          <label className={styles.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={config.showHud}
+              onChange={async () => {
+                const newShowHud = !config.showHud;
+                updateConfig({
+                  showHud: newShowHud,
+                  ...(newShowHud ? {} : { hudShowOnHover: false }),
+                });
+                await saveConfig(false);
+                triggerToast();
+              }}
+            />
+            <div>
+              <div className={styles.checkboxLabel}>{t("general.hud.showHud")}</div>
+              <div className={styles.checkboxDesc}>{t("general.hud.showHudDesc")}</div>
+            </div>
+          </label>
+
+          <label className={`${styles.checkboxRow} ${styles.subCheckbox} ${!config.showHud ? styles.disabled : ""}`}>
+            <input
+              type="checkbox"
+              checked={config.hudShowOnHover}
+              disabled={!config.showHud}
+              onChange={async () => {
+                updateConfig({ hudShowOnHover: !config.hudShowOnHover });
+                await saveConfig(false);
+                triggerToast();
+              }}
+            />
+            <div>
+              <div className={styles.checkboxLabel}>{t("general.hud.showOnHover")}</div>
+              <div className={styles.checkboxDesc}>{t("general.hud.showOnHoverDesc")}</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div className={card.card}>
+        <div className={card.header}>
           <h2>{t("general.theme.title")}</h2>
           <p className={card.description}>{t("general.theme.description")}</p>
         </div>
