@@ -3,14 +3,21 @@ import type { LlmProvider } from "./provider";
 
 export abstract class BaseLlmProvider implements LlmProvider {
   protected abstract readonly providerName: string;
+  protected readonly customPromptText: string;
+  protected readonly customPromptEnabled: boolean;
+
+  constructor(customPrompt: string, hasCustomPrompt: boolean) {
+    this.customPromptText = customPrompt;
+    this.customPromptEnabled = hasCustomPrompt;
+  }
 
   async correct(rawText: string): Promise<string> {
     const slog = log.scope(this.providerName);
-    slog.info("Enhancing text", { hasCustomPrompt: this.hasCustomPrompt() });
+    slog.info("Enhancing text", { hasCustomPrompt: this.customPromptEnabled });
     slog.debug("Request details", {
       rawTextLength: rawText.length,
       rawText,
-      systemPrompt: this.getCustomPrompt(),
+      systemPrompt: this.customPromptText,
     });
 
     const correctedText = await this.enhance(rawText);
@@ -24,6 +31,4 @@ export abstract class BaseLlmProvider implements LlmProvider {
   }
 
   protected abstract enhance(rawText: string): Promise<string>;
-  protected abstract hasCustomPrompt(): boolean;
-  protected abstract getCustomPrompt(): string;
 }

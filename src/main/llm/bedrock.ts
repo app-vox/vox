@@ -21,14 +21,10 @@ export class BedrockProvider extends BaseLlmProvider {
   protected readonly providerName = "Bedrock";
   private readonly client: BedrockRuntimeClient;
   private readonly modelId: string;
-  private readonly customPromptText: string;
-  private readonly customPromptEnabled: boolean;
 
   constructor(config: BedrockConfig) {
-    super();
+    super(config.customPrompt, config.hasCustomPrompt);
     this.modelId = config.modelId;
-    this.customPromptText = config.customPrompt;
-    this.customPromptEnabled = config.hasCustomPrompt;
 
     const clientConfig: Record<string, unknown> = {
       region: config.region,
@@ -84,11 +80,4 @@ export class BedrockProvider extends BaseLlmProvider {
     return textBlock.text.trim();
   }
 
-  protected hasCustomPrompt(): boolean {
-    return this.customPromptEnabled;
-  }
-
-  protected getCustomPrompt(): string {
-    return this.customPromptText;
-  }
 }

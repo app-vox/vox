@@ -18,7 +18,7 @@ export class FoundryProvider extends BaseLlmProvider {
   private readonly config: FoundryConfig;
 
   constructor(config: FoundryConfig) {
-    super();
+    super(config.customPrompt, config.hasCustomPrompt);
     this.config = config;
   }
 
@@ -63,11 +63,4 @@ export class FoundryProvider extends BaseLlmProvider {
     return textBlock.text.trim();
   }
 
-  protected hasCustomPrompt(): boolean {
-    return this.config.hasCustomPrompt;
-  }
-
-  protected getCustomPrompt(): string {
-    return this.config.customPrompt;
-  }
 }

@@ -18,7 +18,7 @@ export class OpenAICompatibleProvider extends BaseLlmProvider {
   private readonly config: OpenAICompatibleConfig;
 
   constructor(config: OpenAICompatibleConfig) {
-    super();
+    super(config.customPrompt, config.hasCustomPrompt);
     this.config = config;
   }
 
@@ -62,11 +62,4 @@ export class OpenAICompatibleProvider extends BaseLlmProvider {
     return content.trim();
   }
 
-  protected hasCustomPrompt(): boolean {
-    return this.config.hasCustomPrompt;
-  }
-
-  protected getCustomPrompt(): string {
-    return this.config.customPrompt;
-  }
 }

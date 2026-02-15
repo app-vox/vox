@@ -17,7 +17,7 @@ export class AnthropicProvider extends BaseLlmProvider {
   private readonly config: AnthropicConfig;
 
   constructor(config: AnthropicConfig) {
-    super();
+    super(config.customPrompt, config.hasCustomPrompt);
     this.config = config;
   }
 
@@ -61,11 +61,4 @@ export class AnthropicProvider extends BaseLlmProvider {
     return textBlock.text.trim();
   }
 
-  protected hasCustomPrompt(): boolean {
-    return this.config.hasCustomPrompt;
-  }
-
-  protected getCustomPrompt(): string {
-    return this.config.customPrompt;
-  }
 }

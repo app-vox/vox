@@ -15,8 +15,6 @@ import { BaseLlmProvider } from "../../../src/main/llm/base-provider";
 
 class TestProvider extends BaseLlmProvider {
   protected readonly providerName = "TestProvider";
-  private readonly customPrompt: string;
-  private readonly _hasCustomPrompt: boolean;
   private readonly enhanceFn: (rawText: string) => Promise<string>;
 
   constructor(
@@ -24,22 +22,12 @@ class TestProvider extends BaseLlmProvider {
     customPrompt = "default prompt",
     hasCustom = false,
   ) {
-    super();
+    super(customPrompt, hasCustom);
     this.enhanceFn = enhanceFn;
-    this.customPrompt = customPrompt;
-    this._hasCustomPrompt = hasCustom;
   }
 
   protected enhance(rawText: string): Promise<string> {
     return this.enhanceFn(rawText);
-  }
-
-  protected hasCustomPrompt(): boolean {
-    return this._hasCustomPrompt;
-  }
-
-  protected getCustomPrompt(): string {
-    return this.customPrompt;
   }
 }
 

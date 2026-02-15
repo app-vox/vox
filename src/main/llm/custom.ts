@@ -21,7 +21,7 @@ export class CustomProvider extends BaseLlmProvider {
   private readonly config: CustomProviderConfig;
 
   constructor(config: CustomProviderConfig) {
-    super();
+    super(config.customPrompt, config.hasCustomPrompt);
     this.config = config;
   }
 
@@ -87,11 +87,4 @@ export class CustomProvider extends BaseLlmProvider {
     return content.trim();
   }
 
-  protected hasCustomPrompt(): boolean {
-    return this.config.hasCustomPrompt;
-  }
-
-  protected getCustomPrompt(): string {
-    return this.config.customPrompt;
-  }
 }
