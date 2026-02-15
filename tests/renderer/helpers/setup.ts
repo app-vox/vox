@@ -116,7 +116,7 @@ export function resetStores(): void {
     setupComplete: false,
     _hasSavedTab: false,
     _hasUserNavigated: false,
-  }, true);
+  });
 
   useTranscriptionsStore.setState({
     entries: [],
@@ -125,16 +125,16 @@ export function resetStores(): void {
     pageSize: 10,
     searchQuery: "",
     loading: false,
-  }, true);
+  });
 
   useDevOverrides.setState({
     overrides: { enabled: false },
-  }, true);
+  });
 
   useSaveToast.setState({
     show: false,
     timestamp: 0,
-  }, true);
+  });
 }
 
 /**
