@@ -195,6 +195,11 @@ export function Sidebar() {
 
   const showDictionaryDot = !visitedDictionary && setupComplete;
 
+  const hasWarning = (item: NavItemDef) =>
+    (item.requiresModel === true && !setupComplete)
+    || (item.requiresPermissions === true && needsPermissions())
+    || (item.requiresTest === true && effectiveLlmEnhancement === true && !isConfigured("ai-enhancement"));
+
   const renderItem = (item: NavItem) => (
     <button
       key={item.id}
@@ -206,6 +211,9 @@ export function Sidebar() {
         {item.icon}
         {isConfigured(item.checkConfigured) && (
           <CheckmarkBadgeIcon className={styles.checkmark} width={10} height={10} />
+        )}
+        {collapsed && hasWarning(item) && (
+          <span className={styles.warningDot} />
         )}
       </div>
       {!collapsed && (

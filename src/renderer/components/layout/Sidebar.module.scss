@@ -248,6 +248,16 @@
   color: color-mix(in srgb, #8b5cf6 85%, var(--color-text-primary));
 }
 
+.warningDot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
+}
+
 .devOverrideDot {
   position: absolute;
   top: -2px;

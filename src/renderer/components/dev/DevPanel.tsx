@@ -569,6 +569,7 @@ export function DevPanel() {
       </div>
 
       {/* Presets */}
+      <div className={styles.presetsLabel}>Presets</div>
       <div className={styles.presets}>
         {presets.map((p) => (
           <button key={p.label} className={styles.presetBtn} onClick={() => applyPreset(p.preset)}>
@@ -580,7 +581,7 @@ export function DevPanel() {
       {/* Grid — always shows all cards, search highlights + scrolls */}
       <div className={styles.grid} ref={gridRef}>
         {cards.map((c) => (
-          <div key={c.title} className={card.card}>
+          <div key={c.title} className={`${card.card} ${hasCardOverrides(c.overrideFields) ? styles.cardOverridden : ""}`}>
             <div className={`${card.header} ${styles.cardHeader}`}>
               <h2><Highlight text={c.title} query={q} /></h2>
               {hasCardOverrides(c.overrideFields) && (
