@@ -289,5 +289,9 @@
   "general.permissions.action": "Skonfiguruj uprawnienia",
   "general.dictionary.title": "Popraw Dokładność",
   "general.dictionary.description": "Dodaj imiona, terminy techniczne i żargon do słownika, aby poprawić dokładność transkrypcji.",
-  "general.dictionary.action": "Skonfiguruj słownik"
+  "general.dictionary.action": "Skonfiguruj słownik",
+  "general.analytics.title": "Analityka",
+  "general.analytics.description": "Anonimowe dane użytkowania pomagające ulepszać Vox.",
+  "general.analytics.enable": "Udostępniaj anonimowe dane użytkowania",
+  "general.analytics.hint": "Pomóż ulepszyć Vox, udostępniając anonimowe dane użytkowania. Żadne dane osobowe ani treści transkrypcji nie są zbierane."
 }

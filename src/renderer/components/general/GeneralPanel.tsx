@@ -278,6 +278,30 @@ export function GeneralPanel() {
           </label>
         </div>
       </div>
+
+      <div className={card.card}>
+        <div className={card.header}>
+          <h2>{t("general.analytics.title")}</h2>
+          <p className={card.description}>{t("general.analytics.description")}</p>
+        </div>
+        <div className={card.body}>
+          <label className={styles.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={config.analyticsEnabled}
+              onChange={async () => {
+                updateConfig({ analyticsEnabled: !config.analyticsEnabled });
+                await saveConfig(false);
+                triggerToast();
+              }}
+            />
+            <div>
+              <div className={styles.checkboxLabel}>{t("general.analytics.enable")}</div>
+              <div className={styles.checkboxDesc}>{t("general.analytics.hint")}</div>
+            </div>
+          </label>
+        </div>
+      </div>
     </>
   );
 }

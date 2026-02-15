@@ -3,6 +3,7 @@ import * as fs from "fs";
 import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
 import { HistoryManager } from "./history/manager";
+import { AnalyticsService } from "./analytics/service";
 import { type VoxConfig, type WhisperModelSize } from "../shared/config";
 import { getResourcePath } from "./resources";
 import { SetupChecker } from "./setup/checker";
@@ -13,7 +14,8 @@ export function registerIpcHandlers(
   configManager: ConfigManager,
   modelManager: ModelManager,
   historyManager: HistoryManager,
-  onConfigChange?: () => void
+  onConfigChange?: () => void,
+  analytics?: AnalyticsService
 ): void {
   ipcMain.handle("resources:data-url", (_event, ...segments: string[]) => {
     const filePath = getResourcePath(...segments);
@@ -30,8 +32,18 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle("config:save", (_event, config: VoxConfig) => {
+    const previousConfig = configManager.load();
     configManager.save(config);
     nativeTheme.themeSource = config.theme;
+
+    // Track config changes (field names only, never values)
+    if (previousConfig.whisper.model !== config.whisper.model) {
+      analytics?.track("whisper_model_selected", { model: config.whisper.model });
+    }
+    if (previousConfig.llm.provider !== config.llm.provider) {
+      analytics?.track("llm_provider_selected", { provider: config.llm.provider });
+    }
+    analytics?.track("config_changed");
 
     // Apply launch at login setting (macOS only, packaged builds only)
     if (process.platform === "darwin" && app.isPackaged) {
@@ -58,6 +70,7 @@ export function registerIpcHandlers(
       await modelManager.download(size as WhisperModelSize, (downloaded, total) => {
         _event.sender.send("models:download-progress", { size, downloaded, total });
       });
+      analytics?.track("model_downloaded", { model: size });
 
       // Auto-select the downloaded model
       const config = configManager.load();
@@ -68,6 +81,10 @@ export function registerIpcHandlers(
       if (err instanceof DOMException && err.name === "AbortError") {
         throw new Error("Download cancelled");
       }
+      analytics?.track("model_download_failed", {
+        model: size,
+        error_type: err instanceof Error ? err.name : "unknown",
+      });
       throw err;
     }
   });

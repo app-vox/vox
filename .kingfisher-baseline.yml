@@ -1,0 +1,8 @@
+# Kingfisher baseline — allowlisted findings
+# PostHog project API key: public, write-only token (like Google Analytics tracking ID)
+ExactFindings:
+  matches:
+    - filepath: src/main/analytics/service.ts
+      fingerprint: b804f046cfb1f485
+      linenum: 19
+      lastupdated: Sat, 15 Feb 2026 10:55:06 +0000

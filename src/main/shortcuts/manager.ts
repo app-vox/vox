@@ -79,6 +79,7 @@ function getHoldKeyCodes(accelerator: string): Set<number> {
 export interface ShortcutManagerDeps {
   configManager: ConfigManager;
   getPipeline: () => Pipeline;
+  analytics?: { track(event: string, properties?: Record<string, unknown>): void };
 }
 
 export class ShortcutManager {
@@ -431,6 +432,7 @@ export class ShortcutManager {
         slog.info("Valid text received, proceeding with paste");
         await new Promise((r) => setTimeout(r, 200));
         pasteText(trimmedText);
+        this.deps.analytics?.track("paste_completed", { method: "auto-paste" });
         this.indicator.hide();
       }
     } catch (err: unknown) {
@@ -441,6 +443,9 @@ export class ShortcutManager {
         this.playCue(errorCueType);
       } else {
         slog.error("Pipeline failed", err);
+        this.deps.analytics?.track("paste_failed", {
+          error_type: err instanceof Error ? err.name : "unknown",
+        });
         this.indicator.showError();
         const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
         this.playCue(errorCueType);

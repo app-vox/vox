@@ -289,5 +289,9 @@
   "general.permissions.action": "Berechtigungen einrichten",
   "general.dictionary.title": "Genauigkeit Verbessern",
   "general.dictionary.description": "Fügen Sie Namen, Fachbegriffe und Jargon zum Wörterbuch hinzu, um die Transkriptionsgenauigkeit zu verbessern.",
-  "general.dictionary.action": "Wörterbuch einrichten"
+  "general.dictionary.action": "Wörterbuch einrichten",
+  "general.analytics.title": "Analytics",
+  "general.analytics.description": "Anonyme Nutzungsdaten zur Verbesserung von Vox.",
+  "general.analytics.enable": "Anonyme Nutzungsdaten teilen",
+  "general.analytics.hint": "Helfen Sie Vox zu verbessern, indem Sie anonyme Nutzungsdaten teilen. Es werden keine persönlichen Informationen oder Transkriptionsinhalte erfasst."
 }

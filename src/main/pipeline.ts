@@ -26,6 +26,11 @@ export interface PipelineDeps {
   llmProvider: LlmProvider;
   modelPath: string;
   dictionary?: string[];
+  hasCustomPrompt?: boolean;
+  llmModelName?: string;
+  analytics?: {
+    track(event: string, properties?: Record<string, unknown>): void;
+  };
   onStage?: (stage: PipelineStage) => void;
   onComplete?: (result: {
     text: string;
@@ -119,6 +124,10 @@ export class Pipeline {
   private readonly deps: PipelineDeps;
   private canceled = false;
 
+  private get whisperModelName(): string {
+    return this.deps.modelPath.split("/").pop()?.replace("ggml-", "").replace(".bin", "") ?? "unknown";
+  }
+
   constructor(deps: PipelineDeps) {
     this.deps = deps;
     if (!existsSync(deps.modelPath)) {
@@ -156,24 +165,43 @@ export class Pipeline {
     }
 
     slog.info("Starting transcription pipeline");
+    this.deps.analytics?.track("transcription_started", {
+      whisper_model: this.whisperModelName,
+    });
     slog.debug("Audio details", {
       bufferLength: recording.audioBuffer.length,
       sampleRate: recording.sampleRate,
     });
 
     this.deps.onStage?.("transcribing");
-    const transcription = await this.deps.transcribe(
-      recording.audioBuffer,
-      recording.sampleRate,
-      this.deps.modelPath,
-      this.deps.dictionary ?? []
-    );
+    let transcription: TranscriptionResult;
+    try {
+      transcription = await this.deps.transcribe(
+        recording.audioBuffer,
+        recording.sampleRate,
+        this.deps.modelPath,
+        this.deps.dictionary ?? []
+      );
+    } catch (err: unknown) {
+      this.deps.analytics?.track("transcription_failed", {
+        whisper_model: this.whisperModelName,
+        error_type: err instanceof Error ? err.name : "unknown",
+      });
+      throw err;
+    }
 
     if (this.canceled) {
       throw new CanceledError();
     }
 
     const rawText = transcription.text.trim();
+    const audioDurationMs = Math.round((recording.audioBuffer.length / recording.sampleRate) * 1000);
+    this.deps.analytics?.track("transcription_completed", {
+      whisper_model: this.whisperModelName,
+      duration_ms: Number((performance.now() - processingStartTime).toFixed(1)),
+      word_count: rawText.split(/\s+/).filter(Boolean).length,
+      audio_duration_ms: audioDurationMs,
+    });
     slog.info("Whisper transcription", rawText);
     slog.debug("Transcription details", {
       rawTextLength: rawText.length,
@@ -184,8 +212,8 @@ export class Pipeline {
     if (this.deps.llmProvider instanceof NoopProvider) {
       const processingTimeMs = Number((performance.now() - processingStartTime).toFixed(1));
       slog.info("LLM enhancement disabled", { processingTimeMs });
+      this.deps.analytics?.track("llm_enhancement_skipped");
       if (!rawText) return "";
-      const audioDurationMs = Math.round((recording.audioBuffer.length / recording.sampleRate) * 1000);
       this.deps.onComplete?.({ text: rawText, originalText: rawText, audioDurationMs });
       return rawText;
     }
@@ -193,6 +221,9 @@ export class Pipeline {
     slog.info("Checking for garbage transcription");
     if (!rawText || isGarbageTranscription(rawText)) {
       slog.info("Transcription rejected as empty or garbage");
+      this.deps.analytics?.track("transcription_garbage_detected", {
+        whisper_model: this.whisperModelName,
+      });
       return "";
     }
     slog.info("Transcription passed, sending to LLM");
@@ -201,8 +232,25 @@ export class Pipeline {
       throw new CanceledError();
     }
 
+    if (this.deps.dictionary && this.deps.dictionary.length > 0) {
+      this.deps.analytics?.track("dictionary_used", {
+        term_count: this.deps.dictionary.length,
+      });
+    }
+
+    this.deps.analytics?.track("custom_prompt_used", {
+      has_prompt: Boolean(this.deps.hasCustomPrompt),
+    });
+
+    const llmStartTime = performance.now();
+    const llmProviderName = this.deps.llmProvider.constructor.name.replace("Provider", "").toLowerCase();
+
     let finalText: string;
     try {
+      this.deps.analytics?.track("llm_enhancement_started", {
+        provider: llmProviderName,
+        model: this.deps.llmModelName,
+      });
       this.deps.onStage?.("enhancing");
       finalText = await this.deps.llmProvider.correct(rawText);
       slog.debug("LLM enhanced text", {
@@ -212,9 +260,19 @@ export class Pipeline {
         originalWords: rawText.split(/\s+/).length,
         enhancedWords: finalText.split(/\s+/).length,
       });
+      this.deps.analytics?.track("llm_enhancement_completed", {
+        provider: llmProviderName,
+        model: this.deps.llmModelName,
+        duration_ms: Number((performance.now() - llmStartTime).toFixed(1)),
+      });
     } catch (err: unknown) {
       // LLM failed — fall back to raw transcription
       slog.warn("LLM enhancement failed, using raw transcription", err instanceof Error ? err.message : err);
+      this.deps.analytics?.track("llm_enhancement_failed", {
+        provider: llmProviderName,
+        model: this.deps.llmModelName,
+        error_type: err instanceof Error ? err.name : "unknown",
+      });
       finalText = rawText;
     }
 
@@ -225,7 +283,6 @@ export class Pipeline {
     const totalTimeMs = Number((performance.now() - processingStartTime).toFixed(1));
     slog.info("Pipeline complete", { totalTimeMs });
 
-    const audioDurationMs = Math.round((recording.audioBuffer.length / recording.sampleRate) * 1000);
     this.deps.onComplete?.({ text: finalText, originalText: rawText, audioDurationMs });
     return finalText;
   }

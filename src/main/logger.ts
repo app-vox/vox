@@ -26,4 +26,17 @@ if (envLevel) {
 
 log.errorHandler.startCatching();
 
+export function setupAnalyticsErrorCapture(
+  analytics: { captureError(error: Error, context?: Record<string, unknown>): void }
+): void {
+  process.on("uncaughtException", (error: Error) => {
+    analytics.captureError(error, { scope: "uncaughtException" });
+  });
+
+  process.on("unhandledRejection", (reason: unknown) => {
+    const error = reason instanceof Error ? reason : new Error(String(reason));
+    analytics.captureError(error, { scope: "unhandledRejection" });
+  });
+}
+
 export default log;

@@ -87,6 +87,7 @@ export interface VoxConfig {
   launchAtLogin: boolean;
   dictionary: string[];
   language: SupportedLanguage | "system";
+  analyticsEnabled: boolean;
   recordingAudioCue: AudioCueType;
   recordingStopAudioCue: AudioCueType;
   errorAudioCue: AudioCueType;
@@ -115,6 +116,7 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     launchAtLogin: isProduction,
     dictionary: [],
     language: "system",
+    analyticsEnabled: true,
     recordingAudioCue: "tap",
     recordingStopAudioCue: "pop",
     errorAudioCue: "error",

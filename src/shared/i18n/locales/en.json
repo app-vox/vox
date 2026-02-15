@@ -289,5 +289,9 @@
   "general.permissions.action": "Set up permissions",
   "general.dictionary.title": "Improve Accuracy",
   "general.dictionary.description": "Add names, technical terms, and jargon to the dictionary to improve transcription accuracy.",
-  "general.dictionary.action": "Set up dictionary"
+  "general.dictionary.action": "Set up dictionary",
+  "general.analytics.title": "Analytics",
+  "general.analytics.description": "Anonymous usage data to help improve Vox.",
+  "general.analytics.enable": "Share anonymous usage data",
+  "general.analytics.hint": "Help improve Vox by sharing anonymous usage data. No personal information or transcription content is ever collected."
 }
