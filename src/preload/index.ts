@@ -246,4 +246,6 @@ contextBridge.exposeInMainWorld("voxApi", voxApi);
 
 contextBridge.exposeInMainWorld("electronAPI", {
   cancelRecording: () => ipcRenderer.invoke("indicator:cancel-recording"),
+  hudStartRecording: () => ipcRenderer.invoke("hud:start-recording"),
+  hudStopRecording: () => ipcRenderer.invoke("hud:stop-recording"),
 });
