@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
 import { usePermissions } from "../../hooks/use-permissions";
@@ -12,6 +12,8 @@ import { OfflineBanner } from "../ui/OfflineBanner";
 import card from "../shared/card.module.scss";
 import buttons from "../shared/buttons.module.scss";
 import styles from "./GeneralPanel.module.scss";
+
+const HUD_COLLAPSED_KEY = "vox:hud-collapsed";
 
 const THEME_ICONS: { value: ThemeMode; icon: ReactNode }[] = [
   { value: "light", icon: <SunIcon width={16} height={16} /> },
@@ -103,6 +105,8 @@ export function GeneralPanel() {
     })),
   ];
 
+  const [hudCollapsed, setHudCollapsed] = useState(() => localStorage.getItem(HUD_COLLAPSED_KEY) === "true");
+
   const isDevMode = import.meta.env.DEV;
 
   const needsPermissions = !loading && setupComplete && permissionStatus !== null && (permissionStatus.accessibility !== true || permissionStatus.microphone !== "granted");
@@ -177,48 +181,67 @@ export function GeneralPanel() {
       )}
 
       <div className={card.card}>
-        <div className={card.header}>
-          <h2>{t("general.hud.title")}</h2>
-          <p className={card.description}>{t("general.hud.description")}</p>
-        </div>
-        <div className={card.body}>
-          <label className={styles.checkboxRow}>
-            <input
-              type="checkbox"
-              checked={config.showHud}
-              onChange={async () => {
-                const newShowHud = !config.showHud;
-                updateConfig({
-                  showHud: newShowHud,
-                  ...(newShowHud ? {} : { hudShowOnHover: false }),
-                });
-                await saveConfig(false);
-                triggerToast();
-              }}
-            />
-            <div>
-              <div className={styles.checkboxLabel}>{t("general.hud.showHud")}</div>
-              <div className={styles.checkboxDesc}>{t("general.hud.showHudDesc")}</div>
-            </div>
-          </label>
+        <button
+          className={styles.collapsibleHeader}
+          onClick={() => {
+            setHudCollapsed((prev) => {
+              const next = !prev;
+              localStorage.setItem(HUD_COLLAPSED_KEY, String(next));
+              return next;
+            });
+          }}
+          aria-expanded={!hudCollapsed}
+        >
+          <div>
+            <h2>{t("general.hud.title")}</h2>
+            <p className={card.description}>{t("general.hud.description")}</p>
+          </div>
+          <ChevronDownIcon
+            width={16}
+            height={16}
+            className={`${styles.collapseChevron} ${hudCollapsed ? styles.collapsed : ""}`}
+          />
+        </button>
+        {!hudCollapsed && (
+          <div className={card.body}>
+            <label className={styles.checkboxRow}>
+              <input
+                type="checkbox"
+                checked={config.showHud}
+                onChange={async () => {
+                  const newShowHud = !config.showHud;
+                  updateConfig({
+                    showHud: newShowHud,
+                    ...(newShowHud ? {} : { hudShowOnHover: false }),
+                  });
+                  await saveConfig(false);
+                  triggerToast();
+                }}
+              />
+              <div>
+                <div className={styles.checkboxLabel}>{t("general.hud.showHud")}</div>
+                <div className={styles.checkboxDesc}>{t("general.hud.showHudDesc")}</div>
+              </div>
+            </label>
 
-          <label className={`${styles.checkboxRow} ${styles.subCheckbox} ${!config.showHud ? styles.disabled : ""}`}>
-            <input
-              type="checkbox"
-              checked={config.hudShowOnHover}
-              disabled={!config.showHud}
-              onChange={async () => {
-                updateConfig({ hudShowOnHover: !config.hudShowOnHover });
-                await saveConfig(false);
-                triggerToast();
-              }}
-            />
-            <div>
-              <div className={styles.checkboxLabel}>{t("general.hud.showOnHover")}</div>
-              <div className={styles.checkboxDesc}>{t("general.hud.showOnHoverDesc")}</div>
-            </div>
-          </label>
-        </div>
+            <label className={`${styles.checkboxRow} ${styles.subCheckbox} ${!config.showHud ? styles.disabled : ""}`}>
+              <input
+                type="checkbox"
+                checked={config.hudShowOnHover}
+                disabled={!config.showHud}
+                onChange={async () => {
+                  updateConfig({ hudShowOnHover: !config.hudShowOnHover });
+                  await saveConfig(false);
+                  triggerToast();
+                }}
+              />
+              <div>
+                <div className={styles.checkboxLabel}>{t("general.hud.showOnHover")}</div>
+                <div className={styles.checkboxDesc}>{t("general.hud.showOnHoverDesc")}</div>
+              </div>
+            </label>
+          </div>
+        )}
       </div>
 
       <div className={card.card}>

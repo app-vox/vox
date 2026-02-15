@@ -161,6 +161,41 @@
   padding-left: 30px;
 }
 
+.collapsibleHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--spacing-5) var(--spacing-6);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+
+  h2 {
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: -0.01em;
+    margin-bottom: var(--spacing-1);
+  }
+
+  &:hover {
+    background: var(--color-bg-hover);
+  }
+}
+
+.collapseChevron {
+  flex-shrink: 0;
+  color: var(--color-text-tertiary);
+  transition: transform var(--duration-fast) var(--ease-default);
+
+  &.collapsed {
+    transform: rotate(-90deg);
+  }
+}
+
 .checkboxLabel {
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-medium);
