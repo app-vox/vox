@@ -136,6 +136,11 @@ export function Sidebar() {
     ? useDevOverrideValue("hideDevVisuals", undefined)
     : undefined;
 
+  const devVisitedDictionary = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("visitedDictionary", undefined)
+    : undefined;
+
   const permissionStatus = {
     ...realPermissionStatus,
     ...(devMicOverride !== undefined ? { microphone: devMicOverride } : {}),
@@ -198,7 +203,8 @@ export function Sidebar() {
     return permissionStatus?.accessibility !== true || permissionStatus?.microphone !== "granted";
   };
 
-  const showDictionaryDot = !visitedDictionary && setupComplete;
+  const effectiveVisitedDictionary = devVisitedDictionary ?? visitedDictionary;
+  const showDictionaryDot = !effectiveVisitedDictionary && setupComplete;
 
   const hasWarning = (item: NavItemDef) =>
     (item.requiresModel === true && !setupComplete)

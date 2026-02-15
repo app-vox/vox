@@ -13,6 +13,7 @@ export interface DevOverrides {
   llmEnhancementEnabled?: boolean;
   llmConnectionTested?: boolean;
   hideDevVisuals?: boolean;
+  visitedDictionary?: boolean;
 }
 
 interface DevOverridesState {

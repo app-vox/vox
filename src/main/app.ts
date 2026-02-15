@@ -242,3 +242,7 @@ app.on("will-quit", () => {
 });
 
 app.on("window-all-closed", () => {});
+
+for (const sig of ["SIGINT", "SIGTERM", "SIGHUP"] as const) {
+  process.on(sig, () => app.quit());
+}
