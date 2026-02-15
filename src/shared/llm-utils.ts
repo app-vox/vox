@@ -1,7 +1,8 @@
 import type { LlmProviderType, LlmConfig } from "./config";
 
 export function isProviderConfigured(provider: LlmProviderType, llm: LlmConfig): boolean {
-  switch (provider) {
+  if (provider !== llm.provider) return false;
+  switch (llm.provider) {
     case "foundry":
       return !!(llm.endpoint && llm.apiKey && llm.model);
     case "bedrock":
@@ -18,5 +19,23 @@ export function isProviderConfigured(provider: LlmProviderType, llm: LlmConfig):
       return !!(llm.customEndpoint && llm.customToken && llm.customTokenAttr);
     default:
       return false;
+  }
+}
+
+export function getLlmModelName(llm: LlmConfig): string {
+  switch (llm.provider) {
+    case "foundry":
+      return llm.model;
+    case "bedrock":
+      return llm.modelId;
+    case "openai":
+    case "deepseek":
+    case "glm":
+    case "litellm":
+      return llm.openaiModel;
+    case "anthropic":
+      return llm.anthropicModel;
+    case "custom":
+      return llm.customModel;
   }
 }

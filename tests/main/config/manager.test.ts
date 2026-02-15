@@ -32,13 +32,13 @@ describe("ConfigManager", () => {
 
   it("should save and load config", () => {
     const config = createDefaultConfig();
-    config.llm.endpoint = "https://my-foundry.example.com";
+    config.llm = { provider: "foundry", endpoint: "https://my-foundry.example.com", apiKey: "", model: "gpt-4o" };
     config.whisper.model = "medium";
 
     manager.save(config);
     const loaded = manager.load();
 
-    expect(loaded.llm.endpoint).toBe("https://my-foundry.example.com");
+    expect(loaded.llm).toEqual({ provider: "foundry", endpoint: "https://my-foundry.example.com", apiKey: "", model: "gpt-4o" });
     expect(loaded.whisper.model).toBe("medium");
   });
 
@@ -62,14 +62,11 @@ describe("ConfigManager", () => {
       },
     };
     fs.mkdirSync(testDir, { recursive: true });
-    fs.writeFileSync(
-      path.join(testDir, "config.json"),
-      JSON.stringify(partialConfig),
-    );
+    fs.writeFileSync(path.join(testDir, "config.json"), JSON.stringify(partialConfig));
 
     const loaded = manager.load();
 
-    expect(loaded.llm.endpoint).toBe("https://test.com");
+    expect(loaded.llm).toEqual({ provider: "foundry", endpoint: "https://test.com", apiKey: "", model: "gpt-4o" });
     expect(loaded.whisper.model).toBe("small");
     expect(loaded.shortcuts.hold).toBe("Alt+Space");
   });
@@ -84,63 +81,61 @@ describe("ConfigManager", () => {
       },
     };
     fs.mkdirSync(testDir, { recursive: true });
-    fs.writeFileSync(
-      path.join(testDir, "config.json"),
-      JSON.stringify(oldConfig),
-    );
+    fs.writeFileSync(path.join(testDir, "config.json"), JSON.stringify(oldConfig));
 
     const loaded = manager.load();
 
     expect(loaded.llm.provider).toBe("foundry");
-    expect(loaded.llm.endpoint).toBe("https://old.com");
-    expect(loaded.llm.region).toBe("us-east-1");
-    expect(loaded.llm.accessKeyId).toBe("");
-    expect(loaded.llm.secretAccessKey).toBe("");
-    expect(loaded.llm.modelId).toBe("anthropic.claude-3-5-sonnet-20241022-v2:0");
+    if (loaded.llm.provider === "foundry") {
+      expect(loaded.llm.endpoint).toBe("https://old.com");
+    }
   });
 
   it("should encrypt sensitive fields on save", () => {
     const config = createDefaultConfig();
-    config.llm.apiKey = "my-secret-key";
-    config.llm.secretAccessKey = "aws-secret";
-    config.llm.accessKeyId = "AKIA123";
+    config.llm = { provider: "foundry", endpoint: "", apiKey: "my-secret-key", model: "gpt-4o" };
 
     manager.save(config);
 
     const raw = JSON.parse(fs.readFileSync(path.join(testDir, "config.json"), "utf-8"));
     expect(raw.llm.apiKey).toMatch(/^enc:/);
-    expect(raw.llm.secretAccessKey).toMatch(/^enc:/);
-    expect(raw.llm.accessKeyId).toMatch(/^enc:/);
     expect(raw.llm.endpoint).toBe("");
   });
 
   it("should decrypt sensitive fields on load", () => {
     const config = createDefaultConfig();
-    config.llm.apiKey = "my-secret-key";
-    config.llm.secretAccessKey = "aws-secret";
-    config.llm.accessKeyId = "AKIA123";
+    config.llm = { provider: "foundry", endpoint: "", apiKey: "my-secret-key", model: "gpt-4o" };
 
     manager.save(config);
     const loaded = manager.load();
 
     expect(loaded.llm.apiKey).toBe("my-secret-key");
-    expect(loaded.llm.secretAccessKey).toBe("aws-secret");
-    expect(loaded.llm.accessKeyId).toBe("AKIA123");
+  });
+
+  it("should encrypt and decrypt bedrock sensitive fields", () => {
+    const config = createDefaultConfig();
+    config.llm = {
+      provider: "bedrock", region: "us-east-1", profile: "",
+      accessKeyId: "AKIA123", secretAccessKey: "aws-secret", modelId: "some-model",
+    };
+
+    manager.save(config);
+
+    const raw = JSON.parse(fs.readFileSync(path.join(testDir, "config.json"), "utf-8"));
+    expect(raw.llm.accessKeyId).toMatch(/^enc:/);
+    expect(raw.llm.secretAccessKey).toMatch(/^enc:/);
+
+    const loaded = manager.load();
+    expect(loaded.llm.provider).toBe("bedrock");
+    if (loaded.llm.provider === "bedrock") {
+      expect(loaded.llm.accessKeyId).toBe("AKIA123");
+      expect(loaded.llm.secretAccessKey).toBe("aws-secret");
+    }
   });
 
   it("should transparently migrate plaintext config to encrypted", () => {
     const plainConfig = {
-      llm: {
-        provider: "foundry",
-        endpoint: "https://test.com",
-        apiKey: "plaintext-key",
-        model: "gpt-4o",
-        region: "us-east-1",
-        profile: "",
-        accessKeyId: "",
-        secretAccessKey: "",
-        modelId: "",
-      },
+      llm: { provider: "foundry", endpoint: "https://test.com", apiKey: "plaintext-key", model: "gpt-4o" },
       whisper: { model: "small" },
       shortcuts: { hold: "Alt+Space", toggle: "Alt+Shift+Space" },
       theme: "system",
@@ -165,8 +160,6 @@ describe("ConfigManager", () => {
 
     const raw = JSON.parse(fs.readFileSync(path.join(testDir, "config.json"), "utf-8"));
     expect(raw.llm.apiKey).toBe("");
-    expect(raw.llm.secretAccessKey).toBe("");
-    expect(raw.llm.accessKeyId).toBe("");
   });
 
   it("should persist and restore llmConnectionTested and llmConfigHash", () => {
@@ -183,12 +176,10 @@ describe("ConfigManager", () => {
 
   it("should count encrypted secrets from raw config", () => {
     const config = createDefaultConfig();
-    config.llm.apiKey = "my-key";
-    config.llm.secretAccessKey = "my-secret";
-    config.llm.accessKeyId = "AKIA123";
+    config.llm = { provider: "foundry", endpoint: "", apiKey: "my-key", model: "gpt-4o" };
 
     manager.save(config);
-    expect(manager.countEncryptedSecrets()).toBe(3);
+    expect(manager.countEncryptedSecrets()).toBe(1);
   });
 
   it("should return 0 when no secrets are stored", () => {
@@ -199,5 +190,28 @@ describe("ConfigManager", () => {
 
   it("should return 0 when config file does not exist", () => {
     expect(manager.countEncryptedSecrets()).toBe(0);
+  });
+
+  it("should preserve credentials from other providers on save (round-trip)", () => {
+    const foundryConfig = createDefaultConfig();
+    foundryConfig.llm = { provider: "foundry", endpoint: "https://foundry.com", apiKey: "foundry-key", model: "gpt-4o" };
+    manager.save(foundryConfig);
+
+    const raw = JSON.parse(fs.readFileSync(path.join(testDir, "config.json"), "utf-8"));
+    raw.llm.openaiApiKey = "enc:" + Buffer.from("openai-key").toString("base64");
+    raw.llm.openaiModel = "gpt-4-turbo";
+    raw.llm.openaiEndpoint = "https://api.openai.com";
+    fs.writeFileSync(path.join(testDir, "config.json"), JSON.stringify(raw));
+
+    const switched = {
+      ...manager.load(),
+      llm: { provider: "openai" as const, openaiApiKey: "openai-key", openaiModel: "gpt-4-turbo", openaiEndpoint: "https://api.openai.com" },
+    };
+    manager.save(switched);
+
+    const saved = JSON.parse(fs.readFileSync(path.join(testDir, "config.json"), "utf-8"));
+    expect(saved.llm.provider).toBe("openai");
+    expect(saved.llm.endpoint).toBe("https://foundry.com");
+    expect(saved.llm.apiKey).toMatch(/^enc:/);
   });
 });

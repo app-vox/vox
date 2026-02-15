@@ -13,7 +13,7 @@ import { StatusBox } from "../ui/StatusBox";
 import { NewDot } from "../ui/NewDot";
 import { CustomSelect } from "../ui/CustomSelect";
 import { ExternalLinkIcon, CheckCircleIcon, InfoCircleAltIcon, CopyIcon, SparkleIcon, PlayIcon } from "../../../shared/icons";
-import type { LlmProviderType } from "../../../shared/config";
+import type { LlmProviderType, LlmConfig } from "../../../shared/config";
 import { isProviderConfigured } from "../../../shared/llm-utils";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
 import card from "../shared/card.module.scss";
@@ -106,21 +106,37 @@ export function LlmPanel() {
     );
   }
 
-  const providerDefaults: Record<string, Record<string, string>> = {
-    openai: { openaiEndpoint: "https://api.openai.com", openaiModel: "gpt-4o" },
-    deepseek: { openaiEndpoint: "https://api.deepseek.com", openaiModel: "deepseek-chat" },
-    glm: { openaiEndpoint: "https://open.bigmodel.cn/api/paas/v4", openaiModel: "glm-4" },
-    litellm: { openaiEndpoint: "http://localhost:4000", openaiModel: "gpt-4o" },
-    anthropic: { anthropicModel: "claude-sonnet-4-20250514" },
-  };
-
   const handleProviderChange = (provider: LlmProviderType) => {
-    const defaults = providerDefaults[provider];
-    if (defaults) {
-      updateConfig({ llm: { ...config.llm, provider, ...defaults } });
-    } else {
-      updateConfig({ llm: { ...config.llm, provider } });
+    let newLlm: LlmConfig;
+    switch (provider) {
+      case "foundry":
+        newLlm = { provider: "foundry", endpoint: "", apiKey: "", model: "gpt-4o" };
+        break;
+      case "bedrock":
+        newLlm = { provider: "bedrock", region: "us-east-1", profile: "", accessKeyId: "", secretAccessKey: "", modelId: "anthropic.claude-3-5-sonnet-20241022-v2:0" };
+        break;
+      case "openai":
+        newLlm = { provider: "openai", openaiApiKey: "", openaiModel: "gpt-4o", openaiEndpoint: "https://api.openai.com" };
+        break;
+      case "deepseek":
+        newLlm = { provider: "deepseek", openaiApiKey: "", openaiModel: "deepseek-chat", openaiEndpoint: "https://api.deepseek.com" };
+        break;
+      case "glm":
+        newLlm = { provider: "glm", openaiApiKey: "", openaiModel: "glm-4", openaiEndpoint: "https://open.bigmodel.cn/api/paas/v4" };
+        break;
+      case "litellm":
+        newLlm = { provider: "litellm", openaiApiKey: "", openaiModel: "gpt-4o", openaiEndpoint: "http://localhost:4000" };
+        break;
+      case "anthropic":
+        newLlm = { provider: "anthropic", anthropicApiKey: "", anthropicModel: "claude-sonnet-4-20250514" };
+        break;
+      case "custom":
+        newLlm = { provider: "custom", customEndpoint: "", customToken: "", customTokenAttr: "Authorization", customTokenSendAs: "header", customModel: "" };
+        break;
+      default:
+        newLlm = { provider: "foundry", endpoint: "", apiKey: "", model: "gpt-4o" };
     }
+    updateConfig({ llm: newLlm });
     saveConfig(true);
   };
 

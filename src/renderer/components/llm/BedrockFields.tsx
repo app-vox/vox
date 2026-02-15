@@ -13,9 +13,11 @@ export function BedrockFields() {
   const [focusedField, setFocusedField] = useState<{ field: string; value: string } | null>(null);
 
   if (!config) return null;
+  const { llm } = config;
+  if (llm.provider !== "bedrock") return null;
 
   const update = (field: string, value: string) => {
-    updateConfig({ llm: { ...config.llm, [field]: value } });
+    updateConfig({ llm: { ...llm, [field]: value } as typeof llm });
     debouncedSave();
   };
 
@@ -37,7 +39,7 @@ export function BedrockFields() {
         <input
           id="llm-region"
           type="text"
-          value={config.llm.region || ""}
+          value={llm.region || ""}
           onChange={(e) => update("region", e.target.value)}
           onFocus={(e) => handleFocus("region", e.target.value)}
           onBlur={(e) => handleBlur("region", e.target.value)}
@@ -49,7 +51,7 @@ export function BedrockFields() {
         <input
           id="llm-profile"
           type="text"
-          value={config.llm.profile || ""}
+          value={llm.profile || ""}
           onChange={(e) => update("profile", e.target.value)}
           onFocus={(e) => handleFocus("profile", e.target.value)}
           onBlur={(e) => handleBlur("profile", e.target.value)}
@@ -61,10 +63,10 @@ export function BedrockFields() {
         <label htmlFor="llm-access-key">{t("llm.bedrock.accessKeyId")}</label>
         <SecretInput
           id="llm-access-key"
-          value={config.llm.accessKeyId || ""}
+          value={llm.accessKeyId || ""}
           onChange={(v) => update("accessKeyId", v)}
-          onFocus={() => handleFocus("accessKeyId", config.llm.accessKeyId || "")}
-          onBlur={() => handleBlur("accessKeyId", config.llm.accessKeyId || "")}
+          onFocus={() => handleFocus("accessKeyId", llm.accessKeyId || "")}
+          onBlur={() => handleBlur("accessKeyId", llm.accessKeyId || "")}
           placeholder={t("llm.bedrock.accessKeyPlaceholder")}
         />
         <p className={form.hint}>{t("llm.bedrock.accessKeyHint")}</p>
@@ -73,10 +75,10 @@ export function BedrockFields() {
         <label htmlFor="llm-secret-key">{t("llm.bedrock.secretAccessKey")}</label>
         <SecretInput
           id="llm-secret-key"
-          value={config.llm.secretAccessKey || ""}
+          value={llm.secretAccessKey || ""}
           onChange={(v) => update("secretAccessKey", v)}
-          onFocus={() => handleFocus("secretAccessKey", config.llm.secretAccessKey || "")}
-          onBlur={() => handleBlur("secretAccessKey", config.llm.secretAccessKey || "")}
+          onFocus={() => handleFocus("secretAccessKey", llm.secretAccessKey || "")}
+          onBlur={() => handleBlur("secretAccessKey", llm.secretAccessKey || "")}
           placeholder={t("llm.bedrock.accessKeyPlaceholder")}
         />
       </div>
@@ -85,7 +87,7 @@ export function BedrockFields() {
         <input
           id="llm-model-id"
           type="text"
-          value={config.llm.modelId || ""}
+          value={llm.modelId || ""}
           onChange={(e) => update("modelId", e.target.value)}
           onFocus={(e) => handleFocus("modelId", e.target.value)}
           onBlur={(e) => handleBlur("modelId", e.target.value)}

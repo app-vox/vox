@@ -14,17 +14,33 @@ beforeEach(() => {
 
 describe("config-store", () => {
   describe("updateConfig", () => {
-    it("deep-merges llm, whisper, and shortcuts without overwriting sibling fields", () => {
+    it("merges llm fields within the same provider without overwriting siblings", () => {
       const config = createDefaultConfig();
-      config.llm.provider = "openai";
-      config.llm.openaiApiKey = "original-key";
       useConfigStore.setState({ config });
+      // Default is foundry with model "gpt-4o"
 
-      useConfigStore.getState().updateConfig({ llm: { provider: "bedrock" } as never });
+      useConfigStore.getState().updateConfig({
+        llm: { provider: "foundry", endpoint: "https://new", apiKey: "", model: "gpt-4o" },
+      });
 
       const result = useConfigStore.getState().config!;
-      expect(result.llm.provider).toBe("bedrock");
-      expect(result.llm.openaiApiKey).toBe("original-key");
+      expect(result.llm.provider).toBe("foundry");
+      expect((result.llm as { endpoint: string }).endpoint).toBe("https://new");
+    });
+
+    it("replaces llm entirely when switching providers (discriminated union)", () => {
+      const config = createDefaultConfig();
+      useConfigStore.setState({ config });
+
+      useConfigStore.getState().updateConfig({
+        llm: { provider: "anthropic", anthropicApiKey: "key", anthropicModel: "claude-sonnet-4-20250514" },
+      });
+
+      const result = useConfigStore.getState().config!;
+      expect(result.llm.provider).toBe("anthropic");
+      expect((result.llm as { anthropicApiKey: string }).anthropicApiKey).toBe("key");
+      // foundry fields should not exist on the new config
+      expect("endpoint" in result.llm).toBe(false);
     });
 
     it("is a no-op when config is null", () => {
