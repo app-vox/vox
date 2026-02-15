@@ -1,9 +1,8 @@
 .updateBanner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto;
   gap: var(--spacing-2) var(--spacing-3);
+  align-items: center;
   padding: var(--spacing-3) var(--spacing-4);
   background: var(--color-accent);
   border-radius: var(--radius-md);
@@ -26,7 +25,7 @@
 }
 
 .progressBar {
-  flex-basis: 100%;
+  grid-column: 1 / -1;
   height: 4px;
   background: rgb(255 255 255 / 20%);
   border-radius: 2px;

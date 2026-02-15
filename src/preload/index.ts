@@ -62,7 +62,7 @@ export interface VoxAPI {
     enable(): Promise<void>;
   };
   llm: {
-    test(): Promise<{ ok: boolean; error?: string }>;
+    test(config: import("../shared/config").VoxConfig): Promise<{ ok: boolean; error?: string }>;
   };
   whisper: {
     test(recording: AudioRecording): Promise<string>;
@@ -141,7 +141,7 @@ const voxApi: VoxAPI = {
     enable: () => ipcRenderer.invoke("shortcuts:enable"),
   },
   llm: {
-    test: () => ipcRenderer.invoke("llm:test"),
+    test: (config) => ipcRenderer.invoke("llm:test", config),
   },
   whisper: {
     test: (recording) => ipcRenderer.invoke("whisper:test", recording),

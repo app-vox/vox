@@ -17,14 +17,15 @@ interface CreateLlmProviderOptions {
 }
 
 export function createLlmProvider(config: VoxConfig, options?: CreateLlmProviderOptions): LlmProvider {
-  // If LLM enhancement is disabled, return no-op provider
-  if (!config.enableLlmEnhancement) {
-    slog.info("LLM enhancement disabled, using NoopProvider");
-    return new NoopProvider();
-  }
-
-  // If not tested or config changed since last test, block unless running a test
+  // When running a connection test, always create the real provider
   if (!options?.forTest) {
+    // If LLM enhancement is disabled, return no-op provider
+    if (!config.enableLlmEnhancement) {
+      slog.info("LLM enhancement disabled, using NoopProvider");
+      return new NoopProvider();
+    }
+
+    // If not tested or config changed since last test, block
     if (!config.llmConnectionTested || computeLlmConfigHash(config) !== config.llmConfigHash) {
       slog.info("LLM connection not tested or config changed, using NoopProvider");
       return new NoopProvider();
@@ -64,6 +65,7 @@ export function createLlmProvider(config: VoxConfig, options?: CreateLlmProvider
 
     case "openai":
     case "deepseek":
+    case "glm":
     case "litellm":
       return new OpenAICompatibleProvider({
         endpoint: config.llm.openaiEndpoint,

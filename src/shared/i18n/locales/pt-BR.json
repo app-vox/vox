@@ -218,6 +218,7 @@
   "dictionary.title": "Dicionário",
   "dictionary.description": "Adicione palavras e frases para melhorar a precisão da transcrição de nomes, termos técnicos e jargões.",
   "dictionary.overLimitWarning": "Seu dicionário tem {total} entradas, mas apenas {fits} cabem no prompt de reconhecimento de fala. Todas as entradas ainda serão usadas para melhoria com IA.",
+  "dictionary.llmRequired": "O dicionário requer que o Melhoramento de IA esteja ativado com uma conexão testada.",
   "dictionary.placeholder": "Digite uma palavra ou frase...",
   "dictionary.add": "Adicionar",
   "dictionary.hint": "Use vírgulas para adicionar múltiplos termos de uma vez, ex.: \"John, Project Alpha, Zoom\"",

@@ -218,6 +218,7 @@
   "dictionary.title": "Diccionario",
   "dictionary.description": "Agregue palabras y frases para mejorar la precisión de la transcripción de nombres, términos técnicos y jerga.",
   "dictionary.overLimitWarning": "Su diccionario tiene {total} entradas pero solo {fits} caben en el prompt de reconocimiento de voz. Todas las entradas seguirán siendo usadas para la mejora con IA.",
+  "dictionary.llmRequired": "El diccionario requiere que la Mejora de IA esté activada con una conexión probada.",
   "dictionary.placeholder": "Escriba una palabra o frase...",
   "dictionary.add": "Agregar",
   "dictionary.hint": "Use comas para agregar múltiples términos a la vez, ej.: \"John, Project Alpha, Zoom\"",

@@ -218,6 +218,7 @@
   "dictionary.title": "Sözlük",
   "dictionary.description": "İsimler, teknik terimler ve jargon için yazıya döküm doğruluğunu artırmak üzere kelimeler ve ifadeler ekleyin.",
   "dictionary.overLimitWarning": "Sözlüğünüzde {total} giriş var ancak konuşma tanıma prompt'una yalnızca {fits} sığıyor. Tüm girişler yine de yapay zeka iyileştirmesi için kullanılacaktır.",
+  "dictionary.llmRequired": "Sözlük, test edilmiş bir bağlantıyla AI Geliştirme'nin etkinleştirilmesini gerektirir.",
   "dictionary.placeholder": "Bir kelime veya ifade yazın...",
   "dictionary.add": "Ekle",
   "dictionary.hint": "Aynı anda birden fazla terim eklemek için virgül kullanın, örn. \"John, Project Alpha, Zoom\"",

@@ -80,10 +80,12 @@ export function registerIpcHandlers(
     modelManager.delete(size as WhisperModelSize);
   });
 
-  ipcMain.handle("llm:test", async () => {
+  ipcMain.handle("llm:test", async (_event, rendererConfig: VoxConfig) => {
     const { createLlmProvider } = await import("./llm/factory");
     const { computeLlmConfigHash } = await import("../shared/llm-config-hash");
-    const config = configManager.load();
+
+    // Use config sent directly from the renderer to avoid stale disk reads
+    const config = rendererConfig;
 
     try {
       const llm = createLlmProvider(config, { forTest: true });

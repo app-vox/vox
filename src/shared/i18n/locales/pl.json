@@ -218,6 +218,7 @@
   "dictionary.title": "Słownik",
   "dictionary.description": "Dodaj słowa i wyrażenia, aby poprawić dokładność transkrypcji nazw, terminów technicznych i żargonu.",
   "dictionary.overLimitWarning": "Twój słownik ma {total} wpisów, ale tylko {fits} mieści się w prompcie rozpoznawania mowy. Wszystkie wpisy nadal będą używane do ulepszania AI.",
+  "dictionary.llmRequired": "Słownik wymaga włączonego Ulepszenia AI z przetestowanym połączeniem.",
   "dictionary.placeholder": "Wpisz słowo lub wyrażenie...",
   "dictionary.add": "Dodaj",
   "dictionary.hint": "Użyj przecinków, aby dodać wiele terminów naraz, np. \"Jan, Projekt Alfa, Zoom\"",

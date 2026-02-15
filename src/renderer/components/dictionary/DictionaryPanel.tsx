@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useT } from "../../i18n-context";
+import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
 import { XIcon, ChevronLeftIcon, ChevronRightIcon } from "../../../shared/icons";
 import { CustomSelect } from "../ui/CustomSelect";
 import card from "../shared/card.module.scss";
@@ -45,6 +46,10 @@ export function DictionaryPanel() {
   }, []);
 
   if (!config) return null;
+
+  const llmReady = config.enableLlmEnhancement === true
+    && config.llmConnectionTested === true
+    && computeLlmConfigHash(config) === config.llmConfigHash;
 
   const dictionary = config.dictionary ?? [];
   const sorted = [...dictionary].sort((a, b) => a.localeCompare(b));
@@ -108,6 +113,24 @@ export function DictionaryPanel() {
           {t("dictionary.description")}
         </p>
       </div>
+
+      {!llmReady && (
+        <div className={card.warningBanner}>
+          <span>
+            {t("dictionary.llmRequired")}{" "}
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                useConfigStore.getState().setActiveTab("llm");
+              }}
+              style={{ color: "inherit", textDecoration: "underline", cursor: "pointer" }}
+            >
+              {t("tabs.aiEnhancement")}
+            </a>
+          </span>
+        </div>
+      )}
 
       {budget.overLimit && (
         <div className={card.warningBanner}>

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useDebouncedSave } from "../../hooks/use-debounced-save";
 import { useT } from "../../i18n-context";
@@ -11,7 +11,7 @@ import { CustomProviderFields } from "./CustomProviderFields";
 import { StatusBox } from "../ui/StatusBox";
 import { NewDot } from "../ui/NewDot";
 import { CustomSelect } from "../ui/CustomSelect";
-import { ExternalLinkIcon, CheckCircleIcon, InfoCircleAltIcon, CopyIcon, SparkleIcon } from "../../../shared/icons";
+import { ExternalLinkIcon, CheckCircleIcon, InfoCircleAltIcon, CopyIcon, SparkleIcon, PlayIcon } from "../../../shared/icons";
 import type { LlmProviderType, LlmConfig } from "../../../shared/config";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
 import card from "../shared/card.module.scss";
@@ -27,6 +27,7 @@ function isProviderConfigured(provider: LlmProviderType, llm: LlmConfig): boolea
       return !!(llm.region && llm.modelId && (llm.profile || (llm.accessKeyId && llm.secretAccessKey)));
     case "openai":
     case "deepseek":
+    case "glm":
       return !!(llm.openaiApiKey && llm.openaiModel && llm.openaiEndpoint);
     case "litellm":
       return !!(llm.openaiEndpoint && llm.openaiModel);
@@ -53,6 +54,15 @@ export function LlmPanel() {
   const [visitedCustomPrompt, setVisitedCustomPrompt] = useState(() => localStorage.getItem("vox:visited-custom-prompt") === "true");
   const [copiedExample, setCopiedExample] = useState<string | null>(null);
   const testSectionRef = useRef<HTMLDivElement>(null);
+
+  const configHash = config ? computeLlmConfigHash(config) : "";
+  const prevHashRef = useRef(configHash);
+  useEffect(() => {
+    if (prevHashRef.current && prevHashRef.current !== configHash) {
+      setTestStatus({ text: "", type: "info" });
+    }
+    prevHashRef.current = configHash;
+  }, [configHash]);
 
   const handlePromptTabClick = useCallback(() => {
     if (!visitedCustomPrompt) {
@@ -99,6 +109,7 @@ export function LlmPanel() {
   const providerDefaults: Record<string, Record<string, string>> = {
     openai: { openaiEndpoint: "https://api.openai.com", openaiModel: "gpt-4o" },
     deepseek: { openaiEndpoint: "https://api.deepseek.com", openaiModel: "deepseek-chat" },
+    glm: { openaiEndpoint: "https://open.bigmodel.cn/api/paas/v4", openaiModel: "glm-4" },
     litellm: { openaiEndpoint: "http://localhost:4000", openaiModel: "gpt-4o" },
     anthropic: { anthropicModel: "claude-sonnet-4-20250514" },
   };
@@ -116,10 +127,9 @@ export function LlmPanel() {
   const handleTest = async () => {
     setTesting(true);
     setTestStatus({ text: t("llm.testingConnection"), type: "info" });
-    await saveConfig();
 
     try {
-      const result = await window.voxApi.llm.test();
+      const result = await window.voxApi.llm.test(config);
       const freshConfig = await window.voxApi.config.load();
       updateConfig({
         llmConnectionTested: freshConfig.llmConnectionTested,
@@ -218,6 +228,7 @@ export function LlmPanel() {
                       { value: "bedrock", label: "AWS Bedrock" },
                       { value: "openai", label: "OpenAI" },
                       { value: "deepseek", label: "DeepSeek" },
+                      { value: "glm", label: "GLM (Zhipu AI)" },
                       { value: "anthropic", label: "Anthropic" },
                       { value: "litellm", label: "LiteLLM" },
                       { value: "custom", label: t("llm.custom.label") },
@@ -233,7 +244,7 @@ export function LlmPanel() {
 
                 {config.llm.provider === "litellm" ? (
                   <LiteLLMFields />
-                ) : (config.llm.provider === "openai" || config.llm.provider === "deepseek") ? (
+                ) : (config.llm.provider === "openai" || config.llm.provider === "deepseek" || config.llm.provider === "glm") ? (
                   <OpenAICompatibleFields providerType={config.llm.provider} />
                 ) : config.llm.provider === "bedrock" ? (
                   <BedrockFields />
@@ -251,6 +262,7 @@ export function LlmPanel() {
                     disabled={testing}
                     className={`${buttons.btn} ${buttons.primary}`}
                   >
+                    <PlayIcon width={14} height={14} />
                     {t("llm.testConnection")}
                   </button>
                   <StatusBox text={testStatus.text} type={testStatus.type} />

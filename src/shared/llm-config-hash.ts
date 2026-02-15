@@ -14,6 +14,7 @@ function getProviderFields(config: VoxConfig): Record<string, string> {
       };
     case "openai":
     case "deepseek":
+    case "glm":
     case "litellm":
       return {
         openaiApiKey: llm.openaiApiKey,

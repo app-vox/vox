@@ -218,6 +218,7 @@
   "dictionary.title": "Wörterbuch",
   "dictionary.description": "Fügen Sie Wörter und Phrasen hinzu, um die Transkriptionsgenauigkeit für Namen, Fachbegriffe und Jargon zu verbessern.",
   "dictionary.overLimitWarning": "Ihr Wörterbuch hat {total} Einträge, aber nur {fits} passen in den Spracherkennungs-Prompt. Alle Einträge werden dennoch für die KI-Verbesserung verwendet.",
+  "dictionary.llmRequired": "Das Wörterbuch erfordert eine aktivierte KI-Verbesserung mit einer getesteten Verbindung.",
   "dictionary.placeholder": "Geben Sie ein Wort oder eine Phrase ein...",
   "dictionary.add": "Hinzufügen",
   "dictionary.hint": "Verwenden Sie Kommas, um mehrere Begriffe auf einmal hinzuzufügen, z.B. \"John, Project Alpha, Zoom\"",

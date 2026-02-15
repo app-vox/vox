@@ -8,7 +8,7 @@ export type AudioCueType =
   | "error"
   | "none";
 
-export type LlmProviderType = "foundry" | "bedrock" | "openai" | "deepseek" | "litellm" | "anthropic" | "custom";
+export type LlmProviderType = "foundry" | "bedrock" | "openai" | "deepseek" | "glm" | "litellm" | "anthropic" | "custom";
 
 export type CustomTokenSendAs = "header" | "body" | "query";
 

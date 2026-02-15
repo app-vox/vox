@@ -5,12 +5,13 @@ import { useT } from "../../i18n-context";
 import { SecretInput } from "../ui/SecretInput";
 import form from "../shared/forms.module.scss";
 
-const PROVIDER_DEFAULTS: Record<string, { endpoint: string; model: string }> = {
-  openai: { endpoint: "https://api.openai.com", model: "gpt-4o" },
-  deepseek: { endpoint: "https://api.deepseek.com", model: "deepseek-chat" },
+const PROVIDER_DEFAULTS: Record<string, { endpoint: string; model: string; label: string }> = {
+  openai: { endpoint: "https://api.openai.com", model: "gpt-4o", label: "OpenAI" },
+  deepseek: { endpoint: "https://api.deepseek.com", model: "deepseek-chat", label: "DeepSeek" },
+  glm: { endpoint: "https://open.bigmodel.cn/api/paas/v4", model: "glm-4", label: "GLM" },
 };
 
-export function OpenAICompatibleFields({ providerType }: { providerType: "openai" | "deepseek" }) {
+export function OpenAICompatibleFields({ providerType }: { providerType: "openai" | "deepseek" | "glm" }) {
   const t = useT();
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
@@ -74,7 +75,7 @@ export function OpenAICompatibleFields({ providerType }: { providerType: "openai
           placeholder={defaults.endpoint}
         />
         <p className={form.hint}>
-          {t("llm.openai.endpointHint", { provider: providerType === "openai" ? "OpenAI" : "DeepSeek" })}
+          {t("llm.openai.endpointHint", { provider: defaults.label })}
         </p>
       </div>
     </>
