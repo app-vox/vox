@@ -225,7 +225,6 @@ export function DevPanel() {
   const [systemLocale, setSystemLocale] = useState("");
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
   const [search, setSearch] = useState("");
-  const [analyticsDevEnabled, setAnalyticsDevEnabled] = useState(false);
 
   const fetchRuntime = useCallback(async () => {
     try {
@@ -306,6 +305,12 @@ export function DevPanel() {
 
   const ov = overrides.enabled;
   const ovProps = { overrides, setOverride, clearOverride };
+
+  // Sync analytics override to the main process
+  const analyticsOverride = ov ? overrides.analyticsDevEnabled : undefined;
+  useEffect(() => {
+    void window.voxApi.dev.setAnalyticsEnabled(analyticsOverride === true);
+  }, [analyticsOverride]);
 
   const isPresetActive = (preset: Partial<DevOverrides>) =>
     ov && Object.entries(preset).every(([key, value]) =>
@@ -501,23 +506,17 @@ export function DevPanel() {
     },
     {
       title: "Analytics",
+      overrideFields: ["analyticsDevEnabled"],
       rows: [
         { label: "Config Enabled", render: () => <>{boolDot(config?.analyticsEnabled)}</> },
         {
           label: "Send in Dev",
+          overrideField: "analyticsDevEnabled",
           render: () => (
-            <label className={styles.inlineToggle}>
-              <input
-                type="checkbox"
-                checked={analyticsDevEnabled}
-                onChange={async (e) => {
-                  const val = e.target.checked;
-                  await window.voxApi.dev.setAnalyticsEnabled(val);
-                  setAnalyticsDevEnabled(val);
-                }}
-              />
-              <span>{analyticsDevEnabled ? "on" : "off"}</span>
-            </label>
+            <>
+              <span className={styles.realValue}>{boolDot(false)}</span>
+              {ov && <OverrideBool field="analyticsDevEnabled" {...ovProps} />}
+            </>
           ),
         },
       ],
@@ -617,7 +616,7 @@ export function DevPanel() {
       models, systemLocale, systemInfo, ov, overrides, transcriptionTotal, transcriptionSearch,
       activeTab, collapsed, llmProvider, llmEnhancement, llmConnectionTested,
       llmConfigHash, currentHash, hashMatch, hasApiKey, modelName, selectedModel,
-      downloadedModels, analyticsDevEnabled]);
+      downloadedModels]);
 
   const q = search.trim().toLowerCase();
 
