@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { getLlmModelName } from "../../src/shared/llm-utils";
 import type { LlmConfig } from "../../src/shared/config";
+import { migrateActiveTab } from "../../src/renderer/stores/config-store";
 
 describe("getLlmModelName", () => {
   it("should return model for foundry", () => {
@@ -57,5 +58,17 @@ describe("getLlmModelName", () => {
       customTokenAttr: "", customTokenSendAs: "header", customModel: "my-model",
     };
     expect(getLlmModelName(llm)).toBe("my-model");
+  });
+});
+
+describe("migrateActiveTab", () => {
+  it.each([
+    ["appearance", "general"],
+    ["history", "transcriptions"],
+    ["general", "general"],
+    ["whisper", "whisper"],
+    [null, null],
+  ] as const)("maps %j to %j", (input, expected) => {
+    expect(migrateActiveTab(input)).toBe(expected);
   });
 });
