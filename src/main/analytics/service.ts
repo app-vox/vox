@@ -47,14 +47,13 @@ export class AnalyticsService {
   private locale = "en";
   private store: TypedStore | null = null;
 
-  init(options: AnalyticsInitOptions): void {
-    this.enabled = options.enabled;
-    this.locale = options.locale;
+  get isDevMode(): boolean {
+    return !app.isPackaged;
+  }
 
-    if (!app.isPackaged) {
-      slog.info("Analytics disabled in development mode");
-      return;
-    }
+  init(options: AnalyticsInitOptions): void {
+    this.enabled = this.isDevMode ? false : options.enabled;
+    this.locale = options.locale;
 
     try {
       this.store = new ElectronStore({ name: "analytics" }) as unknown as TypedStore;
@@ -70,6 +69,7 @@ export class AnalyticsService {
 
       slog.info("Analytics initialized", {
         enabled: this.enabled,
+        devMode: this.isDevMode,
         deviceId: this.deviceId.slice(0, 8) + "...",
       });
     } catch (err) {

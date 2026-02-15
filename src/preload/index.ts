@@ -144,6 +144,7 @@ export interface VoxAPI {
       logLevelConsole: string;
       whisperLib: string;
     }>;
+    setAnalyticsEnabled(enabled: boolean): Promise<boolean>;
   };
 }
 
@@ -237,6 +238,7 @@ const voxApi: VoxAPI = {
   dev: {
     getRuntimeState: () => ipcRenderer.invoke("dev:get-runtime-state"),
     getSystemInfo: () => ipcRenderer.invoke("dev:get-system-info"),
+    setAnalyticsEnabled: (enabled: boolean) => ipcRenderer.invoke("dev:set-analytics-enabled", enabled),
   },
 };
 

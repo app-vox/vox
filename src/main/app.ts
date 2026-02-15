@@ -184,6 +184,11 @@ app.whenReady().then(async () => {
     };
   });
 
+  ipcMain.handle("dev:set-analytics-enabled", (_event, enabled: boolean) => {
+    analytics.setEnabled(enabled);
+    return enabled;
+  });
+
   ipcMain.handle("dev:get-system-info", () => {
     return {
       electronVersion: process.versions.electron,

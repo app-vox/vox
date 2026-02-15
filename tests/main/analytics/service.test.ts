@@ -195,12 +195,22 @@ describe("AnalyticsService", () => {
   });
 
   describe("dev mode", () => {
-    it("should skip initialization when app is not packaged", () => {
+    it("should force disable analytics when app is not packaged", () => {
       Object.defineProperty(app, "isPackaged", { value: false, configurable: true });
       service.init({ enabled: true, locale: "en" });
       service.track("test_event");
       expect(mockCapture).not.toHaveBeenCalled();
-      expect(mockStoreGet).not.toHaveBeenCalled();
+      Object.defineProperty(app, "isPackaged", { value: true, configurable: true });
+    });
+
+    it("should allow enabling analytics in dev mode via setEnabled", () => {
+      Object.defineProperty(app, "isPackaged", { value: false, configurable: true });
+      service.init({ enabled: true, locale: "en" });
+      service.setEnabled(true);
+      service.track("test_event");
+      expect(mockCapture).toHaveBeenCalledWith(
+        expect.objectContaining({ event: "test_event" })
+      );
       Object.defineProperty(app, "isPackaged", { value: true, configurable: true });
     });
   });

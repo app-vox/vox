@@ -225,6 +225,7 @@ export function DevPanel() {
   const [systemLocale, setSystemLocale] = useState("");
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
   const [search, setSearch] = useState("");
+  const [analyticsDevEnabled, setAnalyticsDevEnabled] = useState(false);
 
   const fetchRuntime = useCallback(async () => {
     try {
@@ -499,6 +500,29 @@ export function DevPanel() {
       ],
     },
     {
+      title: "Analytics",
+      rows: [
+        { label: "Config Enabled", render: () => <>{boolDot(config?.analyticsEnabled)}</> },
+        {
+          label: "Send in Dev",
+          render: () => (
+            <label className={styles.inlineToggle}>
+              <input
+                type="checkbox"
+                checked={analyticsDevEnabled}
+                onChange={async (e) => {
+                  const val = e.target.checked;
+                  await window.voxApi.dev.setAnalyticsEnabled(val);
+                  setAnalyticsDevEnabled(val);
+                }}
+              />
+              <span>{analyticsDevEnabled ? "on" : "off"}</span>
+            </label>
+          ),
+        },
+      ],
+    },
+    {
       title: "Audio Cues",
       rows: [
         { label: "Start", render: () => <>{config?.recordingAudioCue || "none"}</> },
@@ -578,7 +602,7 @@ export function DevPanel() {
       models, systemLocale, systemInfo, ov, overrides, transcriptionTotal, transcriptionSearch,
       activeTab, collapsed, llmProvider, llmEnhancement, llmConnectionTested,
       llmConfigHash, currentHash, hashMatch, hasApiKey, modelName, selectedModel,
-      downloadedModels]);
+      downloadedModels, analyticsDevEnabled]);
 
   const q = search.trim().toLowerCase();
 

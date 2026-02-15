@@ -436,6 +436,49 @@
   }
 }
 
+.inlineToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  font-family: var(--font-mono, monospace);
+
+  input[type="checkbox"] {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    min-width: 14px;
+    border: 1.5px solid var(--color-border);
+    border-radius: 3px;
+    background: var(--color-bg-input);
+    cursor: pointer;
+    position: relative;
+    transition: all 150ms ease;
+
+    &:hover {
+      border-color: var(--color-border-hover);
+    }
+
+    &:checked {
+      background: #8b5cf6;
+      border-color: #8b5cf6;
+
+      &::after {
+        content: "";
+        position: absolute;
+        left: 3px;
+        top: 0px;
+        width: 4px;
+        height: 7px;
+        border: solid white;
+        border-width: 0 1.5px 1.5px 0;
+        transform: rotate(45deg);
+      }
+    }
+  }
+}
+
 /* ── Dev Visuals blur ────────────────────────────────────────────── */
 
 .devBlurred {
