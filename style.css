@@ -922,6 +922,152 @@ body {
     animation: fadeIn 0.6s ease forwards;
 }
 
+/* === MASTER ANIMATION (10s cycle) === */
+
+@keyframes cursor-move {
+    0% { transform: translate(120px, 30px); opacity: 0; }
+    5% { transform: translate(120px, 30px); opacity: 1; }
+    10% { transform: translate(2px, 2px); opacity: 1; }
+    13% { transform: translate(2px, 2px) scale(0.9); opacity: 1; }
+    15% { transform: translate(2px, 2px) scale(1); opacity: 1; }
+    18% { transform: translate(-60px, 2px); opacity: 1; }
+    44% { transform: translate(-60px, 2px); opacity: 1; }
+    45% { transform: translate(-60px, 2px) scale(0.9); opacity: 1; }
+    48% { transform: translate(-60px, 2px) scale(1); opacity: 1; }
+    75% { transform: translate(2px, 2px); opacity: 1; }
+    78% { transform: translate(2px, 2px); opacity: 0; }
+    100% { transform: translate(2px, 2px); opacity: 0; }
+}
+
+@keyframes widget-morph {
+    0% { width: 42px; height: 42px; border-radius: 50%; background: rgba(25, 25, 25, 0.92); }
+    13% { width: 42px; height: 42px; border-radius: 50%; background: rgba(25, 25, 25, 0.92); }
+    15% { width: 42px; height: 42px; border-radius: 50%; }
+    18% { width: 200px; height: 36px; border-radius: 18px; background: rgba(255, 68, 68, 0.9); }
+    45% { width: 200px; height: 36px; border-radius: 18px; background: rgba(255, 68, 68, 0.9); }
+    48% { width: 200px; height: 36px; border-radius: 18px; background: rgba(255, 170, 0, 0.9); }
+    51% { width: 200px; height: 36px; border-radius: 18px; background: rgba(255, 170, 0, 0.9); }
+    63% { width: 200px; height: 36px; border-radius: 18px; background: rgba(255, 170, 0, 0.9); }
+    65% { width: 200px; height: 36px; border-radius: 18px; background: rgba(68, 170, 255, 0.9); }
+    75% { width: 200px; height: 36px; border-radius: 18px; background: rgba(68, 170, 255, 0.9); }
+    78% { width: 42px; height: 42px; border-radius: 50%; background: rgba(25, 25, 25, 0.92); }
+    100% { width: 42px; height: 42px; border-radius: 50%; background: rgba(25, 25, 25, 0.92); }
+}
+
+@keyframes idle-icon-toggle {
+    0% { opacity: 1; visibility: visible; }
+    13% { opacity: 1; visibility: visible; }
+    15% { opacity: 0; visibility: hidden; }
+    76% { opacity: 0; visibility: hidden; }
+    78% { opacity: 1; visibility: visible; }
+    100% { opacity: 1; visibility: visible; }
+}
+
+@keyframes pill-content-toggle {
+    0% { opacity: 0; visibility: hidden; }
+    15% { opacity: 0; visibility: hidden; }
+    18% { opacity: 1; visibility: visible; }
+    75% { opacity: 1; visibility: visible; }
+    78% { opacity: 0; visibility: hidden; }
+    100% { opacity: 0; visibility: hidden; }
+}
+
+@keyframes bars-toggle {
+    0% { opacity: 0; visibility: hidden; }
+    18% { opacity: 1; visibility: visible; }
+    45% { opacity: 1; visibility: visible; }
+    48% { opacity: 0; visibility: hidden; }
+    100% { opacity: 0; visibility: hidden; }
+}
+
+@keyframes stop-toggle {
+    0% { opacity: 0; }
+    18% { opacity: 1; }
+    45% { opacity: 1; }
+    48% { opacity: 0; }
+    100% { opacity: 0; }
+}
+
+@keyframes status-toggle {
+    0% { opacity: 0; visibility: hidden; }
+    48% { opacity: 1; visibility: visible; }
+    75% { opacity: 1; visibility: visible; }
+    78% { opacity: 0; visibility: hidden; }
+    100% { opacity: 0; visibility: hidden; }
+}
+
+@keyframes hud-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.6; }
+}
+
+@keyframes status-color {
+    0% { color: #ffaa00; }
+    48% { color: #ffaa00; }
+    63% { color: #ffaa00; }
+    65% { color: #44aaff; }
+    75% { color: #44aaff; }
+    100% { color: #ffaa00; }
+}
+
+@keyframes wave1 { 0% { height: 4px; } 50% { height: 16px; } 100% { height: 4px; } }
+@keyframes wave2 { 0% { height: 8px; } 40% { height: 18px; } 80% { height: 6px; } 100% { height: 8px; } }
+@keyframes wave3 { 0% { height: 12px; } 60% { height: 4px; } 100% { height: 12px; } }
+@keyframes wave4 { 0% { height: 6px; } 30% { height: 14px; } 70% { height: 8px; } 100% { height: 6px; } }
+@keyframes wave5 { 0% { height: 10px; } 50% { height: 4px; } 100% { height: 10px; } }
+@keyframes wave6 { 0% { height: 4px; } 45% { height: 18px; } 100% { height: 4px; } }
+@keyframes wave7 { 0% { height: 14px; } 55% { height: 6px; } 100% { height: 14px; } }
+@keyframes wave8 { 0% { height: 8px; } 35% { height: 16px; } 75% { height: 4px; } 100% { height: 8px; } }
+@keyframes wave9 { 0% { height: 6px; } 65% { height: 14px; } 100% { height: 6px; } }
+@keyframes wave10 { 0% { height: 12px; } 40% { height: 4px; } 80% { height: 16px; } 100% { height: 12px; } }
+@keyframes wave11 { 0% { height: 4px; } 50% { height: 10px; } 100% { height: 4px; } }
+@keyframes wave12 { 0% { height: 10px; } 30% { height: 18px; } 60% { height: 6px; } 100% { height: 10px; } }
+
+@keyframes stage-record {
+    0% { opacity: 0.5; } 15% { opacity: 0.5; } 18% { opacity: 1; } 45% { opacity: 1; } 48% { opacity: 0.5; } 100% { opacity: 0.5; }
+}
+@keyframes stage-transcribe {
+    0% { opacity: 0.5; } 48% { opacity: 0.5; } 51% { opacity: 1; } 63% { opacity: 1; } 65% { opacity: 0.5; } 100% { opacity: 0.5; }
+}
+@keyframes stage-enhance {
+    0% { opacity: 0.5; } 63% { opacity: 0.5; } 65% { opacity: 1; } 75% { opacity: 1; } 78% { opacity: 0.5; } 100% { opacity: 0.5; }
+}
+@keyframes stage-paste {
+    0% { opacity: 0.5; } 78% { opacity: 0.5; } 80% { opacity: 1; } 95% { opacity: 1; } 97% { opacity: 0.5; } 100% { opacity: 0.5; }
+}
+
+@keyframes label-transcribing {
+    0% { opacity: 0; visibility: hidden; }
+    48% { opacity: 1; visibility: visible; }
+    63% { opacity: 1; visibility: visible; }
+    65% { opacity: 0; visibility: hidden; }
+    100% { opacity: 0; visibility: hidden; }
+}
+
+@keyframes label-enhancing {
+    0% { opacity: 0; visibility: hidden; }
+    63% { opacity: 0; visibility: hidden; }
+    65% { opacity: 1; visibility: visible; }
+    75% { opacity: 1; visibility: visible; }
+    78% { opacity: 0; visibility: hidden; }
+    100% { opacity: 0; visibility: hidden; }
+}
+
+@keyframes widget-glow {
+    0% { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); }
+    10% { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2), 0 0 16px rgba(99,102,241,0.3); }
+    13% { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2), 0 0 16px rgba(99,102,241,0.3); }
+    15% { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); }
+    18% { box-shadow: 0 2px 8px rgba(255,68,68,0.3), 0 4px 16px rgba(255,68,68,0.2); }
+    45% { box-shadow: 0 2px 8px rgba(255,68,68,0.3), 0 4px 16px rgba(255,68,68,0.2); }
+    48% { box-shadow: 0 2px 8px rgba(255,170,0,0.3), 0 4px 16px rgba(255,170,0,0.2); }
+    63% { box-shadow: 0 2px 8px rgba(255,170,0,0.3), 0 4px 16px rgba(255,170,0,0.2); }
+    65% { box-shadow: 0 2px 8px rgba(68,170,255,0.3), 0 4px 16px rgba(68,170,255,0.2); }
+    75% { box-shadow: 0 2px 8px rgba(68,170,255,0.3), 0 4px 16px rgba(68,170,255,0.2); }
+    78% { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); }
+    100% { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); }
+}
+
 /* Focus Styles for Accessibility */
 a:focus-visible,
 button:focus-visible {
