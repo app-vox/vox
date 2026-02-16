@@ -13,6 +13,44 @@
   }
 }
 
+.hudBannerContent {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+}
+
+.hudBannerText {
+  flex: 1;
+  min-width: 0;
+}
+
+.hudBannerActions {
+  display: flex;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-3);
+}
+
+.hudBannerClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: color 150ms ease, background 150ms ease;
+  margin-top: 2px;
+
+  &:hover {
+    color: var(--color-text-secondary);
+    background: var(--color-bg-hover);
+  }
+}
+
 .setupIcon {
   display: flex;
   align-items: center;
@@ -160,14 +198,26 @@
   margin-top: var(--spacing-2);
 }
 
-.hudControls {
+.hudSettingsRow {
+  display: flex;
+  gap: var(--spacing-5);
+  align-items: flex-start;
   margin-top: var(--spacing-4);
+}
+
+.hudSelectsCol {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
 }
 
 .previewSide {
   display: flex;
   flex-direction: column;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .selectRow {
@@ -304,7 +354,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-2);
-  margin-top: var(--spacing-4);
 
   &.disabled {
     opacity: 0.5;
@@ -387,6 +436,7 @@
   background: var(--color-bg-input);
   position: relative;
   overflow: hidden;
+  cursor: crosshair;
 }
 
 .previewLabel {
@@ -416,10 +466,22 @@
   height: 10px;
   border-radius: 50%;
   background: var(--color-text-tertiary);
+  border: 1px solid transparent;
   position: absolute;
   z-index: 2;
   transition: left 0.15s ease, right 0.15s ease, top 0.15s ease, bottom 0.15s ease,
-    box-shadow 0.3s ease;
+    box-shadow 0.3s ease, width 0.3s ease, height 0.3s ease, border-radius 0.3s ease,
+    border-color 0.3s ease, background 0.3s ease;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30px;
+    height: 30px;
+    transform: translate(-50%, -50%);
+  }
 
   &.dragging {
     transition: box-shadow 0.15s ease;
@@ -430,6 +492,24 @@
     box-shadow: 0 0 0 3px var(--color-accent);
     transition: box-shadow 0.3s ease;
   }
+
+  &.pillShape {
+    width: 24px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--color-text-quaternary, var(--color-border-hover));
+    border-color: var(--color-border);
+  }
+}
+
+@keyframes hudMorph {
+  0%, 35% { width: 10px; height: 10px; border-radius: 50%; background: var(--color-text-tertiary); border-color: transparent; }
+  45%, 85% { width: 24px; height: 6px; border-radius: 3px; background: var(--color-text-quaternary, var(--color-border-hover)); border-color: var(--color-border); }
+  95%, 100% { width: 10px; height: 10px; border-radius: 50%; background: var(--color-text-tertiary); border-color: transparent; }
+}
+
+.previewHudAnimated {
+  animation: hudMorph 4s ease-in-out infinite;
 }
 
 // HUD position classes (9 positions)
