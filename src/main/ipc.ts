@@ -1,4 +1,4 @@
-import { app, BrowserWindow, clipboard, ipcMain, nativeImage, nativeTheme, safeStorage, systemPreferences, shell } from "electron";
+import { app, BrowserWindow, clipboard, ipcMain, nativeImage, nativeTheme, safeStorage, systemPreferences, shell, screen } from "electron";
 import * as fs from "fs";
 import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
@@ -256,6 +256,15 @@ export function registerIpcHandlers(
 
   ipcMain.handle("shell:open-external", async (_event, url: string) => {
     await shell.openExternal(url);
+  });
+
+  ipcMain.handle("displays:get-all", () => {
+    return screen.getAllDisplays().map((d) => ({
+      id: d.id,
+      label: d.label || `Display ${d.id}`,
+      bounds: d.bounds,
+      primary: d.id === screen.getPrimaryDisplay().id,
+    }));
   });
 
   // Setup state check

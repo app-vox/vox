@@ -12,8 +12,16 @@ export type LlmProviderType = "foundry" | "bedrock" | "openai" | "deepseek" | "g
 
 export type CustomTokenSendAs = "header" | "body" | "query";
 
-export type HudPosition = "left" | "center" | "right";
-export type OverlayPosition = "top" | "bottom";
+export type WidgetPosition =
+  | "top-left" | "top-center" | "top-right"
+  | "center-left" | "center-center" | "center-right"
+  | "bottom-left" | "bottom-center" | "bottom-right"
+  | "custom";
+
+/** @deprecated Use WidgetPosition instead */
+export type HudPosition = WidgetPosition;
+/** @deprecated Use WidgetPosition instead */
+export type OverlayPosition = WidgetPosition;
 
 export interface FoundryLlmConfig {
   provider: "foundry";
@@ -96,8 +104,13 @@ export interface VoxConfig {
   errorAudioCue: AudioCueType;
   showHud: boolean;
   hudShowOnHover: boolean;
-  hudPosition: HudPosition;
-  overlayPosition: OverlayPosition;
+  hudPosition: WidgetPosition;
+  hudCustomX: number;
+  hudCustomY: number;
+  overlayPosition: WidgetPosition;
+  overlayCustomX: number;
+  overlayCustomY: number;
+  targetDisplayId: number | null;
 }
 
 export function createDefaultConfig(isProduction = false): VoxConfig {
@@ -129,8 +142,13 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     errorAudioCue: "error",
     showHud: false,
     hudShowOnHover: false,
-    hudPosition: "center",
-    overlayPosition: "top",
+    hudPosition: "bottom-center",
+    hudCustomX: 0.5,
+    hudCustomY: 0.9,
+    overlayPosition: "top-center",
+    overlayCustomX: 0.5,
+    overlayCustomY: 0.1,
+    targetDisplayId: null,
   };
 }
 

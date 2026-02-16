@@ -1,8 +1,29 @@
 import * as fs from "fs";
 import * as path from "path";
 import { app } from "electron";
-import { type VoxConfig, type LlmConfigFlat, createDefaultConfig, createDefaultLlmFlat, narrowLlmConfig } from "../../shared/config";
+import { type VoxConfig, type LlmConfigFlat, type WidgetPosition, createDefaultConfig, createDefaultLlmFlat, narrowLlmConfig } from "../../shared/config";
 import { ENCRYPTED_PREFIX } from "./secrets";
+
+export function migrateHudPosition(raw: string | undefined): WidgetPosition {
+  if (!raw) return "bottom-center";
+  if (raw.includes("-") || raw === "custom") return raw as WidgetPosition;
+  const map: Record<string, WidgetPosition> = {
+    left: "bottom-left",
+    center: "bottom-center",
+    right: "bottom-right",
+  };
+  return map[raw] ?? "bottom-center";
+}
+
+export function migrateOverlayPosition(raw: string | undefined): WidgetPosition {
+  if (!raw) return "top-center";
+  if (raw.includes("-") || raw === "custom") return raw as WidgetPosition;
+  const map: Record<string, WidgetPosition> = {
+    top: "top-center",
+    bottom: "bottom-center",
+  };
+  return map[raw] ?? "top-center";
+}
 
 export interface SecretStore {
   encrypt(plainText: string): string;
@@ -59,8 +80,13 @@ export class ConfigManager {
         analyticsEnabled: saved.analyticsEnabled ?? defaults.analyticsEnabled,
         showHud: saved.showHud ?? defaults.showHud,
         hudShowOnHover: saved.hudShowOnHover ?? defaults.hudShowOnHover,
-        hudPosition: saved.hudPosition ?? defaults.hudPosition,
-        overlayPosition: saved.overlayPosition ?? defaults.overlayPosition,
+        hudPosition: migrateHudPosition(saved.hudPosition),
+        hudCustomX: saved.hudCustomX ?? defaults.hudCustomX,
+        hudCustomY: saved.hudCustomY ?? defaults.hudCustomY,
+        overlayPosition: migrateOverlayPosition(saved.overlayPosition),
+        overlayCustomX: saved.overlayCustomX ?? defaults.overlayCustomX,
+        overlayCustomY: saved.overlayCustomY ?? defaults.overlayCustomY,
+        targetDisplayId: saved.targetDisplayId ?? defaults.targetDisplayId,
       };
 
       return config;

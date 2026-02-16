@@ -13,6 +13,7 @@ export interface TrayCallbacks {
   onStartListening?: () => void;
   onStopListening?: () => void;
   onCancelListening?: () => void;
+  onToggleHud?: () => void;
 }
 
 let callbacks: TrayCallbacks | null = null;
@@ -171,6 +172,16 @@ export function updateTrayMenu(): void {
         enabled: hasModel,
       });
     }
+  }
+
+  // Show/Hide HUD toggle
+  if (callbacks.onToggleHud) {
+    menuTemplate.push({ type: "separator" });
+    const hudVisible = currentConfig?.showHud ?? false;
+    menuTemplate.push({
+      label: hudVisible ? t("tray.hideHud") : t("tray.showHud"),
+      click: () => callbacks?.onToggleHud?.(),
+    });
   }
 
   // Update notification

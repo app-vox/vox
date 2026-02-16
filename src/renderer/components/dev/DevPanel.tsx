@@ -18,6 +18,7 @@ interface RuntimeState {
   isRecording: boolean;
   indicatorVisible: boolean;
   indicatorMode: string | null;
+  hudVisible: boolean;
   isListening: boolean;
   hasModel: boolean;
   trayActive: boolean;
@@ -334,7 +335,7 @@ export function DevPanel() {
     { label: "No Internet", preset: { online: false } },
     { label: "LLM Not Configured", preset: { llmEnhancementEnabled: false, llmConnectionTested: false } },
     { label: "LLM Untested", preset: { llmEnhancementEnabled: true, llmConnectionTested: false } },
-    { label: "No Model", preset: { setupComplete: false } },
+    { label: "No Local Model", preset: { setupComplete: false } },
     { label: "Permissions Denied", preset: { microphonePermission: "denied", accessibilityPermission: false } },
     { label: "Update Available", preset: { updateStatus: "available" } },
     { label: "Update Downloading", preset: { updateStatus: "downloading", updateDownloadProgress: 42 } },
@@ -485,6 +486,16 @@ export function DevPanel() {
       rows: [
         { label: "Visible", render: () => <>{runtime ? boolDot(runtime.indicatorVisible) : <Dot color="gray" />}</> },
         { label: "Mode", render: () => <>{runtime ? statusDot(runtime.indicatorMode) : <Dot color="gray" />}</> },
+      ],
+    },
+    {
+      title: "HUD & Overlay",
+      rows: [
+        { label: "HUD Visible", render: () => <>{runtime ? boolDot(runtime.hudVisible) : <Dot color="gray" />}</> },
+        { label: "Show HUD", render: () => <>{boolDot(config?.showHud)}</> },
+        { label: "Hover Mode", render: () => <>{boolDot(config?.hudShowOnHover)}</> },
+        { label: "HUD Position", render: () => <>{config?.hudPosition || "bottom-center"}</> },
+        { label: "Overlay Position", render: () => <>{config?.overlayPosition || "top-center"}</> },
       ],
     },
     {

@@ -1,4 +1,4 @@
-import { globalShortcut, ipcMain, Notification } from "electron";
+import { BrowserWindow, globalShortcut, ipcMain, Notification } from "electron";
 import { uIOhook, UiohookKey } from "uiohook-napi";
 import log from "electron-log/main";
 import { type ConfigManager } from "../config/manager";
@@ -7,7 +7,7 @@ import { type Pipeline, CanceledError, NoModelError } from "../pipeline";
 import { ShortcutStateMachine } from "./listener";
 import { IndicatorWindow } from "../indicator";
 import { HudWindow } from "../hud";
-import { setTrayListeningState } from "../tray";
+import { setTrayListeningState, updateTrayConfig } from "../tray";
 import { t } from "../../shared/i18n";
 import { generateCueSamples, isWavCue, getWavFilename, parseWavSamples } from "../../shared/audio-cue";
 import type { AudioCueType } from "../../shared/config";
@@ -81,6 +81,7 @@ export interface ShortcutManagerDeps {
   configManager: ConfigManager;
   getPipeline: () => Pipeline;
   analytics?: { track(event: string, properties?: Record<string, unknown>): void };
+  openSettings?: (tab?: string) => void;
 }
 
 export class ShortcutManager {
@@ -245,14 +246,15 @@ export class ShortcutManager {
     const config = this.deps.configManager.load();
     if (config.showHud) {
       this.hud.show(config.hudShowOnHover, config.hudPosition);
+      if (config.hudPosition === "custom") {
+        this.hud.setCustomPosition(config.hudCustomX, config.hudCustomY);
+      }
     } else {
       this.hud.hide();
     }
-    let overlayPos = config.overlayPosition;
-    if (config.showHud && config.hudPosition === "center" && overlayPos === "bottom") {
-      overlayPos = "top";
-    }
-    this.indicator.setOverlayPosition(overlayPos);
+    this.hud.setTargetDisplay(config.targetDisplayId);
+    this.indicator.setOverlayPosition(config.overlayPosition, config.overlayCustomX, config.overlayCustomY);
+    this.indicator.setTargetDisplay(config.targetDisplayId);
   }
 
   getHud(): HudWindow {
@@ -370,6 +372,93 @@ export class ShortcutManager {
 
     ipcMain.handle("hud:stop-recording", () => {
       this.stopAndProcess();
+    });
+
+    ipcMain.handle("hud:open-settings", () => {
+      this.deps.openSettings?.("general");
+    });
+
+    ipcMain.handle("hud:open-transcriptions", () => {
+      this.deps.openSettings?.("transcriptions");
+    });
+
+    ipcMain.handle("hud:disable", () => {
+      const config = this.deps.configManager.load();
+      config.showHud = false;
+      this.deps.configManager.save(config);
+      this.hud.hide();
+      updateTrayConfig(config);
+      for (const win of BrowserWindow.getAllWindows()) {
+        win.webContents.send("config:changed");
+      }
+    });
+
+    ipcMain.handle("hud:drag", (_event, dx: number, dy: number) => {
+      this.hud.drag(dx, dy);
+    });
+
+    ipcMain.handle("hud:drag-end", () => {
+      const result = this.hud.dragEnd();
+      if (result) {
+        const config = this.deps.configManager.load();
+        config.hudPosition = "custom";
+        config.hudCustomX = result.nx;
+        config.hudCustomY = result.ny;
+        this.deps.configManager.save(config);
+        for (const win of BrowserWindow.getAllWindows()) {
+          win.webContents.send("config:changed");
+        }
+      }
+    });
+
+    ipcMain.handle("hud:set-position", (_event, nx: number, ny: number) => {
+      this.hud.setPosition(nx, ny);
+    });
+
+    ipcMain.handle("hud:show-highlight", () => {
+      this.hud.showHighlight();
+    });
+
+    ipcMain.handle("hud:hide-highlight", () => {
+      this.hud.hideHighlight();
+    });
+
+    ipcMain.handle("indicator:set-position", (_event, nx: number, ny: number) => {
+      this.indicator.setPosition(nx, ny);
+    });
+
+    ipcMain.handle("indicator:show-preview", () => {
+      this.indicator.showPreview();
+    });
+
+    ipcMain.handle("indicator:hide-preview", () => {
+      this.indicator.hidePreview();
+    });
+
+    ipcMain.handle("indicator:show-highlight", () => {
+      this.indicator.showHighlight();
+    });
+
+    ipcMain.handle("indicator:hide-highlight", () => {
+      this.indicator.hideHighlight();
+    });
+
+    ipcMain.handle("indicator:drag", (_event, dx: number, dy: number) => {
+      this.indicator.drag(dx, dy);
+    });
+
+    ipcMain.handle("indicator:drag-end", () => {
+      const result = this.indicator.dragEnd();
+      if (result) {
+        const config = this.deps.configManager.load();
+        config.overlayPosition = "custom";
+        config.overlayCustomX = result.nx;
+        config.overlayCustomY = result.ny;
+        this.deps.configManager.save(config);
+        for (const win of BrowserWindow.getAllWindows()) {
+          win.webContents.send("config:changed");
+        }
+      }
     });
   }
 

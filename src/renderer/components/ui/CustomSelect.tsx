@@ -26,9 +26,10 @@ interface CustomSelectProps {
   onChange: (value: string) => void;
   onPreview?: (value: string) => void;
   id?: string;
+  disabled?: boolean;
 }
 
-export function CustomSelect({ value, items, onChange, onPreview, id }: CustomSelectProps) {
+export function CustomSelect({ value, items, onChange, onPreview, id, disabled }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
   const [focusIndex, setFocusIndex] = useState(-1);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
@@ -134,6 +135,7 @@ export function CustomSelect({ value, items, onChange, onPreview, id }: CustomSe
   };
 
   const handleToggle = () => {
+    if (disabled) return;
     if (!open) {
       const currentIdx = items.findIndex((item) => !isDivider(item) && item.value === value);
       setFocusIndex(currentIdx >= 0 ? currentIdx : getOptionIndices()[0]);
@@ -147,7 +149,8 @@ export function CustomSelect({ value, items, onChange, onPreview, id }: CustomSe
         type="button"
         ref={triggerRef}
         id={id}
-        className={`${styles.trigger} ${open ? styles.open : ""}`}
+        className={`${styles.trigger} ${open ? styles.open : ""} ${disabled ? styles.disabled : ""}`}
+        disabled={disabled}
         onClick={handleToggle}
         onKeyDown={handleKeyDown}
         aria-haspopup="listbox"

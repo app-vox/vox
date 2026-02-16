@@ -158,7 +158,45 @@
 
 .subCheckbox {
   margin-top: var(--spacing-2);
-  padding-left: 30px;
+}
+
+.hudControls {
+  margin-top: var(--spacing-4);
+}
+
+.previewSide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.selectRow {
+  display: flex;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-4);
+}
+
+.selectField {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+
+@keyframes flashHighlight {
+  0%, 100% { box-shadow: none; }
+  50% { box-shadow: 0 0 0 2px var(--color-accent); }
+}
+
+.flash {
+  animation: flashHighlight 0.35s ease 1;
+  border-radius: var(--radius-md);
 }
 
 .collapsibleHeader {
@@ -267,7 +305,6 @@
   flex-direction: column;
   gap: var(--spacing-2);
   margin-top: var(--spacing-4);
-  padding-left: 30px;
 
   &.disabled {
     opacity: 0.5;
@@ -292,19 +329,60 @@
   color: var(--color-text-tertiary);
   line-height: 1.4;
   margin-top: var(--spacing-2);
-  padding-left: 30px;
+}
+
+.restoreDefaultsRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--spacing-4);
+  padding-top: var(--spacing-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.restoreDefaults {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-2);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease;
+  white-space: nowrap;
+
+  &:hover {
+    color: var(--color-text-secondary);
+    border-color: var(--color-border-hover);
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+.previewSection {
+  margin-top: var(--spacing-4);
+}
+
+.previewTitle {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-2);
 }
 
 .previewRow {
   display: flex;
   gap: var(--spacing-4);
-  margin-top: var(--spacing-4);
 }
 
 .previewScreen {
-  width: 96px;
-  height: 60px;
-  border-radius: 6px;
+  width: 180px;
+  height: 110px;
+  border-radius: 8px;
   border: 1px solid var(--color-border);
   background: var(--color-bg-input);
   position: relative;
@@ -318,42 +396,82 @@
   margin-top: var(--spacing-1);
 }
 
+.dragHint {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  margin-top: var(--spacing-2);
+
+  svg {
+    flex-shrink: 0;
+    opacity: 0.6;
+  }
+}
+
+// HUD preview dot — positioned via classes
 .previewHud {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: var(--color-text-tertiary);
   position: absolute;
-  bottom: 14px;
+  z-index: 2;
+  transition: left 0.15s ease, right 0.15s ease, top 0.15s ease, bottom 0.15s ease,
+    box-shadow 0.3s ease;
+
+  &.dragging {
+    transition: box-shadow 0.15s ease;
+    box-shadow: 0 0 0 3px var(--color-accent);
+  }
+
+  &.highlight {
+    box-shadow: 0 0 0 3px var(--color-accent);
+    transition: box-shadow 0.3s ease;
+  }
 }
 
-.previewHudLeft {
-  left: 8px;
-}
+// HUD position classes (9 positions)
+.previewHud_top_left { top: 10px; left: 10px; }
+.previewHud_top_center { top: 10px; left: 50%; transform: translateX(-50%); }
+.previewHud_top_right { top: 10px; right: 10px; }
+.previewHud_center_left { top: 50%; left: 10px; transform: translateY(-50%); }
+.previewHud_center_center { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.previewHud_center_right { top: 50%; right: 10px; transform: translateY(-50%); }
+.previewHud_bottom_left { bottom: 16px; left: 10px; }
+.previewHud_bottom_center { bottom: 16px; left: 50%; transform: translateX(-50%); }
+.previewHud_bottom_right { bottom: 16px; right: 10px; }
 
-.previewHudCenter {
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.previewHudRight {
-  right: 8px;
-}
-
+// Overlay preview pill — positioned via classes
 .previewOverlay {
-  width: 28px;
-  height: 4px;
-  border-radius: 2px;
+  width: 36px;
+  height: 5px;
+  border-radius: 3px;
   background: var(--color-text-tertiary);
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  z-index: 1;
+  transition: left 0.15s ease, right 0.15s ease, top 0.15s ease, bottom 0.15s ease,
+    box-shadow 0.3s ease;
+
+  &.dragging {
+    transition: box-shadow 0.15s ease;
+    box-shadow: 0 0 0 3px var(--color-accent);
+  }
+
+  &.highlight {
+    box-shadow: 0 0 0 3px var(--color-accent);
+    transition: box-shadow 0.3s ease;
+  }
 }
 
-.previewOverlayTop {
-  top: 6px;
-}
-
-.previewOverlayBottom {
-  bottom: 6px;
-}
+// Overlay position classes (9 positions)
+.previewOverlay_top_left { top: 8px; left: 10px; }
+.previewOverlay_top_center { top: 8px; left: 50%; transform: translateX(-50%); }
+.previewOverlay_top_right { top: 8px; right: 10px; }
+.previewOverlay_center_left { top: 50%; left: 10px; transform: translateY(-50%); }
+.previewOverlay_center_center { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.previewOverlay_center_right { top: 50%; right: 10px; transform: translateY(-50%); }
+.previewOverlay_bottom_left { bottom: 8px; left: 10px; }
+.previewOverlay_bottom_center { bottom: 8px; left: 50%; transform: translateX(-50%); }
+.previewOverlay_bottom_right { bottom: 8px; right: 10px; }

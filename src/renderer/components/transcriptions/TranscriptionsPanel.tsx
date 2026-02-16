@@ -11,6 +11,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronsRightIcon,
+  InfoCircleIcon,
 } from "../../../shared/icons";
 import { CustomSelect } from "../ui/CustomSelect";
 import card from "../shared/card.module.scss";
@@ -143,6 +144,10 @@ export function TranscriptionsPanel() {
           <p className={card.description}>
             {total > 0 ? (total === 1 ? t("history.oneStored") : t("history.countStored", { count: total })) : t("history.emptyState")}
           </p>
+        </div>
+        <div className={card.infoBanner}>
+          <InfoCircleIcon width={14} height={14} />
+          <span>{t("history.clipboardHint")}</span>
         </div>
         <div className={card.body}>
           <div className={styles.searchContainer}>

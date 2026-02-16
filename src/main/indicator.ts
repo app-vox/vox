@@ -1,6 +1,6 @@
 import { BrowserWindow, screen } from "electron";
 import { t } from "../shared/i18n";
-import type { OverlayPosition } from "../shared/config";
+import type { WidgetPosition } from "../shared/config";
 
 type IndicatorMode = "initializing" | "listening" | "transcribing" | "enhancing" | "error" | "canceled";
 
@@ -69,10 +69,12 @@ function buildStaticHtml(): string {
     font-weight: 500;
     letter-spacing: 0.1px;
     white-space: nowrap;
-    pointer-events: none;
+    pointer-events: auto;
+    cursor: grab;
     min-width: 100px;
     min-height: 30px;
   }
+  .pill.dragging { cursor: grabbing; }
   .hidden { display: none !important; }
   .dot {
     width: 8px;
@@ -131,6 +133,7 @@ function buildStaticHtml(): string {
     0%, 100% { filter: drop-shadow(0 0 8px var(--c)); }
     50% { filter: drop-shadow(0 0 16px var(--c)); }
   }
+  .pill.highlight { border-color: rgba(99, 102, 241, 0.6); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3), 0 8px 32px rgba(0, 0, 0, 0.4); }
 </style></head>
 <body>
 <div class="pill">
@@ -148,6 +151,40 @@ function buildStaticHtml(): string {
   </button>
 </div>
 <script>
+var isDragging = false;
+var dragStartX = 0, dragStartY = 0;
+var pillEl = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+  pillEl = document.querySelector('.pill');
+  pillEl.addEventListener('mousedown', function(e) {
+    if (e.target.closest('.cancel-btn')) return;
+    isDragging = true;
+    dragStartX = e.screenX;
+    dragStartY = e.screenY;
+    pillEl.classList.add('dragging');
+    e.preventDefault();
+  });
+});
+
+document.addEventListener('mousemove', function(e) {
+  if (!isDragging) return;
+  var dx = e.screenX - dragStartX;
+  var dy = e.screenY - dragStartY;
+  if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+    window.electronAPI?.indicatorDrag(dx, dy);
+    dragStartX = e.screenX;
+    dragStartY = e.screenY;
+  }
+});
+
+document.addEventListener('mouseup', function() {
+  if (!isDragging) return;
+  isDragging = false;
+  if (pillEl) pillEl.classList.remove('dragging');
+  window.electronAPI?.indicatorDragEnd();
+});
+
 function setMode(cfg) {
   var c = cfg.color;
   document.documentElement.style.setProperty('--c', c);
@@ -202,7 +239,10 @@ export class IndicatorWindow {
   private contentReady = false;
   private pendingUpdate: object | null = null;
   private currentMode: IndicatorMode | null = null;
-  private overlayPosition: OverlayPosition = "top";
+  private overlayPosition: WidgetPosition = "top-center";
+  private targetDisplayId: number | null = null;
+  private customX = 0.5;
+  private customY = 0.1;
 
   show(mode: IndicatorMode, customLabel?: string): void {
     if (this.hideTimer) {
@@ -217,7 +257,7 @@ export class IndicatorWindow {
     this.currentMode = mode;
 
     if (this.window && !this.window.isDestroyed()) {
-      this.window.setIgnoreMouseEvents(!isInteractive);
+      this.window.setIgnoreMouseEvents(false);
       if (this.contentReady) {
         this.execSetMode(update);
       } else {
@@ -257,14 +297,7 @@ export class IndicatorWindow {
       if (this.window) this.window.blur();
     });
 
-    const cursorPoint = screen.getCursorScreenPoint();
-    const display = screen.getDisplayNearestPoint(cursorPoint);
-    const workArea = display.workArea;
-    const x = Math.round(display.bounds.x + display.bounds.width / 2 - WINDOW_WIDTH / 2);
-    const y = this.overlayPosition === "bottom"
-      ? workArea.y + workArea.height - WINDOW_HEIGHT - 10
-      : display.bounds.y + 10;
-    this.window.setPosition(x, y);
+    this.positionWindow();
 
     this.window.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(buildStaticHtml())}`);
 
@@ -323,6 +356,24 @@ export class IndicatorWindow {
     this.currentMode = null;
   }
 
+  showPreview(): void {
+    if (!this.window || this.window.isDestroyed()) {
+      this.show("initializing");
+    }
+    if (this.hideTimer) {
+      clearTimeout(this.hideTimer);
+      this.hideTimer = null;
+    }
+  }
+
+  hidePreview(): void {
+    if (this.window && !this.window.isDestroyed()) {
+      const t = setTimeout(() => this.hide(), 300);
+      t.unref();
+      this.hideTimer = t;
+    }
+  }
+
   isVisible(): boolean {
     return this.window !== null && !this.window.isDestroyed();
   }
@@ -331,8 +382,88 @@ export class IndicatorWindow {
     return this.currentMode;
   }
 
-  setOverlayPosition(position: OverlayPosition): void {
+  setOverlayPosition(position: WidgetPosition, customX?: number, customY?: number): void {
     this.overlayPosition = position;
+    if (customX !== undefined) this.customX = customX;
+    if (customY !== undefined) this.customY = customY;
+  }
+
+  setTargetDisplay(id: number | null): void {
+    this.targetDisplayId = id;
+  }
+
+  getTargetDisplay(): number | null {
+    return this.targetDisplayId;
+  }
+
+  showHighlight(): void {
+    if (!this.window || this.window.isDestroyed() || !this.contentReady) return;
+    this.window.webContents.executeJavaScript(
+      `document.querySelector('.pill').classList.add('highlight')`
+    ).catch(() => {});
+  }
+
+  hideHighlight(): void {
+    if (!this.window || this.window.isDestroyed() || !this.contentReady) return;
+    this.window.webContents.executeJavaScript(
+      `document.querySelector('.pill').classList.remove('highlight')`
+    ).catch(() => {});
+  }
+
+  setPosition(nx: number, ny: number): void {
+    this.customX = nx;
+    this.customY = ny;
+    this.overlayPosition = "custom";
+    this.positionWindow();
+  }
+
+  drag(dx: number, dy: number): void {
+    if (!this.window || this.window.isDestroyed()) return;
+    const [wx, wy] = this.window.getPosition();
+    this.window.setPosition(wx + dx, wy + dy);
+  }
+
+  dragEnd(): { nx: number; ny: number } | null {
+    if (!this.window || this.window.isDestroyed()) return null;
+    const [wx, wy] = this.window.getPosition();
+    const display = screen.getDisplayNearestPoint({ x: wx + WINDOW_WIDTH / 2, y: wy + WINDOW_HEIGHT / 2 });
+    const nx = (wx + WINDOW_WIDTH / 2 - display.bounds.x) / display.bounds.width;
+    const ny = (wy + WINDOW_HEIGHT / 2 - display.bounds.y) / display.bounds.height;
+    this.customX = nx;
+    this.customY = ny;
+    this.overlayPosition = "custom";
+    return { nx, ny };
+  }
+
+  private positionWindow(): void {
+    if (!this.window) return;
+    const display = this.targetDisplayId !== null
+      ? screen.getAllDisplays().find(d => d.id === this.targetDisplayId) ?? screen.getPrimaryDisplay()
+      : screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+    const workArea = display.workArea;
+
+    if (this.overlayPosition === "custom") {
+      const x = Math.round(display.bounds.x + display.bounds.width * this.customX - WINDOW_WIDTH / 2);
+      const y = Math.round(display.bounds.y + display.bounds.height * this.customY - WINDOW_HEIGHT / 2);
+      this.window.setPosition(x, y);
+      return;
+    }
+
+    const [vPos, hPos] = this.overlayPosition.split("-") as [string, string];
+    let x: number;
+    if (hPos === "left") {
+      x = workArea.x + 10;
+    } else if (hPos === "right") {
+      x = workArea.x + workArea.width - WINDOW_WIDTH - 10;
+    } else {
+      x = Math.round(display.bounds.x + display.bounds.width / 2 - WINDOW_WIDTH / 2);
+    }
+    const y = vPos === "bottom"
+      ? workArea.y + workArea.height - WINDOW_HEIGHT - 10
+      : vPos === "center"
+      ? Math.round(workArea.y + workArea.height / 2 - WINDOW_HEIGHT / 2)
+      : display.bounds.y + 10;
+    this.window.setPosition(x, y);
   }
 
   private execSetMode(update: object): void {

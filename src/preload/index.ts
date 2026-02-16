@@ -114,6 +114,19 @@ export interface VoxAPI {
   };
   indicator: {
     cancelRecording(): Promise<void>;
+    setPosition(nx: number, ny: number): Promise<void>;
+    showPreview(): Promise<void>;
+    hidePreview(): Promise<void>;
+    showHighlight(): Promise<void>;
+    hideHighlight(): Promise<void>;
+  };
+  hud: {
+    setPosition(nx: number, ny: number): Promise<void>;
+    showHighlight(): Promise<void>;
+    hideHighlight(): Promise<void>;
+  };
+  displays: {
+    getAll(): Promise<{ id: number; label: string; bounds: { x: number; y: number; width: number; height: number }; primary: boolean }[]>;
   };
   i18n: {
     getSystemLocale(): Promise<string>;
@@ -232,6 +245,19 @@ const voxApi: VoxAPI = {
   },
   indicator: {
     cancelRecording: () => ipcRenderer.invoke("indicator:cancel-recording"),
+    setPosition: (nx, ny) => ipcRenderer.invoke("indicator:set-position", nx, ny),
+    showPreview: () => ipcRenderer.invoke("indicator:show-preview"),
+    hidePreview: () => ipcRenderer.invoke("indicator:hide-preview"),
+    showHighlight: () => ipcRenderer.invoke("indicator:show-highlight"),
+    hideHighlight: () => ipcRenderer.invoke("indicator:hide-highlight"),
+  },
+  hud: {
+    setPosition: (nx, ny) => ipcRenderer.invoke("hud:set-position", nx, ny),
+    showHighlight: () => ipcRenderer.invoke("hud:show-highlight"),
+    hideHighlight: () => ipcRenderer.invoke("hud:hide-highlight"),
+  },
+  displays: {
+    getAll: () => ipcRenderer.invoke("displays:get-all"),
   },
   i18n: {
     getSystemLocale: () => ipcRenderer.invoke("i18n:system-locale"),
@@ -249,4 +275,11 @@ contextBridge.exposeInMainWorld("electronAPI", {
   cancelRecording: () => ipcRenderer.invoke("indicator:cancel-recording"),
   hudStartRecording: () => ipcRenderer.invoke("hud:start-recording"),
   hudStopRecording: () => ipcRenderer.invoke("hud:stop-recording"),
+  hudOpenSettings: () => ipcRenderer.invoke("hud:open-settings"),
+  hudOpenTranscriptions: () => ipcRenderer.invoke("hud:open-transcriptions"),
+  hudDisable: () => ipcRenderer.invoke("hud:disable"),
+  hudDrag: (dx: number, dy: number) => ipcRenderer.invoke("hud:drag", dx, dy),
+  hudDragEnd: () => ipcRenderer.invoke("hud:drag-end"),
+  indicatorDrag: (dx: number, dy: number) => ipcRenderer.invoke("indicator:drag", dx, dy),
+  indicatorDragEnd: () => ipcRenderer.invoke("indicator:drag-end"),
 });

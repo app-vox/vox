@@ -1,12 +1,12 @@
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useState, useRef, useCallback, useEffect } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
 import { usePermissions } from "../../hooks/use-permissions";
 import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useT } from "../../i18n-context";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
-import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, ChevronDownIcon } from "../../../shared/icons";
-import type { ThemeMode, SupportedLanguage, HudPosition, OverlayPosition } from "../../../shared/config";
+import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, ChevronDownIcon, MoveIcon, RefreshIcon } from "../../../shared/icons";
+import type { ThemeMode, SupportedLanguage, WidgetPosition } from "../../../shared/config";
 import { CustomSelect, type SelectItem } from "../ui/CustomSelect";
 import { OfflineBanner } from "../ui/OfflineBanner";
 import card from "../shared/card.module.scss";
@@ -38,6 +38,21 @@ function previewCue(cue: string) {
   window.voxApi.audio.previewCue(cue).catch(() => {});
 }
 
+function getOppositePosition(pos: WidgetPosition): WidgetPosition {
+  const map: Record<string, WidgetPosition> = {
+    "top-left": "bottom-left",
+    "top-center": "bottom-center",
+    "top-right": "bottom-right",
+    "center-left": "center-right",
+    "center-center": "bottom-center",
+    "center-right": "center-left",
+    "bottom-left": "top-left",
+    "bottom-center": "top-center",
+    "bottom-right": "top-right",
+  };
+  return map[pos] ?? pos;
+}
+
 export function GeneralPanel() {
   const t = useT();
   const config = useConfigStore((s) => s.config);
@@ -49,7 +64,6 @@ export function GeneralPanel() {
   const triggerToast = useSaveToast((s) => s.trigger);
   const { status: realStatus } = usePermissions();
 
-  // Dev overrides (gated — tree-shaken in production)
   const setupComplete = import.meta.env.DEV
     // eslint-disable-next-line react-hooks/rules-of-hooks
     ? useDevOverrideValue("setupComplete", realSetupComplete)
@@ -105,18 +119,34 @@ export function GeneralPanel() {
     })),
   ];
 
-  const hudPositionItems: SelectItem[] = [
-    { value: "left", label: t("general.hud.positionLeft") },
-    { value: "center", label: t("general.hud.positionCenter") },
-    { value: "right", label: t("general.hud.positionRight") },
-  ];
-
-  const overlayPositionItems: SelectItem[] = [
-    { value: "top", label: t("general.overlay.top") },
-    { value: "bottom", label: t("general.overlay.bottom") },
+  const positionItems: SelectItem[] = [
+    { value: "top-left", label: t("general.position.topLeft") },
+    { value: "top-center", label: t("general.position.topCenter") },
+    { value: "top-right", label: t("general.position.topRight") },
+    { divider: true },
+    { value: "center-left", label: t("general.position.centerLeft") },
+    { value: "center-center", label: t("general.position.centerCenter") },
+    { value: "center-right", label: t("general.position.centerRight") },
+    { divider: true },
+    { value: "bottom-left", label: t("general.position.bottomLeft") },
+    { value: "bottom-center", label: t("general.position.bottomCenter") },
+    { value: "bottom-right", label: t("general.position.bottomRight") },
+    { divider: true },
+    { value: "custom", label: t("general.position.custom") },
   ];
 
   const [displayCollapsed, setDisplayCollapsed] = useState(() => localStorage.getItem(DISPLAY_COLLAPSED_KEY) !== "false");
+  const [availableDisplays, setAvailableDisplays] = useState<{ id: number; label: string; primary: boolean }[]>([]);
+  const [swapDisclaimer, setSwapDisclaimer] = useState(false);
+  const [flashHudSelect, setFlashHudSelect] = useState(false);
+  const [flashOverlaySelect, setFlashOverlaySelect] = useState(false);
+  const [hudDragPos, setHudDragPos] = useState<{ x: number; y: number } | null>(null);
+  const [overlayDragPos, setOverlayDragPos] = useState<{ x: number; y: number } | null>(null);
+  const [hudHighlight, setHudHighlight] = useState(false);
+  const [overlayHighlight, setOverlayHighlight] = useState(false);
+
+  const previewRef = useRef<HTMLDivElement>(null);
+  const swapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isDevMode = import.meta.env.DEV;
 
@@ -124,7 +154,51 @@ export function GeneralPanel() {
 
   if (!config) return null;
 
-  const showAutoInvertDisclaimer = config.showHud && config.hudPosition === "center" && config.overlayPosition === "bottom";
+  const showSwapDisclaimer = () => {
+    setSwapDisclaimer(true);
+    if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
+    swapTimerRef.current = setTimeout(() => setSwapDisclaimer(false), 3000);
+  };
+
+  const flashSelect = (target: "hud" | "overlay") => {
+    const setter = target === "hud" ? setFlashHudSelect : setFlashOverlaySelect;
+    setter(true);
+    setTimeout(() => setter(false), 400);
+  };
+
+  const flashPreview = (target: "hud" | "overlay") => {
+    const setter = target === "hud" ? setHudHighlight : setOverlayHighlight;
+    setter(true);
+    setTimeout(() => setter(false), 400);
+  };
+
+  const handleHudPositionChange = async (val: string) => {
+    const newPos = val as WidgetPosition;
+    const prevPos = config.hudPosition;
+    const updates: Partial<typeof config> = { hudPosition: newPos };
+    if (newPos !== "custom" && newPos === config.overlayPosition) {
+      updates.overlayPosition = getOppositePosition(newPos);
+      showSwapDisclaimer();
+    }
+    updateConfig(updates);
+    await saveConfig(false);
+    triggerToast();
+    if (prevPos !== "custom") flashPreview("hud");
+  };
+
+  const handleOverlayPositionChange = async (val: string) => {
+    const newPos = val as WidgetPosition;
+    const prevPos = config.overlayPosition;
+    const updates: Partial<typeof config> = { overlayPosition: newPos };
+    if (newPos !== "custom" && newPos === config.hudPosition) {
+      updates.hudPosition = getOppositePosition(newPos);
+      showSwapDisclaimer();
+    }
+    updateConfig(updates);
+    await saveConfig(false);
+    triggerToast();
+    if (prevPos !== "custom") flashPreview("overlay");
+  };
 
   const handleSoundChange = async (field: "recordingAudioCue" | "recordingStopAudioCue" | "errorAudioCue", cue: string) => {
     updateConfig({ [field]: cue });
@@ -144,6 +218,75 @@ export function GeneralPanel() {
     await saveConfig(false);
     triggerToast();
   };
+
+  const handleRestoreDefaults = async () => {
+    updateConfig({
+      hudPosition: "bottom-center",
+      hudCustomX: 0.5,
+      hudCustomY: 0.9,
+      overlayPosition: "top-center",
+      overlayCustomX: 0.5,
+      overlayCustomY: 0.1,
+    });
+    await saveConfig(false);
+    triggerToast();
+  };
+
+  const getPreviewPosition = useCallback((pos: WidgetPosition) => {
+    if (pos === "custom") return null;
+    return pos;
+  }, []);
+
+  const handlePreviewMouseDown = useCallback((e: React.MouseEvent, target: "hud" | "overlay") => {
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = previewRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const setDragPos = target === "hud" ? setHudDragPos : setOverlayDragPos;
+    const setHighlight = target === "hud" ? setHudHighlight : setOverlayHighlight;
+
+    const computePos = (ev: { clientX: number; clientY: number }) => ({
+      x: Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width)),
+      y: Math.max(0, Math.min(1, (ev.clientY - rect.top) / rect.height)),
+    });
+
+    setDragPos(computePos(e));
+    setHighlight(true);
+
+    const onMove = (ev: MouseEvent) => {
+      setDragPos(computePos(ev));
+    };
+
+    const onUp = (ev: MouseEvent) => {
+      const pos = computePos(ev);
+      setDragPos(null);
+      setHighlight(false);
+      const wasCustom = target === "hud" ? config.hudPosition === "custom" : config.overlayPosition === "custom";
+      if (target === "hud") {
+        updateConfig({ hudPosition: "custom", hudCustomX: pos.x, hudCustomY: pos.y });
+      } else {
+        updateConfig({ overlayPosition: "custom", overlayCustomX: pos.x, overlayCustomY: pos.y });
+      }
+      if (!wasCustom) flashSelect(target);
+      saveConfig(false).then(() => triggerToast());
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  }, [updateConfig, saveConfig, triggerToast]);
+
+  useEffect(() => {
+    window.voxApi.displays.getAll().then(setAvailableDisplays).catch(() => {});
+    return () => {
+      if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
+    };
+  }, []);
+
+  const hudPreviewPos = getPreviewPosition(config.hudPosition);
+  const overlayPreviewPos = getPreviewPosition(config.overlayPosition);
 
   return (
     <>
@@ -193,6 +336,25 @@ export function GeneralPanel() {
         </div>
       )}
 
+      {/* Language */}
+      <div className={card.card}>
+        <div className={card.header}>
+          <h2>{t("general.language.title")}</h2>
+          <p className={card.description}>{t("general.language.description")}</p>
+        </div>
+        <div className={card.body}>
+          <CustomSelect
+            value={config.language}
+            items={languageItems}
+            onChange={(val) => {
+              updateConfig({ language: val as SupportedLanguage | "system" });
+              saveConfig(false).then(() => triggerToast());
+            }}
+          />
+        </div>
+      </div>
+
+      {/* HUD & Overlay */}
       <div className={card.card}>
         <button
           className={styles.collapsibleHeader}
@@ -217,100 +379,147 @@ export function GeneralPanel() {
         </button>
         {!displayCollapsed && (
           <div className={card.body}>
-            <label className={styles.checkboxRow}>
-              <input
-                type="checkbox"
-                checked={config.showHud}
-                onChange={async () => {
-                  const newShowHud = !config.showHud;
-                  updateConfig({
-                    showHud: newShowHud,
-                    ...(newShowHud ? {} : { hudShowOnHover: false }),
-                  });
-                  await saveConfig(false);
-                  triggerToast();
-                }}
-              />
-              <div>
-                <div className={styles.checkboxLabel}>{t("general.hud.showHud")}</div>
-                <div className={styles.checkboxDesc}>{t("general.hud.showHudDesc")}</div>
+            <div className={styles.previewSide}>
+              <div className={styles.previewTitle}>{t("general.preview.title")}</div>
+              <div
+                className={styles.previewScreen}
+                ref={previewRef}
+              >
+                {/* Overlay pill */}
+                <div
+                  className={`${styles.previewOverlay} ${overlayDragPos ? styles.dragging : overlayHighlight ? styles.highlight : ""} ${overlayDragPos || !overlayPreviewPos ? "" : (styles[`previewOverlay_${overlayPreviewPos.replace(/-/g, "_")}`] || styles.previewOverlay_top_center)}`}
+                  style={overlayDragPos
+                    ? { left: `${overlayDragPos.x * 100}%`, top: `${overlayDragPos.y * 100}%`, transform: "translate(-50%, -50%)", cursor: "grabbing", transition: "box-shadow 0.15s ease" }
+                    : !overlayPreviewPos
+                      ? { left: `${(config.overlayCustomX ?? 0.5) * 100}%`, top: `${(config.overlayCustomY ?? 0.1) * 100}%`, transform: "translate(-50%, -50%)", cursor: "grab" }
+                      : { cursor: "grab" }
+                  }
+                  onMouseDown={(e) => handlePreviewMouseDown(e, "overlay")}
+                />
+                {/* HUD dot — always visible in preview */}
+                <div
+                  className={`${styles.previewHud} ${hudDragPos ? styles.dragging : hudHighlight ? styles.highlight : ""} ${hudDragPos || !hudPreviewPos ? "" : (styles[`previewHud_${hudPreviewPos.replace(/-/g, "_")}`] || styles.previewHud_bottom_center)}`}
+                  style={hudDragPos
+                    ? { left: `${hudDragPos.x * 100}%`, top: `${hudDragPos.y * 100}%`, transform: "translate(-50%, -50%)", cursor: "grabbing", transition: "box-shadow 0.15s ease" }
+                    : !hudPreviewPos
+                      ? { left: `${(config.hudCustomX ?? 0.5) * 100}%`, top: `${(config.hudCustomY ?? 0.9) * 100}%`, transform: "translate(-50%, -50%)", cursor: "grab" }
+                      : { cursor: "grab" }
+                  }
+                  onMouseDown={(e) => handlePreviewMouseDown(e, "hud")}
+                />
               </div>
-            </label>
-
-            <label className={`${styles.checkboxRow} ${styles.subCheckbox} ${!config.showHud ? styles.disabled : ""}`}>
-              <input
-                type="checkbox"
-                checked={config.hudShowOnHover}
-                disabled={!config.showHud}
-                onChange={async () => {
-                  updateConfig({ hudShowOnHover: !config.hudShowOnHover });
-                  await saveConfig(false);
-                  triggerToast();
-                }}
-              />
-              <div>
-                <div className={styles.checkboxLabel}>{t("general.hud.showOnHover")}</div>
-                <div className={styles.checkboxDesc}>{t("general.hud.showOnHoverDesc")}</div>
+              <div className={styles.dragHint}>
+                <MoveIcon width={12} height={12} />
+                <span>{t("general.preview.dragHint")}</span>
               </div>
-            </label>
-
-            <div className={`${styles.selectFieldRow} ${!config.showHud ? styles.disabled : ""}`}>
-              <div className={styles.selectLabel}>{t("general.hud.position")}</div>
-              <div className={styles.selectDesc}>{t("general.hud.positionDesc")}</div>
-              <CustomSelect
-                value={config.hudPosition}
-                items={hudPositionItems}
-                onChange={(val) => {
-                  updateConfig({ hudPosition: val as HudPosition });
-                  saveConfig(false).then(() => triggerToast());
-                }}
-              />
             </div>
 
-            <div className={styles.sectionDivider} />
+            <div className={styles.hudControls}>
+              <label className={styles.checkboxRow}>
+                <input
+                  type="checkbox"
+                  checked={config.showHud}
+                  onChange={async () => {
+                    const newShowHud = !config.showHud;
+                    updateConfig({
+                      showHud: newShowHud,
+                      ...(newShowHud ? {} : { hudShowOnHover: false }),
+                    });
+                    await saveConfig(false);
+                    triggerToast();
+                  }}
+                />
+                <div>
+                  <div className={styles.checkboxLabel}>{t("general.hud.showHud")}</div>
+                  <div className={styles.checkboxDesc}>{t("general.hud.showHudDesc")}</div>
+                </div>
+              </label>
 
-            <div className={styles.sectionSubheading}>{t("general.overlay.title")}</div>
-            <div className={styles.selectDesc}>{t("general.overlay.description")}</div>
+              <label className={`${styles.checkboxRow} ${!config.showHud ? styles.disabled : ""}`}>
+                <input
+                  type="checkbox"
+                  checked={config.hudShowOnHover}
+                  disabled={!config.showHud}
+                  onChange={async () => {
+                    updateConfig({ hudShowOnHover: !config.hudShowOnHover });
+                    await saveConfig(false);
+                    triggerToast();
+                  }}
+                />
+                <div>
+                  <div className={styles.checkboxLabel}>{t("general.hud.showOnHover")}</div>
+                  <div className={styles.checkboxDesc}>{t("general.hud.showOnHoverDesc")}</div>
+                </div>
+              </label>
 
-            <div className={styles.fieldRow} style={{ marginTop: "var(--spacing-3)" }}>
-              <label>{t("general.overlay.position")}</label>
-              <div className={styles.selectDesc}>{t("general.overlay.positionDesc")}</div>
-              <CustomSelect
-                value={config.overlayPosition}
-                items={overlayPositionItems}
-                onChange={(val) => {
-                  updateConfig({ overlayPosition: val as OverlayPosition });
-                  saveConfig(false).then(() => triggerToast());
-                }}
-              />
+              <div className={styles.selectRow}>
+                <div className={`${styles.selectField} ${!config.showHud ? styles.disabled : ""}`}>
+                  <div className={styles.selectLabel}>{t("general.hud.position")}</div>
+                  <div className={flashHudSelect ? styles.flash : undefined}>
+                    <CustomSelect
+                      value={config.hudPosition}
+                      items={positionItems}
+                      onChange={handleHudPositionChange}
+                      disabled={!config.showHud}
+                    />
+                  </div>
+                </div>
+                <div className={styles.selectField}>
+                  <div className={styles.selectLabel}>{t("general.overlay.position")}</div>
+                  <div className={flashOverlaySelect ? styles.flash : undefined}>
+                    <CustomSelect
+                      value={config.overlayPosition}
+                      items={positionItems}
+                      onChange={handleOverlayPositionChange}
+                    />
+                  </div>
+                  <div className={styles.selectDesc}>{t("general.overlay.hiddenDesc")}</div>
+                </div>
+              </div>
+
+              {swapDisclaimer && (
+                <div className={styles.disclaimer}>{t("general.position.swapDisclaimer")}</div>
+              )}
             </div>
-            {showAutoInvertDisclaimer && (
-              <div className={styles.disclaimer}>{t("general.overlay.autoInvertDisclaimer")}</div>
+
+            {availableDisplays.length > 1 && (
+              <div className={`${styles.selectFieldRow}`}>
+                <div className={styles.selectLabel}>{t("general.hud.targetDisplay")}</div>
+                <CustomSelect
+                  value={config.targetDisplayId != null ? String(config.targetDisplayId) : "system"}
+                  items={[
+                    { value: "system", label: t("general.hud.systemDefault") },
+                    { divider: true },
+                    ...availableDisplays.map((d) => ({
+                      value: String(d.id),
+                      label: d.primary ? `${d.label} (${t("general.hud.primaryDisplay")})` : d.label,
+                    })),
+                  ]}
+                  onChange={async (val) => {
+                    const newId = val === "system" ? null : Number(val);
+                    updateConfig({ targetDisplayId: newId });
+                    await saveConfig(false);
+                    triggerToast();
+                  }}
+                />
+              </div>
             )}
 
-            <div className={styles.previewRow}>
-              <div>
-                <div className={styles.previewScreen}>
-                  <div className={`${styles.previewOverlay} ${
-                    showAutoInvertDisclaimer
-                      ? styles.previewOverlayTop
-                      : config.overlayPosition === "bottom" ? styles.previewOverlayBottom : styles.previewOverlayTop
-                  }`} />
-                  {config.showHud && (
-                    <div className={`${styles.previewHud} ${
-                      config.hudPosition === "left" ? styles.previewHudLeft
-                      : config.hudPosition === "right" ? styles.previewHudRight
-                      : styles.previewHudCenter
-                    }`} />
-                  )}
-                </div>
-                <div className={styles.previewLabel}>{t("general.overlay.title")}{config.showHud ? ` + ${t("general.hud.title")}` : ""}</div>
-              </div>
+            <div className={styles.restoreDefaultsRow}>
+              <button
+                type="button"
+                className={styles.restoreDefaults}
+                onClick={handleRestoreDefaults}
+              >
+                <RefreshIcon width={12} height={12} />
+                <span>{t("general.hud.restoreDefaults")}</span>
+              </button>
             </div>
           </div>
         )}
       </div>
 
+      {/* Theme */}
       <div className={card.card}>
         <div className={card.header}>
           <h2>{t("general.theme.title")}</h2>
@@ -329,23 +538,6 @@ export function GeneralPanel() {
               </button>
             ))}
           </div>
-        </div>
-      </div>
-
-      <div className={card.card}>
-        <div className={card.header}>
-          <h2>{t("general.language.title")}</h2>
-          <p className={card.description}>{t("general.language.description")}</p>
-        </div>
-        <div className={card.body}>
-          <CustomSelect
-            value={config.language}
-            items={languageItems}
-            onChange={(val) => {
-              updateConfig({ language: val as SupportedLanguage | "system" });
-              saveConfig(false).then(() => triggerToast());
-            }}
-          />
         </div>
       </div>
 

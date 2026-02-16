@@ -177,6 +177,7 @@ app.whenReady().then(async () => {
     configManager,
     getPipeline: () => pipeline!,
     analytics,
+    openSettings: (tab) => openHome(reloadConfig, tab),
   });
   shortcutManager.start();
 
@@ -222,6 +223,17 @@ app.whenReady().then(async () => {
     onStartListening: () => shortcutManager?.triggerToggle(),
     onStopListening: () => shortcutManager?.stopAndProcess(),
     onCancelListening: () => shortcutManager?.cancelRecording(),
+    onToggleHud: () => {
+      const cfg = configManager.load();
+      cfg.showHud = !cfg.showHud;
+      if (!cfg.showHud) cfg.hudShowOnHover = false;
+      configManager.save(cfg);
+      shortcutManager?.updateHud();
+      updateTrayConfig(cfg);
+      for (const win of BrowserWindow.getAllWindows()) {
+        win.webContents.send("config:changed");
+      }
+    },
   });
   setTrayModelState(setupChecker.hasAnyModel());
   updateTrayConfig(configManager.load());

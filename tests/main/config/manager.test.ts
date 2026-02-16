@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
-import { ConfigManager, type SecretStore } from "../../../src/main/config/manager";
+import { ConfigManager, type SecretStore, migrateHudPosition, migrateOverlayPosition } from "../../../src/main/config/manager";
 import { createDefaultConfig } from "../../../src/shared/config";
 
 function createMockSecretStore(): SecretStore {
@@ -11,6 +11,41 @@ function createMockSecretStore(): SecretStore {
     decrypt: (v: string) => v.startsWith("enc:") ? Buffer.from(v.slice(4), "base64").toString() : v,
   };
 }
+
+describe("migrateHudPosition", () => {
+  it("migrates old values", () => {
+    expect(migrateHudPosition("left")).toBe("bottom-left");
+    expect(migrateHudPosition("center")).toBe("bottom-center");
+    expect(migrateHudPosition("right")).toBe("bottom-right");
+  });
+
+  it("passes through new values", () => {
+    expect(migrateHudPosition("top-left")).toBe("top-left");
+    expect(migrateHudPosition("bottom-center")).toBe("bottom-center");
+    expect(migrateHudPosition("custom")).toBe("custom");
+  });
+
+  it("defaults undefined", () => {
+    expect(migrateHudPosition(undefined)).toBe("bottom-center");
+  });
+});
+
+describe("migrateOverlayPosition", () => {
+  it("migrates old values", () => {
+    expect(migrateOverlayPosition("top")).toBe("top-center");
+    expect(migrateOverlayPosition("bottom")).toBe("bottom-center");
+  });
+
+  it("passes through new values", () => {
+    expect(migrateOverlayPosition("top-left")).toBe("top-left");
+    expect(migrateOverlayPosition("bottom-right")).toBe("bottom-right");
+    expect(migrateOverlayPosition("custom")).toBe("custom");
+  });
+
+  it("defaults undefined", () => {
+    expect(migrateOverlayPosition(undefined)).toBe("top-center");
+  });
+});
 
 describe("ConfigManager", () => {
   let testDir: string;
@@ -190,6 +225,48 @@ describe("ConfigManager", () => {
 
   it("should return 0 when config file does not exist", () => {
     expect(manager.countEncryptedSecrets()).toBe(0);
+  });
+
+  it("should migrate old hudPosition values on load", () => {
+    const oldConfig = {
+      llm: { provider: "foundry", endpoint: "", apiKey: "", model: "gpt-4o" },
+      hudPosition: "center",
+      overlayPosition: "top",
+    };
+    fs.mkdirSync(testDir, { recursive: true });
+    fs.writeFileSync(path.join(testDir, "config.json"), JSON.stringify(oldConfig));
+
+    const loaded = manager.load();
+    expect(loaded.hudPosition).toBe("bottom-center");
+    expect(loaded.overlayPosition).toBe("top-center");
+  });
+
+  it("should migrate left/right hud positions", () => {
+    const oldConfig = {
+      llm: { provider: "foundry", endpoint: "", apiKey: "", model: "gpt-4o" },
+      hudPosition: "left",
+      overlayPosition: "bottom",
+    };
+    fs.mkdirSync(testDir, { recursive: true });
+    fs.writeFileSync(path.join(testDir, "config.json"), JSON.stringify(oldConfig));
+
+    const loaded = manager.load();
+    expect(loaded.hudPosition).toBe("bottom-left");
+    expect(loaded.overlayPosition).toBe("bottom-center");
+  });
+
+  it("should pass through already-migrated positions", () => {
+    const newConfig = {
+      llm: { provider: "foundry", endpoint: "", apiKey: "", model: "gpt-4o" },
+      hudPosition: "top-right",
+      overlayPosition: "bottom-left",
+    };
+    fs.mkdirSync(testDir, { recursive: true });
+    fs.writeFileSync(path.join(testDir, "config.json"), JSON.stringify(newConfig));
+
+    const loaded = manager.load();
+    expect(loaded.hudPosition).toBe("top-right");
+    expect(loaded.overlayPosition).toBe("bottom-left");
   });
 
   it("should preserve credentials from other providers on save (round-trip)", () => {
