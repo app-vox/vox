@@ -320,3 +320,25 @@ select {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* ── Performance: Reduce Animations ─────────────────────────── */
+[data-reduce-animations="true"] *,
+[data-reduce-animations="true"] *::before,
+[data-reduce-animations="true"] *::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
+/* ── Performance: Reduce Visual Effects ─────────────────────── */
+[data-reduce-effects="true"] *,
+[data-reduce-effects="true"] *::before,
+[data-reduce-effects="true"] *::after {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+  background-image: none !important;
+}
