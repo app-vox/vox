@@ -544,10 +544,7 @@ body {
 }
 
 .hud-pill-content {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 12px;
+    position: relative;
     width: 100%;
     height: 100%;
     opacity: 0;
@@ -555,13 +552,23 @@ body {
     animation: pill-content-toggle 10s ease infinite;
 }
 
+.hud-listening-layer {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    opacity: 0;
+    visibility: hidden;
+    animation: bars-toggle 10s ease infinite;
+}
+
 .hud-stop-icon {
     color: white;
     display: flex;
     align-items: center;
     flex-shrink: 0;
-    opacity: 0;
-    animation: stop-toggle 10s ease infinite;
 }
 
 .hud-bars {
@@ -569,9 +576,6 @@ body {
     align-items: center;
     gap: 2px;
     height: 100%;
-    opacity: 0;
-    visibility: hidden;
-    animation: bars-toggle 10s ease infinite;
 }
 
 .hud-bars .bar {
@@ -583,8 +587,11 @@ body {
 }
 
 .hud-status {
+    position: absolute;
+    inset: 0;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
     white-space: nowrap;
     opacity: 0;
@@ -1050,14 +1057,6 @@ body {
     100% { opacity: 0; visibility: hidden; }
 }
 
-@keyframes stop-toggle {
-    0% { opacity: 0; }
-    18% { opacity: 1; }
-    55% { opacity: 1; }
-    58% { opacity: 0; }
-    100% { opacity: 0; }
-}
-
 @keyframes status-toggle {
     0% { opacity: 0; visibility: hidden; }
     58% { opacity: 1; visibility: visible; }
@@ -1143,8 +1142,7 @@ body {
     .hud-widget,
     .hud-icon-idle,
     .hud-pill-content,
-    .hud-stop-icon,
-    .hud-bars,
+    .hud-listening-layer,
     .hud-bars .bar,
     .hud-status,
     .hud-pulse-dot,

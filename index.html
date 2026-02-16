@@ -189,28 +189,29 @@
                             </div>
                             <!-- Pill content (visible when expanded) -->
                             <div class="hud-pill-content">
-                                <!-- Stop icon -->
-                                <div class="hud-stop-icon">
-                                    <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
-                                        <rect x="1" y="1" width="10" height="10" rx="1"/>
-                                    </svg>
+                                <!-- Listening layer: stop icon + waveform bars -->
+                                <div class="hud-listening-layer">
+                                    <div class="hud-stop-icon">
+                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                                            <rect x="1" y="1" width="10" height="10" rx="1"/>
+                                        </svg>
+                                    </div>
+                                    <div class="hud-bars">
+                                        <div class="bar"></div>
+                                        <div class="bar"></div>
+                                        <div class="bar"></div>
+                                        <div class="bar"></div>
+                                        <div class="bar"></div>
+                                        <div class="bar"></div>
+                                        <div class="bar"></div>
+                                        <div class="bar"></div>
+                                        <div class="bar"></div>
+                                        <div class="bar"></div>
+                                        <div class="bar"></div>
+                                        <div class="bar"></div>
+                                    </div>
                                 </div>
-                                <!-- Waveform bars -->
-                                <div class="hud-bars">
-                                    <div class="bar"></div>
-                                    <div class="bar"></div>
-                                    <div class="bar"></div>
-                                    <div class="bar"></div>
-                                    <div class="bar"></div>
-                                    <div class="bar"></div>
-                                    <div class="bar"></div>
-                                    <div class="bar"></div>
-                                    <div class="bar"></div>
-                                    <div class="bar"></div>
-                                    <div class="bar"></div>
-                                    <div class="bar"></div>
-                                </div>
-                                <!-- Status indicator (for transcribing/enhancing) -->
+                                <!-- Status layer: transcribing/enhancing (stacks on top) -->
                                 <div class="hud-status">
                                     <div class="hud-pulse-dot"></div>
                                     <span class="hud-label hud-label-transcribing" data-i18n="demo.transcribing">Transcribing...</span>
