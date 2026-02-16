@@ -172,20 +172,54 @@
                 <div class="demo-container">
                     <div class="demo-header" data-i18n="hero.demoHeader">How it works</div>
 
-                    <!-- Animated Status Overlays -->
-                    <div class="demo-overlay-container">
-                        <div class="demo-background"></div>
-                        <div class="status-overlay" data-status="listening">
-                            <div class="status-dot status-dot-red"></div>
-                            <span class="status-text" data-i18n="demo.listening">Listening...</span>
+                    <!-- HUD Animation -->
+                    <div class="hud-animation-wrapper">
+                        <!-- Animated Cursor -->
+                        <div class="demo-cursor">
+                            <svg width="20" height="24" viewBox="0 0 20 24" fill="none">
+                                <path d="M1 1L1 18.5L5.5 14.5L9.5 22L12.5 20.5L8.5 13L14 12.5L1 1Z" fill="var(--bg-primary)" stroke="var(--text-primary)" stroke-width="1.5" stroke-linejoin="round"/>
+                            </svg>
                         </div>
-                        <div class="status-overlay" data-status="transcribing">
-                            <div class="status-dot status-dot-yellow"></div>
-                            <span class="status-text" data-i18n="demo.transcribing">Transcribing...</span>
-                        </div>
-                        <div class="status-overlay" data-status="enhancing">
-                            <div class="status-dot status-dot-blue"></div>
-                            <span class="status-text" data-i18n="demo.enhancing">Enhancing...</span>
+                        <!-- HUD Widget -->
+                        <div class="hud-widget">
+                            <!-- Idle state: mic icon -->
+                            <div class="hud-icon-idle">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="9" y="2" width="6" height="13" rx="3"/>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                    <path d="M12 19v3"/>
+                                </svg>
+                            </div>
+                            <!-- Pill content (visible when expanded) -->
+                            <div class="hud-pill-content">
+                                <!-- Stop icon -->
+                                <div class="hud-stop-icon">
+                                    <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                                        <rect x="1" y="1" width="10" height="10" rx="1"/>
+                                    </svg>
+                                </div>
+                                <!-- Waveform bars -->
+                                <div class="hud-bars">
+                                    <div class="bar"></div>
+                                    <div class="bar"></div>
+                                    <div class="bar"></div>
+                                    <div class="bar"></div>
+                                    <div class="bar"></div>
+                                    <div class="bar"></div>
+                                    <div class="bar"></div>
+                                    <div class="bar"></div>
+                                    <div class="bar"></div>
+                                    <div class="bar"></div>
+                                    <div class="bar"></div>
+                                    <div class="bar"></div>
+                                </div>
+                                <!-- Status indicator (for transcribing/enhancing) -->
+                                <div class="hud-status">
+                                    <div class="hud-pulse-dot"></div>
+                                    <span class="hud-label hud-label-transcribing" data-i18n="demo.transcribing">Transcribing...</span>
+                                    <span class="hud-label hud-label-enhancing" data-i18n="demo.enhancing">Enhancing...</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
