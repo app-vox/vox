@@ -899,7 +899,7 @@ export class HudWindow {
   }
 
   isVisible(): boolean {
-    return this.window !== null && !this.window.isDestroyed();
+    return this.window !== null && !this.window.isDestroyed() && this.window.isVisible();
   }
 
   getState(): HudState {

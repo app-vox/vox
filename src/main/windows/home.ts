@@ -121,6 +121,12 @@ export function openHome(onClosed: () => void, initialTab?: string): void {
         homeWindow?.hide();
       }
     });
+
+    homeWindow.on("blur", () => {
+      if (!forceQuit && homeWindow && !homeWindow.isDestroyed()) {
+        homeWindow.hide();
+      }
+    });
   }
 
   homeWindow.on("closed", () => {
