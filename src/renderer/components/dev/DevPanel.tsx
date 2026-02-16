@@ -16,8 +16,8 @@ import styles from "./DevPanel.module.scss";
 interface RuntimeState {
   shortcutState: string;
   isRecording: boolean;
-  indicatorVisible: boolean;
-  indicatorMode: string | null;
+  hudVisible: boolean;
+  hudState: string;
   isListening: boolean;
   hasModel: boolean;
   trayActive: boolean;
@@ -334,7 +334,7 @@ export function DevPanel() {
     { label: "No Internet", preset: { online: false } },
     { label: "LLM Not Configured", preset: { llmEnhancementEnabled: false, llmConnectionTested: false } },
     { label: "LLM Untested", preset: { llmEnhancementEnabled: true, llmConnectionTested: false } },
-    { label: "No Model", preset: { setupComplete: false } },
+    { label: "No Local Model", preset: { setupComplete: false } },
     { label: "Permissions Denied", preset: { microphonePermission: "denied", accessibilityPermission: false } },
     { label: "Update Available", preset: { updateStatus: "available" } },
     { label: "Update Downloading", preset: { updateStatus: "downloading", updateDownloadProgress: 42 } },
@@ -481,10 +481,48 @@ export function DevPanel() {
       ],
     },
     {
-      title: "Indicator",
+      title: "HUD",
       rows: [
-        { label: "Visible", render: () => <>{runtime ? boolDot(runtime.indicatorVisible) : <Dot color="gray" />}</> },
-        { label: "Mode", render: () => <>{runtime ? statusDot(runtime.indicatorMode) : <Dot color="gray" />}</> },
+        { label: "Visible", render: () => <>{runtime ? boolDot(runtime.hudVisible) : <Dot color="gray" />}</> },
+        { label: "State", render: () => <>{runtime ? statusDot(runtime.hudState) : <Dot color="gray" />}</> },
+        { label: "Always Show", render: () => <>{boolDot(config?.showHud)}</> },
+        { label: "Proximity Scale", render: () => <>{boolDot(config?.hudShowOnHover)}</> },
+        { label: "Actions on Hover", render: () => <>{boolDot(config?.showHudActions)}</> },
+        { label: "Position", render: () => <>{config?.hudPosition || "bottom-center"}</> },
+        {
+          label: "Banner Dismissed",
+          render: () => {
+            const dismissed = typeof window !== "undefined"
+              ? localStorage.getItem("vox:hud-banner-dismissed") === "true"
+              : false;
+            return <>{boolDot(dismissed)}</>;
+          },
+        },
+        {
+          label: "Reset HUD",
+          render: () => (
+            <button className={styles.setBtn} onClick={async () => {
+              const store = useConfigStore.getState();
+              store.updateConfig({
+                showHud: false,
+                hudShowOnHover: false,
+                showHudActions: true,
+                hudPosition: "bottom-center" as const,
+                hudCustomX: 0.5,
+                hudCustomY: 0.9,
+                targetDisplayId: null,
+              });
+              await store.saveConfig(false);
+              localStorage.removeItem("vox:hud-banner-dismissed");
+              localStorage.removeItem("vox:display-collapsed");
+              localStorage.removeItem("vox:shortcuts-banner-dismissed");
+              localStorage.removeItem("vox:visited-shortcuts");
+              triggerToast();
+            }}>
+              Reset
+            </button>
+          ),
+        },
       ],
     },
     {
@@ -545,7 +583,7 @@ export function DevPanel() {
     },
     {
       title: "Window / UI",
-      overrideFields: ["hideDevVisuals", "visitedDictionary"],
+      overrideFields: ["hideDevVisuals", "visitedDictionary", "visitedShortcuts"],
       rows: [
         { label: "Active Tab", render: () => <>{activeTab}</> },
         { label: "Collapsed", render: () => <>{boolDot(collapsed)}</> },
@@ -570,6 +608,22 @@ export function DevPanel() {
               <>
                 <span className={styles.realValue}>{boolDot(real)}</span>
                 {ov && <OverrideBool field="visitedDictionary" {...ovProps} />}
+              </>
+            );
+          },
+        },
+        {
+          label: "Visited Shortcuts",
+          overrideField: "visitedShortcuts",
+          render: () => {
+            const real = typeof window !== "undefined"
+              ? localStorage.getItem("vox:visited-shortcuts") === "true"
+                || localStorage.getItem("vox:shortcuts-banner-dismissed") === "true"
+              : false;
+            return (
+              <>
+                <span className={styles.realValue}>{boolDot(real)}</span>
+                {ov && <OverrideBool field="visitedShortcuts" {...ovProps} />}
               </>
             );
           },

@@ -69,6 +69,7 @@ export class CustomProvider extends BaseLlmProvider {
 
     const response = await fetch(url, {
       method: "POST",
+      cache: "no-store",
       headers,
       body: JSON.stringify(body),
     });

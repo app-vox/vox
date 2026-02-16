@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
-import { ConfigManager, type SecretStore } from "../../../src/main/config/manager";
+import { ConfigManager, type SecretStore, migrateHudPosition } from "../../../src/main/config/manager";
 import { createDefaultConfig } from "../../../src/shared/config";
 
 function createMockSecretStore(): SecretStore {
@@ -11,6 +11,25 @@ function createMockSecretStore(): SecretStore {
     decrypt: (v: string) => v.startsWith("enc:") ? Buffer.from(v.slice(4), "base64").toString() : v,
   };
 }
+
+describe("migrateHudPosition", () => {
+  it("migrates old values", () => {
+    expect(migrateHudPosition("left")).toBe("bottom-left");
+    expect(migrateHudPosition("center")).toBe("bottom-center");
+    expect(migrateHudPosition("right")).toBe("bottom-right");
+  });
+
+  it("passes through new values", () => {
+    expect(migrateHudPosition("top-left")).toBe("top-left");
+    expect(migrateHudPosition("bottom-center")).toBe("bottom-center");
+    expect(migrateHudPosition("custom")).toBe("custom");
+  });
+
+  it("defaults undefined", () => {
+    expect(migrateHudPosition(undefined)).toBe("bottom-center");
+  });
+});
+
 
 describe("ConfigManager", () => {
   let testDir: string;
@@ -190,6 +209,54 @@ describe("ConfigManager", () => {
 
   it("should return 0 when config file does not exist", () => {
     expect(manager.countEncryptedSecrets()).toBe(0);
+  });
+
+  it("should migrate old hudPosition values on load", () => {
+    const oldConfig = {
+      llm: { provider: "foundry", endpoint: "", apiKey: "", model: "gpt-4o" },
+      hudPosition: "center",
+    };
+    fs.mkdirSync(testDir, { recursive: true });
+    fs.writeFileSync(path.join(testDir, "config.json"), JSON.stringify(oldConfig));
+
+    const loaded = manager.load();
+    expect(loaded.hudPosition).toBe("bottom-center");
+  });
+
+  it("should migrate left/right hud positions", () => {
+    const oldConfig = {
+      llm: { provider: "foundry", endpoint: "", apiKey: "", model: "gpt-4o" },
+      hudPosition: "left",
+    };
+    fs.mkdirSync(testDir, { recursive: true });
+    fs.writeFileSync(path.join(testDir, "config.json"), JSON.stringify(oldConfig));
+
+    const loaded = manager.load();
+    expect(loaded.hudPosition).toBe("bottom-left");
+  });
+
+  it("should pass through already-migrated positions", () => {
+    const newConfig = {
+      llm: { provider: "foundry", endpoint: "", apiKey: "", model: "gpt-4o" },
+      hudPosition: "top-right",
+    };
+    fs.mkdirSync(testDir, { recursive: true });
+    fs.writeFileSync(path.join(testDir, "config.json"), JSON.stringify(newConfig));
+
+    const loaded = manager.load();
+    expect(loaded.hudPosition).toBe("top-right");
+  });
+
+  it("should migrate overlayPosition to hudPosition when hudPosition is absent", () => {
+    const oldConfig = {
+      llm: { provider: "foundry", endpoint: "", apiKey: "", model: "gpt-4o" },
+      overlayPosition: "top-center",
+    };
+    fs.mkdirSync(testDir, { recursive: true });
+    fs.writeFileSync(path.join(testDir, "config.json"), JSON.stringify(oldConfig));
+
+    const loaded = manager.load();
+    expect(loaded.hudPosition).toBe("top-center");
   });
 
   it("should preserve credentials from other providers on save (round-trip)", () => {

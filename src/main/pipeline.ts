@@ -37,6 +37,7 @@ export interface PipelineDeps {
     originalText: string;
     audioDurationMs: number;
   }) => void;
+  onLlmFailed?: () => void;
 }
 
 /**
@@ -52,6 +53,23 @@ const COMMON_HALLUCINATIONS = [
   "you", "uh", "um", "hmm", "ah", "oh",
   // Common YouTube outro phrases
   "thanks", "bye bye",
+  // Well-known whisper.cpp silence hallucinations
+  "thank you so much", "thank you very much",
+  "thanks for listening", "thanks for watching this video",
+  "please subscribe", "please like and subscribe",
+  "i'll see you in the next video", "see you in the next one",
+  "i hope you enjoyed", "i hope you enjoyed this video",
+  "the end", "...",
+  // Whisper.cpp noise artifacts
+  "so", "okay", "ok", "yeah", "yes", "no", "right",
+  "well", "like", "just", "actually",
+  // Chinese/Japanese common hallucinations
+  "\u5b57\u5e55\u7f51", "\u5b57\u5e55\u7ec4", "\u5b57\u5e55\u7531",
+  "\u00e0 bient\u00f4t", "merci",
+  // Subtitle watermarks
+  "amara.org", "subtitles by",
+  "subtitles by the amara.org community",
+  "copyright", "all rights reserved",
 ];
 
 /**
@@ -266,13 +284,14 @@ export class Pipeline {
         duration_ms: Number((performance.now() - llmStartTime).toFixed(1)),
       });
     } catch (err: unknown) {
-      // LLM failed — fall back to raw transcription
+      // LLM failed — fall back to raw transcription and mark as untested
       slog.warn("LLM enhancement failed, using raw transcription", err instanceof Error ? err.message : err);
       this.deps.analytics?.track("llm_enhancement_failed", {
         provider: llmProviderName,
         model: this.deps.llmModelName,
         error_type: err instanceof Error ? err.name : "unknown",
       });
+      this.deps.onLlmFailed?.();
       finalText = rawText;
     }
 

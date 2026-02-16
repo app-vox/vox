@@ -39,6 +39,7 @@ export class AnthropicProvider extends BaseLlmProvider {
 
     const response = await fetch(url, {
       method: "POST",
+      cache: "no-store",
       headers: {
         "Content-Type": "application/json",
         "x-api-key": this.config.apiKey,

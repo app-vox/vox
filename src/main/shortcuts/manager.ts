@@ -1,12 +1,12 @@
-import { globalShortcut, ipcMain, Notification } from "electron";
+import { BrowserWindow, globalShortcut, ipcMain, Notification } from "electron";
 import { uIOhook, UiohookKey } from "uiohook-napi";
 import log from "electron-log/main";
 import { type ConfigManager } from "../config/manager";
 import { pasteText, isAccessibilityGranted } from "../input/paster";
 import { type Pipeline, CanceledError, NoModelError } from "../pipeline";
 import { ShortcutStateMachine } from "./listener";
-import { IndicatorWindow } from "../indicator";
-import { setTrayListeningState } from "../tray";
+import { HudWindow } from "../hud";
+import { setTrayListeningState, updateTrayConfig } from "../tray";
 import { t } from "../../shared/i18n";
 import { generateCueSamples, isWavCue, getWavFilename, parseWavSamples } from "../../shared/audio-cue";
 import type { AudioCueType } from "../../shared/config";
@@ -80,20 +80,22 @@ export interface ShortcutManagerDeps {
   configManager: ConfigManager;
   getPipeline: () => Pipeline;
   analytics?: { track(event: string, properties?: Record<string, unknown>): void };
+  openSettings?: (tab?: string) => void;
 }
 
 export class ShortcutManager {
   private readonly deps: ShortcutManagerDeps;
-  private readonly indicator: IndicatorWindow;
+  private readonly hud: HudWindow;
   private stateMachine: ShortcutStateMachine;
   private holdKeyCodes: Set<number> = new Set([UiohookKey.Space]);
   private accessibilityWasGranted = false;
   private watchdogTimer: ReturnType<typeof setInterval> | null = null;
   private isInitializing = true;
+  private recordingGeneration = 0;
 
   constructor(deps: ShortcutManagerDeps) {
     this.deps = deps;
-    this.indicator = new IndicatorWindow();
+    this.hud = new HudWindow();
 
     this.stateMachine = new ShortcutStateMachine({
       onStart: () => this.onRecordingStart(),
@@ -122,6 +124,8 @@ export class ShortcutManager {
         if (state === "hold" || state === "toggle" || state === "processing") {
           slog.info("Escape pressed, canceling operation");
           this.cancelRecording();
+        } else {
+          this.dismissHud();
         }
       }
     });
@@ -144,6 +148,7 @@ export class ShortcutManager {
         this.isInitializing = false;
         slog.info("Initialization complete (limited mode — no accessibility)");
       }, 1000);
+      this.updateHud();
       return;
     }
 
@@ -166,6 +171,7 @@ export class ShortcutManager {
         this.isInitializing = false;
         slog.info("Initialization complete (limited mode — hook failed)");
       }, 1000);
+      this.updateHud();
       return;
     }
 
@@ -177,20 +183,21 @@ export class ShortcutManager {
       this.isInitializing = false;
       slog.info("Initialization complete, shortcuts enabled");
     }, 1000);
-  }
-
-  showIndicator(mode: "initializing" | "listening" | "transcribing" | "enhancing" | "error"): void {
-    this.indicator.show(mode);
+    this.updateHud();
   }
 
   sendAudioLevels(levels: number[]): void {
-    this.indicator.sendAudioLevels(levels);
+    this.hud.sendAudioLevels(levels);
   }
 
   /** Programmatically trigger the toggle shortcut (e.g., from tray menu) */
   triggerToggle(): void {
     if (this.isInitializing) {
       slog.debug("Cannot trigger toggle during initialization");
+      return;
+    }
+    if (this.stateMachine.getState() === "processing") {
+      this.restartRecording();
       return;
     }
     this.stateMachine.handleTogglePress();
@@ -211,16 +218,39 @@ export class ShortcutManager {
     const state = this.stateMachine.getState();
     if (state === "hold" || state === "toggle" || state === "processing") {
       slog.info("Cancel requested");
+      this.recordingGeneration++;
       const pipeline = this.deps.getPipeline();
       pipeline.cancel().catch((err) => {
         slog.error("Error during cancel", err);
       });
-      this.indicator.showCanceled();
       const config = this.deps.configManager.load();
       const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
       this.playCue(errorCueType);
       this.stateMachine.setIdle();
+      this.hud.setState("canceled");
       this.updateTrayState();
+    }
+  }
+
+  /** Cancel current operation silently and immediately start a new recording. */
+  private restartRecording(): void {
+    slog.info("Restart requested — canceling silently and starting new recording");
+    this.recordingGeneration++;
+    const pipeline = this.deps.getPipeline();
+    pipeline.cancel().catch((err) => {
+      slog.error("Error during restart cancel", err);
+    });
+    this.stateMachine.setIdle();
+    // Start new recording via toggle (no error cue — this is intentional restart)
+    this.stateMachine.handleTogglePress();
+    this.updateTrayState();
+  }
+
+  dismissHud(): void {
+    const hudState = this.hud.getState();
+    if (hudState === "error" || hudState === "canceled") {
+      slog.info("Dismissing HUD state: %s", hudState);
+      this.hud.setState("idle");
     }
   }
 
@@ -230,8 +260,18 @@ export class ShortcutManager {
     return state === "hold" || state === "toggle" || state === "processing";
   }
 
-  getIndicator(): IndicatorWindow {
-    return this.indicator;
+  updateHud(): void {
+    const config = this.deps.configManager.load();
+    this.hud.setTargetDisplay(config.targetDisplayId);
+    if (config.hudPosition === "custom") {
+      this.hud.setCustomPosition(config.hudCustomX, config.hudCustomY);
+    }
+    this.hud.show(config.showHud, config.hudShowOnHover, config.hudPosition);
+    this.hud.setShowActions(config.showHudActions);
+  }
+
+  getHud(): HudWindow {
+    return this.hud;
   }
 
   getStateMachineState(): string {
@@ -240,6 +280,7 @@ export class ShortcutManager {
 
   stop(): void {
     if (this.watchdogTimer) clearInterval(this.watchdogTimer);
+    this.hud.hide();
     globalShortcut.unregisterAll();
     uIOhook.stop();
   }
@@ -298,12 +339,20 @@ export class ShortcutManager {
         slog.debug("Ignoring hold shortcut during initialization");
         return;
       }
+      if (this.stateMachine.getState() === "processing") {
+        this.restartRecording();
+        return;
+      }
       this.stateMachine.handleHoldKeyDown();
     });
 
     const toggleOk = globalShortcut.register(config.shortcuts.toggle, () => {
       if (this.isInitializing) {
         slog.debug("Ignoring toggle shortcut during initialization");
+        return;
+      }
+      if (this.stateMachine.getState() === "processing") {
+        this.restartRecording();
         return;
       }
       this.stateMachine.handleTogglePress();
@@ -335,10 +384,81 @@ export class ShortcutManager {
     ipcMain.handle("indicator:cancel-recording", () => {
       this.cancelRecording();
     });
+
+    ipcMain.handle("hud:start-recording", () => {
+      if (this.stateMachine.getState() === "processing") {
+        this.restartRecording();
+      } else if (!this.isRecording()) {
+        this.triggerToggle();
+      }
+    });
+
+    ipcMain.handle("hud:stop-recording", () => {
+      this.stopAndProcess();
+    });
+
+    ipcMain.handle("hud:open-settings", () => {
+      this.deps.openSettings?.("general");
+    });
+
+    ipcMain.handle("hud:open-transcriptions", () => {
+      this.deps.openSettings?.("transcriptions");
+    });
+
+    ipcMain.handle("hud:disable", () => {
+      const config = this.deps.configManager.load();
+      config.showHud = false;
+      this.deps.configManager.save(config);
+      this.hud.hide();
+      updateTrayConfig(config);
+      for (const win of BrowserWindow.getAllWindows()) {
+        win.webContents.send("config:changed");
+      }
+    });
+
+    ipcMain.handle("hud:drag", (_event, dx: number, dy: number) => {
+      this.hud.drag(dx, dy);
+    });
+
+    ipcMain.handle("hud:drag-end", () => {
+      const result = this.hud.dragEnd();
+      if (result) {
+        const config = this.deps.configManager.load();
+        config.hudPosition = "custom";
+        config.hudCustomX = result.nx;
+        config.hudCustomY = result.ny;
+        config.targetDisplayId = result.displayId;
+        this.deps.configManager.save(config);
+        for (const win of BrowserWindow.getAllWindows()) {
+          win.webContents.send("config:changed");
+        }
+      }
+    });
+
+    ipcMain.handle("hud:set-position", (_event, nx: number, ny: number) => {
+      this.hud.setPosition(nx, ny);
+    });
+
+    ipcMain.handle("hud:show-highlight", () => {
+      this.hud.showHighlight();
+    });
+
+    ipcMain.handle("hud:hide-highlight", () => {
+      this.hud.hideHighlight();
+    });
+
+    ipcMain.handle("hud:set-ignore-mouse", (_event, ignore: boolean) => {
+      this.hud.setIgnoreMouseEvents(ignore);
+    });
+
+    ipcMain.handle("hud:dismiss", () => {
+      this.dismissHud();
+    });
+
   }
 
   private startAccessibilityWatchdog(): void {
-    this.watchdogTimer = setInterval(() => {
+    const timer = setInterval(() => {
       const granted = isAccessibilityGranted();
 
       if (this.accessibilityWasGranted && !granted) {
@@ -373,28 +493,39 @@ export class ShortcutManager {
 
       this.accessibilityWasGranted = granted;
     }, 3000);
+    timer.unref();
+    this.watchdogTimer = timer;
   }
 
   private onRecordingStart(): void {
     const pipeline = this.deps.getPipeline();
-    slog.info("Recording requested — showing initializing indicator");
-    this.indicator.show("initializing");
+    this.recordingGeneration++;
+    const gen = this.recordingGeneration;
+    slog.info("Recording requested (gen=%d) — showing initializing HUD", gen);
+    this.hud.setState("initializing");
     this.updateTrayState();
 
     pipeline.startRecording().then(() => {
+      if (gen !== this.recordingGeneration) {
+        slog.info("Stale recording start (gen=%d, current=%d) — discarding", gen, this.recordingGeneration);
+        return;
+      }
       slog.info("Recording started — mic active");
-      this.indicator.show("listening");
+      this.hud.setState("listening");
 
       const config = this.deps.configManager.load();
       const cueType = (config.recordingAudioCue ?? "tap") as AudioCueType;
       this.playCue(cueType);
     }).catch((err: Error) => {
+      if (gen !== this.recordingGeneration) {
+        slog.info("Stale recording error (gen=%d, current=%d) — discarding", gen, this.recordingGeneration);
+        return;
+      }
       slog.error("Recording failed", err);
-      this.indicator.hide();
       this.updateTrayState();
 
       if (err instanceof NoModelError) {
-        this.indicator.showError(3000, t("notification.setupRequired.indicator"));
+        this.hud.showError(3000, t("notification.setupRequired.indicator"));
         this.stateMachine.setIdle();
         this.updateTrayState();
         new Notification({
@@ -402,6 +533,7 @@ export class ShortcutManager {
           body: t("notification.setupRequired.body"),
         }).show();
       } else {
+        this.hud.setState("idle");
         new Notification({ title: "Vox", body: t("notification.recordingFailed", { error: err.message }) }).show();
       }
     });
@@ -409,51 +541,68 @@ export class ShortcutManager {
 
   private async onRecordingStop(): Promise<void> {
     const pipeline = this.deps.getPipeline();
+    const gen = this.recordingGeneration;
     this.stateMachine.setProcessing();
     this.updateTrayState();
-    slog.info("Recording stopped, processing pipeline");
-    this.indicator.show("transcribing");
+    slog.info("Recording stopped, processing pipeline (gen=%d)", gen);
+    this.hud.setState("transcribing");
 
     const config = this.deps.configManager.load();
     const stopCueType = (config.recordingStopAudioCue ?? "pop") as AudioCueType;
     this.playCue(stopCueType);
 
+    let hudEndState: "idle" | "error" | "canceled" = "idle";
     try {
       const text = await pipeline.stopAndProcess();
+
+      // If generation changed, a restart/cancel happened — abandon this result
+      if (gen !== this.recordingGeneration) {
+        slog.info("Stale pipeline result (gen=%d, current=%d) — discarding", gen, this.recordingGeneration);
+        return;
+      }
+
       slog.info("Pipeline complete, text: %s", text.slice(0, 80));
       const trimmedText = text.trim();
 
       if (!trimmedText || trimmedText.length === 0) {
-        slog.info("No valid text to paste, showing error indicator");
-        this.indicator.showError();
+        slog.info("No valid text to paste, showing error");
         const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
         this.playCue(errorCueType);
+        hudEndState = "error";
       } else {
         slog.info("Valid text received, proceeding with paste");
         await new Promise((r) => setTimeout(r, 200));
         pasteText(trimmedText);
         this.deps.analytics?.track("paste_completed", { method: "auto-paste" });
-        this.indicator.hide();
       }
     } catch (err: unknown) {
+      // If generation changed, a restart/cancel already handled state — bail out
+      if (gen !== this.recordingGeneration) {
+        slog.info("Stale pipeline error (gen=%d, current=%d) — discarding", gen, this.recordingGeneration);
+        return;
+      }
       if (err instanceof CanceledError) {
         slog.info("Operation canceled by user");
-        this.indicator.showCanceled();
         const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
         this.playCue(errorCueType);
+        hudEndState = "canceled";
       } else {
         slog.error("Pipeline failed", err);
         this.deps.analytics?.track("paste_failed", {
           error_type: err instanceof Error ? err.name : "unknown",
         });
-        this.indicator.showError();
         const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
         this.playCue(errorCueType);
+        hudEndState = "error";
       }
     } finally {
-      this.stateMachine.setIdle();
-      this.updateTrayState();
-      slog.info("Ready for next recording");
+      // Only update state if this is still the current generation
+      if (gen === this.recordingGeneration) {
+        this.stateMachine.setIdle();
+        this.hud.setState(hudEndState);
+        this.updateTrayState();
+        slog.info("Ready for next recording");
+      }
     }
   }
 }

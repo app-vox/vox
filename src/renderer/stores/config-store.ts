@@ -97,3 +97,9 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     set({ setupComplete: setupState.hasAnyModel });
   },
 }));
+
+if (typeof window !== "undefined" && window.voxApi?.config?.onConfigChanged) {
+  window.voxApi.config.onConfigChanged(() => {
+    useConfigStore.getState().loadConfig();
+  });
+}

@@ -244,7 +244,6 @@ export function DictionaryPanel() {
                     </button>
                   )}
                 </div>
-                {/* eslint-disable i18next/no-literal-string */}
                 <div className={styles.pageSizeSelect}>
                   <CustomSelect
                     value={String(pageSize)}
@@ -256,7 +255,6 @@ export function DictionaryPanel() {
                     onChange={(value) => handlePageSizeChange(Number(value))}
                   />
                 </div>
-                {/* eslint-enable i18next/no-literal-string */}
               </div>
             )}
           </>

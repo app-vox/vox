@@ -41,6 +41,7 @@ export class OpenAICompatibleProvider extends BaseLlmProvider {
 
     const response = await fetch(url, {
       method: "POST",
+      cache: "no-store",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${this.config.apiKey}`,

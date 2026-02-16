@@ -16,6 +16,7 @@ export class AudioRecorder {
   private win: BrowserWindow | null = null;
   private recording = false;
   private starting = false;
+  private canceling = false;
   private levelsInterval: ReturnType<typeof setInterval> | null = null;
   onAudioLevels: ((levels: number[]) => void) | null = null;
 
@@ -38,6 +39,10 @@ export class AudioRecorder {
   }
 
   async start(): Promise<void> {
+    // Wait for any in-flight cancel to finish before starting a new session
+    while (this.canceling) {
+      await new Promise(r => setTimeout(r, 20));
+    }
     this.starting = true;
     const win = await this.ensureWindow();
 
@@ -73,7 +78,7 @@ export class AudioRecorder {
     this.recording = true;
 
     // Start audio level polling for waveform visualization
-    this.levelsInterval = setInterval(async () => {
+    const lvl = setInterval(async () => {
       if (!this.recording || !this.win || this.win.isDestroyed()) {
         this.stopLevels();
         return;
@@ -102,6 +107,8 @@ export class AudioRecorder {
         // Window may have been destroyed
       }
     }, 33);
+    lvl.unref();
+    this.levelsInterval = lvl;
   }
 
   async stop(): Promise<RecordingResult> {
@@ -149,6 +156,7 @@ export class AudioRecorder {
     if ((!this.recording && !this.starting) || !this.win || this.win.isDestroyed()) {
       return;
     }
+    this.canceling = true;
     try {
       await this.win.webContents.executeJavaScript(`
         (async () => {
@@ -167,6 +175,7 @@ export class AudioRecorder {
     }
     this.recording = false;
     this.starting = false;
+    this.canceling = false;
   }
 
   async playAudioCue(samples: number[], sampleRate?: number): Promise<void> {
@@ -175,10 +184,24 @@ export class AudioRecorder {
 
     const rate = sampleRate ?? 0; // 0 = use ctx.sampleRate
     await win.webContents.executeJavaScript(`
-      (() => {
+      (async () => {
         const samples = new Float32Array(${JSON.stringify(Array.from(samples))});
         const rate = ${rate} || undefined;
-        const ctx = new AudioContext();
+        // Reuse the recording AudioContext when available — it already has
+        // getUserMedia gesture so it won't be blocked by autoplay policy
+        // in hidden BrowserWindows. Fall back to a new context otherwise.
+        var ctx = window._recCtx && window._recCtx.state !== "closed" ? window._recCtx : null;
+        var ownCtx = false;
+        if (!ctx) {
+          ownCtx = true;
+          ctx = new AudioContext();
+          let retries = 0;
+          while (ctx.state === "suspended" && retries < 5) {
+            await ctx.resume();
+            if (ctx.state === "suspended") await new Promise(r => setTimeout(r, 50));
+            retries++;
+          }
+        }
         const buffer = ctx.createBuffer(1, samples.length, rate || ctx.sampleRate);
         buffer.getChannelData(0).set(samples.length <= buffer.length
           ? samples
@@ -187,7 +210,7 @@ export class AudioRecorder {
         source.buffer = buffer;
         source.connect(ctx.destination);
         source.start();
-        source.onended = () => ctx.close();
+        if (ownCtx) source.onended = () => ctx.close();
       })()
     `, true);
   }

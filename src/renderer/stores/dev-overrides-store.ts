@@ -15,6 +15,7 @@ export interface DevOverrides {
   analyticsDevEnabled?: boolean;
   hideDevVisuals?: boolean;
   visitedDictionary?: boolean;
+  visitedShortcuts?: boolean;
 }
 
 interface DevOverridesState {

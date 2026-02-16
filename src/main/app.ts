@@ -59,7 +59,18 @@ function setupPipeline(): void {
     hasCustomPrompt: Boolean(config.customPrompt),
     llmModelName: config.enableLlmEnhancement ? getLlmModelName(config.llm) : undefined,
     analytics,
-    onStage: (stage) => shortcutManager?.showIndicator(stage),
+    onStage: (stage) => {
+      shortcutManager?.getHud().setState(stage);
+    },
+    onLlmFailed: () => {
+      const cfg = configManager.load();
+      cfg.llmConnectionTested = false;
+      cfg.llmConfigHash = "";
+      configManager.save(cfg);
+      for (const win of BrowserWindow.getAllWindows()) {
+        win.webContents.send("config:changed");
+      }
+    },
     onComplete: (result) => {
       try {
         historyManager.add({
@@ -90,6 +101,7 @@ function reloadConfig(): void {
 
   setupPipeline();
   shortcutManager?.registerShortcutKeys();
+  shortcutManager?.updateHud();
   updateTrayConfig(config);
   analytics.setEnabled(config.analyticsEnabled);
 
@@ -171,6 +183,7 @@ app.whenReady().then(async () => {
     configManager,
     getPipeline: () => pipeline!,
     analytics,
+    openSettings: (tab) => openHome(reloadConfig, tab),
   });
   shortcutManager.start();
 
@@ -178,8 +191,8 @@ app.whenReady().then(async () => {
     return {
       shortcutState: shortcutManager?.getStateMachineState() ?? "idle",
       isRecording: shortcutManager?.isRecording() ?? false,
-      indicatorVisible: shortcutManager?.getIndicator().isVisible() ?? false,
-      indicatorMode: shortcutManager?.getIndicator().getMode(),
+      hudVisible: shortcutManager?.getHud().isVisible() ?? false,
+      hudState: shortcutManager?.getHud().getState() ?? "idle",
       ...getTrayState(),
     };
   });
@@ -215,21 +228,36 @@ app.whenReady().then(async () => {
     onStartListening: () => shortcutManager?.triggerToggle(),
     onStopListening: () => shortcutManager?.stopAndProcess(),
     onCancelListening: () => shortcutManager?.cancelRecording(),
+    onToggleHud: () => {
+      const cfg = configManager.load();
+      cfg.showHud = !cfg.showHud;
+      if (!cfg.showHud) cfg.hudShowOnHover = false;
+      configManager.save(cfg);
+      shortcutManager?.updateHud();
+      updateTrayConfig(cfg);
+      for (const win of BrowserWindow.getAllWindows()) {
+        win.webContents.send("config:changed");
+      }
+    },
   });
   setTrayModelState(setupChecker.hasAnyModel());
   updateTrayConfig(configManager.load());
 
   initAutoUpdater(() => updateTrayMenu());
 
+  shortcutManager.updateHud();
   openHome(reloadConfig);
 });
 
-app.on("activate", () => {
-  const visibleWindows = BrowserWindow.getAllWindows().filter(win =>
-    win.isVisible() && !win.isDestroyed() && win.getTitle() === "Vox"
-  );
-  if (visibleWindows.length === 0) {
-    openHome(reloadConfig);
+app.on("activate", (_event, hasVisibleWindows) => {
+  if (hasVisibleWindows) return;
+  openHome(reloadConfig);
+});
+
+app.on("before-quit", () => {
+  shortcutManager?.stop();
+  for (const win of BrowserWindow.getAllWindows()) {
+    if (!win.isDestroyed()) win.destroy();
   }
 });
 
@@ -238,11 +266,21 @@ app.on("will-quit", () => {
     session_duration_ms: Math.round(performance.now()),
   });
   analytics.shutdown();
-  shortcutManager?.stop();
 });
 
 app.on("window-all-closed", () => {});
 
 for (const sig of ["SIGINT", "SIGTERM", "SIGHUP"] as const) {
-  process.on(sig, () => app.quit());
+  process.on(sig, () => app.exit(0));
+}
+
+// In dev mode, electron-vite spawns Electron as a child process.
+// When Ctrl+C kills electron-vite, the Electron child becomes an orphan
+// reparented to launchd (PID 1) and never receives SIGINT.
+// Detect parent death by polling and exit immediately.
+if (!app.isPackaged) {
+  const parentPid = process.ppid;
+  setInterval(() => {
+    try { process.kill(parentPid, 0); } catch { app.exit(0); }
+  }, 200).unref();
 }

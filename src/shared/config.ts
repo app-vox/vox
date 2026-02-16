@@ -12,6 +12,13 @@ export type LlmProviderType = "foundry" | "bedrock" | "openai" | "deepseek" | "g
 
 export type CustomTokenSendAs = "header" | "body" | "query";
 
+export type WidgetPosition =
+  | "top-left" | "top-center" | "top-right"
+  | "center-left" | "center-center" | "center-right"
+  | "bottom-left" | "bottom-center" | "bottom-right"
+  | "custom";
+
+
 export interface FoundryLlmConfig {
   provider: "foundry";
   endpoint: string;
@@ -91,6 +98,13 @@ export interface VoxConfig {
   recordingAudioCue: AudioCueType;
   recordingStopAudioCue: AudioCueType;
   errorAudioCue: AudioCueType;
+  showHud: boolean;
+  hudShowOnHover: boolean;
+  showHudActions: boolean;
+  hudPosition: WidgetPosition;
+  hudCustomX: number;
+  hudCustomY: number;
+  targetDisplayId: number | null;
 }
 
 export function createDefaultConfig(isProduction = false): VoxConfig {
@@ -120,6 +134,13 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     recordingAudioCue: "tap",
     recordingStopAudioCue: "pop",
     errorAudioCue: "error",
+    showHud: false,
+    hudShowOnHover: false,
+    showHudActions: true,
+    hudPosition: "bottom-center",
+    hudCustomX: 0.5,
+    hudCustomY: 0.9,
+    targetDisplayId: null,
   };
 }
 

@@ -16,12 +16,17 @@
   text-align: left;
   gap: var(--spacing-2);
 
-  &:hover {
+  &:hover:not(:disabled) {
     border-color: var(--color-border-hover);
   }
 
   &:focus-visible {
     border-color: var(--color-border-focus);
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   svg {

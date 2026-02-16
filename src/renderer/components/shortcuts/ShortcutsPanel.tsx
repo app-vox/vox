@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
 import { useT } from "../../i18n-context";
@@ -6,6 +7,9 @@ import card from "../shared/card.module.scss";
 import btn from "../shared/buttons.module.scss";
 
 export function ShortcutsPanel() {
+  useEffect(() => {
+    localStorage.setItem("vox:visited-shortcuts", "true");
+  }, []);
   const t = useT();
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);

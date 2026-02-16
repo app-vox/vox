@@ -13,6 +13,44 @@
   }
 }
 
+.hudBannerContent {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+}
+
+.hudBannerText {
+  flex: 1;
+  min-width: 0;
+}
+
+.hudBannerActions {
+  display: flex;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-3);
+}
+
+.hudBannerClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: color 150ms ease, background 150ms ease;
+  margin-top: 2px;
+
+  &:hover {
+    color: var(--color-text-secondary);
+    background: var(--color-bg-hover);
+  }
+}
+
 .setupIcon {
   display: flex;
   align-items: center;
@@ -156,6 +194,96 @@
   }
 }
 
+.subCheckbox {
+  margin-top: var(--spacing-2);
+}
+
+.hudSettingsRow {
+  display: flex;
+  gap: var(--spacing-5);
+  align-items: flex-start;
+  margin-top: var(--spacing-4);
+}
+
+.hudSelectsCol {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.previewSide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.selectRow {
+  display: flex;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-4);
+}
+
+.selectField {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+
+@keyframes flashHighlight {
+  0%, 100% { box-shadow: none; }
+  50% { box-shadow: 0 0 0 2px var(--color-accent); }
+}
+
+.flash {
+  animation: flashHighlight 0.35s ease 1;
+  border-radius: var(--radius-md);
+}
+
+.collapsibleHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--spacing-5) var(--spacing-6);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+
+  h2 {
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: -0.01em;
+    margin-bottom: var(--spacing-1);
+  }
+
+  &:hover {
+    background: var(--color-bg-hover);
+  }
+}
+
+.collapseChevron {
+  flex-shrink: 0;
+  color: var(--color-text-tertiary);
+  transition: transform var(--duration-fast) var(--ease-default);
+
+  &.collapsed {
+    transform: rotate(-90deg);
+  }
+}
+
 .checkboxLabel {
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-medium);
@@ -208,3 +336,222 @@
     height: 12px;
   }
 }
+
+.sectionDivider {
+  height: 1px;
+  background: var(--color-border);
+  margin: var(--spacing-4) 0;
+}
+
+.sectionSubheading {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-1);
+}
+
+.selectFieldRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+
+.selectLabel {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.selectDesc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  line-height: 1.4;
+}
+
+.disclaimer {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  line-height: 1.4;
+  margin-top: var(--spacing-2);
+}
+
+.restoreDefaultsRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--spacing-4);
+  padding-top: var(--spacing-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.restoreDefaults {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-2);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease;
+  white-space: nowrap;
+
+  &:hover {
+    color: var(--color-text-secondary);
+    border-color: var(--color-border-hover);
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+.previewSection {
+  margin-top: var(--spacing-4);
+}
+
+.previewTitle {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-2);
+}
+
+.previewRow {
+  display: flex;
+  gap: var(--spacing-4);
+}
+
+.previewScreen {
+  width: 180px;
+  height: 110px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-input);
+  position: relative;
+  overflow: hidden;
+  cursor: crosshair;
+}
+
+.previewLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  text-align: center;
+  margin-top: var(--spacing-1);
+}
+
+.dragHint {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  margin-top: var(--spacing-2);
+
+  svg {
+    flex-shrink: 0;
+    opacity: 0.6;
+  }
+}
+
+// HUD preview dot — positioned via classes
+.previewHud {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-text-tertiary);
+  border: 1px solid transparent;
+  position: absolute;
+  z-index: 2;
+  transition: left 0.15s ease, right 0.15s ease, top 0.15s ease, bottom 0.15s ease,
+    box-shadow 0.3s ease, width 0.3s ease, height 0.3s ease, border-radius 0.3s ease,
+    border-color 0.3s ease, background 0.3s ease;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30px;
+    height: 30px;
+    transform: translate(-50%, -50%);
+  }
+
+  &.dragging {
+    transition: box-shadow 0.15s ease;
+    box-shadow: 0 0 0 3px var(--color-accent);
+  }
+
+  &.highlight {
+    box-shadow: 0 0 0 3px var(--color-accent);
+    transition: box-shadow 0.3s ease;
+  }
+
+  &.pillShape {
+    width: 24px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--color-text-quaternary, var(--color-border-hover));
+    border-color: var(--color-border);
+  }
+}
+
+@keyframes hudMorph {
+  0%, 35% { width: 10px; height: 10px; border-radius: 50%; background: var(--color-text-tertiary); border-color: transparent; }
+  45%, 85% { width: 24px; height: 6px; border-radius: 3px; background: var(--color-text-quaternary, var(--color-border-hover)); border-color: var(--color-border); }
+  95%, 100% { width: 10px; height: 10px; border-radius: 50%; background: var(--color-text-tertiary); border-color: transparent; }
+}
+
+.previewHudAnimated {
+  animation: hudMorph 4s ease-in-out infinite;
+}
+
+// HUD position classes (9 positions)
+.previewHud_top_left { top: 10px; left: 10px; }
+.previewHud_top_center { top: 10px; left: 50%; transform: translateX(-50%); }
+.previewHud_top_right { top: 10px; right: 10px; }
+.previewHud_center_left { top: 50%; left: 10px; transform: translateY(-50%); }
+.previewHud_center_center { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.previewHud_center_right { top: 50%; right: 10px; transform: translateY(-50%); }
+.previewHud_bottom_left { bottom: 16px; left: 10px; }
+.previewHud_bottom_center { bottom: 16px; left: 50%; transform: translateX(-50%); }
+.previewHud_bottom_right { bottom: 16px; right: 10px; }
+
+// Overlay preview pill — positioned via classes
+.previewOverlay {
+  width: 36px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--color-text-tertiary);
+  position: absolute;
+  z-index: 1;
+  transition: left 0.15s ease, right 0.15s ease, top 0.15s ease, bottom 0.15s ease,
+    box-shadow 0.3s ease;
+
+  &.dragging {
+    transition: box-shadow 0.15s ease;
+    box-shadow: 0 0 0 3px var(--color-accent);
+  }
+
+  &.highlight {
+    box-shadow: 0 0 0 3px var(--color-accent);
+    transition: box-shadow 0.3s ease;
+  }
+}
+
+// Overlay position classes (9 positions)
+.previewOverlay_top_left { top: 8px; left: 10px; }
+.previewOverlay_top_center { top: 8px; left: 50%; transform: translateX(-50%); }
+.previewOverlay_top_right { top: 8px; right: 10px; }
+.previewOverlay_center_left { top: 50%; left: 10px; transform: translateY(-50%); }
+.previewOverlay_center_center { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.previewOverlay_center_right { top: 50%; right: 10px; transform: translateY(-50%); }
+.previewOverlay_bottom_left { bottom: 8px; left: 10px; }
+.previewOverlay_bottom_center { bottom: 8px; left: 50%; transform: translateX(-50%); }
+.previewOverlay_bottom_right { bottom: 8px; right: 10px; }

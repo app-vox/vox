@@ -1,8 +1,19 @@
 import * as fs from "fs";
 import * as path from "path";
 import { app } from "electron";
-import { type VoxConfig, type LlmConfigFlat, createDefaultConfig, createDefaultLlmFlat, narrowLlmConfig } from "../../shared/config";
+import { type VoxConfig, type LlmConfigFlat, type WidgetPosition, createDefaultConfig, createDefaultLlmFlat, narrowLlmConfig } from "../../shared/config";
 import { ENCRYPTED_PREFIX } from "./secrets";
+
+export function migrateHudPosition(raw: string | undefined): WidgetPosition {
+  if (!raw) return "bottom-center";
+  if (raw.includes("-") || raw === "custom") return raw as WidgetPosition;
+  const map: Record<string, WidgetPosition> = {
+    left: "bottom-left",
+    center: "bottom-center",
+    right: "bottom-right",
+  };
+  return map[raw] ?? "bottom-center";
+}
 
 export interface SecretStore {
   encrypt(plainText: string): string;
@@ -57,6 +68,13 @@ export class ConfigManager {
         llmConnectionTested: saved.llmConnectionTested ?? defaults.llmConnectionTested,
         llmConfigHash: saved.llmConfigHash ?? defaults.llmConfigHash,
         analyticsEnabled: saved.analyticsEnabled ?? defaults.analyticsEnabled,
+        showHud: saved.showHud ?? defaults.showHud,
+        hudShowOnHover: saved.hudShowOnHover ?? defaults.hudShowOnHover,
+        showHudActions: saved.showHudActions ?? defaults.showHudActions,
+        hudPosition: migrateHudPosition(saved.hudPosition ?? saved.overlayPosition),
+        hudCustomX: saved.hudCustomX ?? saved.overlayCustomX ?? defaults.hudCustomX,
+        hudCustomY: saved.hudCustomY ?? saved.overlayCustomY ?? defaults.hudCustomY,
+        targetDisplayId: saved.targetDisplayId ?? defaults.targetDisplayId,
       };
 
       return config;

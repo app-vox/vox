@@ -49,6 +49,7 @@ export interface VoxAPI {
   config: {
     load(): Promise<import("../shared/config").VoxConfig>;
     save(config: import("../shared/config").VoxConfig): Promise<void>;
+    onConfigChanged(callback: () => void): () => void;
   };
   models: {
     list(): Promise<ModelInfo[]>;
@@ -112,8 +113,13 @@ export interface VoxAPI {
   audio: {
     previewCue(cueType: string): Promise<void>;
   };
-  indicator: {
-    cancelRecording(): Promise<void>;
+  hud: {
+    setPosition(nx: number, ny: number): Promise<void>;
+    showHighlight(): Promise<void>;
+    hideHighlight(): Promise<void>;
+  };
+  displays: {
+    getAll(): Promise<{ id: number; label: string; bounds: { x: number; y: number; width: number; height: number }; primary: boolean }[]>;
   };
   i18n: {
     getSystemLocale(): Promise<string>;
@@ -122,8 +128,8 @@ export interface VoxAPI {
     getRuntimeState(): Promise<{
       shortcutState: string;
       isRecording: boolean;
-      indicatorVisible: boolean;
-      indicatorMode: string | null;
+      hudVisible: boolean;
+      hudState: string;
       isListening: boolean;
       hasModel: boolean;
       trayActive: boolean;
@@ -152,6 +158,11 @@ const voxApi: VoxAPI = {
   config: {
     load: () => ipcRenderer.invoke("config:load"),
     save: (config) => ipcRenderer.invoke("config:save", config),
+    onConfigChanged: (callback) => {
+      const handler = () => callback();
+      ipcRenderer.on("config:changed", handler);
+      return () => ipcRenderer.removeListener("config:changed", handler);
+    },
   },
   models: {
     list: () => ipcRenderer.invoke("models:list"),
@@ -229,8 +240,13 @@ const voxApi: VoxAPI = {
   audio: {
     previewCue: (cueType) => ipcRenderer.invoke("audio:preview-cue", cueType),
   },
-  indicator: {
-    cancelRecording: () => ipcRenderer.invoke("indicator:cancel-recording"),
+  hud: {
+    setPosition: (nx, ny) => ipcRenderer.invoke("hud:set-position", nx, ny),
+    showHighlight: () => ipcRenderer.invoke("hud:show-highlight"),
+    hideHighlight: () => ipcRenderer.invoke("hud:hide-highlight"),
+  },
+  displays: {
+    getAll: () => ipcRenderer.invoke("displays:get-all"),
   },
   i18n: {
     getSystemLocale: () => ipcRenderer.invoke("i18n:system-locale"),
@@ -246,4 +262,13 @@ contextBridge.exposeInMainWorld("voxApi", voxApi);
 
 contextBridge.exposeInMainWorld("electronAPI", {
   cancelRecording: () => ipcRenderer.invoke("indicator:cancel-recording"),
+  hudStartRecording: () => ipcRenderer.invoke("hud:start-recording"),
+  hudStopRecording: () => ipcRenderer.invoke("hud:stop-recording"),
+  hudOpenSettings: () => ipcRenderer.invoke("hud:open-settings"),
+  hudOpenTranscriptions: () => ipcRenderer.invoke("hud:open-transcriptions"),
+  hudDisable: () => ipcRenderer.invoke("hud:disable"),
+  hudDrag: (dx: number, dy: number) => ipcRenderer.invoke("hud:drag", dx, dy),
+  hudDragEnd: () => ipcRenderer.invoke("hud:drag-end"),
+  setIgnoreMouseEvents: (ignore: boolean) => ipcRenderer.invoke("hud:set-ignore-mouse", ignore),
+  hudDismiss: () => ipcRenderer.invoke("hud:dismiss"),
 });

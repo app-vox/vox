@@ -11,6 +11,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronsRightIcon,
+  InfoCircleIcon,
 } from "../../../shared/icons";
 import { CustomSelect } from "../ui/CustomSelect";
 import card from "../shared/card.module.scss";
@@ -144,6 +145,10 @@ export function TranscriptionsPanel() {
             {total > 0 ? (total === 1 ? t("history.oneStored") : t("history.countStored", { count: total })) : t("history.emptyState")}
           </p>
         </div>
+        <div className={card.infoBanner}>
+          <InfoCircleIcon width={14} height={14} />
+          <span>{t("history.clipboardHint")}</span>
+        </div>
         <div className={card.body}>
           <div className={styles.searchContainer}>
             <SearchIcon className={styles.searchIcon} width={16} height={16} />
@@ -223,7 +228,6 @@ export function TranscriptionsPanel() {
                   </button>
                 )}
               </div>
-              {/* eslint-disable i18next/no-literal-string */}
               <div className={styles.pageSizeSelect}>
                 <CustomSelect
                   value={String(pageSize)}
@@ -235,7 +239,6 @@ export function TranscriptionsPanel() {
                   onChange={(value) => setPageSize(Number(value))}
                 />
               </div>
-              {/* eslint-enable i18next/no-literal-string */}
             </div>
           )}
         </div>

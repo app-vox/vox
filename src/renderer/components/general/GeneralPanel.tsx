@@ -1,17 +1,22 @@
-import { type ReactNode } from "react";
+import { type ReactNode, useState, useRef, useCallback, useEffect } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
 import { usePermissions } from "../../hooks/use-permissions";
 import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useT } from "../../i18n-context";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
-import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, ChevronDownIcon } from "../../../shared/icons";
-import type { ThemeMode, SupportedLanguage } from "../../../shared/config";
+import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, KeyboardIcon, ChevronDownIcon, MoveIcon, RefreshIcon } from "../../../shared/icons";
+import type { ThemeMode, SupportedLanguage, WidgetPosition } from "../../../shared/config";
 import { CustomSelect, type SelectItem } from "../ui/CustomSelect";
 import { OfflineBanner } from "../ui/OfflineBanner";
 import card from "../shared/card.module.scss";
 import buttons from "../shared/buttons.module.scss";
 import styles from "./GeneralPanel.module.scss";
+
+const DISPLAY_COLLAPSED_KEY = "vox:display-collapsed";
+const HUD_BANNER_DISMISSED_KEY = "vox:hud-banner-dismissed";
+const SHORTCUTS_BANNER_DISMISSED_KEY = "vox:shortcuts-banner-dismissed";
+const VISITED_SHORTCUTS_KEY = "vox:visited-shortcuts";
 
 const THEME_ICONS: { value: ThemeMode; icon: ReactNode }[] = [
   { value: "light", icon: <SunIcon width={16} height={16} /> },
@@ -47,7 +52,6 @@ export function GeneralPanel() {
   const triggerToast = useSaveToast((s) => s.trigger);
   const { status: realStatus } = usePermissions();
 
-  // Dev overrides (gated — tree-shaken in production)
   const setupComplete = import.meta.env.DEV
     // eslint-disable-next-line react-hooks/rules-of-hooks
     ? useDevOverrideValue("setupComplete", realSetupComplete)
@@ -103,11 +107,100 @@ export function GeneralPanel() {
     })),
   ];
 
+  const positionItems: SelectItem[] = [
+    { value: "top-left", label: t("general.position.topLeft") },
+    { value: "top-center", label: t("general.position.topCenter") },
+    { value: "top-right", label: t("general.position.topRight") },
+    { divider: true },
+    { value: "center-left", label: t("general.position.centerLeft") },
+    { value: "center-center", label: t("general.position.centerCenter") },
+    { value: "center-right", label: t("general.position.centerRight") },
+    { divider: true },
+    { value: "bottom-left", label: t("general.position.bottomLeft") },
+    { value: "bottom-center", label: `${t("general.position.bottomCenter")} ${t("general.position.default")}` },
+    { value: "bottom-right", label: t("general.position.bottomRight") },
+    { divider: true },
+    { value: "custom", label: t("general.position.custom") },
+  ];
+
+  const [displayCollapsed, setDisplayCollapsed] = useState(() => localStorage.getItem(DISPLAY_COLLAPSED_KEY) !== "false");
+  const [hudBannerDismissed, setHudBannerDismissed] = useState(() => localStorage.getItem(HUD_BANNER_DISMISSED_KEY) === "true");
+  const [shortcutsBannerDismissed, setShortcutsBannerDismissed] = useState(() =>
+    localStorage.getItem(SHORTCUTS_BANNER_DISMISSED_KEY) === "true" || localStorage.getItem(VISITED_SHORTCUTS_KEY) === "true"
+  );
+  const [availableDisplays, setAvailableDisplays] = useState<{ id: number; label: string; primary: boolean }[]>([]);
+  const [flashHudSelect, setFlashHudSelect] = useState(false);
+  const [flashPreview, setFlashPreview] = useState(false);
+  const [hudDragPos, setHudDragPos] = useState<{ x: number; y: number } | null>(null);
+  const [hudHighlight, setHudHighlight] = useState(false);
+
+  const previewRef = useRef<HTMLDivElement>(null);
+
   const isDevMode = import.meta.env.DEV;
 
   const needsPermissions = !loading && setupComplete && permissionStatus !== null && (permissionStatus.accessibility !== true || permissionStatus.microphone !== "granted");
 
+  const flashSelect = useCallback(() => {
+    setFlashHudSelect(true);
+    setTimeout(() => setFlashHudSelect(false), 400);
+  }, []);
+
+  const getPreviewPosition = useCallback((pos: WidgetPosition) => {
+    if (pos === "custom") return null;
+    return pos;
+  }, []);
+
+  const handlePreviewMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = previewRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const computePos = (ev: { clientX: number; clientY: number }) => ({
+      x: Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width)),
+      y: Math.max(0, Math.min(1, (ev.clientY - rect.top) / rect.height)),
+    });
+
+    setHudDragPos(computePos(e));
+    setHudHighlight(true);
+
+    const onMove = (ev: MouseEvent) => {
+      setHudDragPos(computePos(ev));
+    };
+
+    const onUp = (ev: MouseEvent) => {
+      const pos = computePos(ev);
+      setHudDragPos(null);
+      setHudHighlight(false);
+      const wasCustom = config?.hudPosition === "custom";
+      updateConfig({ hudPosition: "custom", hudCustomX: pos.x, hudCustomY: pos.y });
+      if (!wasCustom) flashSelect();
+      saveConfig(false).then(() => triggerToast());
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  }, [config?.hudPosition, updateConfig, saveConfig, triggerToast, flashSelect]);
+
+  useEffect(() => {
+    window.voxApi.displays.getAll().then(setAvailableDisplays).catch(() => {});
+  }, []);
+
   if (!config) return null;
+
+  const handleHudPositionChange = async (val: string) => {
+    const newPos = val as WidgetPosition;
+    const prevPos = config.hudPosition;
+    updateConfig({ hudPosition: newPos });
+    await saveConfig(false);
+    triggerToast();
+    if (prevPos !== "custom") {
+      setHudHighlight(true);
+      setTimeout(() => setHudHighlight(false), 400);
+    }
+  };
 
   const handleSoundChange = async (field: "recordingAudioCue" | "recordingStopAudioCue" | "errorAudioCue", cue: string) => {
     updateConfig({ [field]: cue });
@@ -127,6 +220,21 @@ export function GeneralPanel() {
     await saveConfig(false);
     triggerToast();
   };
+
+  const handleRestoreDefaults = async () => {
+    updateConfig({
+      hudPosition: "bottom-center",
+      hudCustomX: 0.5,
+      hudCustomY: 0.9,
+    });
+    await saveConfig(false);
+    triggerToast();
+    flashSelect();
+    setFlashPreview(true);
+    setTimeout(() => setFlashPreview(false), 400);
+  };
+
+  const hudPreviewPos = getPreviewPosition(config.hudPosition);
 
   return (
     <>
@@ -176,6 +284,286 @@ export function GeneralPanel() {
         </div>
       )}
 
+      {/* Shortcuts discovery banner */}
+      {!loading && setupComplete && !shortcutsBannerDismissed && (
+        <div className={`${card.card} ${styles.setupBanner}`}>
+          <div className={card.body}>
+            <div className={styles.hudBannerContent}>
+              <div className={styles.setupIcon}>
+                <KeyboardIcon width={20} height={20} />
+              </div>
+              <div className={styles.hudBannerText}>
+                <div className={styles.setupTitle}>{t("general.shortcuts.banner.title")}</div>
+                <div className={styles.setupDesc}>{t("general.shortcuts.banner.description")}</div>
+                <div className={styles.hudBannerActions}>
+                  <button
+                    className={`${buttons.btn} ${buttons.primary}`}
+                    onClick={() => {
+                      setActiveTab("shortcuts");
+                      setShortcutsBannerDismissed(true);
+                      localStorage.setItem(SHORTCUTS_BANNER_DISMISSED_KEY, "true");
+                    }}
+                  >
+                    {t("general.shortcuts.banner.action")}
+                  </button>
+                  <button
+                    className={`${buttons.btn} ${buttons.secondary}`}
+                    onClick={() => {
+                      setShortcutsBannerDismissed(true);
+                      localStorage.setItem(SHORTCUTS_BANNER_DISMISSED_KEY, "true");
+                    }}
+                  >
+                    {t("general.shortcuts.banner.dismiss")}
+                  </button>
+                </div>
+              </div>
+              <button
+                className={styles.hudBannerClose}
+                onClick={() => {
+                  setShortcutsBannerDismissed(true);
+                  localStorage.setItem(SHORTCUTS_BANNER_DISMISSED_KEY, "true");
+                }}
+                aria-label="Close"
+                title={t("general.shortcuts.banner.dismiss")}
+              >
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M8 2L2 8M2 2L8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Language */}
+      <div className={card.card}>
+        <div className={card.header}>
+          <h2>{t("general.language.title")}</h2>
+          <p className={card.description}>{t("general.language.description")}</p>
+        </div>
+        <div className={card.body}>
+          <CustomSelect
+            value={config.language}
+            items={languageItems}
+            onChange={(val) => {
+              updateConfig({ language: val as SupportedLanguage | "system" });
+              saveConfig(false).then(() => triggerToast());
+            }}
+          />
+        </div>
+      </div>
+
+      {/* HUD discovery banner */}
+      {!loading && setupComplete && !config.showHud && !hudBannerDismissed && (
+        <div className={`${card.card} ${styles.setupBanner}`}>
+          <div className={card.body}>
+            <div className={styles.hudBannerContent}>
+              <div className={styles.setupIcon}>
+                <MicIcon width={20} height={20} />
+              </div>
+              <div className={styles.hudBannerText}>
+                <div className={styles.setupTitle}>{t("general.hud.banner.title")}</div>
+                <div className={styles.setupDesc}>{t("general.hud.banner.description")}</div>
+                <div className={styles.hudBannerActions}>
+                  <button
+                    className={`${buttons.btn} ${buttons.primary}`}
+                    onClick={async () => {
+                      updateConfig({ showHud: true, showHudActions: true });
+                      await saveConfig(false);
+                      triggerToast();
+                      setDisplayCollapsed(false);
+                      localStorage.setItem(DISPLAY_COLLAPSED_KEY, "false");
+                      setHudBannerDismissed(true);
+                      localStorage.setItem(HUD_BANNER_DISMISSED_KEY, "true");
+                    }}
+                  >
+                    {t("general.hud.banner.enable")}
+                  </button>
+                  <button
+                    className={`${buttons.btn} ${buttons.secondary}`}
+                    onClick={() => {
+                      setHudBannerDismissed(true);
+                      localStorage.setItem(HUD_BANNER_DISMISSED_KEY, "true");
+                    }}
+                  >
+                    {t("general.hud.banner.dismiss")}
+                  </button>
+                </div>
+              </div>
+              <button
+                className={styles.hudBannerClose}
+                onClick={() => {
+                  setHudBannerDismissed(true);
+                  localStorage.setItem(HUD_BANNER_DISMISSED_KEY, "true");
+                }}
+                aria-label="Close"
+                title={t("general.hud.banner.dismiss")}
+              >
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M8 2L2 8M2 2L8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* HUD */}
+      <div className={card.card}>
+        <button
+          className={styles.collapsibleHeader}
+          onClick={() => {
+            setDisplayCollapsed((prev) => {
+              const next = !prev;
+              localStorage.setItem(DISPLAY_COLLAPSED_KEY, String(next));
+              return next;
+            });
+          }}
+          aria-expanded={!displayCollapsed}
+        >
+          <div>
+            <h2>{t("general.hud.title")}</h2>
+            <p className={card.description}>{t("general.hud.description")}</p>
+          </div>
+          <ChevronDownIcon
+            width={16}
+            height={16}
+            className={`${styles.collapseChevron} ${displayCollapsed ? styles.collapsed : ""}`}
+          />
+        </button>
+        {!displayCollapsed && (
+          <div className={card.body}>
+            <label className={styles.checkboxRow}>
+              <input
+                type="checkbox"
+                checked={config.showHud}
+                onChange={async () => {
+                  const newShowHud = !config.showHud;
+                  updateConfig({
+                    showHud: newShowHud,
+                    ...(newShowHud ? { showHudActions: true } : { showHudActions: false }),
+                  });
+                  await saveConfig(false);
+                  triggerToast();
+                }}
+              />
+              <div>
+                <div className={styles.checkboxLabel}>{t("general.hud.showHud")}</div>
+                <div className={styles.checkboxDesc}>{t("general.hud.showHudDesc")}</div>
+              </div>
+            </label>
+
+            <label className={`${styles.checkboxRow} ${!config.showHud ? styles.disabled : ""}`}>
+              <input
+                type="checkbox"
+                checked={config.hudShowOnHover}
+                disabled={!config.showHud}
+                onChange={async () => {
+                  updateConfig({ hudShowOnHover: !config.hudShowOnHover });
+                  await saveConfig(false);
+                  triggerToast();
+                }}
+              />
+              <div>
+                <div className={styles.checkboxLabel}>{t("general.hud.showOnHover")}</div>
+                <div className={styles.checkboxDesc}>{t("general.hud.showOnHoverDesc")}</div>
+              </div>
+            </label>
+
+            <label className={`${styles.checkboxRow} ${!config.showHud ? styles.disabled : ""}`}>
+              <input
+                type="checkbox"
+                checked={config.showHudActions}
+                disabled={!config.showHud}
+                onChange={async () => {
+                  updateConfig({ showHudActions: !config.showHudActions });
+                  await saveConfig(false);
+                  triggerToast();
+                }}
+              />
+              <div>
+                <div className={styles.checkboxLabel}>{t("general.hud.showActionsOnHover")}</div>
+                <div className={styles.checkboxDesc}>{t("general.hud.showActionsOnHoverDesc")}</div>
+              </div>
+            </label>
+
+            <div className={styles.hudSettingsRow}>
+              <div className={styles.hudSelectsCol}>
+                <div className={styles.selectFieldRow}>
+                  <div className={styles.selectLabel}>{t("general.hud.position")}</div>
+                  <div className={flashHudSelect ? styles.flash : undefined}>
+                    <CustomSelect
+                      value={config.hudPosition}
+                      items={positionItems}
+                      onChange={handleHudPositionChange}
+                    />
+                  </div>
+                </div>
+
+                {availableDisplays.length > 1 && (
+                  <div className={styles.selectFieldRow}>
+                    <div className={styles.selectLabel}>{t("general.hud.targetDisplay")}</div>
+                    <CustomSelect
+                      value={config.targetDisplayId != null ? String(config.targetDisplayId) : "system"}
+                      items={[
+                        { value: "system", label: t("general.hud.systemDefault") },
+                        { divider: true },
+                        ...availableDisplays.map((d) => ({
+                          value: String(d.id),
+                          label: d.primary ? `${d.label} (${t("general.hud.primaryDisplay")})` : d.label,
+                        })),
+                      ]}
+                      onChange={async (val) => {
+                        const newId = val === "system" ? null : Number(val);
+                        updateConfig({ targetDisplayId: newId });
+                        await saveConfig(false);
+                        triggerToast();
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.previewSide}>
+                <div className={styles.previewTitle}>{t("general.preview.title")}</div>
+                <div
+                  className={`${styles.previewScreen} ${flashPreview ? styles.flash : ""}`}
+                  ref={previewRef}
+                  onMouseDown={handlePreviewMouseDown}
+                >
+                  <div
+                    className={[
+                      styles.previewHud,
+                      hudDragPos ? styles.dragging : hudHighlight ? styles.highlight : "",
+                      !config.showHud ? styles.pillShape : config.showHud ? styles.previewHudAnimated : "",
+                      hudDragPos || !hudPreviewPos ? "" : (styles[`previewHud_${hudPreviewPos.replace(/-/g, "_")}`] || styles.previewHud_bottom_center),
+                    ].filter(Boolean).join(" ")}
+                    style={hudDragPos
+                      ? { left: `${hudDragPos.x * 100}%`, top: `${hudDragPos.y * 100}%`, transform: "translate(-50%, -50%)", cursor: "grabbing", transition: "box-shadow 0.15s ease" }
+                      : !hudPreviewPos
+                        ? { left: `${(config.hudCustomX ?? 0.5) * 100}%`, top: `${(config.hudCustomY ?? 0.9) * 100}%`, transform: "translate(-50%, -50%)", cursor: "grab" }
+                        : { cursor: "grab" }
+                    }
+                  />
+                </div>
+                <div className={styles.dragHint}>
+                  <MoveIcon width={12} height={12} />
+                  <span>{t("general.preview.dragHint")}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.restoreDefaultsRow}>
+              <button
+                type="button"
+                className={styles.restoreDefaults}
+                onClick={handleRestoreDefaults}
+              >
+                <RefreshIcon width={12} height={12} />
+                <span>{t("general.hud.restoreDefaults")}</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Theme */}
       <div className={card.card}>
         <div className={card.header}>
           <h2>{t("general.theme.title")}</h2>
@@ -194,23 +582,6 @@ export function GeneralPanel() {
               </button>
             ))}
           </div>
-        </div>
-      </div>
-
-      <div className={card.card}>
-        <div className={card.header}>
-          <h2>{t("general.language.title")}</h2>
-          <p className={card.description}>{t("general.language.description")}</p>
-        </div>
-        <div className={card.body}>
-          <CustomSelect
-            value={config.language}
-            items={languageItems}
-            onChange={(val) => {
-              updateConfig({ language: val as SupportedLanguage | "system" });
-              saveConfig(false).then(() => triggerToast());
-            }}
-          />
         </div>
       </div>
 
