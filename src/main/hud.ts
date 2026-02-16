@@ -988,6 +988,9 @@ export class HudWindow {
       const base = PILL_MODES[state] || PILL_MODES.initializing;
       const labelText = customLabel ?? t(INDICATOR_KEYS[state] || "indicator.transcribing");
       mode = { ...base, labelText };
+      if (this.reduceAnimations && state === "listening") {
+        mode = { ...mode, icon: "dot", showLabel: true, animation: "none" };
+      }
     }
 
     const cfg = JSON.stringify({ titles, mode });
