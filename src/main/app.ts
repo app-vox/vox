@@ -110,6 +110,8 @@ function reloadConfig(): void {
 }
 
 app.whenReady().then(async () => {
+  app.dock?.show();
+
   session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
     callback(permission === "media");
   });
@@ -249,8 +251,7 @@ app.whenReady().then(async () => {
   openHome(reloadConfig);
 });
 
-app.on("activate", (_event, hasVisibleWindows) => {
-  if (hasVisibleWindows) return;
+app.on("activate", () => {
   openHome(reloadConfig);
 });
 
