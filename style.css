@@ -614,12 +614,12 @@ body {
 .hud-bars .bar:nth-child(4)  { animation: wave4  0.31s ease-in-out infinite alternate; }
 .hud-bars .bar:nth-child(5)  { animation: wave5  0.41s ease-in-out infinite alternate; }
 .hud-bars .bar:nth-child(6)  { animation: wave6  0.29s ease-in-out infinite alternate; }
-.hud-bars .bar:nth-child(7)  { animation: wave7  0.37s ease-in-out infinite alternate; }
-.hud-bars .bar:nth-child(8)  { animation: wave8  0.43s ease-in-out infinite alternate; }
+.hud-bars .bar:nth-child(7)  { animation: wave7  0.34s ease-in-out infinite alternate; }
+.hud-bars .bar:nth-child(8)  { animation: wave8  0.44s ease-in-out infinite alternate; }
 .hud-bars .bar:nth-child(9)  { animation: wave9  0.33s ease-in-out infinite alternate; }
 .hud-bars .bar:nth-child(10) { animation: wave10 0.39s ease-in-out infinite alternate; }
 .hud-bars .bar:nth-child(11) { animation: wave11 0.47s ease-in-out infinite alternate; }
-.hud-bars .bar:nth-child(12) { animation: wave12 0.31s ease-in-out infinite alternate; }
+.hud-bars .bar:nth-child(12) { animation: wave12 0.36s ease-in-out infinite alternate; }
 
 /* Stage label animations (driven by CSS, not JS) */
 .demo-stages .stage-label:nth-child(1) { animation: stage-record     10s ease infinite; }
@@ -693,9 +693,6 @@ body {
     }
 }
 
-.stage-label.active .stage-icon {
-    transform: scale(1.05);
-}
 
 .stage-icon.record {
     background-color: rgba(239, 68, 68, 0.1);
