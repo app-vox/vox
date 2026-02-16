@@ -75,6 +75,8 @@ export class ConfigManager {
         hudCustomX: saved.hudCustomX ?? saved.overlayCustomX ?? defaults.hudCustomX,
         hudCustomY: saved.hudCustomY ?? saved.overlayCustomY ?? defaults.hudCustomY,
         targetDisplayId: saved.targetDisplayId ?? defaults.targetDisplayId,
+        reduceAnimations: saved.reduceAnimations ?? defaults.reduceAnimations,
+        reduceVisualEffects: saved.reduceVisualEffects ?? defaults.reduceVisualEffects,
       };
 
       return config;
