@@ -281,6 +281,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const TYPING_START = 0.78;
         const TYPING_END = 0.95;
 
+        let pendingTimeouts = [];
+
+        const clearPending = () => {
+            pendingTimeouts.forEach(id => clearTimeout(id));
+            pendingTimeouts = [];
+        };
+
         const getFullText = () => {
             return window.i18n && window.i18n.t
                 ? window.i18n.t('demo.sampleText')
@@ -288,6 +295,8 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         const runCycle = () => {
+            clearPending();
+
             const text = getFullText();
             const typingStartMs = TYPING_START * CYCLE_MS;
             const typingDuration = 800;
@@ -297,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cursor.classList.remove('active');
             inputField.classList.remove('active');
 
-            setTimeout(() => {
+            pendingTimeouts.push(setTimeout(() => {
                 cursor.classList.add('active');
                 inputField.classList.add('active');
                 let i = 0;
@@ -306,27 +315,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (i < text.length) {
                         typedText.textContent += text.charAt(i);
                         i++;
-                        setTimeout(typeChar, charDelay);
+                        pendingTimeouts.push(setTimeout(typeChar, charDelay));
                     }
                 };
                 typeChar();
-            }, typingStartMs);
+            }, typingStartMs));
 
-            setTimeout(() => {
+            pendingTimeouts.push(setTimeout(() => {
                 cursor.classList.remove('active');
                 inputField.classList.remove('active');
-            }, displayUntilMs);
+            }, displayUntilMs));
 
-            setTimeout(() => {
+            pendingTimeouts.push(setTimeout(() => {
                 typedText.textContent = '';
-            }, CYCLE_MS - 200);
+            }, CYCLE_MS - 200));
         };
 
         // Anchor JS to CSS master clock via animationiteration event
+        // Filter to widget-morph only to avoid double-firing (widget has 2 animations)
         const widget = document.querySelector('.hud-widget');
         if (widget) {
-            widget.addEventListener('animationiteration', () => {
-                runCycle();
+            widget.addEventListener('animationiteration', (e) => {
+                if (e.animationName === 'widget-morph') {
+                    runCycle();
+                }
             });
         }
         runCycle();

@@ -211,13 +211,24 @@
                                         <div class="bar"></div>
                                     </div>
                                 </div>
-                                <!-- Status layer: transcribing/enhancing (stacks on top) -->
-                                <div class="hud-status">
-                                    <div class="hud-pulse-dot"></div>
-                                    <span class="hud-label hud-label-transcribing" data-i18n="demo.transcribing">Transcribing...</span>
-                                    <span class="hud-label hud-label-enhancing" data-i18n="demo.enhancing">Enhancing...</span>
+                                <!-- Transcribing layer -->
+                                <div class="hud-status-layer hud-transcribing-layer">
+                                    <div class="hud-pulse-dot hud-pulse-dot-orange"></div>
+                                    <span class="hud-label" data-i18n="demo.transcribing">Transcribing...</span>
+                                </div>
+                                <!-- Enhancing layer -->
+                                <div class="hud-status-layer hud-enhancing-layer">
+                                    <div class="hud-pulse-dot hud-pulse-dot-blue"></div>
+                                    <span class="hud-label" data-i18n="demo.enhancing">Enhancing...</span>
                                 </div>
                             </div>
+                        </div>
+                        <!-- Cancel button (sibling of widget to avoid overflow:hidden clipping) -->
+                        <div class="hud-cancel-btn">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <circle cx="8" cy="8" r="7" stroke="rgba(255,255,255,0.5)" stroke-width="1.2"/>
+                                <path d="M5.5 5.5L10.5 10.5M10.5 5.5L5.5 10.5" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" stroke-linecap="round"/>
+                            </svg>
                         </div>
                     </div>
 

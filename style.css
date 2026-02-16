@@ -586,7 +586,7 @@ body {
     box-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
 }
 
-.hud-status {
+.hud-status-layer {
     position: absolute;
     inset: 0;
     display: flex;
@@ -596,15 +596,29 @@ body {
     white-space: nowrap;
     opacity: 0;
     visibility: hidden;
-    animation: status-toggle 10s ease infinite;
+}
+
+.hud-transcribing-layer {
+    animation: layer-transcribing 10s ease infinite;
+}
+
+.hud-enhancing-layer {
+    animation: layer-enhancing 10s ease infinite;
 }
 
 .hud-pulse-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: currentColor;
-    animation: hud-pulse 1s ease-in-out infinite, status-color 10s ease infinite;
+    animation: hud-pulse 1s ease-in-out infinite;
+}
+
+.hud-pulse-dot-orange {
+    background: #ffaa00;
+}
+
+.hud-pulse-dot-blue {
+    background: #44aaff;
 }
 
 .hud-label {
@@ -613,24 +627,29 @@ body {
     font-weight: 500;
 }
 
+.hud-cancel-btn {
+    position: absolute;
+    left: calc(50% + 110px);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    animation: cancel-btn-toggle 10s ease infinite;
+    cursor: pointer;
+    z-index: 3;
+}
+
 .demo-cursor {
     position: absolute;
     z-index: 10;
     pointer-events: none;
     opacity: 0;
     animation: cursor-move 10s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-.hud-label-transcribing {
-    opacity: 0;
-    visibility: hidden;
-    animation: label-transcribing 10s ease infinite;
-}
-
-.hud-label-enhancing {
-    opacity: 0;
-    visibility: hidden;
-    animation: label-enhancing 10s ease infinite;
 }
 
 /* Waveform bar animations (prime-ish durations) */
@@ -1057,26 +1076,9 @@ body {
     100% { opacity: 0; visibility: hidden; }
 }
 
-@keyframes status-toggle {
-    0% { opacity: 0; visibility: hidden; }
-    58% { opacity: 1; visibility: visible; }
-    75% { opacity: 1; visibility: visible; }
-    78% { opacity: 0; visibility: hidden; }
-    100% { opacity: 0; visibility: hidden; }
-}
-
 @keyframes hud-pulse {
     0%, 100% { transform: scale(1); opacity: 1; }
     50% { transform: scale(1.2); opacity: 0.6; }
-}
-
-@keyframes status-color {
-    0% { color: #ffaa00; }
-    58% { color: #ffaa00; }
-    68% { color: #ffaa00; }
-    70% { color: #44aaff; }
-    75% { color: #44aaff; }
-    100% { color: #ffaa00; }
 }
 
 @keyframes wave1 { 0% { height: 4px; } 50% { height: 16px; } 100% { height: 4px; } }
@@ -1105,20 +1107,30 @@ body {
     0% { opacity: 0.5; } 78% { opacity: 0.5; } 80% { opacity: 1; } 95% { opacity: 1; } 97% { opacity: 0.5; } 100% { opacity: 0.5; }
 }
 
-@keyframes label-transcribing {
+@keyframes layer-transcribing {
     0% { opacity: 0; visibility: hidden; }
+    57% { opacity: 0; visibility: hidden; }
     58% { opacity: 1; visibility: visible; }
     68% { opacity: 1; visibility: visible; }
-    70% { opacity: 0; visibility: hidden; }
+    69% { opacity: 0; visibility: hidden; }
     100% { opacity: 0; visibility: hidden; }
 }
 
-@keyframes label-enhancing {
+@keyframes layer-enhancing {
     0% { opacity: 0; visibility: hidden; }
-    68% { opacity: 0; visibility: hidden; }
+    69% { opacity: 0; visibility: hidden; }
     70% { opacity: 1; visibility: visible; }
     75% { opacity: 1; visibility: visible; }
-    78% { opacity: 0; visibility: hidden; }
+    76% { opacity: 0; visibility: hidden; }
+    100% { opacity: 0; visibility: hidden; }
+}
+
+@keyframes cancel-btn-toggle {
+    0% { opacity: 0; visibility: hidden; }
+    18% { opacity: 0; visibility: hidden; }
+    20% { opacity: 1; visibility: visible; }
+    75% { opacity: 1; visibility: visible; }
+    76% { opacity: 0; visibility: hidden; }
     100% { opacity: 0; visibility: hidden; }
 }
 
@@ -1144,11 +1156,11 @@ body {
     .hud-pill-content,
     .hud-listening-layer,
     .hud-bars .bar,
-    .hud-status,
+    .hud-transcribing-layer,
+    .hud-enhancing-layer,
     .hud-pulse-dot,
+    .hud-cancel-btn,
     .demo-cursor,
-    .hud-label-transcribing,
-    .hud-label-enhancing,
     .demo-stages .stage-label {
         animation: none !important;
     }
