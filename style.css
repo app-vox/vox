@@ -627,6 +627,26 @@ body {
 .demo-stages .stage-label:nth-child(3) { animation: stage-enhance     10s ease infinite; }
 .demo-stages .stage-label:nth-child(4) { animation: stage-paste       10s ease infinite; }
 
+@media (max-width: 639px) {
+    .hud-animation-wrapper {
+        transform: scale(0.8);
+        transform-origin: center center;
+        min-height: 120px;
+    }
+}
+
+@media (max-width: 400px) {
+    .hud-animation-wrapper {
+        transform: scale(0.65);
+        min-height: 100px;
+    }
+}
+
+[data-theme="light"] .demo-cursor svg path {
+    fill: var(--bg-primary);
+    stroke: var(--text-primary);
+}
+
 /* Stage Labels */
 .demo-stages {
     display: grid;
