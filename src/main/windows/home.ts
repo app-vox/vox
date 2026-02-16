@@ -17,8 +17,9 @@ function setAppMenu(): void {
 
 let homeWindow: BrowserWindow | null = null;
 let forceQuit = false;
+const isMac = process.platform === "darwin";
 
-if (process.platform === "darwin") {
+if (isMac) {
   app.on("before-quit", () => {
     forceQuit = true;
   });
@@ -113,7 +114,7 @@ export function openHome(onClosed: () => void, initialTab?: string): void {
     }
   });
 
-  if (process.platform === "darwin") {
+  if (isMac) {
     homeWindow.on("close", (event) => {
       if (!forceQuit) {
         event.preventDefault();
