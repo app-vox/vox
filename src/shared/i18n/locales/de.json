@@ -337,5 +337,11 @@
   "general.analytics.hint": "Helfen Sie Vox zu verbessern, indem Sie anonyme Nutzungsdaten teilen. Es werden keine persönlichen Informationen oder Transkriptionsinhalte erfasst.",
   "general.hud.targetDisplay": "Bildschirm",
   "general.hud.systemDefault": "Systemstandard",
-  "general.hud.primaryDisplay": "Primär"
+  "general.hud.primaryDisplay": "Primär",
+  "general.performance.title": "Leistung",
+  "general.performance.description": "Reduzieren Sie die visuelle Komplexität für ein leichteres Erlebnis.",
+  "general.performance.reduceAnimations": "Animationen reduzieren",
+  "general.performance.reduceAnimationsHint": "Deaktiviert alle CSS-Übergänge und Animationen in der App.",
+  "general.performance.reduceVisualEffects": "Visuelle Effekte reduzieren",
+  "general.performance.reduceVisualEffectsHint": "Entfernt Schatten, Unschärfe, Backdrop-Effekte und Verläufe für leichteres Rendering."
 }

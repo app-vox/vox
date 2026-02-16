@@ -337,5 +337,11 @@
   "general.analytics.hint": "Ajude a melhorar o Vox compartilhando dados de uso anônimos. Nenhuma informação pessoal ou conteúdo de transcrição é coletado.",
   "general.hud.targetDisplay": "Monitor",
   "general.hud.systemDefault": "Padrão do sistema",
-  "general.hud.primaryDisplay": "Principal"
+  "general.hud.primaryDisplay": "Principal",
+  "general.performance.title": "Desempenho",
+  "general.performance.description": "Reduza a complexidade visual para uma experiência mais leve.",
+  "general.performance.reduceAnimations": "Reduzir animações",
+  "general.performance.reduceAnimationsHint": "Desativa todas as transições e animações CSS no app.",
+  "general.performance.reduceVisualEffects": "Reduzir efeitos visuais",
+  "general.performance.reduceVisualEffectsHint": "Remove sombras, desfoque, efeitos de backdrop e gradientes para renderização mais leve."
 }
