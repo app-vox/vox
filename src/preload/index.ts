@@ -49,6 +49,7 @@ export interface VoxAPI {
   config: {
     load(): Promise<import("../shared/config").VoxConfig>;
     save(config: import("../shared/config").VoxConfig): Promise<void>;
+    onConfigChanged(callback: () => void): () => void;
   };
   models: {
     list(): Promise<ModelInfo[]>;
@@ -112,14 +113,6 @@ export interface VoxAPI {
   audio: {
     previewCue(cueType: string): Promise<void>;
   };
-  indicator: {
-    cancelRecording(): Promise<void>;
-    setPosition(nx: number, ny: number): Promise<void>;
-    showPreview(): Promise<void>;
-    hidePreview(): Promise<void>;
-    showHighlight(): Promise<void>;
-    hideHighlight(): Promise<void>;
-  };
   hud: {
     setPosition(nx: number, ny: number): Promise<void>;
     showHighlight(): Promise<void>;
@@ -135,9 +128,8 @@ export interface VoxAPI {
     getRuntimeState(): Promise<{
       shortcutState: string;
       isRecording: boolean;
-      indicatorVisible: boolean;
-      indicatorMode: string | null;
       hudVisible: boolean;
+      hudState: string;
       isListening: boolean;
       hasModel: boolean;
       trayActive: boolean;
@@ -166,6 +158,11 @@ const voxApi: VoxAPI = {
   config: {
     load: () => ipcRenderer.invoke("config:load"),
     save: (config) => ipcRenderer.invoke("config:save", config),
+    onConfigChanged: (callback) => {
+      const handler = () => callback();
+      ipcRenderer.on("config:changed", handler);
+      return () => ipcRenderer.removeListener("config:changed", handler);
+    },
   },
   models: {
     list: () => ipcRenderer.invoke("models:list"),
@@ -243,14 +240,6 @@ const voxApi: VoxAPI = {
   audio: {
     previewCue: (cueType) => ipcRenderer.invoke("audio:preview-cue", cueType),
   },
-  indicator: {
-    cancelRecording: () => ipcRenderer.invoke("indicator:cancel-recording"),
-    setPosition: (nx, ny) => ipcRenderer.invoke("indicator:set-position", nx, ny),
-    showPreview: () => ipcRenderer.invoke("indicator:show-preview"),
-    hidePreview: () => ipcRenderer.invoke("indicator:hide-preview"),
-    showHighlight: () => ipcRenderer.invoke("indicator:show-highlight"),
-    hideHighlight: () => ipcRenderer.invoke("indicator:hide-highlight"),
-  },
   hud: {
     setPosition: (nx, ny) => ipcRenderer.invoke("hud:set-position", nx, ny),
     showHighlight: () => ipcRenderer.invoke("hud:show-highlight"),
@@ -280,6 +269,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
   hudDisable: () => ipcRenderer.invoke("hud:disable"),
   hudDrag: (dx: number, dy: number) => ipcRenderer.invoke("hud:drag", dx, dy),
   hudDragEnd: () => ipcRenderer.invoke("hud:drag-end"),
-  indicatorDrag: (dx: number, dy: number) => ipcRenderer.invoke("indicator:drag", dx, dy),
-  indicatorDragEnd: () => ipcRenderer.invoke("indicator:drag-end"),
+  setIgnoreMouseEvents: (ignore: boolean) => ipcRenderer.invoke("hud:set-ignore-mouse", ignore),
+  hudDismiss: () => ipcRenderer.invoke("hud:dismiss"),
 });

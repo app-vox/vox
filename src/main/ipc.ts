@@ -1,5 +1,6 @@
-import { app, BrowserWindow, clipboard, ipcMain, nativeImage, nativeTheme, safeStorage, systemPreferences, shell, screen } from "electron";
+import { app, BrowserWindow, clipboard, ipcMain, nativeImage, nativeTheme, safeStorage, session, systemPreferences, shell, screen } from "electron";
 import * as fs from "fs";
+import log from "electron-log/main";
 import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
 import { HistoryManager } from "./history/manager";
@@ -9,6 +10,8 @@ import { getResourcePath } from "./resources";
 import { SetupChecker } from "./setup/checker";
 import { checkForUpdates, getUpdateState, quitAndInstall } from "./updater";
 import { t } from "../shared/i18n";
+
+const testLog = log.scope("LlmTest");
 
 export function registerIpcHandlers(
   configManager: ConfigManager,
@@ -101,24 +104,38 @@ export function registerIpcHandlers(
     const { createLlmProvider } = await import("./llm/factory");
     const { computeLlmConfigHash } = await import("../shared/llm-config-hash");
 
-    // Use config sent directly from the renderer to avoid stale disk reads
+    // Use config sent directly from the renderer to avoid stale disk reads.
+    // Force the guard fields so the factory ALWAYS creates a real provider —
+    // the dynamic import can drop the `forTest` options bag in bundled builds.
     const config = rendererConfig;
+    config.enableLlmEnhancement = true;
+    config.llmConnectionTested = true;
+    config.llmConfigHash = computeLlmConfigHash(config);
+
+    testLog.warn(">>> TEST START provider=%s", config.llm.provider);
 
     try {
-      const llm = createLlmProvider(config, { forTest: true });
-      await llm.correct("Hello");
+      // Clear HTTP cache to ensure a fresh network request
+      await session.defaultSession.clearCache();
+      const llm = createLlmProvider(config);
+      testLog.warn(">>> Provider created: %s", llm.constructor.name);
+
+      // Use unique payload each time to defeat any HTTP/proxy caching
+      const nonce = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      testLog.warn(">>> Calling llm.correct() nonce=%s", nonce);
+      await llm.correct(`Connection test ${nonce}`);
+      testLog.warn(">>> llm.correct() OK");
 
       config.llmConnectionTested = true;
       config.llmConfigHash = computeLlmConfigHash(config);
       configManager.save(config);
-      onConfigChange?.();
 
       return { ok: true };
     } catch (err: unknown) {
+      testLog.warn(">>> llm.correct() THREW: %s", err instanceof Error ? err.message : String(err));
       config.llmConnectionTested = false;
       config.llmConfigHash = "";
       configManager.save(config);
-      onConfigChange?.();
 
       return { ok: false, error: err instanceof Error ? err.message : String(err) };
     }
