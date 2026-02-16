@@ -2,6 +2,24 @@
   border-color: var(--color-accent);
 }
 
+.rerunSetup {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  background: none;
+  border: none;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  padding: var(--spacing-1) 0;
+  margin-bottom: var(--spacing-3);
+
+  &:hover {
+    color: var(--color-accent);
+    text-decoration: underline;
+  }
+}
+
 .setupContent {
   display: flex;
   align-items: center;

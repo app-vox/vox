@@ -241,6 +241,18 @@ export function GeneralPanel() {
     <>
       <OfflineBanner />
 
+      {config.onboardingCompleted && (
+        <button
+          className={styles.rerunSetup}
+          onClick={async () => {
+            updateConfig({ onboardingCompleted: false });
+            await saveConfig(false);
+          }}
+        >
+          {t("onboarding.rerun.link")}
+        </button>
+      )}
+
       {!loading && !setupComplete && (
         <div className={`${card.card} ${styles.setupBanner}`}>
           <div className={card.body}>
