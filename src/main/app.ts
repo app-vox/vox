@@ -60,9 +60,15 @@ function setupPipeline(): void {
     llmModelName: config.enableLlmEnhancement ? getLlmModelName(config.llm) : undefined,
     analytics,
     onStage: (stage) => {
-      shortcutManager?.showIndicator(stage);
-      if (stage === "enhancing") {
-        shortcutManager?.getHud().setState("enhancing");
+      shortcutManager?.getHud().setState(stage);
+    },
+    onLlmFailed: () => {
+      const cfg = configManager.load();
+      cfg.llmConnectionTested = false;
+      cfg.llmConfigHash = "";
+      configManager.save(cfg);
+      for (const win of BrowserWindow.getAllWindows()) {
+        win.webContents.send("config:changed");
       }
     },
     onComplete: (result) => {
@@ -185,9 +191,8 @@ app.whenReady().then(async () => {
     return {
       shortcutState: shortcutManager?.getStateMachineState() ?? "idle",
       isRecording: shortcutManager?.isRecording() ?? false,
-      indicatorVisible: shortcutManager?.getIndicator().isVisible() ?? false,
-      indicatorMode: shortcutManager?.getIndicator().getMode(),
       hudVisible: shortcutManager?.getHud().isVisible() ?? false,
+      hudState: shortcutManager?.getHud().getState() ?? "idle",
       ...getTrayState(),
     };
   });
@@ -244,13 +249,9 @@ app.whenReady().then(async () => {
   openHome(reloadConfig);
 });
 
-app.on("activate", () => {
-  const visibleWindows = BrowserWindow.getAllWindows().filter(win =>
-    win.isVisible() && !win.isDestroyed() && win.getTitle() === "Vox"
-  );
-  if (visibleWindows.length === 0) {
-    openHome(reloadConfig);
-  }
+app.on("activate", (_event, hasVisibleWindows) => {
+  if (hasVisibleWindows) return;
+  openHome(reloadConfig);
 });
 
 app.on("before-quit", () => {
