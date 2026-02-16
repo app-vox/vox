@@ -560,6 +560,32 @@ export function DevPanel() {
       ],
     },
     {
+      title: "Performance",
+      overrideFields: ["reduceAnimations", "reduceVisualEffects"],
+      rows: [
+        {
+          label: "Reduce Animations",
+          overrideField: "reduceAnimations",
+          render: () => (
+            <>
+              <span className={styles.realValue}>{boolDot(config?.reduceAnimations)}</span>
+              {ov && <OverrideBool field="reduceAnimations" {...ovProps} />}
+            </>
+          ),
+        },
+        {
+          label: "Reduce Effects",
+          overrideField: "reduceVisualEffects",
+          render: () => (
+            <>
+              <span className={styles.realValue}>{boolDot(config?.reduceVisualEffects)}</span>
+              {ov && <OverrideBool field="reduceVisualEffects" {...ovProps} />}
+            </>
+          ),
+        },
+      ],
+    },
+    {
       title: "Audio Cues",
       rows: [
         { label: "Start", render: () => <>{config?.recordingAudioCue || "none"}</> },
