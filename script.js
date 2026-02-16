@@ -322,8 +322,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }, CYCLE_MS - 200);
         };
 
+        // Anchor JS to CSS master clock via animationiteration event
+        const widget = document.querySelector('.hud-widget');
+        if (widget) {
+            widget.addEventListener('animationiteration', () => {
+                runCycle();
+            });
+        }
         runCycle();
-        setInterval(runCycle, CYCLE_MS);
     };
 
     // Start HUD typing animation synced with CSS cycle

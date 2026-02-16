@@ -514,6 +514,8 @@ body {
     justify-content: center;
     overflow: hidden;
     z-index: 2;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     animation: widget-morph 10s ease infinite, widget-glow 10s ease infinite;
 }
 
@@ -598,6 +600,8 @@ body {
 }
 
 .hud-label-transcribing {
+    opacity: 0;
+    visibility: hidden;
     animation: label-transcribing 10s ease infinite;
 }
 
@@ -692,7 +696,6 @@ body {
         margin-bottom: 0.5rem;
     }
 }
-
 
 .stage-icon.record {
     background-color: rgba(239, 68, 68, 0.1);
@@ -998,7 +1001,7 @@ body {
 @keyframes widget-morph {
     0% { width: 42px; height: 42px; border-radius: 50%; background: rgba(25, 25, 25, 0.92); }
     13% { width: 42px; height: 42px; border-radius: 50%; background: rgba(25, 25, 25, 0.92); }
-    15% { width: 42px; height: 42px; border-radius: 50%; }
+    15% { width: 42px; height: 42px; border-radius: 50%; background: rgba(25, 25, 25, 0.92); }
     18% { width: 200px; height: 36px; border-radius: 18px; background: rgba(255, 68, 68, 0.9); }
     45% { width: 200px; height: 36px; border-radius: 18px; background: rgba(255, 68, 68, 0.9); }
     48% { width: 200px; height: 36px; border-radius: 18px; background: rgba(255, 170, 0, 0.9); }
@@ -1122,6 +1125,24 @@ body {
     75% { box-shadow: 0 2px 8px rgba(68,170,255,0.3), 0 4px 16px rgba(68,170,255,0.2); }
     78% { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); }
     100% { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .hud-widget,
+    .hud-icon-idle,
+    .hud-pill-content,
+    .hud-stop-icon,
+    .hud-bars,
+    .hud-bars .bar,
+    .hud-status,
+    .hud-pulse-dot,
+    .demo-cursor,
+    .hud-label-transcribing,
+    .hud-label-enhancing,
+    .demo-stages .stage-label {
+        animation: none !important;
+    }
 }
 
 /* Focus Styles for Accessibility */
