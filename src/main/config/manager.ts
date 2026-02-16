@@ -15,16 +15,6 @@ export function migrateHudPosition(raw: string | undefined): WidgetPosition {
   return map[raw] ?? "bottom-center";
 }
 
-export function migrateOverlayPosition(raw: string | undefined): WidgetPosition {
-  if (!raw) return "top-center";
-  if (raw.includes("-") || raw === "custom") return raw as WidgetPosition;
-  const map: Record<string, WidgetPosition> = {
-    top: "top-center",
-    bottom: "bottom-center",
-  };
-  return map[raw] ?? "top-center";
-}
-
 export interface SecretStore {
   encrypt(plainText: string): string;
   decrypt(cipherText: string): string;
@@ -80,12 +70,10 @@ export class ConfigManager {
         analyticsEnabled: saved.analyticsEnabled ?? defaults.analyticsEnabled,
         showHud: saved.showHud ?? defaults.showHud,
         hudShowOnHover: saved.hudShowOnHover ?? defaults.hudShowOnHover,
-        hudPosition: migrateHudPosition(saved.hudPosition),
-        hudCustomX: saved.hudCustomX ?? defaults.hudCustomX,
-        hudCustomY: saved.hudCustomY ?? defaults.hudCustomY,
-        overlayPosition: migrateOverlayPosition(saved.overlayPosition),
-        overlayCustomX: saved.overlayCustomX ?? defaults.overlayCustomX,
-        overlayCustomY: saved.overlayCustomY ?? defaults.overlayCustomY,
+        showHudActions: saved.showHudActions ?? defaults.showHudActions,
+        hudPosition: migrateHudPosition(saved.hudPosition ?? saved.overlayPosition),
+        hudCustomX: saved.hudCustomX ?? saved.overlayCustomX ?? defaults.hudCustomX,
+        hudCustomY: saved.hudCustomY ?? saved.overlayCustomY ?? defaults.hudCustomY,
         targetDisplayId: saved.targetDisplayId ?? defaults.targetDisplayId,
       };
 

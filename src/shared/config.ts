@@ -18,10 +18,6 @@ export type WidgetPosition =
   | "bottom-left" | "bottom-center" | "bottom-right"
   | "custom";
 
-/** @deprecated Use WidgetPosition instead */
-export type HudPosition = WidgetPosition;
-/** @deprecated Use WidgetPosition instead */
-export type OverlayPosition = WidgetPosition;
 
 export interface FoundryLlmConfig {
   provider: "foundry";
@@ -104,12 +100,10 @@ export interface VoxConfig {
   errorAudioCue: AudioCueType;
   showHud: boolean;
   hudShowOnHover: boolean;
+  showHudActions: boolean;
   hudPosition: WidgetPosition;
   hudCustomX: number;
   hudCustomY: number;
-  overlayPosition: WidgetPosition;
-  overlayCustomX: number;
-  overlayCustomY: number;
   targetDisplayId: number | null;
 }
 
@@ -142,12 +136,10 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     errorAudioCue: "error",
     showHud: false,
     hudShowOnHover: false,
+    showHudActions: true,
     hudPosition: "bottom-center",
     hudCustomX: 0.5,
     hudCustomY: 0.9,
-    overlayPosition: "top-center",
-    overlayCustomX: 0.5,
-    overlayCustomY: 0.1,
     targetDisplayId: null,
   };
 }
