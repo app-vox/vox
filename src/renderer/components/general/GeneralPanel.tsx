@@ -676,6 +676,45 @@ export function GeneralPanel() {
           </label>
         </div>
       </div>
+
+      <div className={card.card}>
+        <div className={card.header}>
+          <h2>{t("general.performance.title")}</h2>
+          <p className={card.description}>{t("general.performance.description")}</p>
+        </div>
+        <div className={card.body}>
+          <label className={styles.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={config.reduceAnimations}
+              onChange={async () => {
+                updateConfig({ reduceAnimations: !config.reduceAnimations });
+                await saveConfig(false);
+                triggerToast();
+              }}
+            />
+            <div>
+              <div className={styles.checkboxLabel}>{t("general.performance.reduceAnimations")}</div>
+              <div className={styles.checkboxDesc}>{t("general.performance.reduceAnimationsHint")}</div>
+            </div>
+          </label>
+          <label className={styles.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={config.reduceVisualEffects}
+              onChange={async () => {
+                updateConfig({ reduceVisualEffects: !config.reduceVisualEffects });
+                await saveConfig(false);
+                triggerToast();
+              }}
+            />
+            <div>
+              <div className={styles.checkboxLabel}>{t("general.performance.reduceVisualEffects")}</div>
+              <div className={styles.checkboxDesc}>{t("general.performance.reduceVisualEffectsHint")}</div>
+            </div>
+          </label>
+        </div>
+      </div>
     </>
   );
 }
