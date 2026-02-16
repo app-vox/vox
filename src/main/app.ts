@@ -162,7 +162,7 @@ app.whenReady().then(async () => {
   historyManager.cleanup();
 
   const hasAccessibility = isAccessibilityGranted();
-  if (!hasAccessibility) {
+  if (!hasAccessibility && initialConfig.onboardingCompleted) {
     const response = await dialog.showMessageBox({
       type: "warning",
       title: t("dialog.accessibilityTitle"),
