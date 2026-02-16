@@ -684,6 +684,26 @@ function setAudioLevels(levels) {
     bar.style.height = h + 'px';
   });
 }
+function setPerformanceFlags(reduceAnimations, reduceEffects) {
+  var id = 'perf-overrides';
+  var existing = document.getElementById(id);
+  if (existing) existing.remove();
+  var rules = [];
+  if (reduceAnimations) {
+    rules.push('*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; }');
+  }
+  if (reduceEffects) {
+    rules.push('*, *::before, *::after { box-shadow: none !important; text-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; filter: none !important; }');
+    rules.push('.bar { box-shadow: none !important; }');
+    rules.push('.dot { box-shadow: none !important; }');
+  }
+  if (rules.length > 0) {
+    var style = document.createElement('style');
+    style.id = id;
+    style.textContent = rules.join(' ');
+    document.head.appendChild(style);
+  }
+}
 </script>
 </body></html>`;
 }
@@ -732,6 +752,8 @@ export class HudWindow {
   private hoverTimer: ReturnType<typeof setInterval> | null = null;
   private flashTimer: ReturnType<typeof setTimeout> | null = null;
   private hideTimer: ReturnType<typeof setTimeout> | null = null;
+  private reduceAnimations = false;
+  private reduceVisualEffects = false;
 
   show(alwaysShow: boolean, showOnHover: boolean, position: WidgetPosition = "bottom-center"): void {
     const positionChanged = this.position !== position;
@@ -795,6 +817,7 @@ export class HudWindow {
       this.contentReady = true;
       this.execJs(`setAlwaysShow(${this.alwaysShow})`);
       this.sendTitles();
+      this.execJs(`setPerformanceFlags(${this.reduceAnimations}, ${this.reduceVisualEffects})`);
       if (this.pendingUpdate) {
         this.execSetState(this.pendingUpdate.state);
         this.pendingUpdate = null;
@@ -1104,5 +1127,11 @@ export class HudWindow {
 
   setShowActions(show: boolean): void {
     this.execJs(`setShowActions(${show})`);
+  }
+
+  setPerformanceFlags(reduceAnimations: boolean, reduceVisualEffects: boolean): void {
+    this.reduceAnimations = reduceAnimations;
+    this.reduceVisualEffects = reduceVisualEffects;
+    this.execJs(`setPerformanceFlags(${reduceAnimations}, ${reduceVisualEffects})`);
   }
 }
