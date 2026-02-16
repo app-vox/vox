@@ -514,6 +514,7 @@ body {
     justify-content: center;
     overflow: hidden;
     z-index: 2;
+    animation: widget-morph 10s ease infinite, widget-glow 10s ease infinite;
 }
 
 .hud-icon-idle {
@@ -522,6 +523,7 @@ body {
     align-items: center;
     justify-content: center;
     position: absolute;
+    animation: idle-icon-toggle 10s ease infinite;
 }
 
 .hud-pill-content {
@@ -533,6 +535,7 @@ body {
     height: 100%;
     opacity: 0;
     visibility: hidden;
+    animation: pill-content-toggle 10s ease infinite;
 }
 
 .hud-stop-icon {
@@ -541,6 +544,7 @@ body {
     align-items: center;
     flex-shrink: 0;
     opacity: 0;
+    animation: stop-toggle 10s ease infinite;
 }
 
 .hud-bars {
@@ -550,6 +554,7 @@ body {
     height: 100%;
     opacity: 0;
     visibility: hidden;
+    animation: bars-toggle 10s ease infinite;
 }
 
 .hud-bars .bar {
@@ -557,6 +562,7 @@ body {
     height: 4px;
     border-radius: 1.5px;
     background: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
 }
 
 .hud-status {
@@ -566,6 +572,7 @@ body {
     white-space: nowrap;
     opacity: 0;
     visibility: hidden;
+    animation: status-toggle 10s ease infinite;
 }
 
 .hud-pulse-dot {
@@ -573,6 +580,7 @@ body {
     height: 8px;
     border-radius: 50%;
     background: currentColor;
+    animation: hud-pulse 1s ease-in-out infinite, status-color 10s ease infinite;
 }
 
 .hud-label {
@@ -586,7 +594,38 @@ body {
     z-index: 10;
     pointer-events: none;
     opacity: 0;
+    animation: cursor-move 10s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
+
+.hud-label-transcribing {
+    animation: label-transcribing 10s ease infinite;
+}
+
+.hud-label-enhancing {
+    opacity: 0;
+    visibility: hidden;
+    animation: label-enhancing 10s ease infinite;
+}
+
+/* Waveform bar animations (prime-ish durations) */
+.hud-bars .bar:nth-child(1)  { animation: wave1  0.30s ease-in-out infinite alternate; }
+.hud-bars .bar:nth-child(2)  { animation: wave2  0.37s ease-in-out infinite alternate; }
+.hud-bars .bar:nth-child(3)  { animation: wave3  0.43s ease-in-out infinite alternate; }
+.hud-bars .bar:nth-child(4)  { animation: wave4  0.31s ease-in-out infinite alternate; }
+.hud-bars .bar:nth-child(5)  { animation: wave5  0.41s ease-in-out infinite alternate; }
+.hud-bars .bar:nth-child(6)  { animation: wave6  0.29s ease-in-out infinite alternate; }
+.hud-bars .bar:nth-child(7)  { animation: wave7  0.37s ease-in-out infinite alternate; }
+.hud-bars .bar:nth-child(8)  { animation: wave8  0.43s ease-in-out infinite alternate; }
+.hud-bars .bar:nth-child(9)  { animation: wave9  0.33s ease-in-out infinite alternate; }
+.hud-bars .bar:nth-child(10) { animation: wave10 0.39s ease-in-out infinite alternate; }
+.hud-bars .bar:nth-child(11) { animation: wave11 0.47s ease-in-out infinite alternate; }
+.hud-bars .bar:nth-child(12) { animation: wave12 0.31s ease-in-out infinite alternate; }
+
+/* Stage label animations (driven by CSS, not JS) */
+.demo-stages .stage-label:nth-child(1) { animation: stage-record     10s ease infinite; }
+.demo-stages .stage-label:nth-child(2) { animation: stage-transcribe  10s ease infinite; }
+.demo-stages .stage-label:nth-child(3) { animation: stage-enhance     10s ease infinite; }
+.demo-stages .stage-label:nth-child(4) { animation: stage-paste       10s ease infinite; }
 
 /* Stage Labels */
 .demo-stages {
