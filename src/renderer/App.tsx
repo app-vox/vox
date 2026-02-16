@@ -21,6 +21,7 @@ import { ScrollButtons } from "./components/ui/ScrollButtons";
 import { useTheme } from "./hooks/use-theme";
 import { usePerformance } from "./hooks/use-performance";
 import { I18nProvider } from "./i18n-context";
+import { OnboardingOverlay } from "./components/onboarding/OnboardingOverlay";
 
 // Lazy-load DevPanel so the entire module tree is excluded from production bundles.
 // In production, import.meta.env.DEV is false and this code path is dead-code-eliminated.
@@ -86,6 +87,7 @@ export function App() {
   }
 
   const Panel = PANELS[activeTab] ?? WhisperPanel;
+  const onboardingCompleted = useConfigStore((s) => s.config?.onboardingCompleted);
 
   return (
     <I18nProvider>
@@ -99,6 +101,7 @@ export function App() {
           <ScrollButtons containerRef={contentRef} />
         </div>
       </div>
+      {onboardingCompleted === false && <OnboardingOverlay />}
     </I18nProvider>
   );
 }
