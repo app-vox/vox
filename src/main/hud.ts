@@ -14,15 +14,6 @@ const MIN_SCALE = 0.55;
 
 export type HudState = "idle" | "initializing" | "listening" | "transcribing" | "enhancing" | "error" | "canceled";
 
-const STATE_COLORS: Record<string, string> = {
-  idle: "rgba(25, 25, 25, 0.92)",
-  initializing: "#888888",
-  listening: "#ff4444",
-  transcribing: "#ffaa00",
-  enhancing: "#44aaff",
-  error: "#fbbf24",
-  canceled: "#fbbf24",
-};
 
 function getLogoDataUrl(): string {
   try {
@@ -881,7 +872,7 @@ export class HudWindow {
     this.execJs(`setAudioLevels(${JSON.stringify(levels)})`);
   }
 
-  showError(durationMs = 3000, customText?: string): void {
+  showError(_durationMs = 3000, customText?: string): void {
     this.setState("error", customText);
   }
 

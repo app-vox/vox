@@ -228,7 +228,6 @@ export function TranscriptionsPanel() {
                   </button>
                 )}
               </div>
-              {/* eslint-disable i18next/no-literal-string */}
               <div className={styles.pageSizeSelect}>
                 <CustomSelect
                   value={String(pageSize)}
@@ -240,7 +239,6 @@ export function TranscriptionsPanel() {
                   onChange={(value) => setPageSize(Number(value))}
                 />
               </div>
-              {/* eslint-enable i18next/no-literal-string */}
             </div>
           )}
         </div>
