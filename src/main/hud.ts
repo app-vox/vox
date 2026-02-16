@@ -229,7 +229,7 @@ function buildHudHtml(): string {
     padding: 0 12px;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s ease 0.1s;
+    transition: opacity 0.15s ease 0.1s;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
     color: rgba(255,255,255,0.95);
     font-size: 12px;
@@ -631,21 +631,39 @@ function setState(newState, cfg) {
 
   var isIdle = newState === 'idle';
   var isPill = !isIdle;
+  var wasInPill = prevState !== 'idle';
 
-  widget.className = 'widget' + (isPill ? ' pill ' + newState : '');
+  if (isIdle && wasInPill) {
+    // Fade out pill content first, then morph shape after a delay
+    pillContent.classList.remove('on');
+    setTimeout(function() {
+      if (currentState !== 'idle') return;
+      widget.className = 'widget';
+      circleContent.classList.remove('off');
+      if (isMouseOver && alwaysShow) {
+        document.getElementById('v-logo').classList.add('off');
+        document.getElementById('mic-icon').classList.remove('off');
+        if (showActions) startHoverActionsTimer();
+      } else {
+        document.getElementById('v-logo').classList.remove('off');
+        document.getElementById('mic-icon').classList.add('off');
+      }
+    }, 150);
+  } else {
+    widget.className = 'widget' + (isPill ? ' pill ' + newState : '');
+    circleContent.classList.toggle('off', isPill);
+    pillContent.classList.toggle('on', isPill);
 
-  circleContent.classList.toggle('off', isPill);
-  pillContent.classList.toggle('on', isPill);
+    if (isPill && cfg.mode) setPillMode(cfg.mode);
 
-  if (isPill && cfg.mode) setPillMode(cfg.mode);
-
-  if (isIdle && isMouseOver && alwaysShow) {
-    document.getElementById('v-logo').classList.add('off');
-    document.getElementById('mic-icon').classList.remove('off');
-    if (showActions) startHoverActionsTimer();
-  } else if (isIdle) {
-    document.getElementById('v-logo').classList.remove('off');
-    document.getElementById('mic-icon').classList.add('off');
+    if (isIdle && isMouseOver && alwaysShow) {
+      document.getElementById('v-logo').classList.add('off');
+      document.getElementById('mic-icon').classList.remove('off');
+      if (showActions) startHoverActionsTimer();
+    } else if (isIdle) {
+      document.getElementById('v-logo').classList.remove('off');
+      document.getElementById('mic-icon').classList.add('off');
+    }
   }
 
   var circleCancel = document.getElementById('circle-cancel');
