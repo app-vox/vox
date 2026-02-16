@@ -152,18 +152,71 @@ export function GeneralPanel() {
 
   const needsPermissions = !loading && setupComplete && permissionStatus !== null && (permissionStatus.accessibility !== true || permissionStatus.microphone !== "granted");
 
+  const flashSelect = useCallback((target: "hud" | "overlay") => {
+    const setter = target === "hud" ? setFlashHudSelect : setFlashOverlaySelect;
+    setter(true);
+    setTimeout(() => setter(false), 400);
+  }, []);
+
+  const getPreviewPosition = useCallback((pos: WidgetPosition) => {
+    if (pos === "custom") return null;
+    return pos;
+  }, []);
+
+  const handlePreviewMouseDown = useCallback((e: React.MouseEvent, target: "hud" | "overlay") => {
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = previewRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const setDragPos = target === "hud" ? setHudDragPos : setOverlayDragPos;
+    const setHighlight = target === "hud" ? setHudHighlight : setOverlayHighlight;
+
+    const computePos = (ev: { clientX: number; clientY: number }) => ({
+      x: Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width)),
+      y: Math.max(0, Math.min(1, (ev.clientY - rect.top) / rect.height)),
+    });
+
+    setDragPos(computePos(e));
+    setHighlight(true);
+
+    const onMove = (ev: MouseEvent) => {
+      setDragPos(computePos(ev));
+    };
+
+    const onUp = (ev: MouseEvent) => {
+      const pos = computePos(ev);
+      setDragPos(null);
+      setHighlight(false);
+      const wasCustom = target === "hud" ? config?.hudPosition === "custom" : config?.overlayPosition === "custom";
+      if (target === "hud") {
+        updateConfig({ hudPosition: "custom", hudCustomX: pos.x, hudCustomY: pos.y });
+      } else {
+        updateConfig({ overlayPosition: "custom", overlayCustomX: pos.x, overlayCustomY: pos.y });
+      }
+      if (!wasCustom) flashSelect(target);
+      saveConfig(false).then(() => triggerToast());
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  }, [config?.hudPosition, config?.overlayPosition, updateConfig, saveConfig, triggerToast, flashSelect]);
+
+  useEffect(() => {
+    window.voxApi.displays.getAll().then(setAvailableDisplays).catch(() => {});
+    return () => {
+      if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
+    };
+  }, []);
+
   if (!config) return null;
 
   const showSwapDisclaimer = () => {
     setSwapDisclaimer(true);
     if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
     swapTimerRef.current = setTimeout(() => setSwapDisclaimer(false), 3000);
-  };
-
-  const flashSelect = (target: "hud" | "overlay") => {
-    const setter = target === "hud" ? setFlashHudSelect : setFlashOverlaySelect;
-    setter(true);
-    setTimeout(() => setter(false), 400);
   };
 
   const flashPreview = (target: "hud" | "overlay") => {
@@ -231,59 +284,6 @@ export function GeneralPanel() {
     await saveConfig(false);
     triggerToast();
   };
-
-  const getPreviewPosition = useCallback((pos: WidgetPosition) => {
-    if (pos === "custom") return null;
-    return pos;
-  }, []);
-
-  const handlePreviewMouseDown = useCallback((e: React.MouseEvent, target: "hud" | "overlay") => {
-    e.preventDefault();
-    e.stopPropagation();
-    const rect = previewRef.current?.getBoundingClientRect();
-    if (!rect) return;
-
-    const setDragPos = target === "hud" ? setHudDragPos : setOverlayDragPos;
-    const setHighlight = target === "hud" ? setHudHighlight : setOverlayHighlight;
-
-    const computePos = (ev: { clientX: number; clientY: number }) => ({
-      x: Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width)),
-      y: Math.max(0, Math.min(1, (ev.clientY - rect.top) / rect.height)),
-    });
-
-    setDragPos(computePos(e));
-    setHighlight(true);
-
-    const onMove = (ev: MouseEvent) => {
-      setDragPos(computePos(ev));
-    };
-
-    const onUp = (ev: MouseEvent) => {
-      const pos = computePos(ev);
-      setDragPos(null);
-      setHighlight(false);
-      const wasCustom = target === "hud" ? config.hudPosition === "custom" : config.overlayPosition === "custom";
-      if (target === "hud") {
-        updateConfig({ hudPosition: "custom", hudCustomX: pos.x, hudCustomY: pos.y });
-      } else {
-        updateConfig({ overlayPosition: "custom", overlayCustomX: pos.x, overlayCustomY: pos.y });
-      }
-      if (!wasCustom) flashSelect(target);
-      saveConfig(false).then(() => triggerToast());
-      document.removeEventListener("mousemove", onMove);
-      document.removeEventListener("mouseup", onUp);
-    };
-
-    document.addEventListener("mousemove", onMove);
-    document.addEventListener("mouseup", onUp);
-  }, [updateConfig, saveConfig, triggerToast]);
-
-  useEffect(() => {
-    window.voxApi.displays.getAll().then(setAvailableDisplays).catch(() => {});
-    return () => {
-      if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
-    };
-  }, []);
 
   const hudPreviewPos = getPreviewPosition(config.hudPosition);
   const overlayPreviewPos = getPreviewPosition(config.overlayPosition);
