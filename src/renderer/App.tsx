@@ -1,5 +1,6 @@
 import { useEffect, useRef, lazy, Suspense, type JSX } from "react";
 import { useConfigStore } from "./stores/config-store";
+import { useDevValue } from "./stores/dev-overrides-store";
 import { SpinnerIcon } from "../shared/icons";
 
 // Clear dev overrides on startup so the app always starts clean (before any component mounts)
@@ -57,8 +58,10 @@ export function App() {
 
   useTheme(theme);
 
-  const reduceAnimations = useConfigStore((s) => s.config?.reduceAnimations);
-  const reduceVisualEffects = useConfigStore((s) => s.config?.reduceVisualEffects);
+  const rawReduceAnimations = useConfigStore((s) => s.config?.reduceAnimations);
+  const rawReduceVisualEffects = useConfigStore((s) => s.config?.reduceVisualEffects);
+  const reduceAnimations = useDevValue("reduceAnimations", rawReduceAnimations);
+  const reduceVisualEffects = useDevValue("reduceVisualEffects", rawReduceVisualEffects);
   usePerformance(reduceAnimations, reduceVisualEffects);
 
   useEffect(() => {
