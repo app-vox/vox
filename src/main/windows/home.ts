@@ -16,6 +16,14 @@ function setAppMenu(): void {
 }
 
 let homeWindow: BrowserWindow | null = null;
+let forceQuit = false;
+const isMac = process.platform === "darwin";
+
+if (isMac) {
+  app.on("before-quit", () => {
+    forceQuit = true;
+  });
+}
 
 export function openHome(onClosed: () => void, initialTab?: string): void {
   if (homeWindow) {
@@ -105,6 +113,15 @@ export function openHome(onClosed: () => void, initialTab?: string): void {
       menu.popup();
     }
   });
+
+  if (isMac) {
+    homeWindow.on("close", (event) => {
+      if (!forceQuit) {
+        event.preventDefault();
+        homeWindow?.hide();
+      }
+    });
+  }
 
   homeWindow.on("closed", () => {
     homeWindow = null;
