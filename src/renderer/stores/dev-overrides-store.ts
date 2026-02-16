@@ -16,6 +16,8 @@ export interface DevOverrides {
   hideDevVisuals?: boolean;
   visitedDictionary?: boolean;
   visitedShortcuts?: boolean;
+  reduceAnimations?: boolean;
+  reduceVisualEffects?: boolean;
 }
 
 interface DevOverridesState {
