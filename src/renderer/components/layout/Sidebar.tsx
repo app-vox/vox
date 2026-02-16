@@ -171,7 +171,7 @@ export function Sidebar() {
   }));
 
   useEffect(() => {
-    window.voxApi.resources.dataUrl("vox-logo.svg").then(setLogoSrc);
+    window.voxApi.resources.dataUrl("vox-logo-full.png").then(setLogoSrc);
     window.voxApi.resources.dataUrl("trayIcon@8x.png").then(setIconSrc);
   }, []);
 
