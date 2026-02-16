@@ -36,7 +36,7 @@ export function ModelDownloadStep() {
   }, [setModelDownloaded, selectedSize]);
 
   useEffect(() => {
-    refreshModels();
+    refreshModels(); // eslint-disable-line react-hooks/set-state-in-effect
   }, [refreshModels]);
 
   useEffect(() => {
@@ -134,7 +134,9 @@ export function ModelDownloadStep() {
                     <div className={styles.progressBar}>
                       <div className={styles.progressFill} style={{ width: `${percent}%` }} />
                     </div>
+                    {/* eslint-disable-next-line i18next/no-literal-string */}
                     <span className={styles.progressText}>{percent}%</span>
+                    {/* eslint-disable-next-line i18next/no-literal-string */}
                     <button className={styles.cancelBtn} onClick={handleCancel} type="button">&times;</button>
                   </div>
                 ) : model.downloaded ? (
