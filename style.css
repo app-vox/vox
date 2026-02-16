@@ -501,7 +501,7 @@ body {
 .demo-background {
     position: absolute;
     inset: 0;
-    background-image: url('assets/mac-background.png');
+    background-image: url('assets/desktop-background.png');
     background-size: 150%;
     background-position: 50% 0;
     opacity: 0.15;
@@ -1005,9 +1005,9 @@ body {
     10% { transform: translate(2px, 2px); opacity: 1; }
     13% { transform: translate(2px, 2px) scale(0.9); opacity: 1; }
     15% { transform: translate(2px, 2px) scale(1); opacity: 1; }
-    18% { transform: translate(80px, 40px); opacity: 0.5; }
-    20% { transform: translate(100px, 50px); opacity: 0; }
-    100% { transform: translate(100px, 50px); opacity: 0; }
+    18% { transform: translate(60px, -40px); opacity: 0.5; }
+    20% { transform: translate(80px, -60px); opacity: 0; }
+    100% { transform: translate(80px, -60px); opacity: 0; }
 }
 
 @keyframes widget-morph {
