@@ -18,6 +18,7 @@ import { TranscriptionsPanel } from "./components/transcriptions/TranscriptionsP
 import { DictionaryPanel } from "./components/dictionary/DictionaryPanel";
 import { ScrollButtons } from "./components/ui/ScrollButtons";
 import { useTheme } from "./hooks/use-theme";
+import { usePerformance } from "./hooks/use-performance";
 import { I18nProvider } from "./i18n-context";
 
 // Lazy-load DevPanel so the entire module tree is excluded from production bundles.
@@ -55,6 +56,10 @@ export function App() {
   const contentRef = useRef<HTMLElement>(null);
 
   useTheme(theme);
+
+  const reduceAnimations = useConfigStore((s) => s.config?.reduceAnimations);
+  const reduceVisualEffects = useConfigStore((s) => s.config?.reduceVisualEffects);
+  usePerformance(reduceAnimations, reduceVisualEffects);
 
   useEffect(() => {
     loadConfig();
