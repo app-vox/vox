@@ -77,6 +77,7 @@ export function OnboardingOverlay() {
   useEffect(() => {
     if (step === SHORTCUT_LEARN_STEP) {
       window.voxApi.shortcuts.disable();
+      localStorage.setItem("vox:shortcuts-banner-dismissed", "true");
     }
     return () => {
       if (step === SHORTCUT_LEARN_STEP) {
