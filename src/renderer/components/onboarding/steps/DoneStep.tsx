@@ -35,11 +35,11 @@ export function DoneStep({ onComplete, onExploreSettings }: DoneStepProps) {
       </a>
 
       <div className={styles.doneButtonRow}>
-        <button className={`${btn.btn} ${btn.primary} ${styles.ctaButton}`} onClick={onComplete}>
-          {t("onboarding.done.startUsing")}
-        </button>
         <button className={`${btn.btn} ${btn.secondary} ${styles.ctaButton}`} onClick={onExploreSettings}>
           {t("onboarding.done.exploreSettings")}
+        </button>
+        <button className={`${btn.btn} ${btn.primary} ${styles.ctaButton}`} onClick={onComplete}>
+          {t("onboarding.done.startUsing")}
         </button>
       </div>
     </div>

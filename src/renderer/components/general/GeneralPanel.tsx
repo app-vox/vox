@@ -6,7 +6,7 @@ import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useT } from "../../i18n-context";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
 import { useOnboardingStore } from "../onboarding/use-onboarding-store";
-import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, KeyboardIcon, ChevronDownIcon, MoveIcon, RefreshIcon } from "../../../shared/icons";
+import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, KeyboardIcon, ChevronDownIcon, MoveIcon, RefreshIcon, InfoCircleIcon } from "../../../shared/icons";
 import type { ThemeMode, SupportedLanguage, WidgetPosition } from "../../../shared/config";
 import { CustomSelect, type SelectItem } from "../ui/CustomSelect";
 import { OfflineBanner } from "../ui/OfflineBanner";
@@ -246,6 +246,7 @@ export function GeneralPanel() {
         <div className={styles.rerunSetupRow}>
           <button
             className={styles.rerunSetup}
+            title={t("onboarding.rerun.description")}
             onClick={async () => {
               const needsModel = !setupComplete;
               const needsPermissions = permissionStatus.microphone !== "granted" || permissionStatus.accessibility !== true;
@@ -264,6 +265,7 @@ export function GeneralPanel() {
               await saveConfig(false);
             }}
           >
+            <InfoCircleIcon width={14} height={14} />
             {(!setupComplete || permissionStatus.microphone !== "granted" || permissionStatus.accessibility !== true)
               ? t("onboarding.rerun.complete")
               : t("onboarding.rerun.link")}

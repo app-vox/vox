@@ -67,10 +67,10 @@ export function OnboardingOverlay() {
 
   return (
     <div className={styles.overlay}>
+      <button className={styles.closeBtn} onClick={handleSkip} aria-label="Close" type="button">
+        <XIcon width={18} height={18} />
+      </button>
       <div className={styles.container}>
-        <button className={styles.closeBtn} onClick={handleSkip} aria-label="Close" type="button">
-          <XIcon width={18} height={18} />
-        </button>
         {step > 0 && step < 7 && (
           <div className={styles.topNav}>
             <button className={styles.backBtn} onClick={back}>

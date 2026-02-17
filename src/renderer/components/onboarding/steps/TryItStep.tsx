@@ -90,7 +90,11 @@ export function TryItStep() {
           value={testResult || ""}
           readOnly
           rows={3}
-          placeholder=""
+          onKeyDown={(e) => {
+            if (!(e.metaKey && e.key === "v") && !(e.ctrlKey && e.key === "v")) {
+              e.preventDefault();
+            }
+          }}
         />
 
         {testResult && (

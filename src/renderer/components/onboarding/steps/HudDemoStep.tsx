@@ -15,9 +15,14 @@ export function HudDemoStep() {
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const [choice, setChoice] = useState<HudChoice>("enable");
 
+  const config = useConfigStore((s) => s.config);
+
   const handleContinue = async () => {
     if (choice === "enable") {
       updateConfig({ showHud: true, showHudActions: true });
+      await saveConfig(false);
+    } else if (choice === "later" && config?.showHud !== true) {
+      updateConfig({ showHud: false });
       await saveConfig(false);
     }
     next();
