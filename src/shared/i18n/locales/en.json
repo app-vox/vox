@@ -401,10 +401,20 @@
   "onboarding.navigation.skip": "Skip Setup",
   "onboarding.navigation.stepOf": "Step {current} of {total}",
   "onboarding.rerun.link": "Re-run setup wizard",
+  "onboarding.rerun.complete": "Complete Setup Wizard",
   "onboarding.rerun.description": "Walk through the initial setup steps again.",
   "onboarding.llm.stepLabel": "Step {current} of {total}",
   "onboarding.llm.title": "AI Enhancement",
   "onboarding.llm.description": "Vox can use AI to automatically improve your transcriptions — fixing grammar, removing filler words like \"um\" and \"uh\", and cleaning up your text.",
   "onboarding.llm.optional": "This is optional and requires connecting to an AI service. You can set it up anytime in Settings.",
-  "onboarding.llm.goToSettings": "Take me to AI settings"
+  "onboarding.llm.goToSettings": "Take me to AI settings",
+  "onboarding.hud.stepLabel": "Step {current} of {total}",
+  "onboarding.hud.title": "Recording Widget",
+  "onboarding.hud.description": "Vox has a floating widget (HUD) that appears on your screen. During recording, it shows a status pill. You can also keep it always visible as a quick-access recording button.",
+  "onboarding.hud.choice.enable": "Yes, enable it",
+  "onboarding.hud.choice.enableDesc": "Keep a small floating button on screen. Click it to record instantly.",
+  "onboarding.hud.choice.later": "No, I'll configure later",
+  "onboarding.hud.choice.laterDesc": "You can enable the HUD anytime in Settings → General.",
+  "onboarding.hud.choice.skip": "Skip",
+  "onboarding.hud.choice.skipDesc": "Move on without changing HUD settings."
 }
