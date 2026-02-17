@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
@@ -38,5 +38,105 @@ describe("ModelManager", () => {
     expect(sizes).toContain("small");
     expect(sizes).toContain("medium");
     expect(sizes).toContain("large");
+  });
+
+  it("should remove partial file when download is cancelled", async () => {
+    const modelPath = manager.getModelPath("tiny");
+
+    // Create a readable stream that we can control
+    let readerRead: () => Promise<ReadableStreamReadResult<Uint8Array>>;
+    const mockBody = {
+      getReader: () => ({
+        read: () => readerRead(),
+      }),
+    } as unknown as ReadableStream<Uint8Array>;
+
+    let readCount = 0;
+    readerRead = () => {
+      readCount++;
+      if (readCount === 1) {
+        // First chunk succeeds
+        return Promise.resolve({
+          done: false,
+          value: new Uint8Array([1, 2, 3]),
+        } as ReadableStreamReadResult<Uint8Array>);
+      }
+      // Second read: simulate abort
+      return Promise.reject(new DOMException("The operation was aborted.", "AbortError"));
+    };
+
+    const mockResponse = {
+      ok: true,
+      headers: new Headers({ "content-length": "1000" }),
+      body: mockBody,
+    } as unknown as Response;
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(mockResponse);
+
+    await expect(manager.download("tiny")).rejects.toThrow();
+
+    // The partial file should have been cleaned up
+    expect(fs.existsSync(modelPath)).toBe(false);
+
+    vi.restoreAllMocks();
+  });
+
+  it("should remove partial file when download fails due to network error", async () => {
+    const modelPath = manager.getModelPath("tiny");
+
+    const mockBody = {
+      getReader: () => ({
+        read: () => Promise.reject(new Error("Network failure")),
+      }),
+    } as unknown as ReadableStream<Uint8Array>;
+
+    const mockResponse = {
+      ok: true,
+      headers: new Headers({ "content-length": "1000" }),
+      body: mockBody,
+    } as unknown as Response;
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(mockResponse);
+
+    await expect(manager.download("tiny")).rejects.toThrow("Network failure");
+
+    expect(fs.existsSync(modelPath)).toBe(false);
+
+    vi.restoreAllMocks();
+  });
+
+  it("should keep file on successful download", async () => {
+    const modelPath = manager.getModelPath("tiny");
+
+    let readCount = 0;
+    const mockBody = {
+      getReader: () => ({
+        read: () => {
+          readCount++;
+          if (readCount === 1) {
+            return Promise.resolve({
+              done: false,
+              value: new Uint8Array([1, 2, 3, 4]),
+            } as ReadableStreamReadResult<Uint8Array>);
+          }
+          return Promise.resolve({ done: true, value: undefined } as ReadableStreamReadResult<Uint8Array>);
+        },
+      }),
+    } as unknown as ReadableStream<Uint8Array>;
+
+    const mockResponse = {
+      ok: true,
+      headers: new Headers({ "content-length": "4" }),
+      body: mockBody,
+    } as unknown as Response;
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(mockResponse);
+
+    const result = await manager.download("tiny");
+
+    expect(result).toBe(modelPath);
+    expect(fs.existsSync(modelPath)).toBe(true);
+
+    vi.restoreAllMocks();
   });
 });

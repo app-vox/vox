@@ -83,6 +83,12 @@ export class ModelManager {
       }
 
       return destPath;
+    } catch (err) {
+      // Clean up partial file on any failure (cancellation, network error, etc.)
+      if (fs.existsSync(destPath)) {
+        fs.unlinkSync(destPath);
+      }
+      throw err;
     } finally {
       this.activeDownloads.delete(size);
     }
