@@ -2,21 +2,15 @@ import { useRef, useEffect, useMemo } from "react";
 import { useT } from "../../../i18n-context";
 import { useOnboardingStore } from "../use-onboarding-store";
 import { useConfigStore } from "../../../stores/config-store";
-import { recordAudio } from "../../../utils/record-audio";
-import { RecordIcon } from "../../../../shared/icons";
+import { useTranscriptionTest } from "../../../hooks/use-transcription-test";
 import styles from "../OnboardingOverlay.module.scss";
 import btn from "../../shared/buttons.module.scss";
 
 export function TryItStep() {
   const t = useT();
   const next = useOnboardingStore((s) => s.next);
-  const testing = useOnboardingStore((s) => s.testing);
-  const testResult = useOnboardingStore((s) => s.testResult);
-  const testError = useOnboardingStore((s) => s.testError);
-  const setTesting = useOnboardingStore((s) => s.setTesting);
-  const setTestResult = useOnboardingStore((s) => s.setTestResult);
-  const setTestError = useOnboardingStore((s) => s.setTestError);
   const config = useConfigStore((s) => s.config);
+  const transcriptionTest = useTranscriptionTest(3);
 
   const holdShortcut = config?.shortcuts.hold || "Alt+Space";
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -36,36 +30,24 @@ export function TryItStep() {
 
   const handleTest = async () => {
     textareaRef.current?.focus();
-    setTesting(true);
-    setTestResult(null);
-    setTestError(null);
+    const result = await transcriptionTest.run();
 
-    try {
-      const recording = await recordAudio(3);
-      const text = await window.voxApi.whisper.test(recording);
-      if (text) {
-        setTestResult(text);
-        await window.voxApi.history.add({
-          text,
-          originalText: text,
-          audioDurationMs: 3000,
-          whisperModel: config?.whisper?.model || "small",
-          llmEnhanced: false,
-        });
-      } else {
-        setTestResult(null);
-        setTestError("no-speech");
-      }
-    } catch (err: unknown) {
-      setTestError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setTesting(false);
+    // Save to history on success
+    if (result?.rawText) {
+      const text = result.correctedText || result.rawText;
+      await window.voxApi.history.add({
+        text,
+        originalText: result.rawText,
+        audioDurationMs: 3000,
+        whisperModel: config?.whisper?.model || "small",
+        llmEnhanced: !!result.correctedText,
+      });
     }
   };
 
-  const statusMessage = testing
-    ? t("onboarding.tryIt.recording")
-    : null;
+  const resultText = transcriptionTest.result
+    ? transcriptionTest.result.correctedText || transcriptionTest.result.rawText
+    : "";
 
   const handleStepClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
@@ -94,7 +76,7 @@ export function TryItStep() {
         <textarea
           ref={textareaRef}
           className={styles.testResultBox}
-          value={testResult || ""}
+          value={resultText}
           rows={3}
           onKeyDown={(e) => {
             const isPaste = (e.metaKey || e.ctrlKey) && e.key === "v";
@@ -106,38 +88,35 @@ export function TryItStep() {
           }}
           onPaste={(e) => {
             e.preventDefault();
-            const text = e.clipboardData.getData("text/plain");
-            if (text) setTestResult(text);
           }}
           onChange={() => {}}
         />
 
-        {testResult && (
+        {resultText && (
           <p className={styles.successMessage}>{t("onboarding.tryIt.success")}</p>
         )}
-        {testError === "no-speech" && (
+        {transcriptionTest.error === "no-speech" && (
           <p className={styles.errorMessage}>{t("onboarding.tryIt.noSpeech")}</p>
         )}
-        {testError && testError !== "no-speech" && (
-          <p className={styles.errorMessage}>{t("onboarding.tryIt.failed", { error: testError })}</p>
+        {transcriptionTest.error && transcriptionTest.error !== "no-speech" && (
+          <p className={styles.errorMessage}>{t("onboarding.tryIt.failed", { error: transcriptionTest.error })}</p>
         )}
-        {statusMessage && <p className={styles.statusMessage}>{statusMessage}</p>}
+        {transcriptionTest.testing && <p className={styles.statusMessage}>{t("onboarding.tryIt.recording")}</p>}
       </div>
 
-      {!testResult && (
+      {!resultText && (
         <p className={styles.hint}>{t("onboarding.tryIt.orPressButton")}</p>
       )}
 
       <div className={styles.buttonRow}>
-        {!testResult ? (
+        {!resultText ? (
           <>
             <button
               className={`${btn.btn} ${btn.primary} ${styles.ctaButton}`}
               onClick={handleTest}
-              disabled={testing}
+              disabled={transcriptionTest.testing}
             >
-              <RecordIcon width={16} height={16} />
-              {testError ? t("onboarding.tryIt.retry") : t("onboarding.tryIt.title")}
+              {transcriptionTest.error ? t("onboarding.tryIt.retry") : t("onboarding.tryIt.title")}
             </button>
             <button className={styles.skipLink} onClick={next}>
               {t("onboarding.tryIt.skip")}
