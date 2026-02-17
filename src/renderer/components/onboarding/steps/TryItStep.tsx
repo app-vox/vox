@@ -88,13 +88,21 @@ export function TryItStep() {
           ref={textareaRef}
           className={styles.testResultBox}
           value={testResult || ""}
-          readOnly
           rows={3}
           onKeyDown={(e) => {
-            if (!(e.metaKey && e.key === "v") && !(e.ctrlKey && e.key === "v")) {
+            const isPaste = (e.metaKey || e.ctrlKey) && e.key === "v";
+            const isSelect = (e.metaKey || e.ctrlKey) && e.key === "a";
+            const isCopy = (e.metaKey || e.ctrlKey) && e.key === "c";
+            if (!isPaste && !isSelect && !isCopy) {
               e.preventDefault();
             }
           }}
+          onPaste={(e) => {
+            e.preventDefault();
+            const text = e.clipboardData.getData("text/plain");
+            if (text) setTestResult(text);
+          }}
+          onChange={() => {}}
         />
 
         {testResult && (

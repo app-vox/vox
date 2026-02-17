@@ -416,6 +416,7 @@
   "onboarding.llm.stepLabel": "Paso {current} de {total}",
   "onboarding.llm.title": "Mejora con IA",
   "onboarding.llm.description": "Vox puede usar IA para mejorar automáticamente tus transcripciones — corrigiendo gramática, eliminando muletillas como \"eh\" y \"este\", y limpiando tu texto.",
+  "onboarding.llm.dictionaryNote": "También habilita un diccionario personalizado para nombres y términos.",
   "onboarding.llm.optional": "Esto es opcional y requiere conectarse a un servicio de IA. Puedes configurarlo en cualquier momento en Ajustes.",
   "onboarding.llm.goToSettings": "Ir a ajustes de IA",
   "onboarding.done.tipTranscriptions": "Revisa la pestaña Transcripciones para tu historial completo con búsqueda",

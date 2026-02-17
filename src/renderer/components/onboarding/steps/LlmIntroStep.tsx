@@ -21,6 +21,7 @@ export function LlmIntroStep() {
       </h2>
 
       <p className={styles.description}>{t("onboarding.llm.description")}</p>
+      <p className={styles.hint}>{t("onboarding.llm.dictionaryNote")}</p>
       <p className={styles.hint}>{t("onboarding.llm.optional")}</p>
 
       <button

@@ -411,6 +411,7 @@
   "onboarding.llm.stepLabel": "Step {current} of {total}",
   "onboarding.llm.title": "AI Enhancement",
   "onboarding.llm.description": "Vox can use AI to automatically improve your transcriptions — fixing grammar, removing filler words like \"um\" and \"uh\", and cleaning up your text.",
+  "onboarding.llm.dictionaryNote": "Also enables a custom dictionary for names and terms.",
   "onboarding.llm.optional": "This is optional and requires connecting to an AI service. You can set it up anytime in Settings.",
   "onboarding.llm.goToSettings": "Take me to AI settings",
   "onboarding.hud.stepLabel": "Step {current} of {total}",

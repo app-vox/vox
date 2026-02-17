@@ -416,6 +416,7 @@
   "onboarding.llm.stepLabel": "Adım {current} / {total}",
   "onboarding.llm.title": "Yapay Zeka İyileştirme",
   "onboarding.llm.description": "Vox, transkripsiyon kalitesini otomatik olarak artırmak için yapay zeka kullanabilir — dilbilgisi düzeltme, \"şey\" ve \"hani\" gibi dolgu sözcüklerini kaldırma ve metni temizleme.",
+  "onboarding.llm.dictionaryNote": "Ayrıca adlar ve terimler için özel sözlük sağlar.",
   "onboarding.llm.optional": "Bu isteğe bağlıdır ve bir yapay zeka servisine bağlantı gerektirir. İstediğiniz zaman Ayarlardan yapılandırabilirsiniz.",
   "onboarding.llm.goToSettings": "Yapay zeka ayarlarına git",
   "onboarding.done.tipTranscriptions": "Tam aranabilir geçmişiniz için Yazıya Dökümler sekmesine bakın",

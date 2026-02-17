@@ -416,6 +416,7 @@
   "onboarding.llm.stepLabel": "Passo {current} de {total}",
   "onboarding.llm.title": "Aprimoramento com IA",
   "onboarding.llm.description": "O Vox pode usar IA para melhorar automaticamente suas transcrições — corrigindo gramática, removendo palavras de preenchimento como \"é\" e \"tipo\", e limpando seu texto.",
+  "onboarding.llm.dictionaryNote": "Também habilita um dicionário personalizado para nomes e termos.",
   "onboarding.llm.optional": "Isso é opcional e requer conexão com um serviço de IA. Você pode configurar a qualquer momento nas Configurações.",
   "onboarding.llm.goToSettings": "Ir para configurações de IA",
   "onboarding.done.tipTranscriptions": "Confira a aba Transcrições para seu histórico completo com busca",
