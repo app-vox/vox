@@ -269,132 +269,76 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 5. Sequential status overlay animation
-    const animateStatusOverlays = () => {
-        const overlays = document.querySelectorAll('.status-overlay');
-        const labels = document.querySelectorAll('.stage-label');
+    // 5. Typing animation synced with 10s CSS cycle
+    const animateTypingLoop = () => {
         const inputField = document.querySelector('.demo-input-field');
         const typedText = document.querySelector('.typed-text');
         const cursor = document.querySelector('.typing-cursor');
 
-        let currentIndex = 0;
-        let typingTimeout;
-        let cycleTimeout;
+        if (!inputField || !typedText || !cursor) return;
 
-        // Helper to get current translated text
+        const CYCLE_MS = 10000;
+        const TYPING_START = 0.70;
+
+        let pendingTimeouts = [];
+
+        const clearPending = () => {
+            pendingTimeouts.forEach(id => clearTimeout(id));
+            pendingTimeouts = [];
+        };
+
         const getFullText = () => {
             return window.i18n && window.i18n.t
                 ? window.i18n.t('demo.sampleText')
                 : "Hey team, let's sync up tomorrow at 10 AM to discuss the new feature rollout. I'll share the design specs beforehand.";
         };
 
-        const typeText = (text, element, callback) => {
-            element.textContent = '';
-            cursor.classList.add('active');
-            inputField.classList.add('active');
+        const runCycle = () => {
+            clearPending();
 
-            // Show text almost instantly (simulating paste behavior)
-            let i = 0;
-            const type = () => {
-                if (i < text.length) {
-                    element.textContent += text.charAt(i);
-                    i++;
-                    typingTimeout = setTimeout(type, 8); // Very fast - 8ms per char (~0.8s total)
-                } else {
-                    setTimeout(() => {
-                        cursor.classList.remove('active');
-                        inputField.classList.remove('active');
-                        if (callback) callback();
-                    }, 1000); // Stay 1 second after text appears
-                }
-            };
-            type();
-        };
+            const words = getFullText().split(' ');
+            const typingStartMs = TYPING_START * CYCLE_MS;
+            const WORD_DELAY = 40;
 
-        const activateStatus = () => {
-            // Clear any ongoing typing
-            if (typingTimeout) {
-                clearTimeout(typingTimeout);
-            }
-
-            // Remove active class from all overlays and labels
-            overlays.forEach(overlay => overlay.classList.remove('active'));
-            labels.forEach(label => label.classList.remove('active'));
-
-            // Clear text when starting new cycle
-            if (typedText) {
-                typedText.textContent = '';
-            }
+            typedText.textContent = '';
             cursor.classList.remove('active');
             inputField.classList.remove('active');
 
-            // Determine delay based on current stage
-            let delay;
-
-            if (currentIndex === 0) {
-                // Listening - 2.5 seconds
-                delay = 2500;
-                if (overlays[currentIndex]) {
-                    overlays[currentIndex].classList.add('active');
-                }
-                if (labels[currentIndex]) {
-                    labels[currentIndex].classList.add('active');
-                }
-            } else if (currentIndex === 1) {
-                // Transcribing - 1.2 seconds (faster)
-                delay = 1200;
-                if (overlays[currentIndex]) {
-                    overlays[currentIndex].classList.add('active');
-                }
-                if (labels[currentIndex]) {
-                    labels[currentIndex].classList.add('active');
-                }
-            } else if (currentIndex === 2) {
-                // Enhancing - 1 second (faster)
-                delay = 1000;
-                if (overlays[currentIndex]) {
-                    overlays[currentIndex].classList.add('active');
-                }
-                if (labels[currentIndex]) {
-                    labels[currentIndex].classList.add('active');
-                }
-
-                // After enhancing, trigger paste with typing
-                setTimeout(() => {
-                    overlays.forEach(overlay => overlay.classList.remove('active'));
-                    labels.forEach(label => label.classList.remove('active'));
-                    if (labels[3]) {
-                        labels[3].classList.add('active');
+            pendingTimeouts.push(setTimeout(() => {
+                cursor.classList.add('active');
+                inputField.classList.add('active');
+                let w = 0;
+                const typeWord = () => {
+                    if (w < words.length) {
+                        typedText.textContent += (w > 0 ? ' ' : '') + words[w];
+                        w++;
+                        pendingTimeouts.push(setTimeout(typeWord, WORD_DELAY));
+                    } else {
+                        cursor.classList.remove('active');
                     }
-                    // Typing takes ~3s + 1s display = 4s total
-                    // Get translated text dynamically
-                    typeText(getFullText(), typedText, () => {
-                        // After typing finishes and 1s display, move to next
-                        cycleTimeout = setTimeout(() => {
-                            currentIndex = (currentIndex + 1) % overlays.length;
-                            activateStatus();
-                        }, 0);
-                    });
-                }, delay);
-
-                // Don't set cycleTimeout here, it will be set after typing
-                return;
-            }
-
-            // Move to next status after delay
-            currentIndex = (currentIndex + 1) % overlays.length;
-            cycleTimeout = setTimeout(activateStatus, delay);
+                };
+                typeWord();
+            }, typingStartMs));
         };
 
-        // Initial activation
-        activateStatus();
+        // Anchor JS to CSS master clock via animationiteration event
+        // Filter to widget-morph only to avoid double-firing (widget has 2 animations)
+        const widget = document.querySelector('.hud-widget');
+        if (widget) {
+            widget.addEventListener('animationiteration', (e) => {
+                if (e.animationName === 'widget-morph') {
+                    runCycle();
+                }
+            });
+        }
+        runCycle();
     };
 
-    // Start animation when demo container is visible
+    // Start HUD typing animation synced with CSS cycle
     const demoObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                animateStatusOverlays();
+                animateTypingLoop();
                 demoObserver.unobserve(entry.target);
             }
         });
