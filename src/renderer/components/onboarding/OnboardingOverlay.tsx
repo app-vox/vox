@@ -1,4 +1,4 @@
-import { useCallback, type JSX } from "react";
+import { useCallback, useEffect, type JSX } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useOnboardingStore, type OnboardingStep } from "./use-onboarding-store";
 import { useT } from "../../i18n-context";
@@ -40,6 +40,16 @@ export function OnboardingOverlay() {
     await completeOnboarding();
     setActiveTab("general");
   }, [completeOnboarding, setActiveTab]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleSkip();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleSkip]);
 
   const steps: Record<OnboardingStep, JSX.Element> = {
     0: <WelcomeStep />,

@@ -55,6 +55,7 @@ export function App() {
   const activeTab = useConfigStore((s) => s.activeTab);
   const loadConfig = useConfigStore((s) => s.loadConfig);
   const theme = useConfigStore((s) => s.config?.theme);
+  const onboardingCompleted = useConfigStore((s) => s.config?.onboardingCompleted);
   const contentRef = useRef<HTMLElement>(null);
 
   useTheme(theme);
@@ -87,7 +88,6 @@ export function App() {
   }
 
   const Panel = PANELS[activeTab] ?? WhisperPanel;
-  const onboardingCompleted = useConfigStore((s) => s.config?.onboardingCompleted);
 
   return (
     <I18nProvider>
