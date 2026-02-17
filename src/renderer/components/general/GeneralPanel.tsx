@@ -75,6 +75,7 @@ export function GeneralPanel() {
     ...(devAccOverride !== undefined ? { accessibility: devAccOverride } : {}),
   };
 
+  const bannersReady = !loading && realStatus !== null;
   const needsSetup = !setupComplete || permissionStatus.microphone !== "granted" || permissionStatus.accessibility !== true;
 
   const themeLabels: Record<ThemeMode, string> = {
@@ -143,7 +144,7 @@ export function GeneralPanel() {
 
   const isDevMode = import.meta.env.DEV;
 
-  const needsPermissions = !loading && setupComplete && permissionStatus !== null && (permissionStatus.accessibility !== true || permissionStatus.microphone !== "granted");
+  const needsPermissions = bannersReady && setupComplete && (permissionStatus.accessibility !== true || permissionStatus.microphone !== "granted");
 
   const flashSelect = useCallback(() => {
     setFlashHudSelect(true);
@@ -271,7 +272,7 @@ export function GeneralPanel() {
         </button>
       </div>
 
-      {!loading && !setupComplete && (
+      {bannersReady && !setupComplete && (
         <div className={`${card.card} ${styles.setupBanner}`}>
           <div className={card.body}>
             <div className={styles.setupContent}>
@@ -316,7 +317,7 @@ export function GeneralPanel() {
       )}
 
       {/* Shortcuts discovery banner */}
-      {!loading && setupComplete && !shortcutsBannerDismissed && !config.onboardingCompleted && (
+      {bannersReady && setupComplete && !shortcutsBannerDismissed && !config.onboardingCompleted && (
         <div className={`${card.card} ${styles.setupBanner}`}>
           <div className={card.body}>
             <div className={styles.hudBannerContent}>
@@ -383,7 +384,7 @@ export function GeneralPanel() {
       </div>
 
       {/* HUD discovery banner */}
-      {!loading && setupComplete && !config.showHud && !hudBannerDismissed && (
+      {bannersReady && setupComplete && !config.showHud && !hudBannerDismissed && (
         <div className={`${card.card} ${styles.setupBanner}`}>
           <div className={card.body}>
             <div className={styles.hudBannerContent}>
