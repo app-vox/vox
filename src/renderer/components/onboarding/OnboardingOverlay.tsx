@@ -10,6 +10,7 @@ import { TryItStep } from "./steps/TryItStep";
 import { HudDemoStep } from "./steps/HudDemoStep";
 import { LlmIntroStep } from "./steps/LlmIntroStep";
 import { DoneStep } from "./steps/DoneStep";
+import { XIcon } from "../../../shared/icons";
 import styles from "./OnboardingOverlay.module.scss";
 
 const TOTAL_STEPS = 8;
@@ -67,6 +68,9 @@ export function OnboardingOverlay() {
   return (
     <div className={styles.overlay}>
       <div className={styles.container}>
+        <button className={styles.closeBtn} onClick={handleSkip} aria-label="Close" type="button">
+          <XIcon width={18} height={18} />
+        </button>
         {step > 0 && step < 7 && (
           <div className={styles.topNav}>
             <button className={styles.backBtn} onClick={back}>

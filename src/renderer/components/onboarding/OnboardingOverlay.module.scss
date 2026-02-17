@@ -20,6 +20,28 @@
   position: relative;
 }
 
+.closeBtn {
+  position: absolute;
+  top: var(--spacing-3);
+  right: var(--spacing-3);
+  background: none;
+  border: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--duration-fast) ease, background var(--duration-fast) ease;
+  z-index: 1;
+
+  &:hover {
+    color: var(--color-text-secondary);
+    background: var(--color-bg-hover);
+  }
+}
+
 /* ---- Top navigation ---- */
 
 .topNav {
@@ -467,6 +489,17 @@
 
   &:hover {
     color: var(--color-text-secondary);
+  }
+}
+
+.doneButtonRow {
+  display: flex;
+  gap: var(--spacing-3);
+  width: 100%;
+  margin-top: var(--spacing-2);
+
+  > button {
+    flex: 1;
   }
 }
 
