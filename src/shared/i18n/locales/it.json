@@ -397,5 +397,6 @@
   "onboarding.navigation.skip": "Salta Configurazione",
   "onboarding.navigation.stepOf": "Passo {current} di {total}",
   "onboarding.rerun.link": "Ripeti assistente configurazione",
+  "onboarding.rerun.complete": "Completa assistente configurazione",
   "onboarding.rerun.description": "Ripercorri i passaggi della configurazione iniziale."
 }

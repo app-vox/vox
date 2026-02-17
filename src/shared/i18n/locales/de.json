@@ -397,5 +397,6 @@
   "onboarding.navigation.skip": "Einrichtung Überspringen",
   "onboarding.navigation.stepOf": "Schritt {current} von {total}",
   "onboarding.rerun.link": "Einrichtungsassistent erneut starten",
+  "onboarding.rerun.complete": "Einrichtungsassistent abschließen",
   "onboarding.rerun.description": "Durchlaufe die Schritte der Ersteinrichtung erneut."
 }

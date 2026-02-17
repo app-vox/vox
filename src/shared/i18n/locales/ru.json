@@ -397,5 +397,6 @@
   "onboarding.navigation.skip": "Пропустить Настройку",
   "onboarding.navigation.stepOf": "Шаг {current} из {total}",
   "onboarding.rerun.link": "Повторить мастер настройки",
+  "onboarding.rerun.complete": "Завершить мастер настройки",
   "onboarding.rerun.description": "Пройдите шаги начальной настройки заново."
 }

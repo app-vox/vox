@@ -2,6 +2,12 @@
   border-color: var(--color-accent);
 }
 
+.rerunSetupRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--spacing-3);
+}
+
 .rerunSetup {
   display: inline-flex;
   align-items: center;
@@ -12,7 +18,6 @@
   font-size: var(--font-size-sm);
   cursor: pointer;
   padding: var(--spacing-1) 0;
-  margin-bottom: var(--spacing-3);
 
   &:hover {
     color: var(--color-accent);

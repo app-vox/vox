@@ -397,5 +397,6 @@
   "onboarding.navigation.skip": "Passer la Configuration",
   "onboarding.navigation.stepOf": "Étape {current} sur {total}",
   "onboarding.rerun.link": "Relancer l'assistant de configuration",
+  "onboarding.rerun.complete": "Terminer l'assistant de configuration",
   "onboarding.rerun.description": "Parcourez à nouveau les étapes de configuration initiale."
 }

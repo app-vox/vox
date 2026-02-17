@@ -397,5 +397,6 @@
   "onboarding.navigation.skip": "Pomiń Konfigurację",
   "onboarding.navigation.stepOf": "Krok {current} z {total}",
   "onboarding.rerun.link": "Uruchom ponownie kreator konfiguracji",
+  "onboarding.rerun.complete": "Dokończ kreator konfiguracji",
   "onboarding.rerun.description": "Przejdź ponownie przez kroki początkowej konfiguracji."
 }

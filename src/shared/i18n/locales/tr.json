@@ -397,5 +397,6 @@
   "onboarding.navigation.skip": "Kurulumu Atla",
   "onboarding.navigation.stepOf": "Adım {current} / {total}",
   "onboarding.rerun.link": "Kurulum sihirbazını yeniden çalıştır",
+  "onboarding.rerun.complete": "Kurulum Sihirbazını Tamamla",
   "onboarding.rerun.description": "İlk kurulum adımlarını tekrar gözden geçirin."
 }

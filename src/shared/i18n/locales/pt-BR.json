@@ -397,5 +397,6 @@
   "onboarding.navigation.skip": "Pular Configuração",
   "onboarding.navigation.stepOf": "Passo {current} de {total}",
   "onboarding.rerun.link": "Refazer assistente de configuração",
+  "onboarding.rerun.complete": "Concluir Assistente de Configuração",
   "onboarding.rerun.description": "Percorra as etapas de configuração inicial novamente."
 }

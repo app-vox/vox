@@ -5,6 +5,7 @@ import { usePermissions } from "../../hooks/use-permissions";
 import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useT } from "../../i18n-context";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
+import { useOnboardingStore } from "../onboarding/use-onboarding-store";
 import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, KeyboardIcon, ChevronDownIcon, MoveIcon, RefreshIcon } from "../../../shared/icons";
 import type { ThemeMode, SupportedLanguage, WidgetPosition } from "../../../shared/config";
 import { CustomSelect, type SelectItem } from "../ui/CustomSelect";
@@ -242,15 +243,32 @@ export function GeneralPanel() {
       <OfflineBanner />
 
       {config.onboardingCompleted && (
-        <button
-          className={styles.rerunSetup}
-          onClick={async () => {
-            updateConfig({ onboardingCompleted: false });
-            await saveConfig(false);
-          }}
-        >
-          {t("onboarding.rerun.link")}
-        </button>
+        <div className={styles.rerunSetupRow}>
+          <button
+            className={styles.rerunSetup}
+            onClick={async () => {
+              const needsModel = !setupComplete;
+              const needsPermissions = permissionStatus.microphone !== "granted" || permissionStatus.accessibility !== true;
+
+              let startStep = 0;
+              if (needsModel) startStep = 1;
+              else if (needsPermissions) startStep = 2;
+
+              if (needsModel || needsPermissions) {
+                useOnboardingStore.getState().setStep(startStep as any);
+              } else {
+                useOnboardingStore.getState().reset();
+              }
+
+              updateConfig({ onboardingCompleted: false });
+              await saveConfig(false);
+            }}
+          >
+            {(!setupComplete || permissionStatus.microphone !== "granted" || permissionStatus.accessibility !== true)
+              ? t("onboarding.rerun.complete")
+              : t("onboarding.rerun.link")}
+          </button>
+        </div>
       )}
 
       {!loading && !setupComplete && (
