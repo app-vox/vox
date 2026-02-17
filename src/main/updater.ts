@@ -124,6 +124,6 @@ export function getUpdateState(): UpdateState {
 
 export function quitAndInstall(): void {
   if (app.isPackaged) {
-    autoUpdater.quitAndInstall();
+    autoUpdater.quitAndInstall(false, true);
   }
 }
