@@ -55,7 +55,7 @@ function buildAppMenu(): void {
         {
           label: t("menu.showVox"),
           accelerator: "CmdOrCtrl+O",
-          click: () => menuCallbacks?.onShowVox(),
+          click: () => menuCallbacks?.onSettings(),
         },
         {
           label: t("menu.transcriptions"),
