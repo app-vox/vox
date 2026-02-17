@@ -77,6 +77,7 @@ export class ConfigManager {
         targetDisplayId: saved.targetDisplayId ?? defaults.targetDisplayId,
         reduceAnimations: saved.reduceAnimations ?? defaults.reduceAnimations,
         reduceVisualEffects: saved.reduceVisualEffects ?? defaults.reduceVisualEffects,
+        onboardingCompleted: saved.onboardingCompleted ?? true,
       };
 
       return config;

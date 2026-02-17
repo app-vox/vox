@@ -92,6 +92,8 @@ export class ShortcutManager {
   private watchdogTimer: ReturnType<typeof setInterval> | null = null;
   private isInitializing = true;
   private recordingGeneration = 0;
+  private micActiveAt = 0;
+  private static readonly MIN_RECORDING_MS = 400;
 
   constructor(deps: ShortcutManagerDeps) {
     this.deps = deps;
@@ -218,6 +220,7 @@ export class ShortcutManager {
     const state = this.stateMachine.getState();
     if (state === "hold" || state === "toggle" || state === "processing") {
       slog.info("Cancel requested");
+      this.micActiveAt = 0;
       this.recordingGeneration++;
       const pipeline = this.deps.getPipeline();
       pipeline.cancel().catch((err) => {
@@ -378,8 +381,11 @@ export class ShortcutManager {
       globalShortcut.unregisterAll();
     });
 
-    ipcMain.handle("shortcuts:enable", () => {
+    ipcMain.handle("shortcuts:enable", (_event, immediate?: boolean) => {
       this.registerShortcutKeys();
+      if (immediate) {
+        this.isInitializing = false;
+      }
     });
 
     ipcMain.handle("indicator:cancel-recording", () => {
@@ -506,11 +512,14 @@ export class ShortcutManager {
     this.hud.setState("initializing");
     this.updateTrayState();
 
+    this.micActiveAt = 0;
     pipeline.startRecording().then(() => {
       if (gen !== this.recordingGeneration) {
-        slog.info("Stale recording start (gen=%d, current=%d) — discarding", gen, this.recordingGeneration);
+        slog.info("Stale recording start (gen=%d, current=%d) — stopping mic", gen, this.recordingGeneration);
+        pipeline.cancel().catch((e) => slog.error("Error stopping stale recording", e));
         return;
       }
+      this.micActiveAt = Date.now();
       slog.info("Recording started — mic active");
       this.hud.setState("listening");
 
@@ -520,6 +529,7 @@ export class ShortcutManager {
     }).catch((err: Error) => {
       if (gen !== this.recordingGeneration) {
         slog.info("Stale recording error (gen=%d, current=%d) — discarding", gen, this.recordingGeneration);
+        pipeline.cancel().catch(() => {});
         return;
       }
       slog.error("Recording failed", err);
@@ -541,6 +551,21 @@ export class ShortcutManager {
   }
 
   private async onRecordingStop(): Promise<void> {
+    const elapsed = this.micActiveAt > 0 ? Date.now() - this.micActiveAt : 0;
+    if (this.micActiveAt === 0 || elapsed < ShortcutManager.MIN_RECORDING_MS) {
+      slog.info("Recording too short (%dms) or mic not ready — canceling", elapsed);
+      this.micActiveAt = 0;
+      this.recordingGeneration++;
+      const pipeline = this.deps.getPipeline();
+      pipeline.cancel().catch((err) => {
+        slog.error("Error during short-recording cancel", err);
+      });
+      this.stateMachine.setIdle();
+      this.hud.setState("canceled");
+      this.updateTrayState();
+      return;
+    }
+
     const pipeline = this.deps.getPipeline();
     const gen = this.recordingGeneration;
     this.stateMachine.setProcessing();

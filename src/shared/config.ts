@@ -107,6 +107,7 @@ export interface VoxConfig {
   targetDisplayId: number | null;
   reduceAnimations: boolean;
   reduceVisualEffects: boolean;
+  onboardingCompleted: boolean;
 }
 
 export function createDefaultConfig(isProduction = false): VoxConfig {
@@ -145,6 +146,7 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     targetDisplayId: null,
     reduceAnimations: false,
     reduceVisualEffects: false,
+    onboardingCompleted: false,
   };
 }
 

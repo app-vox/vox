@@ -317,6 +317,16 @@ export function registerIpcHandlers(
     historyManager.deleteEntry(id);
   });
 
+  ipcMain.handle("history:add", (_event, entry: { text: string; originalText: string; audioDurationMs: number; whisperModel: string; llmEnhanced: boolean }) => {
+    historyManager.add({
+      ...entry,
+      wordCount: entry.text.split(/\s+/).filter(Boolean).length,
+    });
+    for (const win of BrowserWindow.getAllWindows()) {
+      win.webContents.send("history:entry-added");
+    }
+  });
+
   ipcMain.handle("clipboard:write", (_event, text: string) => {
     clipboard.writeText(text);
   });

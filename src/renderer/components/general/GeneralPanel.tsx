@@ -5,7 +5,9 @@ import { usePermissions } from "../../hooks/use-permissions";
 import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useT } from "../../i18n-context";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
-import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, KeyboardIcon, ChevronDownIcon, MoveIcon, RefreshIcon } from "../../../shared/icons";
+import { useOnboardingStore } from "../onboarding/use-onboarding-store";
+import type { OnboardingStep } from "../onboarding/use-onboarding-store";
+import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, KeyboardIcon, ChevronDownIcon, MoveIcon, RefreshIcon, InfoCircleIcon } from "../../../shared/icons";
 import type { ThemeMode, SupportedLanguage, WidgetPosition } from "../../../shared/config";
 import { CustomSelect, type SelectItem } from "../ui/CustomSelect";
 import { OfflineBanner } from "../ui/OfflineBanner";
@@ -73,6 +75,9 @@ export function GeneralPanel() {
     ...(devAccOverride !== undefined ? { accessibility: devAccOverride } : {}),
   };
 
+  const bannersReady = !loading && realStatus !== null;
+  const needsSetup = !setupComplete || permissionStatus.microphone !== "granted" || permissionStatus.accessibility !== true;
+
   const themeLabels: Record<ThemeMode, string> = {
     light: t("general.theme.light"),
     dark: t("general.theme.dark"),
@@ -126,9 +131,15 @@ export function GeneralPanel() {
   const [displayCollapsed, setDisplayCollapsed] = useState(() => localStorage.getItem(DISPLAY_COLLAPSED_KEY) !== "false");
   const [perfCollapsed, setPerfCollapsed] = useState(true);
   const [hudBannerDismissed, setHudBannerDismissed] = useState(() => localStorage.getItem(HUD_BANNER_DISMISSED_KEY) === "true");
-  const [shortcutsBannerDismissed, setShortcutsBannerDismissed] = useState(() =>
+  const [shortcutsBannerDismissedLocal, setShortcutsBannerDismissed] = useState(() =>
     localStorage.getItem(SHORTCUTS_BANNER_DISMISSED_KEY) === "true" || localStorage.getItem(VISITED_SHORTCUTS_KEY) === "true"
   );
+
+  const devVisitedShortcuts = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("visitedShortcuts", undefined)
+    : undefined;
+  const shortcutsBannerDismissed = devVisitedShortcuts !== undefined ? devVisitedShortcuts : shortcutsBannerDismissedLocal;
   const [availableDisplays, setAvailableDisplays] = useState<{ id: number; label: string; primary: boolean }[]>([]);
   const [flashHudSelect, setFlashHudSelect] = useState(false);
   const [flashPreview, setFlashPreview] = useState(false);
@@ -139,7 +150,7 @@ export function GeneralPanel() {
 
   const isDevMode = import.meta.env.DEV;
 
-  const needsPermissions = !loading && setupComplete && permissionStatus !== null && (permissionStatus.accessibility !== true || permissionStatus.microphone !== "granted");
+  const needsPermissions = bannersReady && setupComplete && (permissionStatus.accessibility !== true || permissionStatus.microphone !== "granted");
 
   const flashSelect = useCallback(() => {
     setFlashHudSelect(true);
@@ -241,7 +252,33 @@ export function GeneralPanel() {
     <>
       <OfflineBanner />
 
-      {!loading && !setupComplete && (
+      <div className={styles.rerunSetupRow}>
+        <button
+          className={styles.rerunSetup}
+          title={t("onboarding.rerun.description")}
+          onClick={async () => {
+            const store = useOnboardingStore.getState();
+
+            if (needsSetup) {
+              let startStep = 0;
+              if (!setupComplete) startStep = 1;
+              else if (permissionStatus.microphone !== "granted" || permissionStatus.accessibility !== true) startStep = 2;
+              store.setStep(startStep as OnboardingStep);
+            } else {
+              store.reset();
+            }
+
+            store.setForceOpen(true);
+            updateConfig({ onboardingCompleted: false });
+            await saveConfig(false);
+          }}
+        >
+          <InfoCircleIcon width={14} height={14} />
+          {bannersReady && needsSetup ? t("onboarding.rerun.complete") : t("onboarding.rerun.link")}
+        </button>
+      </div>
+
+      {bannersReady && !setupComplete && (
         <div className={`${card.card} ${styles.setupBanner}`}>
           <div className={card.body}>
             <div className={styles.setupContent}>
@@ -286,7 +323,7 @@ export function GeneralPanel() {
       )}
 
       {/* Shortcuts discovery banner */}
-      {!loading && setupComplete && !shortcutsBannerDismissed && (
+      {bannersReady && setupComplete && !shortcutsBannerDismissed && (devVisitedShortcuts === false || !config.onboardingCompleted) && (
         <div className={`${card.card} ${styles.setupBanner}`}>
           <div className={card.body}>
             <div className={styles.hudBannerContent}>
@@ -353,7 +390,7 @@ export function GeneralPanel() {
       </div>
 
       {/* HUD discovery banner */}
-      {!loading && setupComplete && !config.showHud && !hudBannerDismissed && (
+      {bannersReady && setupComplete && !config.showHud && !hudBannerDismissed && (
         <div className={`${card.card} ${styles.setupBanner}`}>
           <div className={card.body}>
             <div className={styles.hudBannerContent}>

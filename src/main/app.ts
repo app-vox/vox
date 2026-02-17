@@ -12,7 +12,7 @@ import { Pipeline } from "./pipeline";
 import { ShortcutManager } from "./shortcuts/manager";
 import { setupTray, setTrayModelState, updateTrayConfig, updateTrayMenu, getTrayState } from "./tray";
 import { initAutoUpdater } from "./updater";
-import { openHome } from "./windows/home";
+import { openHome, setAppMenuCallbacks, refreshAppMenu } from "./windows/home";
 import { registerIpcHandlers } from "./ipc";
 import { isAccessibilityGranted } from "./input/paster";
 import { SetupChecker } from "./setup/checker";
@@ -103,6 +103,7 @@ function reloadConfig(): void {
   shortcutManager?.registerShortcutKeys();
   shortcutManager?.updateHud();
   updateTrayConfig(config);
+  refreshAppMenu();
   analytics.setEnabled(config.analyticsEnabled);
 
   const setupChecker = new SetupChecker(modelManager);
@@ -162,7 +163,7 @@ app.whenReady().then(async () => {
   historyManager.cleanup();
 
   const hasAccessibility = isAccessibilityGranted();
-  if (!hasAccessibility) {
+  if (!hasAccessibility && initialConfig.onboardingCompleted) {
     const response = await dialog.showMessageBox({
       type: "warning",
       title: t("dialog.accessibilityTitle"),
@@ -241,6 +242,7 @@ app.whenReady().then(async () => {
       configManager.save(cfg);
       shortcutManager?.updateHud();
       updateTrayConfig(cfg);
+      refreshAppMenu();
       for (const win of BrowserWindow.getAllWindows()) {
         win.webContents.send("config:changed");
       }
@@ -250,6 +252,29 @@ app.whenReady().then(async () => {
   updateTrayConfig(configManager.load());
 
   initAutoUpdater(() => updateTrayMenu());
+
+  setAppMenuCallbacks({
+    onShowVox: () => openHome(reloadConfig),
+    onTranscriptions: () => openHome(reloadConfig, "transcriptions"),
+    onSettings: () => openHome(reloadConfig, "general"),
+    onToggleHud: () => {
+      const cfg = configManager.load();
+      cfg.showHud = !cfg.showHud;
+      if (!cfg.showHud) cfg.hudShowOnHover = false;
+      configManager.save(cfg);
+      shortcutManager?.updateHud();
+      updateTrayConfig(cfg);
+      refreshAppMenu();
+      for (const win of BrowserWindow.getAllWindows()) {
+        win.webContents.send("config:changed");
+      }
+    },
+    onCheckForUpdates: () => openHome(reloadConfig, "about"),
+    onOnboarding: () => {
+      openHome(reloadConfig, "onboarding");
+    },
+    isHudVisible: () => configManager.load().showHud,
+  });
 
   shortcutManager.updateHud();
   openHome(reloadConfig);

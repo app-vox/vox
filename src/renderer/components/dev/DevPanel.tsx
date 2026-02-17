@@ -339,6 +339,7 @@ export function DevPanel() {
     { label: "Update Available", preset: { updateStatus: "available" } },
     { label: "Update Downloading", preset: { updateStatus: "downloading", updateDownloadProgress: 42 } },
     { label: "Update Ready", preset: { updateStatus: "ready" } },
+    { label: "New User", preset: { setupComplete: false, visitedShortcuts: false, llmEnhancementEnabled: false, llmConnectionTested: false } },
     { label: "Everything Broken", preset: { online: false, setupComplete: false, microphonePermission: "denied", accessibilityPermission: false, updateStatus: "error", llmEnhancementEnabled: false, llmConnectionTested: false } },
   ];
 
@@ -621,6 +622,29 @@ export function DevPanel() {
       rows: [
         { label: "Active Tab", render: () => <>{activeTab}</> },
         { label: "Collapsed", render: () => <>{boolDot(collapsed)}</> },
+        {
+          label: "Onboarding",
+          render: () => (
+            <>
+              <span className={styles.realValue}>{boolDot(config?.onboardingCompleted)}</span>
+              {config?.onboardingCompleted && (
+                <button
+                  className={styles.setBtn}
+                  onClick={async () => {
+                    const { useOnboardingStore } = await import("../onboarding/use-onboarding-store");
+                    useOnboardingStore.getState().setForceOpen(true);
+                    const store = useConfigStore.getState();
+                    store.updateConfig({ onboardingCompleted: false });
+                    await store.saveConfig(false);
+                    triggerToast();
+                  }}
+                >
+                  Reset
+                </button>
+              )}
+            </>
+          ),
+        },
         {
           label: "Dev Visuals",
           overrideField: "hideDevVisuals",
