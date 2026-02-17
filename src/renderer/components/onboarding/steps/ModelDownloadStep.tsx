@@ -17,13 +17,13 @@ export function ModelDownloadStep() {
   const next = useOnboardingStore((s) => s.next);
   const modelDownloaded = useOnboardingStore((s) => s.modelDownloaded);
   const setModelDownloaded = useOnboardingStore((s) => s.setModelDownloaded);
+  const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [downloading, setDownloading] = useState<string | null>(null);
   const [progress, setProgress] = useState({ downloaded: 0, total: 0 });
-  const config = useConfigStore((s) => s.config);
 
   const refreshModels = useCallback(async () => {
     const list = await window.voxApi.models.list();
@@ -33,7 +33,7 @@ export function ModelDownloadStep() {
 
     // Pre-select model if one is already downloaded and configured
     if (anyDownloaded) {
-      const configuredModel = config.whisper.model;
+      const configuredModel = config?.whisper.model;
       const configuredAndDownloaded = list.find(
         (m) => m.size === configuredModel && m.downloaded
       );
@@ -46,7 +46,7 @@ export function ModelDownloadStep() {
         if (first) setSelectedSize(first.size);
       }
     }
-  }, [setModelDownloaded, selectedSize, config.whisper.model]);
+  }, [setModelDownloaded, selectedSize, config?.whisper.model]);
 
   useEffect(() => {
     refreshModels(); // eslint-disable-line react-hooks/set-state-in-effect
