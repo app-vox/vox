@@ -337,5 +337,11 @@
   "general.analytics.hint": "Anonim kullanım verilerini paylaşarak Vox'u iyileştirmeye yardımcı olun. Kişisel bilgi veya transkripsiyon içeriği asla toplanmaz.",
   "general.hud.targetDisplay": "Ekran",
   "general.hud.systemDefault": "Sistem varsayılanı",
-  "general.hud.primaryDisplay": "Ana"
+  "general.hud.primaryDisplay": "Ana",
+  "general.performance.title": "Performans",
+  "general.performance.description": "Daha hafif bir deneyim için görsel karmaşıklığı azaltın.",
+  "general.performance.reduceAnimations": "Animasyonları azalt",
+  "general.performance.reduceAnimationsHint": "Uygulamadaki tüm CSS geçişlerini ve animasyonlarını devre dışı bırakır.",
+  "general.performance.reduceVisualEffects": "Görsel efektleri azalt",
+  "general.performance.reduceVisualEffectsHint": "Daha hafif işlem için gölgeleri, bulanıklığı, arka plan efektlerini ve degradeleri kaldırır."
 }

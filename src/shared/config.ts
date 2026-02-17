@@ -105,6 +105,8 @@ export interface VoxConfig {
   hudCustomX: number;
   hudCustomY: number;
   targetDisplayId: number | null;
+  reduceAnimations: boolean;
+  reduceVisualEffects: boolean;
 }
 
 export function createDefaultConfig(isProduction = false): VoxConfig {
@@ -141,6 +143,8 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     hudCustomX: 0.5,
     hudCustomY: 0.9,
     targetDisplayId: null,
+    reduceAnimations: false,
+    reduceVisualEffects: false,
   };
 }
 

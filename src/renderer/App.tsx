@@ -1,5 +1,6 @@
 import { useEffect, useRef, lazy, Suspense, type JSX } from "react";
 import { useConfigStore } from "./stores/config-store";
+import { useDevValue } from "./stores/dev-overrides-store";
 import { SpinnerIcon } from "../shared/icons";
 
 // Clear dev overrides on startup so the app always starts clean (before any component mounts)
@@ -18,6 +19,7 @@ import { TranscriptionsPanel } from "./components/transcriptions/TranscriptionsP
 import { DictionaryPanel } from "./components/dictionary/DictionaryPanel";
 import { ScrollButtons } from "./components/ui/ScrollButtons";
 import { useTheme } from "./hooks/use-theme";
+import { usePerformance } from "./hooks/use-performance";
 import { I18nProvider } from "./i18n-context";
 
 // Lazy-load DevPanel so the entire module tree is excluded from production bundles.
@@ -55,6 +57,12 @@ export function App() {
   const contentRef = useRef<HTMLElement>(null);
 
   useTheme(theme);
+
+  const rawReduceAnimations = useConfigStore((s) => s.config?.reduceAnimations);
+  const rawReduceVisualEffects = useConfigStore((s) => s.config?.reduceVisualEffects);
+  const reduceAnimations = useDevValue("reduceAnimations", rawReduceAnimations);
+  const reduceVisualEffects = useDevValue("reduceVisualEffects", rawReduceVisualEffects);
+  usePerformance(reduceAnimations, reduceVisualEffects);
 
   useEffect(() => {
     loadConfig();

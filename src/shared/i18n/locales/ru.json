@@ -337,5 +337,11 @@
   "general.analytics.hint": "Помогите улучшить Vox, делясь анонимными данными об использовании. Личная информация и содержимое транскрипций никогда не собираются.",
   "general.hud.targetDisplay": "Дисплей",
   "general.hud.systemDefault": "Системный по умолчанию",
-  "general.hud.primaryDisplay": "Основной"
+  "general.hud.primaryDisplay": "Основной",
+  "general.performance.title": "Производительность",
+  "general.performance.description": "Уменьшите визуальную сложность для более лёгкого интерфейса.",
+  "general.performance.reduceAnimations": "Уменьшить анимации",
+  "general.performance.reduceAnimationsHint": "Отключает все CSS-переходы и анимации в приложении.",
+  "general.performance.reduceVisualEffects": "Уменьшить визуальные эффекты",
+  "general.performance.reduceVisualEffectsHint": "Удаляет тени, размытие, эффекты backdrop и градиенты для более лёгкой отрисовки."
 }

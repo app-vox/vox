@@ -124,6 +124,7 @@ export function GeneralPanel() {
   ];
 
   const [displayCollapsed, setDisplayCollapsed] = useState(() => localStorage.getItem(DISPLAY_COLLAPSED_KEY) !== "false");
+  const [perfCollapsed, setPerfCollapsed] = useState(true);
   const [hudBannerDismissed, setHudBannerDismissed] = useState(() => localStorage.getItem(HUD_BANNER_DISMISSED_KEY) === "true");
   const [shortcutsBannerDismissed, setShortcutsBannerDismissed] = useState(() =>
     localStorage.getItem(SHORTCUTS_BANNER_DISMISSED_KEY) === "true" || localStorage.getItem(VISITED_SHORTCUTS_KEY) === "true"
@@ -675,6 +676,60 @@ export function GeneralPanel() {
             </div>
           </label>
         </div>
+      </div>
+
+      <div className={card.card}>
+        <button
+          className={styles.collapsibleHeader}
+          onClick={() => {
+            setPerfCollapsed((prev) => !prev);
+          }}
+          aria-expanded={!perfCollapsed}
+        >
+          <div>
+            <h2>{t("general.performance.title")}</h2>
+            <p className={card.description}>{t("general.performance.description")}</p>
+          </div>
+          <ChevronDownIcon
+            width={16}
+            height={16}
+            className={`${styles.collapseChevron} ${perfCollapsed ? styles.collapsed : ""}`}
+          />
+        </button>
+        {!perfCollapsed && (
+          <div className={card.body}>
+            <label className={styles.checkboxRow}>
+              <input
+                type="checkbox"
+                checked={config.reduceAnimations}
+                onChange={async () => {
+                  updateConfig({ reduceAnimations: !config.reduceAnimations });
+                  await saveConfig(false);
+                  triggerToast();
+                }}
+              />
+              <div>
+                <div className={styles.checkboxLabel}>{t("general.performance.reduceAnimations")}</div>
+                <div className={styles.checkboxDesc}>{t("general.performance.reduceAnimationsHint")}</div>
+              </div>
+            </label>
+            <label className={styles.checkboxRow}>
+              <input
+                type="checkbox"
+                checked={config.reduceVisualEffects}
+                onChange={async () => {
+                  updateConfig({ reduceVisualEffects: !config.reduceVisualEffects });
+                  await saveConfig(false);
+                  triggerToast();
+                }}
+              />
+              <div>
+                <div className={styles.checkboxLabel}>{t("general.performance.reduceVisualEffects")}</div>
+                <div className={styles.checkboxDesc}>{t("general.performance.reduceVisualEffectsHint")}</div>
+              </div>
+            </label>
+          </div>
+        )}
       </div>
     </>
   );
