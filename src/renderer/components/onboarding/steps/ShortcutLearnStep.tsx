@@ -26,7 +26,9 @@ export function ShortcutLearnStep() {
           (m === "meta" && e.metaKey) ||
           (m === "shift" && e.shiftKey),
       );
-      return modMatch && mainKey && e.key.toLowerCase() === mainKey;
+      if (!modMatch || !mainKey) return false;
+      const pressed = e.key.toLowerCase();
+      return pressed === mainKey || (mainKey === "space" && (pressed === " " || e.code === "Space"));
     },
     [],
   );
