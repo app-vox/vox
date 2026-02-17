@@ -406,7 +406,7 @@
   "onboarding.tryIt.suggestedPhrase3": "Буду через пять минут",
   "onboarding.hud.stepLabel": "Шаг {current} из {total}",
   "onboarding.hud.title": "Виджет Записи",
-  "onboarding.hud.description": "У Vox есть плавающий виджет (HUD), который появляется на экране. Во время записи он показывает статусную пилюлю. Вы также можете оставить его всегда видимым как кнопку быстрого доступа к записи.",
+  "onboarding.hud.description": "Vox имеет плавающий виджет (HUD), показывающий состояние записи. Вы также можете включить постоянно видимую кнопку для мгновенной записи одним кликом.",
   "onboarding.hud.choice.enable": "Да, включить",
   "onboarding.hud.choice.enableDesc": "Оставить маленькую плавающую кнопку на экране. Нажмите на неё, чтобы мгновенно записать.",
   "onboarding.hud.choice.later": "Нет, настрою позже",
@@ -421,5 +421,6 @@
   "onboarding.done.tipTranscriptions": "Проверьте вкладку Транскрипции для полной истории с поиском",
   "onboarding.done.tipDictionary": "Добавьте имена и термины в Словарь для повышения точности",
   "onboarding.done.tipAi": "Включите Улучшение ИИ в Настройках для автоматического исправления грамматики",
-  "onboarding.done.visitWebsite": "Узнайте больше на app-vox.github.io/vox"
+  "onboarding.done.visitWebsite": "Узнайте больше на app-vox.github.io/vox",
+  "onboarding.hud.previewLabel": "Вот как это будет выглядеть:"
 }

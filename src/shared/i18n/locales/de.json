@@ -406,7 +406,7 @@
   "onboarding.tryIt.suggestedPhrase3": "Ich bin in fünf Minuten da",
   "onboarding.hud.stepLabel": "Schritt {current} von {total}",
   "onboarding.hud.title": "Aufnahme-Widget",
-  "onboarding.hud.description": "Vox hat ein schwebendes Widget (HUD), das auf deinem Bildschirm erscheint. Während der Aufnahme zeigt es eine Status-Pille. Du kannst es auch dauerhaft sichtbar als Schnellzugriffs-Button für Aufnahmen behalten.",
+  "onboarding.hud.description": "Vox hat ein schwebendes Widget (HUD), das den Aufnahmestatus anzeigt. Sie können auch eine immer sichtbare Schaltfläche für sofortige Aufnahme mit einem Klick aktivieren.",
   "onboarding.hud.choice.enable": "Ja, aktivieren",
   "onboarding.hud.choice.enableDesc": "Einen kleinen schwebenden Button auf dem Bildschirm behalten. Klicke darauf, um sofort aufzunehmen.",
   "onboarding.hud.choice.later": "Nein, später konfigurieren",
@@ -421,5 +421,6 @@
   "onboarding.done.tipTranscriptions": "Sieh dir den Transkriptionen-Tab für deinen vollständigen durchsuchbaren Verlauf an",
   "onboarding.done.tipDictionary": "Füge Namen und Begriffe zum Wörterbuch hinzu, um die Genauigkeit zu verbessern",
   "onboarding.done.tipAi": "Aktiviere KI-Verbesserung in den Einstellungen, um Grammatik automatisch zu korrigieren",
-  "onboarding.done.visitWebsite": "Mehr erfahren auf app-vox.github.io/vox"
+  "onboarding.done.visitWebsite": "Mehr erfahren auf app-vox.github.io/vox",
+  "onboarding.hud.previewLabel": "So werden Sie es sehen:"
 }

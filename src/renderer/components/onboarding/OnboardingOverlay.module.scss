@@ -532,3 +532,65 @@
     }
   }
 }
+
+/* ---- HUD preview ---- */
+
+.hudPreview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-2);
+  width: 100%;
+}
+
+.hudPreviewLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+}
+
+.hudPreviewScene {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 80px;
+}
+
+.hudPreviewButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  color: white;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent) 30%, transparent);
+  animation: hudFloat 3s ease-in-out infinite;
+}
+
+.hudPreviewCursor {
+  position: absolute;
+  right: 16px;
+  bottom: 12px;
+  animation: cursorApproach 3s ease-in-out infinite;
+}
+
+@keyframes hudFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes cursorApproach {
+  0% { transform: translate(12px, 8px); opacity: 0.4; }
+  50% { transform: translate(0, 0); opacity: 1; }
+  100% { transform: translate(12px, 8px); opacity: 0.4; }
+}
+
+.hudButtonRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-2);
+}

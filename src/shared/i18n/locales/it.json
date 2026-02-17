@@ -406,7 +406,7 @@
   "onboarding.tryIt.suggestedPhrase3": "Arrivo tra cinque minuti",
   "onboarding.hud.stepLabel": "Passo {current} di {total}",
   "onboarding.hud.title": "Widget di Registrazione",
-  "onboarding.hud.description": "Vox ha un widget flottante (HUD) che appare sullo schermo. Durante la registrazione, mostra una pillola di stato. Puoi anche mantenerlo sempre visibile come pulsante di accesso rapido per registrare.",
+  "onboarding.hud.description": "Vox ha un widget flottante (HUD) che mostra lo stato della registrazione. Puoi anche attivare un pulsante sempre visibile per registrare con un clic.",
   "onboarding.hud.choice.enable": "Sì, attivalo",
   "onboarding.hud.choice.enableDesc": "Mantieni un piccolo pulsante flottante sullo schermo. Cliccalo per registrare all'istante.",
   "onboarding.hud.choice.later": "No, lo configuro dopo",
@@ -421,5 +421,6 @@
   "onboarding.done.tipTranscriptions": "Consulta la scheda Trascrizioni per la cronologia completa con ricerca",
   "onboarding.done.tipDictionary": "Aggiungi nomi e termini al Dizionario per migliorare la precisione",
   "onboarding.done.tipAi": "Attiva il Miglioramento IA nelle Impostazioni per correggere automaticamente la grammatica",
-  "onboarding.done.visitWebsite": "Scopri di più su app-vox.github.io/vox"
+  "onboarding.done.visitWebsite": "Scopri di più su app-vox.github.io/vox",
+  "onboarding.hud.previewLabel": "Ecco come lo vedrai:"
 }

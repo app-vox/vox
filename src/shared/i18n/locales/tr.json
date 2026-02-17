@@ -406,7 +406,7 @@
   "onboarding.tryIt.suggestedPhrase3": "Beş dakikaya oradayım",
   "onboarding.hud.stepLabel": "Adım {current} / {total}",
   "onboarding.hud.title": "Kayıt Widget'ı",
-  "onboarding.hud.description": "Vox'un ekranınızda görünen bir yüzen widget'ı (HUD) vardır. Kayıt sırasında bir durum göstergesi görüntüler. Ayrıca kayda hızlı erişim düğmesi olarak her zaman görünür tutabilirsiniz.",
+  "onboarding.hud.description": "Vox'un kayıt durumunu gösteren yüzen bir penceresi (HUD) var. Tek tıkla kayıt için her zaman görünen bir düğmeyi de etkinleştirebilirsiniz.",
   "onboarding.hud.choice.enable": "Evet, etkinleştir",
   "onboarding.hud.choice.enableDesc": "Ekranda küçük bir yüzen düğme tut. Anında kaydetmek için tıkla.",
   "onboarding.hud.choice.later": "Hayır, sonra ayarlarım",
@@ -421,5 +421,6 @@
   "onboarding.done.tipTranscriptions": "Tam aranabilir geçmişiniz için Yazıya Dökümler sekmesine bakın",
   "onboarding.done.tipDictionary": "Doğruluğu artırmak için Sözlüğe isimler ve terimler ekleyin",
   "onboarding.done.tipAi": "Dilbilgisini otomatik düzeltmek için Ayarlarda Yapay Zeka İyileştirmeyi etkinleştirin",
-  "onboarding.done.visitWebsite": "Daha fazla bilgi için app-vox.github.io/vox"
+  "onboarding.done.visitWebsite": "Daha fazla bilgi için app-vox.github.io/vox",
+  "onboarding.hud.previewLabel": "Böyle görünecek:"
 }

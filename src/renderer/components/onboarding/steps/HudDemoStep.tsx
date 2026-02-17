@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useT } from "../../../i18n-context";
 import { useOnboardingStore } from "../use-onboarding-store";
 import { useConfigStore } from "../../../stores/config-store";
+import { MicSimpleIcon } from "../../../../shared/icons";
 import styles from "../OnboardingOverlay.module.scss";
 import btn from "../../shared/buttons.module.scss";
 
-type HudChoice = "enable" | "later" | "skip";
+type HudChoice = "enable" | "later";
 
 export function HudDemoStep() {
   const t = useT();
@@ -31,8 +32,22 @@ export function HudDemoStep() {
       </h2>
       <p className={styles.description}>{t("onboarding.hud.description")}</p>
 
+      <div className={styles.hudPreview}>
+        <span className={styles.hudPreviewLabel}>
+          {t("onboarding.hud.previewLabel")}
+        </span>
+        <div className={styles.hudPreviewScene}>
+          <div className={styles.hudPreviewButton}>
+            <MicSimpleIcon width={20} height={20} />
+          </div>
+          <svg className={styles.hudPreviewCursor} width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M5 3l14 8-6.5 1.5L11 19z" fill="var(--color-text-tertiary)" stroke="var(--color-text-primary)" strokeWidth="1.5"/>
+          </svg>
+        </div>
+      </div>
+
       <div className={styles.modelList}>
-        {(["enable", "later", "skip"] as const).map((opt) => (
+        {(["enable", "later"] as const).map((opt) => (
           <label
             key={opt}
             className={`${styles.modelRow} ${choice === opt ? styles.modelRowSelected : ""}`}
@@ -56,12 +71,20 @@ export function HudDemoStep() {
         ))}
       </div>
 
-      <button
-        className={`${btn.btn} ${btn.primary} ${styles.ctaButton}`}
-        onClick={handleContinue}
-      >
-        {t("onboarding.navigation.continue")}
-      </button>
+      <div className={styles.hudButtonRow}>
+        <button
+          className={`${btn.btn} ${btn.primary} ${styles.ctaButton}`}
+          onClick={handleContinue}
+        >
+          {t("onboarding.navigation.continue")}
+        </button>
+        <button
+          className={`${btn.btn} ${btn.secondary}`}
+          onClick={() => next()}
+        >
+          {t("onboarding.hud.choice.skip")}
+        </button>
+      </div>
     </div>
   );
 }

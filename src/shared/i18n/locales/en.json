@@ -415,11 +415,12 @@
   "onboarding.llm.goToSettings": "Take me to AI settings",
   "onboarding.hud.stepLabel": "Step {current} of {total}",
   "onboarding.hud.title": "Recording Widget",
-  "onboarding.hud.description": "Vox has a floating widget (HUD) that appears on your screen. During recording, it shows a status pill. You can also keep it always visible as a quick-access recording button.",
+  "onboarding.hud.description": "Vox has a floating widget (HUD) that shows recording status. You can also enable an always-on button for instant one-click recording.",
   "onboarding.hud.choice.enable": "Yes, enable it",
   "onboarding.hud.choice.enableDesc": "Keep a small floating button on screen. Click it to record instantly.",
   "onboarding.hud.choice.later": "No, I'll configure later",
   "onboarding.hud.choice.laterDesc": "You can enable the HUD anytime in Settings → General.",
   "onboarding.hud.choice.skip": "Skip",
-  "onboarding.hud.choice.skipDesc": "Move on without changing HUD settings."
+  "onboarding.hud.choice.skipDesc": "Move on without changing HUD settings.",
+  "onboarding.hud.previewLabel": "This is how you'll see it:"
 }
