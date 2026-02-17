@@ -11,31 +11,35 @@ export function ShortcutLearnStep() {
   const config = useConfigStore((s) => s.config);
 
   const holdShortcut = config?.shortcuts.hold || "Alt+Space";
+  const toggleShortcut = config?.shortcuts.toggle || "Alt+Shift+Space";
   const advancedRef = useRef(false);
+
+  const matchesShortcut = useCallback(
+    (e: KeyboardEvent, shortcut: string) => {
+      const keys = shortcut.toLowerCase().split("+");
+      const modifiers = keys.filter((k) => ["alt", "ctrl", "meta", "shift"].includes(k));
+      const mainKey = keys.find((k) => !["alt", "ctrl", "meta", "shift"].includes(k));
+      const modMatch = modifiers.every(
+        (m) =>
+          (m === "alt" && e.altKey) ||
+          (m === "ctrl" && e.ctrlKey) ||
+          (m === "meta" && e.metaKey) ||
+          (m === "shift" && e.shiftKey),
+      );
+      return modMatch && mainKey && e.key.toLowerCase() === mainKey;
+    },
+    [],
+  );
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (advancedRef.current) return;
-      const keys = holdShortcut.toLowerCase().split("+");
-      const modifiers = keys.filter((k) => ["alt", "ctrl", "meta", "shift"].includes(k));
-      const mainKey = keys.find((k) => !["alt", "ctrl", "meta", "shift"].includes(k));
-
-      const modMatch =
-        modifiers.every(
-          (m) =>
-            (m === "alt" && e.altKey) ||
-            (m === "ctrl" && e.ctrlKey) ||
-            (m === "meta" && e.metaKey) ||
-            (m === "shift" && e.shiftKey),
-        );
-
-      if (modMatch && mainKey && e.key.toLowerCase() === mainKey) {
-        e.preventDefault();
+      if (matchesShortcut(e, holdShortcut) || matchesShortcut(e, toggleShortcut)) {
         advancedRef.current = true;
         next();
       }
     },
-    [holdShortcut, next],
+    [holdShortcut, toggleShortcut, matchesShortcut, next],
   );
 
   useEffect(() => {

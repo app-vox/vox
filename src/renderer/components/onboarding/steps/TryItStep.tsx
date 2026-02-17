@@ -67,8 +67,15 @@ export function TryItStep() {
     ? t("onboarding.tryIt.recording")
     : null;
 
+  const handleStepClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName !== "BUTTON") {
+      textareaRef.current?.focus();
+    }
+  };
+
   return (
-    <div className={styles.stepContent}>
+    <div className={styles.stepContent} onClick={handleStepClick}>
       <h2 className={styles.stepTitle}>
         {t("onboarding.tryIt.stepLabel", { current: "4", total: "8" })}
         {" — "}
