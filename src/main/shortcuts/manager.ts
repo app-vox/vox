@@ -552,7 +552,15 @@ export class ShortcutManager {
     const elapsed = this.micActiveAt > 0 ? Date.now() - this.micActiveAt : 0;
     if (this.micActiveAt === 0 || elapsed < ShortcutManager.MIN_RECORDING_MS) {
       slog.info("Recording too short (%dms) or mic not ready — canceling", elapsed);
-      this.cancelRecording();
+      this.micActiveAt = 0;
+      this.recordingGeneration++;
+      const pipeline = this.deps.getPipeline();
+      pipeline.cancel().catch((err) => {
+        slog.error("Error during short-recording cancel", err);
+      });
+      this.stateMachine.setIdle();
+      this.hud.setState("canceled");
+      this.updateTrayState();
       return;
     }
 
