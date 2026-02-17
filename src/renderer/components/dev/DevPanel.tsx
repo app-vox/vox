@@ -622,6 +622,27 @@ export function DevPanel() {
         { label: "Active Tab", render: () => <>{activeTab}</> },
         { label: "Collapsed", render: () => <>{boolDot(collapsed)}</> },
         {
+          label: "Onboarding",
+          render: () => (
+            <>
+              <span className={styles.realValue}>{boolDot(config?.onboardingCompleted)}</span>
+              {config?.onboardingCompleted && (
+                <button
+                  className={styles.setBtn}
+                  onClick={async () => {
+                    const store = useConfigStore.getState();
+                    store.updateConfig({ onboardingCompleted: false });
+                    await store.saveConfig(false);
+                    triggerToast();
+                  }}
+                >
+                  Reset
+                </button>
+              )}
+            </>
+          ),
+        },
+        {
           label: "Dev Visuals",
           overrideField: "hideDevVisuals",
           render: () => (
