@@ -33,6 +33,7 @@ export function OnboardingOverlay() {
     updateConfig({ onboardingCompleted: true });
     await saveConfig(false);
     reset();
+    window.voxApi.shortcuts.enable();
   }, [setForceOpen, updateConfig, saveConfig, reset]);
 
   const animateClose = useCallback(
@@ -43,6 +44,7 @@ export function OnboardingOverlay() {
       setActiveTab("general");
       setTimeout(async () => {
         await completeOnboarding();
+        document.querySelector(".content")?.scrollTo({ top: 0 });
         afterClose();
       }, CLOSE_ANIMATION_MS);
     },
