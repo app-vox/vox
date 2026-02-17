@@ -7,10 +7,12 @@ import { ModelDownloadStep } from "./steps/ModelDownloadStep";
 import { PermissionsStep } from "./steps/PermissionsStep";
 import { ShortcutLearnStep } from "./steps/ShortcutLearnStep";
 import { TryItStep } from "./steps/TryItStep";
+import { HudDemoStep } from "./steps/HudDemoStep";
+import { LlmIntroStep } from "./steps/LlmIntroStep";
 import { DoneStep } from "./steps/DoneStep";
 import styles from "./OnboardingOverlay.module.scss";
 
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 8;
 
 export function OnboardingOverlay() {
   const t = useT();
@@ -41,6 +43,11 @@ export function OnboardingOverlay() {
     setActiveTab("general");
   }, [completeOnboarding, setActiveTab]);
 
+  const handleNavigateToLlm = useCallback(async () => {
+    await completeOnboarding();
+    setActiveTab("llm");
+  }, [completeOnboarding, setActiveTab]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -57,13 +64,15 @@ export function OnboardingOverlay() {
     2: <PermissionsStep />,
     3: <ShortcutLearnStep />,
     4: <TryItStep />,
-    5: <DoneStep onComplete={handleComplete} onExploreSettings={handleExploreSettings} />,
+    5: <HudDemoStep />,
+    6: <LlmIntroStep onNavigateToLlm={handleNavigateToLlm} />,
+    7: <DoneStep onComplete={handleComplete} onExploreSettings={handleExploreSettings} />,
   };
 
   return (
     <div className={styles.overlay}>
       <div className={styles.container}>
-        {step > 0 && step < 5 && (
+        {step > 0 && step < 7 && (
           <div className={styles.topNav}>
             <button className={styles.backBtn} onClick={back}>
               {t("onboarding.navigation.back")}

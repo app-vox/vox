@@ -45,7 +45,7 @@ export function PermissionsStep() {
   return (
     <div className={styles.stepContent}>
       <h2 className={styles.stepTitle}>
-        {t("onboarding.permissions.stepLabel", { current: "2", total: "6" })}
+        {t("onboarding.permissions.stepLabel", { current: "2", total: "8" })}
         {" — "}
         {t("onboarding.permissions.title")}
       </h2>

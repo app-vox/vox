@@ -109,7 +109,7 @@ export function ModelDownloadStep() {
   return (
     <div className={styles.stepContent}>
       <h2 className={styles.stepTitle}>
-        {t("onboarding.model.stepLabel", { current: "1", total: "6" })}
+        {t("onboarding.model.stepLabel", { current: "1", total: "8" })}
         {" — "}
         {t("onboarding.model.title")}
       </h2>
