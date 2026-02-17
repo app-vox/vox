@@ -45,7 +45,7 @@ export function PermissionsStep() {
   return (
     <div className={styles.stepContent}>
       <h2 className={styles.stepTitle}>
-        {t("onboarding.permissions.stepLabel", { current: "2", total: "4" })}
+        {t("onboarding.permissions.stepLabel", { current: "2", total: "6" })}
         {" — "}
         {t("onboarding.permissions.title")}
       </h2>
@@ -78,7 +78,6 @@ export function PermissionsStep() {
             <span className={styles.permissionDesc}>
               {t("onboarding.permissions.accessibilityDesc", { shortcut: holdShortcut })}
             </span>
-            <span className={styles.permissionOptional}>{t("onboarding.permissions.accessibilityOptional")}</span>
           </div>
           {accessibilityGranted ? (
             <span className={styles.grantedBadge}>{t("onboarding.permissions.granted")}</span>
@@ -98,7 +97,7 @@ export function PermissionsStep() {
       <button
         className={`${btn.btn} ${btn.primary} ${styles.ctaButton}`}
         onClick={next}
-        disabled={!microphoneGranted}
+        disabled={!microphoneGranted || !accessibilityGranted}
       >
         {t("onboarding.navigation.continue")}
       </button>
