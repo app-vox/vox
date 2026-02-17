@@ -535,7 +535,6 @@ body {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     animation: widget-morph 10s ease infinite, widget-glow 10s ease infinite;
-    pointer-events: auto;
 }
 
 .hud-icon-idle {
@@ -547,16 +546,15 @@ body {
     animation: idle-icon-toggle 10s step-end infinite;
 }
 
+.hud-icon-idle .idle-logo {
+    position: absolute;
+    animation: idle-logo-swap 10s step-end infinite;
+}
+
 .hud-icon-idle .idle-mic {
-    display: none;
-}
-
-.hud-widget:hover .hud-icon-idle .idle-logo {
-    display: none;
-}
-
-.hud-widget:hover .hud-icon-idle .idle-mic {
-    display: block;
+    position: absolute;
+    opacity: 0;
+    animation: idle-mic-swap 10s step-end infinite;
 }
 
 .hud-pill-content {
@@ -599,8 +597,8 @@ body {
     width: 3px;
     height: 4px;
     border-radius: 1.5px;
-    background: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
+    background: rgba(255, 80, 80, 0.9);
+    box-shadow: 0 0 4px rgba(255, 68, 68, 0.3);
 }
 
 .hud-status-layer {
@@ -1061,8 +1059,8 @@ body {
     15%  { width: 42px;  height: 42px; border-radius: 50%;  background: rgba(25, 25, 25, 0.92); }
     18%  { width: 200px; height: 36px; border-radius: 18px; background: rgba(255, 68, 68, 0.85); }
     20%  { width: 200px; height: 36px; border-radius: 18px; background: rgba(25, 25, 25, 0.92); }
-    60%  { width: 200px; height: 36px; border-radius: 18px; background: rgba(25, 25, 25, 0.92); }
-    64%  { width: 42px;  height: 42px; border-radius: 50%;  background: rgba(25, 25, 25, 0.92); }
+    64%  { width: 200px; height: 36px; border-radius: 18px; background: rgba(25, 25, 25, 0.92); }
+    68%  { width: 42px;  height: 42px; border-radius: 50%;  background: rgba(25, 25, 25, 0.92); }
     100% { width: 42px;  height: 42px; border-radius: 50%;  background: rgba(25, 25, 25, 0.92); }
 }
 
@@ -1070,17 +1068,31 @@ body {
     0%   { opacity: 1; visibility: visible; }
     13%  { opacity: 1; visibility: visible; }
     15%  { opacity: 0; visibility: hidden; }
-    62%  { opacity: 0; visibility: hidden; }
-    64%  { opacity: 1; visibility: visible; }
+    66%  { opacity: 0; visibility: hidden; }
+    68%  { opacity: 1; visibility: visible; }
     100% { opacity: 1; visibility: visible; }
+}
+
+@keyframes idle-logo-swap {
+    0%   { opacity: 1; }
+    8%   { opacity: 0; }
+    68%  { opacity: 1; }
+    100% { opacity: 1; }
+}
+
+@keyframes idle-mic-swap {
+    0%   { opacity: 0; }
+    8%   { opacity: 1; }
+    15%  { opacity: 0; }
+    100% { opacity: 0; }
 }
 
 @keyframes pill-content-toggle {
     0%   { opacity: 0; visibility: hidden; }
     15%  { opacity: 0; visibility: hidden; }
     18%  { opacity: 1; visibility: visible; }
-    60%  { opacity: 1; visibility: visible; }
-    64%  { opacity: 0; visibility: hidden; }
+    64%  { opacity: 1; visibility: visible; }
+    68%  { opacity: 0; visibility: hidden; }
     100% { opacity: 0; visibility: hidden; }
 }
 
@@ -1114,30 +1126,30 @@ body {
     0% { opacity: 0.5; } 15% { opacity: 0.5; } 18% { opacity: 1; } 43% { opacity: 1; } 45% { opacity: 0.5; } 100% { opacity: 0.5; }
 }
 @keyframes stage-transcribe {
-    0% { opacity: 0.5; } 43% { opacity: 0.5; } 45% { opacity: 1; } 53% { opacity: 1; } 55% { opacity: 0.5; } 100% { opacity: 0.5; }
+    0% { opacity: 0.5; } 43% { opacity: 0.5; } 45% { opacity: 1; } 56% { opacity: 1; } 58% { opacity: 0.5; } 100% { opacity: 0.5; }
 }
 @keyframes stage-enhance {
-    0% { opacity: 0.5; } 53% { opacity: 0.5; } 55% { opacity: 1; } 60% { opacity: 1; } 62% { opacity: 0.5; } 100% { opacity: 0.5; }
+    0% { opacity: 0.5; } 56% { opacity: 0.5; } 58% { opacity: 1; } 64% { opacity: 1; } 66% { opacity: 0.5; } 100% { opacity: 0.5; }
 }
 @keyframes stage-paste {
-    0% { opacity: 0.5; } 64% { opacity: 0.5; } 66% { opacity: 1; } 86% { opacity: 1; } 88% { opacity: 0.5; } 100% { opacity: 0.5; }
+    0% { opacity: 0.5; } 68% { opacity: 0.5; } 70% { opacity: 1; } 88% { opacity: 1; } 90% { opacity: 0.5; } 100% { opacity: 0.5; }
 }
 
 @keyframes layer-transcribing {
     0%   { opacity: 0; visibility: hidden; }
     44%  { opacity: 0; visibility: hidden; }
     45%  { opacity: 1; visibility: visible; }
-    53%  { opacity: 1; visibility: visible; }
-    54%  { opacity: 0; visibility: hidden; }
+    56%  { opacity: 1; visibility: visible; }
+    57%  { opacity: 0; visibility: hidden; }
     100% { opacity: 0; visibility: hidden; }
 }
 
 @keyframes layer-enhancing {
     0%   { opacity: 0; visibility: hidden; }
-    54%  { opacity: 0; visibility: hidden; }
-    55%  { opacity: 1; visibility: visible; }
-    60%  { opacity: 1; visibility: visible; }
-    61%  { opacity: 0; visibility: hidden; }
+    57%  { opacity: 0; visibility: hidden; }
+    58%  { opacity: 1; visibility: visible; }
+    64%  { opacity: 1; visibility: visible; }
+    65%  { opacity: 0; visibility: hidden; }
     100% { opacity: 0; visibility: hidden; }
 }
 
@@ -1145,8 +1157,8 @@ body {
     0%   { opacity: 0; visibility: hidden; }
     18%  { opacity: 0; visibility: hidden; }
     20%  { opacity: 1; visibility: visible; }
-    60%  { opacity: 1; visibility: visible; }
-    61%  { opacity: 0; visibility: hidden; }
+    64%  { opacity: 1; visibility: visible; }
+    65%  { opacity: 0; visibility: hidden; }
     100% { opacity: 0; visibility: hidden; }
 }
 
@@ -1157,8 +1169,8 @@ body {
     15%  { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); }
     18%  { box-shadow: 0 2px 8px rgba(255,68,68,0.3), 0 4px 16px rgba(255,68,68,0.2); }
     20%  { box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2); }
-    60%  { box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2); }
-    64%  { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); }
+    64%  { box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2); }
+    68%  { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); }
     100% { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); }
 }
 
@@ -1166,6 +1178,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
     .hud-widget,
     .hud-icon-idle,
+    .hud-icon-idle .idle-logo,
+    .hud-icon-idle .idle-mic,
     .hud-pill-content,
     .hud-listening-layer,
     .hud-bars .bar,

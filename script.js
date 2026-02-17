@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!inputField || !typedText || !cursor) return;
 
         const CYCLE_MS = 10000;
-        const TYPING_START = 0.66;
+        const TYPING_START = 0.70;
 
         let pendingTimeouts = [];
 
