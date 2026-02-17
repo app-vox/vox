@@ -423,5 +423,14 @@
   "onboarding.done.tipDictionary": "Doğruluğu artırmak için Sözlüğe isimler ve terimler ekleyin",
   "onboarding.done.tipAi": "Dilbilgisini otomatik düzeltmek için Ayarlarda Yapay Zeka İyileştirmeyi etkinleştirin",
   "onboarding.done.visitWebsite": "Daha fazla bilgi için app-vox.github.io/vox",
-  "onboarding.hud.previewLabel": "Böyle görünecek:"
+  "onboarding.hud.previewLabel": "Böyle görünecek:",
+  "menu.file": "Dosya",
+  "menu.view": "Görünüm",
+  "menu.showVox": "Vox'u Göster",
+  "menu.transcriptions": "Transkripsiyonlar",
+  "menu.settings": "Ayarlar",
+  "menu.showHud": "HUD'u Göster",
+  "menu.hideHud": "HUD'u Gizle",
+  "menu.checkForUpdates": "Güncellemeleri Kontrol Et…",
+  "menu.visitOnboarding": "Karşılama Turunu Başlat"
 }

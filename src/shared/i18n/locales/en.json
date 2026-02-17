@@ -423,5 +423,14 @@
   "onboarding.hud.choice.laterDesc": "You can enable the HUD anytime in Settings → General.",
   "onboarding.hud.choice.skip": "Skip",
   "onboarding.hud.choice.skipDesc": "Move on without changing HUD settings.",
-  "onboarding.hud.previewLabel": "This is how you'll see it:"
+  "onboarding.hud.previewLabel": "This is how you'll see it:",
+  "menu.file": "File",
+  "menu.view": "View",
+  "menu.showVox": "Show Vox",
+  "menu.transcriptions": "Transcriptions",
+  "menu.settings": "Settings",
+  "menu.showHud": "Show HUD",
+  "menu.hideHud": "Hide HUD",
+  "menu.checkForUpdates": "Check for Updates…",
+  "menu.visitOnboarding": "Visit Onboarding"
 }

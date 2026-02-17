@@ -1,18 +1,100 @@
 import { app, BrowserWindow, Menu, nativeTheme, screen } from "electron";
 import * as path from "path";
 import log from "electron-log/main";
+import { t } from "../../shared/i18n";
 
 const slog = log.scope("Vox");
 
-function setAppMenu(): void {
+export interface AppMenuCallbacks {
+  onShowVox: () => void;
+  onTranscriptions: () => void;
+  onSettings: () => void;
+  onToggleHud: () => void;
+  onCheckForUpdates: () => void;
+  onOnboarding: () => void;
+  isHudVisible: () => boolean;
+}
+
+let menuCallbacks: AppMenuCallbacks | null = null;
+
+export function setAppMenuCallbacks(cb: AppMenuCallbacks): void {
+  menuCallbacks = cb;
+}
+
+function buildAppMenu(): void {
+  const hudVisible = menuCallbacks?.isHudVisible() ?? false;
+
   const template: Electron.MenuItemConstructorOptions[] = [
-    { role: "appMenu" },
-    { role: "fileMenu" },
+    {
+      label: "Vox",
+      submenu: [
+        { role: "about" },
+        { type: "separator" },
+        {
+          label: t("menu.checkForUpdates"),
+          click: () => menuCallbacks?.onCheckForUpdates(),
+        },
+        { type: "separator" },
+        {
+          label: t("menu.visitOnboarding"),
+          click: () => menuCallbacks?.onOnboarding(),
+        },
+        { type: "separator" },
+        { role: "services" },
+        { type: "separator" },
+        { role: "hide" },
+        { role: "hideOthers" },
+        { role: "unhide" },
+        { type: "separator" },
+        { role: "quit" },
+      ],
+    },
+    {
+      label: t("menu.file"),
+      submenu: [
+        {
+          label: t("menu.showVox"),
+          accelerator: "CmdOrCtrl+O",
+          click: () => menuCallbacks?.onShowVox(),
+        },
+        {
+          label: t("menu.transcriptions"),
+          accelerator: "CmdOrCtrl+T",
+          click: () => menuCallbacks?.onTranscriptions(),
+        },
+        { type: "separator" },
+        { role: "close" },
+      ],
+    },
     { role: "editMenu" },
-    ...(!app.isPackaged ? [{ role: "viewMenu" as const }] : []),
-    { role: "windowMenu" },
+    {
+      label: t("menu.view"),
+      submenu: [
+        {
+          label: t("menu.settings"),
+          accelerator: "CmdOrCtrl+,",
+          click: () => menuCallbacks?.onSettings(),
+        },
+        { type: "separator" },
+        {
+          label: hudVisible ? t("menu.hideHud") : t("menu.showHud"),
+          click: () => menuCallbacks?.onToggleHud(),
+        },
+        ...(!app.isPackaged ? [
+          { type: "separator" as const },
+          { role: "reload" as const },
+          { role: "forceReload" as const },
+          { role: "toggleDevTools" as const },
+        ] : []),
+      ],
+    },
   ];
+
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+}
+
+export function refreshAppMenu(): void {
+  buildAppMenu();
 }
 
 let homeWindow: BrowserWindow | null = null;
@@ -70,7 +152,7 @@ export function openHome(onClosed: () => void, initialTab?: string): void {
     },
   });
 
-  setAppMenu();
+  buildAppMenu();
 
   if (!app.isPackaged && process.env["ELECTRON_RENDERER_URL"]) {
     homeWindow.loadURL(process.env["ELECTRON_RENDERER_URL"]);

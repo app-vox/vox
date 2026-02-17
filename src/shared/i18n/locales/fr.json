@@ -423,5 +423,14 @@
   "onboarding.done.tipDictionary": "Ajoutez des noms et des termes au Dictionnaire pour améliorer la précision",
   "onboarding.done.tipAi": "Activez l'Amélioration IA dans les Réglages pour corriger la grammaire automatiquement",
   "onboarding.done.visitWebsite": "En savoir plus sur app-vox.github.io/vox",
-  "onboarding.hud.previewLabel": "Voici comment vous le verrez :"
+  "onboarding.hud.previewLabel": "Voici comment vous le verrez :",
+  "menu.file": "Fichier",
+  "menu.view": "Affichage",
+  "menu.showVox": "Afficher Vox",
+  "menu.transcriptions": "Transcriptions",
+  "menu.settings": "Paramètres",
+  "menu.showHud": "Afficher le HUD",
+  "menu.hideHud": "Masquer le HUD",
+  "menu.checkForUpdates": "Rechercher les mises à jour…",
+  "menu.visitOnboarding": "Découvrir l'accueil"
 }

@@ -76,6 +76,12 @@ export function App() {
 
   useEffect(() => {
     window.voxApi.navigation.onNavigateTab((tab) => {
+      if (tab === "onboarding") {
+        const store = useOnboardingStore.getState();
+        store.reset();
+        store.setForceOpen(true);
+        return;
+      }
       useConfigStore.getState().setActiveTab(tab);
     });
   }, []);

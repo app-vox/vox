@@ -149,7 +149,7 @@ function buildHudHtml(): string {
     color: white;
   }
   .widget.pill.listening .pill-cancel:active {
-    transform: translateY(-50%) scale(0.85);
+    transform: translateY(-50%) scale(0.92);
   }
   .widget.pill.transcribing,
   .widget.pill.enhancing {
@@ -178,7 +178,7 @@ function buildHudHtml(): string {
   }
   .widget.pill.transcribing .pill-cancel:active,
   .widget.pill.enhancing .pill-cancel:active {
-    transform: translateY(-50%) scale(0.85);
+    transform: translateY(-50%) scale(0.92);
   }
   .widget.pill.error, .widget.pill.canceled {
     background: rgba(25, 25, 25, 0.92);
@@ -455,7 +455,7 @@ document.addEventListener('click', function(e) {
 
 /* ---- Drag handling ---- */
 widget.addEventListener('mousedown', function(e) {
-  if (e.target.closest('.hover-btn') || e.target.closest('.pill-cancel')) return;
+  if (e.target.closest('.hover-btn') || e.target.closest('.pill-cancel') || e.target.closest('.pill-stop')) return;
   isDragging = false;
   wasDragged = false;
   dragStartX = e.screenX;
@@ -493,7 +493,7 @@ widget.addEventListener('mousedown', function(e) {
 
 /* ---- Click handling ---- */
 widget.addEventListener('click', function(e) {
-  if (e.target.closest('.hover-btn') || e.target.closest('.pill-cancel')) return;
+  if (e.target.closest('.hover-btn') || e.target.closest('.pill-cancel') || e.target.closest('.pill-stop')) return;
   if (wasDragged) { wasDragged = false; return; }
   var isCircle = !widget.classList.contains('pill');
   if (isCircle) {
