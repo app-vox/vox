@@ -515,7 +515,8 @@ export class ShortcutManager {
     this.micActiveAt = 0;
     pipeline.startRecording().then(() => {
       if (gen !== this.recordingGeneration) {
-        slog.info("Stale recording start (gen=%d, current=%d) — discarding", gen, this.recordingGeneration);
+        slog.info("Stale recording start (gen=%d, current=%d) — stopping mic", gen, this.recordingGeneration);
+        pipeline.cancel().catch((e) => slog.error("Error stopping stale recording", e));
         return;
       }
       this.micActiveAt = Date.now();
@@ -528,6 +529,7 @@ export class ShortcutManager {
     }).catch((err: Error) => {
       if (gen !== this.recordingGeneration) {
         slog.info("Stale recording error (gen=%d, current=%d) — discarding", gen, this.recordingGeneration);
+        pipeline.cancel().catch(() => {});
         return;
       }
       slog.error("Recording failed", err);
