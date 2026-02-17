@@ -73,6 +73,18 @@ export function OnboardingOverlay() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleSkip]);
 
+  const SHORTCUT_LEARN_STEP = 3;
+  useEffect(() => {
+    if (step === SHORTCUT_LEARN_STEP) {
+      window.voxApi.shortcuts.disable();
+    }
+    return () => {
+      if (step === SHORTCUT_LEARN_STEP) {
+        window.voxApi.shortcuts.enable();
+      }
+    };
+  }, [step]);
+
   const steps: Record<OnboardingStep, JSX.Element> = {
     0: <WelcomeStep />,
     1: <ModelDownloadStep />,

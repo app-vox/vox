@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useT } from "../../../i18n-context";
 import { useOnboardingStore } from "../use-onboarding-store";
 import { useConfigStore } from "../../../stores/config-store";
@@ -11,13 +10,6 @@ export function ShortcutLearnStep() {
   const config = useConfigStore((s) => s.config);
 
   const holdShortcut = config?.shortcuts.hold || "Alt+Space";
-
-  useEffect(() => {
-    window.voxApi.shortcuts.disable();
-    return () => {
-      window.voxApi.shortcuts.enable();
-    };
-  }, []);
 
   return (
     <div className={styles.stepContent}>
