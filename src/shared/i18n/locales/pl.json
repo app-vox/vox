@@ -415,7 +415,7 @@
   "onboarding.hud.choice.skipDesc": "Kontynuuj bez zmiany ustawień HUD.",
   "onboarding.llm.stepLabel": "Krok {current} z {total}",
   "onboarding.llm.title": "Ulepszanie AI",
-  "onboarding.llm.description": "Vox może używać AI do automatycznego ulepszania transkrypcji — poprawiając gramatykę, usuwając słowa wypełniające jak „no" i „eee" oraz czyszcząc tekst.",
+  "onboarding.llm.description": "Vox może używać AI do automatycznego ulepszania transkrypcji — poprawiając gramatykę, usuwając słowa wypełniające jak \u201eno\u201c i \u201eeee\u201c oraz czyszcząc tekst.",
   "onboarding.llm.optional": "To jest opcjonalne i wymaga połączenia z usługą AI. Możesz to skonfigurować w każdej chwili w Ustawieniach.",
   "onboarding.llm.goToSettings": "Przejdź do ustawień AI",
   "onboarding.done.tipTranscriptions": "Sprawdź zakładkę Transkrypcje, aby zobaczyć pełną historię z wyszukiwaniem",

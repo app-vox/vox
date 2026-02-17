@@ -108,8 +108,20 @@ describe("OnboardingOverlay", () => {
     expect(matches.length).toBeGreaterThanOrEqual(1);
   });
 
-  it("renders done step at step 5", () => {
+  it("renders HUD demo step at step 5", () => {
     useOnboardingStore.setState({ step: 5 });
+    renderWithI18n(<OnboardingOverlay />);
+    expect(screen.getByText(/Recording Widget/)).toBeInTheDocument();
+  });
+
+  it("renders LLM intro step at step 6", () => {
+    useOnboardingStore.setState({ step: 6 });
+    renderWithI18n(<OnboardingOverlay />);
+    expect(screen.getByText(/AI Enhancement/)).toBeInTheDocument();
+  });
+
+  it("renders done step at step 7", () => {
+    useOnboardingStore.setState({ step: 7 });
     renderWithI18n(<OnboardingOverlay />);
     expect(screen.getByText("You're All Set!")).toBeInTheDocument();
   });
@@ -127,7 +139,7 @@ describe("OnboardingOverlay", () => {
   it("renders step indicator dots", () => {
     const { container } = renderWithI18n(<OnboardingOverlay />);
     const dots = container.querySelectorAll("[class*='dot']");
-    expect(dots.length).toBeGreaterThanOrEqual(6);
+    expect(dots.length).toBeGreaterThanOrEqual(8);
   });
 
   it("back button goes to previous step", () => {
@@ -135,5 +147,19 @@ describe("OnboardingOverlay", () => {
     renderWithI18n(<OnboardingOverlay />);
     fireEvent.click(screen.getByText("Back"));
     expect(useOnboardingStore.getState().step).toBe(1);
+  });
+
+  it("shows back and skip buttons on HUD demo step", () => {
+    useOnboardingStore.setState({ step: 5 });
+    renderWithI18n(<OnboardingOverlay />);
+    expect(screen.getByText("Back")).toBeInTheDocument();
+    expect(screen.getByText("Skip Setup")).toBeInTheDocument();
+  });
+
+  it("shows back and skip buttons on LLM intro step", () => {
+    useOnboardingStore.setState({ step: 6 });
+    renderWithI18n(<OnboardingOverlay />);
+    expect(screen.getByText("Back")).toBeInTheDocument();
+    expect(screen.getByText("Skip Setup")).toBeInTheDocument();
   });
 });

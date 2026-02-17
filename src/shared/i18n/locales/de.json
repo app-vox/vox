@@ -415,7 +415,7 @@
   "onboarding.hud.choice.skipDesc": "Fortfahren ohne HUD-Einstellungen zu ändern.",
   "onboarding.llm.stepLabel": "Schritt {current} von {total}",
   "onboarding.llm.title": "KI-Verbesserung",
-  "onboarding.llm.description": "Vox kann KI nutzen, um deine Transkriptionen automatisch zu verbessern — Grammatik korrigieren, Füllwörter wie „ähm" und „äh" entfernen und deinen Text bereinigen.",
+  "onboarding.llm.description": "Vox kann KI nutzen, um deine Transkriptionen automatisch zu verbessern — Grammatik korrigieren, Füllwörter wie \u201eähm\u201c und \u201eäh\u201c entfernen und deinen Text bereinigen.",
   "onboarding.llm.optional": "Dies ist optional und erfordert eine Verbindung zu einem KI-Dienst. Du kannst es jederzeit in den Einstellungen konfigurieren.",
   "onboarding.llm.goToSettings": "Zu den KI-Einstellungen",
   "onboarding.done.tipTranscriptions": "Sieh dir den Transkriptionen-Tab für deinen vollständigen durchsuchbaren Verlauf an",
