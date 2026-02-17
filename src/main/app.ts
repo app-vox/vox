@@ -261,11 +261,16 @@ app.on("before-quit", () => {
   }
 });
 
-app.on("will-quit", () => {
-  analytics.track("app_quit", {
-    session_duration_ms: Math.round(performance.now()),
-  });
-  analytics.shutdown();
+let isQuitting = false;
+app.on("will-quit", (event) => {
+  if (!isQuitting) {
+    isQuitting = true;
+    event.preventDefault();
+    analytics.track("app_quit", {
+      session_duration_ms: Math.round(performance.now()),
+    });
+    analytics.shutdown().finally(() => app.quit());
+  }
 });
 
 app.on("window-all-closed", () => {});
