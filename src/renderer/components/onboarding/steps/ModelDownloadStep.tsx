@@ -20,20 +20,33 @@ export function ModelDownloadStep() {
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const [models, setModels] = useState<ModelInfo[]>([]);
-  const [selectedSize, setSelectedSize] = useState<string>(RECOMMENDED_MODEL);
+  const [selectedSize, setSelectedSize] = useState<string>("");
   const [downloading, setDownloading] = useState<string | null>(null);
   const [progress, setProgress] = useState({ downloaded: 0, total: 0 });
+  const config = useConfigStore((s) => s.config);
 
   const refreshModels = useCallback(async () => {
     const list = await window.voxApi.models.list();
     setModels(list);
     const anyDownloaded = list.some((m) => m.downloaded);
     setModelDownloaded(anyDownloaded);
-    if (anyDownloaded && !list.find((m) => m.size === selectedSize && m.downloaded)) {
-      const first = list.find((m) => m.downloaded);
-      if (first) setSelectedSize(first.size);
+
+    // Pre-select model if one is already downloaded and configured
+    if (anyDownloaded) {
+      const configuredModel = config.whisper.model;
+      const configuredAndDownloaded = list.find(
+        (m) => m.size === configuredModel && m.downloaded
+      );
+
+      if (configuredAndDownloaded) {
+        setSelectedSize(configuredAndDownloaded.size);
+      } else if (!selectedSize || !list.find((m) => m.size === selectedSize && m.downloaded)) {
+        // If no valid selection, pick the first downloaded model
+        const first = list.find((m) => m.downloaded);
+        if (first) setSelectedSize(first.size);
+      }
     }
-  }, [setModelDownloaded, selectedSize]);
+  }, [setModelDownloaded, selectedSize, config.whisper.model]);
 
   useEffect(() => {
     refreshModels(); // eslint-disable-line react-hooks/set-state-in-effect
@@ -57,10 +70,10 @@ export function ModelDownloadStep() {
 
   const handleDownload = async (size: string) => {
     setDownloading(size);
-    setSelectedSize(size);
     setProgress({ downloaded: 0, total: 0 });
     try {
       await window.voxApi.models.download(size);
+      setSelectedSize(size);
       updateConfig({ whisper: { model: size as WhisperModelSize } });
       await saveConfig(false);
     } catch {
@@ -96,7 +109,7 @@ export function ModelDownloadStep() {
   return (
     <div className={styles.stepContent}>
       <h2 className={styles.stepTitle}>
-        {t("onboarding.model.stepLabel", { current: "1", total: "4" })}
+        {t("onboarding.model.stepLabel", { current: "1", total: "6" })}
         {" — "}
         {t("onboarding.model.title")}
       </h2>
@@ -160,7 +173,7 @@ export function ModelDownloadStep() {
       <button
         className={`${btn.btn} ${btn.primary} ${styles.ctaButton}`}
         onClick={handleContinue}
-        disabled={!modelDownloaded}
+        disabled={!modelDownloaded || !selectedSize || !models.find(m => m.size === selectedSize && m.downloaded)}
       >
         {t("onboarding.navigation.continue")}
       </button>
