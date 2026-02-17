@@ -293,13 +293,13 @@ export class ShortcutManager {
     setTrayListeningState(this.isRecording());
   }
 
-  private playCue(cueType: AudioCueType): void {
-    if (cueType === "none") return;
+  private playCue(cueType: AudioCueType): Promise<void> {
+    if (cueType === "none") return Promise.resolve();
     const pipeline = this.deps.getPipeline();
 
     if (isWavCue(cueType)) {
       const filename = getWavFilename(cueType);
-      if (!filename) return;
+      if (!filename) return Promise.resolve();
       try {
         const audioDir = app.isPackaged
           ? join(process.resourcesPath, "resources", "audio")
@@ -307,7 +307,7 @@ export class ShortcutManager {
         const wavData = readFileSync(join(audioDir, filename));
         const { samples, sampleRate } = parseWavSamples(wavData);
         if (samples.length > 0) {
-          pipeline.playAudioCue(samples, sampleRate).catch((err: Error) => {
+          return pipeline.playAudioCue(samples, sampleRate).catch((err: Error) => {
             slog.error("WAV audio cue failed", err);
           });
         }
@@ -317,11 +317,12 @@ export class ShortcutManager {
     } else {
       const samples = generateCueSamples(cueType, 44100);
       if (samples.length > 0) {
-        pipeline.playAudioCue(samples).catch((err: Error) => {
+        return pipeline.playAudioCue(samples).catch((err: Error) => {
           slog.error("Audio cue failed", err);
         });
       }
     }
+    return Promise.resolve();
   }
 
   registerShortcutKeys(): void {
@@ -533,6 +534,7 @@ export class ShortcutManager {
         return;
       }
       slog.error("Recording failed", err);
+      pipeline.cancel().catch(() => {});
       this.updateTrayState();
 
       if (err instanceof NoModelError) {
