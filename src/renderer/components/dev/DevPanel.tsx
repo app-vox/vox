@@ -630,6 +630,8 @@ export function DevPanel() {
                 <button
                   className={styles.setBtn}
                   onClick={async () => {
+                    const { useOnboardingStore } = await import("../onboarding/use-onboarding-store");
+                    useOnboardingStore.getState().setForceOpen(true);
                     const store = useConfigStore.getState();
                     store.updateConfig({ onboardingCompleted: false });
                     await store.saveConfig(false);

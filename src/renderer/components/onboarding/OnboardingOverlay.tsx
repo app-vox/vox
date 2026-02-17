@@ -20,15 +20,17 @@ export function OnboardingOverlay() {
   const step = useOnboardingStore((s) => s.step);
   const back = useOnboardingStore((s) => s.back);
   const reset = useOnboardingStore((s) => s.reset);
+  const setForceOpen = useOnboardingStore((s) => s.setForceOpen);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const setActiveTab = useConfigStore((s) => s.setActiveTab);
 
   const completeOnboarding = useCallback(async () => {
+    setForceOpen(false);
     updateConfig({ onboardingCompleted: true });
     await saveConfig(false);
     reset();
-  }, [updateConfig, saveConfig, reset]);
+  }, [setForceOpen, updateConfig, saveConfig, reset]);
 
   const handleSkip = useCallback(async () => {
     await completeOnboarding();

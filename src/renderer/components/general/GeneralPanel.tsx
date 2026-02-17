@@ -245,31 +245,31 @@ export function GeneralPanel() {
     <>
       <OfflineBanner />
 
-      {(config.onboardingCompleted || needsSetup) && (
-        <div className={styles.rerunSetupRow}>
-          <button
-            className={styles.rerunSetup}
-            title={t("onboarding.rerun.description")}
-            onClick={async () => {
+      <div className={styles.rerunSetupRow}>
+        <button
+          className={styles.rerunSetup}
+          title={t("onboarding.rerun.description")}
+          onClick={async () => {
+            const store = useOnboardingStore.getState();
+
+            if (needsSetup) {
               let startStep = 0;
               if (!setupComplete) startStep = 1;
               else if (permissionStatus.microphone !== "granted" || permissionStatus.accessibility !== true) startStep = 2;
+              store.setStep(startStep as OnboardingStep);
+            } else {
+              store.reset();
+            }
 
-              if (needsSetup) {
-                useOnboardingStore.getState().setStep(startStep as OnboardingStep);
-              } else {
-                useOnboardingStore.getState().reset();
-              }
-
-              updateConfig({ onboardingCompleted: false });
-              await saveConfig(false);
-            }}
-          >
-            <InfoCircleIcon width={14} height={14} />
-            {needsSetup ? t("onboarding.rerun.complete") : t("onboarding.rerun.link")}
-          </button>
-        </div>
-      )}
+            store.setForceOpen(true);
+            updateConfig({ onboardingCompleted: false });
+            await saveConfig(false);
+          }}
+        >
+          <InfoCircleIcon width={14} height={14} />
+          {needsSetup ? t("onboarding.rerun.complete") : t("onboarding.rerun.link")}
+        </button>
+      </div>
 
       {!loading && !setupComplete && (
         <div className={`${card.card} ${styles.setupBanner}`}>
