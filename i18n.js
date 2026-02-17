@@ -36,7 +36,7 @@ const translations = {
       stages: {
         record: {
           title: 'Record',
-          description: 'Press hotkey to record'
+          description: 'Click or press a hotkey'
         },
         transcribe: {
           title: 'Transcribe',
@@ -107,7 +107,7 @@ const translations = {
       stages: {
         record: {
           title: 'Gravar',
-          description: 'Pressione o atalho para gravar'
+          description: 'Clique ou pressione um atalho'
         },
         transcribe: {
           title: 'Transcrever',
@@ -178,7 +178,7 @@ const translations = {
       stages: {
         record: {
           title: 'Gravar',
-          description: 'Prima o atalho para gravar'
+          description: 'Clique ou prima um atalho'
         },
         transcribe: {
           title: 'Transcrever',
@@ -249,7 +249,7 @@ const translations = {
       stages: {
         record: {
           title: 'Grabar',
-          description: 'Presiona el atajo para grabar'
+          description: 'Haz clic o presiona un atajo'
         },
         transcribe: {
           title: 'Transcribir',
@@ -320,7 +320,7 @@ const translations = {
       stages: {
         record: {
           title: 'Enregistrer',
-          description: 'Appuyez sur le raccourci pour enregistrer'
+          description: 'Cliquez ou appuyez sur un raccourci'
         },
         transcribe: {
           title: 'Transcrire',
@@ -391,7 +391,7 @@ const translations = {
       stages: {
         record: {
           title: 'Aufnehmen',
-          description: 'Tastenkombination zum Aufnehmen drücken'
+          description: 'Klicken oder Tastenkürzel drücken'
         },
         transcribe: {
           title: 'Transkribieren',
@@ -462,7 +462,7 @@ const translations = {
       stages: {
         record: {
           title: 'Registra',
-          description: 'Premi la scorciatoia per registrare'
+          description: 'Clicca o premi una scorciatoia'
         },
         transcribe: {
           title: 'Trascrivi',
@@ -533,7 +533,7 @@ const translations = {
       stages: {
         record: {
           title: 'Запись',
-          description: 'Нажмите горячую клавишу для записи'
+          description: 'Нажмите или используйте горячую клавишу'
         },
         transcribe: {
           title: 'Транскрипция',
@@ -604,7 +604,7 @@ const translations = {
       stages: {
         record: {
           title: 'Kaydet',
-          description: 'Kaydetmek için kısayola basın'
+          description: 'Tıklayın veya bir kısayol tuşuna basın'
         },
         transcribe: {
           title: 'Yazıya Dök',

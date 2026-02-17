@@ -490,6 +490,9 @@ body {
     margin-bottom: var(--spacing-lg);
     border-radius: var(--radius-lg);
     overflow: hidden;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 @media (min-width: 768px) {
@@ -532,6 +535,7 @@ body {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     animation: widget-morph 10s ease infinite, widget-glow 10s ease infinite;
+    pointer-events: auto;
 }
 
 .hud-icon-idle {
@@ -541,6 +545,18 @@ body {
     justify-content: center;
     position: absolute;
     animation: idle-icon-toggle 10s step-end infinite;
+}
+
+.hud-icon-idle .idle-mic {
+    display: none;
+}
+
+.hud-widget:hover .hud-icon-idle .idle-logo {
+    display: none;
+}
+
+.hud-widget:hover .hud-icon-idle .idle-mic {
+    display: block;
 }
 
 .hud-pill-content {
@@ -638,12 +654,12 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(25, 25, 25, 0.85);
+    background: rgba(60, 60, 60, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 50%;
     opacity: 0;
     visibility: hidden;
     animation: cancel-btn-toggle 10s step-end infinite;
-    cursor: pointer;
     z-index: 3;
 }
 
@@ -1040,42 +1056,39 @@ body {
 }
 
 @keyframes widget-morph {
-    0% { width: 42px; height: 42px; border-radius: 50%; background: rgba(25, 25, 25, 0.92); }
-    13% { width: 42px; height: 42px; border-radius: 50%; background: rgba(25, 25, 25, 0.92); }
-    15% { width: 42px; height: 42px; border-radius: 50%; background: rgba(25, 25, 25, 0.92); }
-    18% { width: 200px; height: 36px; border-radius: 18px; background: rgba(255, 68, 68, 0.9); }
-    55% { width: 200px; height: 36px; border-radius: 18px; background: rgba(255, 68, 68, 0.9); }
-    58% { width: 200px; height: 36px; border-radius: 18px; background: rgba(255, 170, 0, 0.9); }
-    68% { width: 200px; height: 36px; border-radius: 18px; background: rgba(255, 170, 0, 0.9); }
-    70% { width: 200px; height: 36px; border-radius: 18px; background: rgba(68, 170, 255, 0.9); }
-    75% { width: 200px; height: 36px; border-radius: 18px; background: rgba(68, 170, 255, 0.9); }
-    78% { width: 42px; height: 42px; border-radius: 50%; background: rgba(25, 25, 25, 0.92); }
-    100% { width: 42px; height: 42px; border-radius: 50%; background: rgba(25, 25, 25, 0.92); }
+    0%   { width: 42px;  height: 42px; border-radius: 50%;  background: rgba(25, 25, 25, 0.92); }
+    13%  { width: 42px;  height: 42px; border-radius: 50%;  background: rgba(25, 25, 25, 0.92); }
+    15%  { width: 42px;  height: 42px; border-radius: 50%;  background: rgba(25, 25, 25, 0.92); }
+    18%  { width: 200px; height: 36px; border-radius: 18px; background: rgba(255, 68, 68, 0.85); }
+    20%  { width: 200px; height: 36px; border-radius: 18px; background: rgba(25, 25, 25, 0.92); }
+    60%  { width: 200px; height: 36px; border-radius: 18px; background: rgba(25, 25, 25, 0.92); }
+    64%  { width: 42px;  height: 42px; border-radius: 50%;  background: rgba(25, 25, 25, 0.92); }
+    100% { width: 42px;  height: 42px; border-radius: 50%;  background: rgba(25, 25, 25, 0.92); }
 }
 
 @keyframes idle-icon-toggle {
-    0% { opacity: 1; visibility: visible; }
-    13% { opacity: 1; visibility: visible; }
-    15% { opacity: 0; visibility: hidden; }
-    76% { opacity: 0; visibility: hidden; }
-    78% { opacity: 1; visibility: visible; }
+    0%   { opacity: 1; visibility: visible; }
+    13%  { opacity: 1; visibility: visible; }
+    15%  { opacity: 0; visibility: hidden; }
+    62%  { opacity: 0; visibility: hidden; }
+    64%  { opacity: 1; visibility: visible; }
     100% { opacity: 1; visibility: visible; }
 }
 
 @keyframes pill-content-toggle {
-    0% { opacity: 0; visibility: hidden; }
-    15% { opacity: 0; visibility: hidden; }
-    18% { opacity: 1; visibility: visible; }
-    75% { opacity: 1; visibility: visible; }
-    78% { opacity: 0; visibility: hidden; }
+    0%   { opacity: 0; visibility: hidden; }
+    15%  { opacity: 0; visibility: hidden; }
+    18%  { opacity: 1; visibility: visible; }
+    60%  { opacity: 1; visibility: visible; }
+    64%  { opacity: 0; visibility: hidden; }
     100% { opacity: 0; visibility: hidden; }
 }
 
 @keyframes bars-toggle {
-    0% { opacity: 0; visibility: hidden; }
-    18% { opacity: 1; visibility: visible; }
-    55% { opacity: 1; visibility: visible; }
-    58% { opacity: 0; visibility: hidden; }
+    0%   { opacity: 0; visibility: hidden; }
+    18%  { opacity: 1; visibility: visible; }
+    43%  { opacity: 1; visibility: visible; }
+    45%  { opacity: 0; visibility: hidden; }
     100% { opacity: 0; visibility: hidden; }
 }
 
@@ -1098,57 +1111,54 @@ body {
 @keyframes wave12 { 0% { height: 10px; } 30% { height: 18px; } 60% { height: 6px; } 100% { height: 10px; } }
 
 @keyframes stage-record {
-    0% { opacity: 0.5; } 15% { opacity: 0.5; } 18% { opacity: 1; } 55% { opacity: 1; } 58% { opacity: 0.5; } 100% { opacity: 0.5; }
+    0% { opacity: 0.5; } 15% { opacity: 0.5; } 18% { opacity: 1; } 43% { opacity: 1; } 45% { opacity: 0.5; } 100% { opacity: 0.5; }
 }
 @keyframes stage-transcribe {
-    0% { opacity: 0.5; } 55% { opacity: 0.5; } 58% { opacity: 1; } 68% { opacity: 1; } 70% { opacity: 0.5; } 100% { opacity: 0.5; }
+    0% { opacity: 0.5; } 43% { opacity: 0.5; } 45% { opacity: 1; } 53% { opacity: 1; } 55% { opacity: 0.5; } 100% { opacity: 0.5; }
 }
 @keyframes stage-enhance {
-    0% { opacity: 0.5; } 68% { opacity: 0.5; } 70% { opacity: 1; } 75% { opacity: 1; } 78% { opacity: 0.5; } 100% { opacity: 0.5; }
+    0% { opacity: 0.5; } 53% { opacity: 0.5; } 55% { opacity: 1; } 60% { opacity: 1; } 62% { opacity: 0.5; } 100% { opacity: 0.5; }
 }
 @keyframes stage-paste {
-    0% { opacity: 0.5; } 78% { opacity: 0.5; } 80% { opacity: 1; } 95% { opacity: 1; } 97% { opacity: 0.5; } 100% { opacity: 0.5; }
+    0% { opacity: 0.5; } 64% { opacity: 0.5; } 66% { opacity: 1; } 86% { opacity: 1; } 88% { opacity: 0.5; } 100% { opacity: 0.5; }
 }
 
 @keyframes layer-transcribing {
-    0% { opacity: 0; visibility: hidden; }
-    57% { opacity: 0; visibility: hidden; }
-    58% { opacity: 1; visibility: visible; }
-    68% { opacity: 1; visibility: visible; }
-    69% { opacity: 0; visibility: hidden; }
+    0%   { opacity: 0; visibility: hidden; }
+    44%  { opacity: 0; visibility: hidden; }
+    45%  { opacity: 1; visibility: visible; }
+    53%  { opacity: 1; visibility: visible; }
+    54%  { opacity: 0; visibility: hidden; }
     100% { opacity: 0; visibility: hidden; }
 }
 
 @keyframes layer-enhancing {
-    0% { opacity: 0; visibility: hidden; }
-    69% { opacity: 0; visibility: hidden; }
-    70% { opacity: 1; visibility: visible; }
-    75% { opacity: 1; visibility: visible; }
-    76% { opacity: 0; visibility: hidden; }
+    0%   { opacity: 0; visibility: hidden; }
+    54%  { opacity: 0; visibility: hidden; }
+    55%  { opacity: 1; visibility: visible; }
+    60%  { opacity: 1; visibility: visible; }
+    61%  { opacity: 0; visibility: hidden; }
     100% { opacity: 0; visibility: hidden; }
 }
 
 @keyframes cancel-btn-toggle {
-    0% { opacity: 0; visibility: hidden; }
-    18% { opacity: 0; visibility: hidden; }
-    20% { opacity: 1; visibility: visible; }
-    75% { opacity: 1; visibility: visible; }
-    76% { opacity: 0; visibility: hidden; }
+    0%   { opacity: 0; visibility: hidden; }
+    18%  { opacity: 0; visibility: hidden; }
+    20%  { opacity: 1; visibility: visible; }
+    60%  { opacity: 1; visibility: visible; }
+    61%  { opacity: 0; visibility: hidden; }
     100% { opacity: 0; visibility: hidden; }
 }
 
 @keyframes widget-glow {
-    0% { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); }
-    10% { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2), 0 0 16px rgba(99,102,241,0.3); }
-    13% { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2), 0 0 16px rgba(99,102,241,0.3); }
-    15% { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); }
-    18% { box-shadow: 0 2px 8px rgba(255,68,68,0.3), 0 4px 16px rgba(255,68,68,0.2); }
-    55% { box-shadow: 0 2px 8px rgba(255,68,68,0.3), 0 4px 16px rgba(255,68,68,0.2); }
-    58% { box-shadow: 0 2px 8px rgba(255,170,0,0.3), 0 4px 16px rgba(255,170,0,0.2); }
-    68% { box-shadow: 0 2px 8px rgba(255,170,0,0.3), 0 4px 16px rgba(255,170,0,0.2); }
-    70% { box-shadow: 0 2px 8px rgba(68,170,255,0.3), 0 4px 16px rgba(68,170,255,0.2); }
-    75% { box-shadow: 0 2px 8px rgba(68,170,255,0.3), 0 4px 16px rgba(68,170,255,0.2); }
-    78% { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); }
+    0%   { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); }
+    10%  { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2), 0 0 16px rgba(99,102,241,0.3); }
+    13%  { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2), 0 0 16px rgba(99,102,241,0.3); }
+    15%  { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); }
+    18%  { box-shadow: 0 2px 8px rgba(255,68,68,0.3), 0 4px 16px rgba(255,68,68,0.2); }
+    20%  { box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2); }
+    60%  { box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2); }
+    64%  { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); }
     100% { box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); }
 }
 

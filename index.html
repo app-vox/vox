@@ -183,9 +183,14 @@
                         </div>
                         <!-- HUD Widget -->
                         <div class="hud-widget">
-                            <!-- Idle state: mic icon -->
+                            <!-- Idle state: V logo, swaps to mic on hover -->
                             <div class="hud-icon-idle">
-                                <img src="assets/logo.png" alt="Vox" width="22" height="22" style="border-radius: 2px;">
+                                <img src="assets/logo.png" alt="Vox" width="22" height="22" style="border-radius: 2px;" class="idle-logo">
+                                <svg class="idle-mic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="9" y="2" width="6" height="11" rx="3"/>
+                                    <path d="M19 10v1a7 7 0 01-14 0v-1"/>
+                                    <line x1="12" y1="19" x2="12" y2="22"/>
+                                </svg>
                             </div>
                             <!-- Pill content (visible when expanded) -->
                             <div class="hud-pill-content">
@@ -251,7 +256,7 @@
                                 </svg>
                             </div>
                             <h3 class="stage-title" data-i18n="demo.stages.record.title">Record</h3>
-                            <p class="stage-description" data-i18n="demo.stages.record.description">Press hotkey to record</p>
+                            <p class="stage-description" data-i18n="demo.stages.record.description">Click or press a hotkey</p>
                         </div>
                         <div class="stage-label">
                             <div class="stage-icon transcribe">
