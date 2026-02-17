@@ -133,6 +133,14 @@ export function GeneralPanel() {
   const [shortcutsBannerDismissed, setShortcutsBannerDismissed] = useState(() =>
     localStorage.getItem(SHORTCUTS_BANNER_DISMISSED_KEY) === "true" || localStorage.getItem(VISITED_SHORTCUTS_KEY) === "true"
   );
+  useEffect(() => {
+    if (
+      localStorage.getItem(SHORTCUTS_BANNER_DISMISSED_KEY) === "true" ||
+      localStorage.getItem(VISITED_SHORTCUTS_KEY) === "true"
+    ) {
+      setShortcutsBannerDismissed(true);
+    }
+  }, [config?.onboardingCompleted]);
   const [availableDisplays, setAvailableDisplays] = useState<{ id: number; label: string; primary: boolean }[]>([]);
   const [flashHudSelect, setFlashHudSelect] = useState(false);
   const [flashPreview, setFlashPreview] = useState(false);
