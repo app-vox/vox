@@ -43,11 +43,6 @@ export function OnboardingOverlay() {
     setActiveTab("general");
   }, [completeOnboarding, setActiveTab]);
 
-  const handleNavigateToLlm = useCallback(async () => {
-    await completeOnboarding();
-    setActiveTab("llm");
-  }, [completeOnboarding, setActiveTab]);
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -65,7 +60,7 @@ export function OnboardingOverlay() {
     3: <ShortcutLearnStep />,
     4: <TryItStep />,
     5: <HudDemoStep />,
-    6: <LlmIntroStep onNavigateToLlm={handleNavigateToLlm} />,
+    6: <LlmIntroStep />,
     7: <DoneStep onComplete={handleComplete} onExploreSettings={handleExploreSettings} />,
   };
 
