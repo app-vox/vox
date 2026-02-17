@@ -378,8 +378,11 @@ export class ShortcutManager {
       globalShortcut.unregisterAll();
     });
 
-    ipcMain.handle("shortcuts:enable", () => {
+    ipcMain.handle("shortcuts:enable", (_event, immediate?: boolean) => {
       this.registerShortcutKeys();
+      if (immediate) {
+        this.isInitializing = false;
+      }
     });
 
     ipcMain.handle("indicator:cancel-recording", () => {

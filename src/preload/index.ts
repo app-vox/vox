@@ -60,7 +60,7 @@ export interface VoxAPI {
   };
   shortcuts: {
     disable(): Promise<void>;
-    enable(): Promise<void>;
+    enable(immediate?: boolean): Promise<void>;
   };
   llm: {
     test(config: import("../shared/config").VoxConfig): Promise<{ ok: boolean; error?: string }>;
@@ -179,7 +179,7 @@ const voxApi: VoxAPI = {
   },
   shortcuts: {
     disable: () => ipcRenderer.invoke("shortcuts:disable"),
-    enable: () => ipcRenderer.invoke("shortcuts:enable"),
+    enable: (immediate?: boolean) => ipcRenderer.invoke("shortcuts:enable", immediate),
   },
   llm: {
     test: (config) => ipcRenderer.invoke("llm:test", config),

@@ -33,7 +33,7 @@ export function OnboardingOverlay() {
     updateConfig({ onboardingCompleted: true });
     await saveConfig(false);
     reset();
-    window.voxApi.shortcuts.enable();
+    window.voxApi.shortcuts.enable(true);
   }, [setForceOpen, updateConfig, saveConfig, reset]);
 
   const animateClose = useCallback(
@@ -80,7 +80,7 @@ export function OnboardingOverlay() {
     }
     return () => {
       if (step === SHORTCUT_LEARN_STEP) {
-        window.voxApi.shortcuts.enable();
+        window.voxApi.shortcuts.enable(true);
       }
     };
   }, [step]);
