@@ -22,6 +22,7 @@ import { useTheme } from "./hooks/use-theme";
 import { usePerformance } from "./hooks/use-performance";
 import { I18nProvider } from "./i18n-context";
 import { OnboardingOverlay } from "./components/onboarding/OnboardingOverlay";
+import { useSetupReady } from "./hooks/use-setup-ready";
 
 // Lazy-load DevPanel so the entire module tree is excluded from production bundles.
 // In production, import.meta.env.DEV is false and this code path is dead-code-eliminated.
@@ -56,6 +57,7 @@ export function App() {
   const loadConfig = useConfigStore((s) => s.loadConfig);
   const theme = useConfigStore((s) => s.config?.theme);
   const onboardingCompleted = useConfigStore((s) => s.config?.onboardingCompleted);
+  const setupReady = useSetupReady();
   const contentRef = useRef<HTMLElement>(null);
 
   useTheme(theme);
@@ -101,7 +103,7 @@ export function App() {
           <ScrollButtons containerRef={contentRef} />
         </div>
       </div>
-      {onboardingCompleted === false && <OnboardingOverlay />}
+      {onboardingCompleted === false && !setupReady && <OnboardingOverlay />}
     </I18nProvider>
   );
 }

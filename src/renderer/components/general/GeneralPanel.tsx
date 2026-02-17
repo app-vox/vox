@@ -7,6 +7,7 @@ import { useT } from "../../i18n-context";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
 import { useOnboardingStore } from "../onboarding/use-onboarding-store";
 import type { OnboardingStep } from "../onboarding/use-onboarding-store";
+import { useSetupReady } from "../../hooks/use-setup-ready";
 import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, KeyboardIcon, ChevronDownIcon, MoveIcon, RefreshIcon, InfoCircleIcon } from "../../../shared/icons";
 import type { ThemeMode, SupportedLanguage, WidgetPosition } from "../../../shared/config";
 import { CustomSelect, type SelectItem } from "../ui/CustomSelect";
@@ -74,6 +75,8 @@ export function GeneralPanel() {
     ...(devMicOverride !== undefined ? { microphone: devMicOverride } : {}),
     ...(devAccOverride !== undefined ? { accessibility: devAccOverride } : {}),
   };
+
+  const allSetupReady = useSetupReady();
 
   const themeLabels: Record<ThemeMode, string> = {
     light: t("general.theme.light"),
@@ -267,9 +270,7 @@ export function GeneralPanel() {
             }}
           >
             <InfoCircleIcon width={14} height={14} />
-            {(!setupComplete || permissionStatus.microphone !== "granted" || permissionStatus.accessibility !== true)
-              ? t("onboarding.rerun.complete")
-              : t("onboarding.rerun.link")}
+            {!allSetupReady ? t("onboarding.rerun.complete") : t("onboarding.rerun.link")}
           </button>
         </div>
       )}
