@@ -204,6 +204,10 @@ app.whenReady().then(async () => {
     return enabled;
   });
 
+  ipcMain.handle("dev:test-error", () => {
+    analytics.captureError(new Error("Test error from Dev Panel"), { scope: "devPanel" });
+  });
+
   ipcMain.handle("dev:get-system-info", () => {
     return {
       electronVersion: process.versions.electron,
