@@ -45,3 +45,17 @@ Sections: `general.`, `whisper.`, `llm.`, `permissions.`, `shortcuts.`, `tray.`,
 - Technical identifiers (CSS classes, IPC channels, config keys)
 - Transcribed speech content
 - User-entered content (custom prompts)
+
+## Validation: Run All Linters Before Completing Work
+
+Before claiming any implementation is done, you MUST run all validation commands and confirm they pass:
+
+```bash
+npm run typecheck          # TypeScript type checking
+npm run lint               # ESLint
+npm run lint:css           # Stylelint for CSS/SCSS
+npm run check:tokens       # CSS design token validation
+npx vitest run             # All tests
+```
+
+All five commands must exit with code 0. Do not commit or claim success if any of them fail.
