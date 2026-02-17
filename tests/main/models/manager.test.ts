@@ -43,27 +43,21 @@ describe("ModelManager", () => {
   it("should remove partial file when download is cancelled", async () => {
     const modelPath = manager.getModelPath("tiny");
 
-    // Create a readable stream that we can control
-    let readerRead: () => Promise<ReadableStreamReadResult<Uint8Array>>;
+    let readCount = 0;
     const mockBody = {
       getReader: () => ({
-        read: () => readerRead(),
+        read: () => {
+          readCount++;
+          if (readCount === 1) {
+            return Promise.resolve({
+              done: false,
+              value: new Uint8Array([1, 2, 3]),
+            } as ReadableStreamReadResult<Uint8Array>);
+          }
+          return Promise.reject(new DOMException("The operation was aborted.", "AbortError"));
+        },
       }),
     } as unknown as ReadableStream<Uint8Array>;
-
-    let readCount = 0;
-    readerRead = () => {
-      readCount++;
-      if (readCount === 1) {
-        // First chunk succeeds
-        return Promise.resolve({
-          done: false,
-          value: new Uint8Array([1, 2, 3]),
-        } as ReadableStreamReadResult<Uint8Array>);
-      }
-      // Second read: simulate abort
-      return Promise.reject(new DOMException("The operation was aborted.", "AbortError"));
-    };
 
     const mockResponse = {
       ok: true,
