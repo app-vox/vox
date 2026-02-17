@@ -584,6 +584,7 @@ body {
     display: flex;
     align-items: center;
     flex-shrink: 0;
+    order: 1;
 }
 
 .hud-bars {
