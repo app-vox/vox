@@ -84,7 +84,6 @@
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
       "extendInfo": {
-        "LSUIElement": false,
         "NSMicrophoneUsageDescription": "Vox needs microphone access to record your voice for transcription.",
         "NSAccessibilityUsageDescription": "Vox needs accessibility access to paste transcribed text automatically."
       }
