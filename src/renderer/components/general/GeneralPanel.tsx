@@ -14,7 +14,6 @@ import buttons from "../shared/buttons.module.scss";
 import styles from "./GeneralPanel.module.scss";
 
 const DISPLAY_COLLAPSED_KEY = "vox:display-collapsed";
-const PERF_COLLAPSED_KEY = "vox:perf-collapsed";
 const HUD_BANNER_DISMISSED_KEY = "vox:hud-banner-dismissed";
 const SHORTCUTS_BANNER_DISMISSED_KEY = "vox:shortcuts-banner-dismissed";
 const VISITED_SHORTCUTS_KEY = "vox:visited-shortcuts";
@@ -125,7 +124,7 @@ export function GeneralPanel() {
   ];
 
   const [displayCollapsed, setDisplayCollapsed] = useState(() => localStorage.getItem(DISPLAY_COLLAPSED_KEY) !== "false");
-  const [perfCollapsed, setPerfCollapsed] = useState(() => localStorage.getItem(PERF_COLLAPSED_KEY) !== "false");
+  const [perfCollapsed, setPerfCollapsed] = useState(true);
   const [hudBannerDismissed, setHudBannerDismissed] = useState(() => localStorage.getItem(HUD_BANNER_DISMISSED_KEY) === "true");
   const [shortcutsBannerDismissed, setShortcutsBannerDismissed] = useState(() =>
     localStorage.getItem(SHORTCUTS_BANNER_DISMISSED_KEY) === "true" || localStorage.getItem(VISITED_SHORTCUTS_KEY) === "true"
@@ -683,11 +682,7 @@ export function GeneralPanel() {
         <button
           className={styles.collapsibleHeader}
           onClick={() => {
-            setPerfCollapsed((prev) => {
-              const next = !prev;
-              localStorage.setItem(PERF_COLLAPSED_KEY, String(next));
-              return next;
-            });
+            setPerfCollapsed((prev) => !prev);
           }}
           aria-expanded={!perfCollapsed}
         >
