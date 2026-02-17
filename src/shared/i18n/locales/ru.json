@@ -400,7 +400,7 @@
   "onboarding.rerun.complete": "Завершить мастер настройки",
   "onboarding.rerun.description": "Пройдите шаги начальной настройки заново.",
   "onboarding.tryIt.orPressButton": "Или нажмите кнопку ниже:",
-  "onboarding.tryIt.suggestedPhrasesLabel": "Попробуйте сказать что-нибудь вроде:",
+  "onboarding.tryIt.suggestedPhrasesLabel": "Попробуйте сказать что-нибудь вроде: ({{phrase}})",
   "onboarding.tryIt.suggestedPhrase1": "Сегодня прекрасная погода",
   "onboarding.tryIt.suggestedPhrase2": "Отправь мне заметки со встречи пожалуйста",
   "onboarding.tryIt.suggestedPhrase3": "Буду через пять минут",

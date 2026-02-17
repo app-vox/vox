@@ -400,7 +400,7 @@
   "onboarding.rerun.complete": "Einrichtungsassistent abschließen",
   "onboarding.rerun.description": "Durchlaufe die Schritte der Ersteinrichtung erneut.",
   "onboarding.tryIt.orPressButton": "Oder drücke den Button unten:",
-  "onboarding.tryIt.suggestedPhrasesLabel": "Versuche etwas zu sagen wie:",
+  "onboarding.tryIt.suggestedPhrasesLabel": "Versuche etwas zu sagen wie: ({{phrase}})",
   "onboarding.tryIt.suggestedPhrase1": "Das Wetter ist heute wunderschön",
   "onboarding.tryIt.suggestedPhrase2": "Schick mir bitte die Besprechungsnotizen",
   "onboarding.tryIt.suggestedPhrase3": "Ich bin in fünf Minuten da",

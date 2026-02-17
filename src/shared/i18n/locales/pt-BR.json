@@ -400,7 +400,7 @@
   "onboarding.rerun.complete": "Concluir Assistente de Configuração",
   "onboarding.rerun.description": "Percorra as etapas de configuração inicial novamente.",
   "onboarding.tryIt.orPressButton": "Ou pressione o botão abaixo:",
-  "onboarding.tryIt.suggestedPhrasesLabel": "Tente dizer algo como:",
+  "onboarding.tryIt.suggestedPhrasesLabel": "Tente dizer algo como: ({{phrase}})",
   "onboarding.tryIt.suggestedPhrase1": "O tempo está lindo hoje",
   "onboarding.tryIt.suggestedPhrase2": "Me manda a ata da reunião por favor",
   "onboarding.tryIt.suggestedPhrase3": "Chego aí em cinco minutos",

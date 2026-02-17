@@ -80,7 +80,7 @@ export function TryItStep() {
       </p>
 
       <p className={styles.hint}>
-        {t("onboarding.tryIt.suggestedPhrasesLabel")} ({suggestedPhrase})
+        {t("onboarding.tryIt.suggestedPhrasesLabel", { phrase: suggestedPhrase })}
       </p>
 
       <div className={styles.testArea}>

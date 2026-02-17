@@ -6,6 +6,7 @@ import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useT } from "../../i18n-context";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
 import { useOnboardingStore } from "../onboarding/use-onboarding-store";
+import type { OnboardingStep } from "../onboarding/use-onboarding-store";
 import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, KeyboardIcon, ChevronDownIcon, MoveIcon, RefreshIcon, InfoCircleIcon } from "../../../shared/icons";
 import type { ThemeMode, SupportedLanguage, WidgetPosition } from "../../../shared/config";
 import { CustomSelect, type SelectItem } from "../ui/CustomSelect";
@@ -256,7 +257,7 @@ export function GeneralPanel() {
               else if (needsPermissions) startStep = 2;
 
               if (needsModel || needsPermissions) {
-                useOnboardingStore.getState().setStep(startStep as any);
+                useOnboardingStore.getState().setStep(startStep as OnboardingStep);
               } else {
                 useOnboardingStore.getState().reset();
               }

@@ -400,7 +400,7 @@
   "onboarding.rerun.complete": "Kurulum Sihirbazını Tamamla",
   "onboarding.rerun.description": "İlk kurulum adımlarını tekrar gözden geçirin.",
   "onboarding.tryIt.orPressButton": "Veya aşağıdaki düğmeye basın:",
-  "onboarding.tryIt.suggestedPhrasesLabel": "Şöyle bir şey söylemeyi deneyin:",
+  "onboarding.tryIt.suggestedPhrasesLabel": "Şöyle bir şey söylemeyi deneyin: ({{phrase}})",
   "onboarding.tryIt.suggestedPhrase1": "Bugün hava çok güzel",
   "onboarding.tryIt.suggestedPhrase2": "Toplantı notlarını gönder lütfen",
   "onboarding.tryIt.suggestedPhrase3": "Beş dakikaya oradayım",

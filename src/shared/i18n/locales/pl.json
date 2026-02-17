@@ -400,7 +400,7 @@
   "onboarding.rerun.complete": "Dokończ kreator konfiguracji",
   "onboarding.rerun.description": "Przejdź ponownie przez kroki początkowej konfiguracji.",
   "onboarding.tryIt.orPressButton": "Lub naciśnij przycisk poniżej:",
-  "onboarding.tryIt.suggestedPhrasesLabel": "Spróbuj powiedzieć coś takiego:",
+  "onboarding.tryIt.suggestedPhrasesLabel": "Spróbuj powiedzieć coś takiego: ({{phrase}})",
   "onboarding.tryIt.suggestedPhrase1": "Dzisiaj jest piękna pogoda",
   "onboarding.tryIt.suggestedPhrase2": "Wyślij mi notatki ze spotkania proszę",
   "onboarding.tryIt.suggestedPhrase3": "Będę za pięć minut",

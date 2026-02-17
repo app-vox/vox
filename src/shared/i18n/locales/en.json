@@ -377,7 +377,7 @@
   "onboarding.tryIt.stepLabel": "Step {current} of {total}",
   "onboarding.tryIt.instruction": "Hold {shortcut} and say something, or press the record button.",
   "onboarding.tryIt.orPressButton": "Or press the button below:",
-  "onboarding.tryIt.suggestedPhrasesLabel": "Try saying something like:",
+  "onboarding.tryIt.suggestedPhrasesLabel": "Try saying something like: ({{phrase}})",
   "onboarding.tryIt.suggestedPhrase1": "The weather is beautiful today",
   "onboarding.tryIt.suggestedPhrase2": "Send me the meeting notes please",
   "onboarding.tryIt.suggestedPhrase3": "I'll be there in five minutes",
