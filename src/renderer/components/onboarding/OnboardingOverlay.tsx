@@ -1,4 +1,4 @@
-import { useCallback, useEffect, type JSX } from "react";
+import { useCallback, useEffect, useRef, useState, type JSX } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useOnboardingStore, type OnboardingStep } from "./use-onboarding-store";
 import { useT } from "../../i18n-context";
@@ -14,6 +14,7 @@ import { XIcon } from "../../../shared/icons";
 import styles from "./OnboardingOverlay.module.scss";
 
 const TOTAL_STEPS = 8;
+const CLOSE_ANIMATION_MS = 500;
 
 export function OnboardingOverlay() {
   const t = useT();
@@ -24,6 +25,8 @@ export function OnboardingOverlay() {
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const setActiveTab = useConfigStore((s) => s.setActiveTab);
+  const [closing, setClosing] = useState(false);
+  const closingRef = useRef(false);
 
   const completeOnboarding = useCallback(async () => {
     setForceOpen(false);
@@ -32,19 +35,31 @@ export function OnboardingOverlay() {
     reset();
   }, [setForceOpen, updateConfig, saveConfig, reset]);
 
-  const handleSkip = useCallback(async () => {
-    await completeOnboarding();
-  }, [completeOnboarding]);
+  const animateClose = useCallback(
+    (afterClose: () => Promise<void> | void) => {
+      if (closingRef.current) return;
+      closingRef.current = true;
+      setClosing(true);
+      setActiveTab("general");
+      setTimeout(async () => {
+        await completeOnboarding();
+        afterClose();
+      }, CLOSE_ANIMATION_MS);
+    },
+    [completeOnboarding, setActiveTab],
+  );
 
-  const handleComplete = useCallback(async () => {
-    await completeOnboarding();
-    setActiveTab("transcriptions");
-  }, [completeOnboarding, setActiveTab]);
+  const handleSkip = useCallback(() => {
+    animateClose(() => {});
+  }, [animateClose]);
 
-  const handleExploreSettings = useCallback(async () => {
-    await completeOnboarding();
-    setActiveTab("general");
-  }, [completeOnboarding, setActiveTab]);
+  const handleComplete = useCallback(() => {
+    animateClose(() => setActiveTab("transcriptions"));
+  }, [animateClose, setActiveTab]);
+
+  const handleExploreSettings = useCallback(() => {
+    animateClose(() => setActiveTab("general"));
+  }, [animateClose, setActiveTab]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -68,7 +83,7 @@ export function OnboardingOverlay() {
   };
 
   return (
-    <div className={styles.overlay}>
+    <div className={`${styles.overlay} ${closing ? styles.overlayClosing : ""}`}>
       <button className={styles.closeBtn} onClick={handleSkip} aria-label="Close" type="button">
         <XIcon width={18} height={18} />
       </button>

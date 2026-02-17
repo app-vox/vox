@@ -10,6 +10,26 @@
   background: var(--color-bg-root);
 }
 
+.overlayClosing {
+  animation: overlayCollapse 500ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes overlayCollapse {
+  0% {
+    opacity: 1;
+    clip-path: circle(150% at 50% 50%);
+  }
+  70% {
+    opacity: 1;
+    clip-path: circle(8% at 85% 12%);
+  }
+  100% {
+    opacity: 0;
+    clip-path: circle(0% at 85% 12%);
+  }
+}
+
 .closeBtn {
   position: absolute;
   top: var(--spacing-4);
