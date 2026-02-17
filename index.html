@@ -248,43 +248,55 @@
                     <hr class="demo-divider">
 
                     <!-- Stage Icons and Labels -->
-                    <div class="demo-stages">
-                        <div class="stage-label">
-                            <div class="stage-icon record">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                                    <circle cx="12" cy="12" r="8"/>
-                                </svg>
+                    <div class="demo-stages-wrapper">
+                        <div class="demo-stages">
+                            <div class="stage-label">
+                                <div class="stage-icon record">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                        <circle cx="12" cy="12" r="8"/>
+                                    </svg>
+                                </div>
+                                <h3 class="stage-title" data-i18n="demo.stages.record.title">Record</h3>
+                                <p class="stage-description" data-i18n="demo.stages.record.description">Click or press a hotkey</p>
                             </div>
-                            <h3 class="stage-title" data-i18n="demo.stages.record.title">Record</h3>
-                            <p class="stage-description" data-i18n="demo.stages.record.description">Click or press a hotkey</p>
+                            <div class="stage-label">
+                                <div class="stage-icon transcribe">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+                                    </svg>
+                                </div>
+                                <h3 class="stage-title" data-i18n="demo.stages.transcribe.title">Transcribe</h3>
+                                <p class="stage-description" data-i18n="demo.stages.transcribe.description">Whisper processes locally</p>
+                            </div>
+                            <div class="stage-label">
+                                <div class="stage-icon enhance">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 3v18M3 12h18M7.5 7.5l9 9M16.5 7.5l-9 9"/>
+                                        <circle cx="12" cy="12" r="9"/>
+                                    </svg>
+                                </div>
+                                <h3 class="stage-title" data-i18n="demo.stages.enhance.title">AI Enhancement</h3>
+                                <p class="stage-description" data-i18n="demo.stages.enhance.description">Optional enhancement</p>
+                            </div>
+                            <div class="stage-label">
+                                <div class="stage-icon paste">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                </div>
+                                <h3 class="stage-title" data-i18n="demo.stages.paste.title">Paste</h3>
+                                <p class="stage-description" data-i18n="demo.stages.paste.description">Clean text, ready to use</p>
+                            </div>
                         </div>
-                        <div class="stage-label">
-                            <div class="stage-icon transcribe">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
-                                </svg>
-                            </div>
-                            <h3 class="stage-title" data-i18n="demo.stages.transcribe.title">Transcribe</h3>
-                            <p class="stage-description" data-i18n="demo.stages.transcribe.description">Whisper processes locally</p>
-                        </div>
-                        <div class="stage-label">
-                            <div class="stage-icon enhance">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 3v18M3 12h18M7.5 7.5l9 9M16.5 7.5l-9 9"/>
-                                    <circle cx="12" cy="12" r="9"/>
-                                </svg>
-                            </div>
-                            <h3 class="stage-title" data-i18n="demo.stages.enhance.title">AI Enhancement</h3>
-                            <p class="stage-description" data-i18n="demo.stages.enhance.description">Optional enhancement</p>
-                        </div>
-                        <div class="stage-label">
-                            <div class="stage-icon paste">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                </svg>
-                            </div>
-                            <h3 class="stage-title" data-i18n="demo.stages.paste.title">Paste</h3>
-                            <p class="stage-description" data-i18n="demo.stages.paste.description">Clean text, ready to use</p>
+                        <!-- Mobile step progress indicator -->
+                        <div class="demo-stages-nav" aria-hidden="true">
+                            <div class="demo-stages-step-dot"></div>
+                            <div class="demo-stages-step-line"></div>
+                            <div class="demo-stages-step-dot"></div>
+                            <div class="demo-stages-step-line"></div>
+                            <div class="demo-stages-step-dot"></div>
+                            <div class="demo-stages-step-line"></div>
+                            <div class="demo-stages-step-dot"></div>
                         </div>
                     </div>
                 </div>
