@@ -7,7 +7,6 @@ import { useT } from "../../i18n-context";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
 import { useOnboardingStore } from "../onboarding/use-onboarding-store";
 import type { OnboardingStep } from "../onboarding/use-onboarding-store";
-import { useSetupReady } from "../../hooks/use-setup-ready";
 import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, KeyboardIcon, ChevronDownIcon, MoveIcon, RefreshIcon, InfoCircleIcon } from "../../../shared/icons";
 import type { ThemeMode, SupportedLanguage, WidgetPosition } from "../../../shared/config";
 import { CustomSelect, type SelectItem } from "../ui/CustomSelect";
@@ -76,7 +75,7 @@ export function GeneralPanel() {
     ...(devAccOverride !== undefined ? { accessibility: devAccOverride } : {}),
   };
 
-  const allSetupReady = useSetupReady();
+  const needsSetup = !setupComplete || permissionStatus.microphone !== "granted" || permissionStatus.accessibility !== true;
 
   const themeLabels: Record<ThemeMode, string> = {
     light: t("general.theme.light"),
@@ -246,20 +245,17 @@ export function GeneralPanel() {
     <>
       <OfflineBanner />
 
-      {config.onboardingCompleted && (
+      {(config.onboardingCompleted || needsSetup) && (
         <div className={styles.rerunSetupRow}>
           <button
             className={styles.rerunSetup}
             title={t("onboarding.rerun.description")}
             onClick={async () => {
-              const needsModel = !setupComplete;
-              const needsPermissions = permissionStatus.microphone !== "granted" || permissionStatus.accessibility !== true;
-
               let startStep = 0;
-              if (needsModel) startStep = 1;
-              else if (needsPermissions) startStep = 2;
+              if (!setupComplete) startStep = 1;
+              else if (permissionStatus.microphone !== "granted" || permissionStatus.accessibility !== true) startStep = 2;
 
-              if (needsModel || needsPermissions) {
+              if (needsSetup) {
                 useOnboardingStore.getState().setStep(startStep as OnboardingStep);
               } else {
                 useOnboardingStore.getState().reset();
@@ -270,7 +266,7 @@ export function GeneralPanel() {
             }}
           >
             <InfoCircleIcon width={14} height={14} />
-            {!allSetupReady ? t("onboarding.rerun.complete") : t("onboarding.rerun.link")}
+            {needsSetup ? t("onboarding.rerun.complete") : t("onboarding.rerun.link")}
           </button>
         </div>
       )}
