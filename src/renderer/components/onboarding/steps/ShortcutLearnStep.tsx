@@ -1,3 +1,4 @@
+import { useEffect, useCallback, useRef } from "react";
 import { useT } from "../../../i18n-context";
 import { useOnboardingStore } from "../use-onboarding-store";
 import { useConfigStore } from "../../../stores/config-store";
@@ -10,6 +11,37 @@ export function ShortcutLearnStep() {
   const config = useConfigStore((s) => s.config);
 
   const holdShortcut = config?.shortcuts.hold || "Alt+Space";
+  const advancedRef = useRef(false);
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (advancedRef.current) return;
+      const keys = holdShortcut.toLowerCase().split("+");
+      const modifiers = keys.filter((k) => ["alt", "ctrl", "meta", "shift"].includes(k));
+      const mainKey = keys.find((k) => !["alt", "ctrl", "meta", "shift"].includes(k));
+
+      const modMatch =
+        modifiers.every(
+          (m) =>
+            (m === "alt" && e.altKey) ||
+            (m === "ctrl" && e.ctrlKey) ||
+            (m === "meta" && e.metaKey) ||
+            (m === "shift" && e.shiftKey),
+        );
+
+      if (modMatch && mainKey && e.key.toLowerCase() === mainKey) {
+        e.preventDefault();
+        advancedRef.current = true;
+        next();
+      }
+    },
+    [holdShortcut, next],
+  );
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
 
   return (
     <div className={styles.stepContent}>

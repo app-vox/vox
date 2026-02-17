@@ -22,7 +22,7 @@ export function LlmIntroStep() {
 
       <p className={styles.description}>{t("onboarding.llm.description")}</p>
       <p className={styles.hint}>{t("onboarding.llm.dictionaryNote")}</p>
-      <p className={styles.hint}>{t("onboarding.llm.optional")}</p>
+      <p className={styles.hint}><strong>{t("onboarding.llm.optional")}</strong></p>
 
       <button
         className={`${btn.btn} ${btn.primary} ${styles.ctaButton}`}
