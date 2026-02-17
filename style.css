@@ -540,7 +540,7 @@ body {
     align-items: center;
     justify-content: center;
     position: absolute;
-    animation: idle-icon-toggle 10s ease infinite;
+    animation: idle-icon-toggle 10s step-end infinite;
 }
 
 .hud-pill-content {
@@ -549,7 +549,7 @@ body {
     height: 100%;
     opacity: 0;
     visibility: hidden;
-    animation: pill-content-toggle 10s ease infinite;
+    animation: pill-content-toggle 10s step-end infinite;
 }
 
 .hud-listening-layer {
@@ -557,11 +557,12 @@ body {
     inset: 0;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     padding: 0 12px;
     opacity: 0;
     visibility: hidden;
-    animation: bars-toggle 10s ease infinite;
+    animation: bars-toggle 10s step-end infinite;
 }
 
 .hud-stop-icon {
@@ -599,11 +600,11 @@ body {
 }
 
 .hud-transcribing-layer {
-    animation: layer-transcribing 10s ease infinite;
+    animation: layer-transcribing 10s step-end infinite;
 }
 
 .hud-enhancing-layer {
-    animation: layer-enhancing 10s ease infinite;
+    animation: layer-enhancing 10s step-end infinite;
 }
 
 .hud-pulse-dot {
@@ -629,17 +630,19 @@ body {
 
 .hud-cancel-btn {
     position: absolute;
-    left: calc(50% + 110px);
+    left: calc(50% + 112px);
     top: 50%;
     transform: translateY(-50%);
-    width: 20px;
-    height: 20px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
+    background: rgba(25, 25, 25, 0.85);
+    border-radius: 50%;
     opacity: 0;
     visibility: hidden;
-    animation: cancel-btn-toggle 10s ease infinite;
+    animation: cancel-btn-toggle 10s step-end infinite;
     cursor: pointer;
     z-index: 3;
 }

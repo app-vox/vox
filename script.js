@@ -279,7 +279,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const CYCLE_MS = 10000;
         const TYPING_START = 0.78;
-        const TYPING_END = 0.95;
 
         let pendingTimeouts = [];
 
@@ -297,10 +296,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const runCycle = () => {
             clearPending();
 
-            const text = getFullText();
+            const words = getFullText().split(' ');
             const typingStartMs = TYPING_START * CYCLE_MS;
-            const typingDuration = 800;
-            const displayUntilMs = TYPING_END * CYCLE_MS;
+            const WORD_DELAY = 40;
 
             typedText.textContent = '';
             cursor.classList.remove('active');
@@ -309,26 +307,18 @@ document.addEventListener('DOMContentLoaded', () => {
             pendingTimeouts.push(setTimeout(() => {
                 cursor.classList.add('active');
                 inputField.classList.add('active');
-                let i = 0;
-                const charDelay = typingDuration / text.length;
-                const typeChar = () => {
-                    if (i < text.length) {
-                        typedText.textContent += text.charAt(i);
-                        i++;
-                        pendingTimeouts.push(setTimeout(typeChar, charDelay));
+                let w = 0;
+                const typeWord = () => {
+                    if (w < words.length) {
+                        typedText.textContent += (w > 0 ? ' ' : '') + words[w];
+                        w++;
+                        pendingTimeouts.push(setTimeout(typeWord, WORD_DELAY));
+                    } else {
+                        cursor.classList.remove('active');
                     }
                 };
-                typeChar();
+                typeWord();
             }, typingStartMs));
-
-            pendingTimeouts.push(setTimeout(() => {
-                cursor.classList.remove('active');
-                inputField.classList.remove('active');
-            }, displayUntilMs));
-
-            pendingTimeouts.push(setTimeout(() => {
-                typedText.textContent = '';
-            }, CYCLE_MS - 200));
         };
 
         // Anchor JS to CSS master clock via animationiteration event
