@@ -339,6 +339,7 @@ export function DevPanel() {
     { label: "Update Available", preset: { updateStatus: "available" } },
     { label: "Update Downloading", preset: { updateStatus: "downloading", updateDownloadProgress: 42 } },
     { label: "Update Ready", preset: { updateStatus: "ready" } },
+    { label: "New User", preset: { setupComplete: false, visitedShortcuts: false, llmEnhancementEnabled: false, llmConnectionTested: false } },
     { label: "Everything Broken", preset: { online: false, setupComplete: false, microphonePermission: "denied", accessibilityPermission: false, updateStatus: "error", llmEnhancementEnabled: false, llmConnectionTested: false } },
   ];
 

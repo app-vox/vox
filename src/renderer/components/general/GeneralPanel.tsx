@@ -131,9 +131,15 @@ export function GeneralPanel() {
   const [displayCollapsed, setDisplayCollapsed] = useState(() => localStorage.getItem(DISPLAY_COLLAPSED_KEY) !== "false");
   const [perfCollapsed, setPerfCollapsed] = useState(true);
   const [hudBannerDismissed, setHudBannerDismissed] = useState(() => localStorage.getItem(HUD_BANNER_DISMISSED_KEY) === "true");
-  const [shortcutsBannerDismissed, setShortcutsBannerDismissed] = useState(() =>
+  const [shortcutsBannerDismissedLocal, setShortcutsBannerDismissed] = useState(() =>
     localStorage.getItem(SHORTCUTS_BANNER_DISMISSED_KEY) === "true" || localStorage.getItem(VISITED_SHORTCUTS_KEY) === "true"
   );
+
+  const devVisitedShortcuts = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("visitedShortcuts", undefined)
+    : undefined;
+  const shortcutsBannerDismissed = devVisitedShortcuts !== undefined ? devVisitedShortcuts : shortcutsBannerDismissedLocal;
   const [availableDisplays, setAvailableDisplays] = useState<{ id: number; label: string; primary: boolean }[]>([]);
   const [flashHudSelect, setFlashHudSelect] = useState(false);
   const [flashPreview, setFlashPreview] = useState(false);
@@ -268,7 +274,7 @@ export function GeneralPanel() {
           }}
         >
           <InfoCircleIcon width={14} height={14} />
-          {needsSetup ? t("onboarding.rerun.complete") : t("onboarding.rerun.link")}
+          {bannersReady && needsSetup ? t("onboarding.rerun.complete") : t("onboarding.rerun.link")}
         </button>
       </div>
 
@@ -317,7 +323,7 @@ export function GeneralPanel() {
       )}
 
       {/* Shortcuts discovery banner */}
-      {bannersReady && setupComplete && !shortcutsBannerDismissed && !config.onboardingCompleted && (
+      {bannersReady && setupComplete && !shortcutsBannerDismissed && (devVisitedShortcuts === false || !config.onboardingCompleted) && (
         <div className={`${card.card} ${styles.setupBanner}`}>
           <div className={card.body}>
             <div className={styles.hudBannerContent}>
