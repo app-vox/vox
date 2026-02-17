@@ -20,11 +20,19 @@ export function DoneStep({ onComplete, onExploreSettings }: DoneStepProps) {
 
       <ul className={styles.tipList}>
         <li>{t("onboarding.done.tip1", { shortcut: holdShortcut })}</li>
-        <li>{t("onboarding.done.tip2")}</li>
-        <li>{t("onboarding.done.tip3")}</li>
+        <li>{t("onboarding.done.tipTranscriptions")}</li>
+        <li>{t("onboarding.done.tipDictionary")}</li>
+        <li>{t("onboarding.done.tipAi")}</li>
       </ul>
 
-      <p className={styles.hint}>{t("onboarding.done.aiHint")}</p>
+      <a
+        className={styles.skipLink}
+        href="https://app-vox.github.io/vox/"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {t("onboarding.done.visitWebsite")}
+      </a>
 
       <div className={styles.buttonRow}>
         <button className={`${btn.btn} ${btn.primary} ${styles.ctaButton}`} onClick={onComplete}>
