@@ -115,24 +115,24 @@ export class AnalyticsService {
     if (!this.enabled || !this.posthog) return;
 
     try {
-      const baseProps: Record<string, unknown> = {
+      const props = {
+        $ip: null,
         app_version: app.getVersion(),
         os_version: `${platform()} ${release()}`,
         arch: arch(),
         locale: this.locale,
-        $ip: null,
+        ...(context ?? {}),
       };
 
-      this.posthog.capture({
-        distinctId: this.deviceId,
-        event: "error_uncaught",
-        properties: {
-          ...baseProps,
-          error_message: error.message,
-          stack_trace: error.stack ?? "",
-          ...(context ?? {}),
-        },
-      });
+      if (this.isDevMode) {
+        void this.posthog.captureExceptionImmediate(error, this.deviceId, props).catch((err) => {
+          slog.warn("Failed to send exception", { error: err });
+        });
+      } else {
+        this.posthog.captureException(error, this.deviceId, props);
+      }
+
+      slog.debug("Exception captured", { error: error.message });
     } catch (err) {
       slog.warn("Failed to capture error event", err);
     }

@@ -26,12 +26,16 @@ vi.mock("electron-store", () => {
 // Mock posthog-node
 const mockCapture = vi.fn();
 const mockCaptureImmediate = vi.fn().mockResolvedValue(undefined);
+const mockCaptureException = vi.fn();
+const mockCaptureExceptionImmediate = vi.fn().mockResolvedValue(undefined);
 const mockIdentify = vi.fn();
 const mockShutdown = vi.fn().mockResolvedValue(undefined);
 vi.mock("posthog-node", () => {
   const MockPostHog = class {
     capture = mockCapture;
     captureImmediate = mockCaptureImmediate;
+    captureException = mockCaptureException;
+    captureExceptionImmediate = mockCaptureExceptionImmediate;
     identify = mockIdentify;
     _shutdown = mockShutdown;
   };
@@ -138,18 +142,17 @@ describe("AnalyticsService", () => {
   });
 
   describe("captureError", () => {
-    it("should capture error events with stack trace", () => {
+    it("should use captureException with error and context", () => {
       service.init({ enabled: true, locale: "en" });
       const error = new Error("test error");
       service.captureError(error, { scope: "Pipeline" });
-      expect(mockCapture).toHaveBeenCalledWith(
+      expect(mockCaptureException).toHaveBeenCalledWith(
+        error,
+        expect.stringMatching(/^[0-9a-f-]{36}$/),
         expect.objectContaining({
-          event: "error_uncaught",
-          properties: expect.objectContaining({
-            error_message: "test error",
-            stack_trace: expect.stringContaining("Error: test error"),
-            scope: "Pipeline",
-          }),
+          scope: "Pipeline",
+          app_version: "0.6.1",
+          $ip: null,
         })
       );
     });
@@ -157,7 +160,7 @@ describe("AnalyticsService", () => {
     it("should not capture errors when disabled", () => {
       service.init({ enabled: false, locale: "en" });
       service.captureError(new Error("test"));
-      expect(mockCapture).not.toHaveBeenCalled();
+      expect(mockCaptureException).not.toHaveBeenCalled();
     });
   });
 

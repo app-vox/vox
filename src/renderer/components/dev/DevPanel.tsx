@@ -557,6 +557,14 @@ export function DevPanel() {
             </>
           ),
         },
+        {
+          label: "Test Error",
+          render: () => (
+            <button className={styles.setBtn} onClick={() => void window.voxApi.dev.testError()}>
+              Send
+            </button>
+          ),
+        },
       ],
     },
     {
