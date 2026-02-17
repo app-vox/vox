@@ -103,6 +103,7 @@ export interface VoxAPI {
   history: {
     get(params: { offset: number; limit: number }): Promise<{ entries: import("../shared/types").TranscriptionEntry[]; total: number }>;
     search(params: { query: string; offset: number; limit: number }): Promise<{ entries: import("../shared/types").TranscriptionEntry[]; total: number }>;
+    add(entry: { text: string; originalText: string; audioDurationMs: number; whisperModel: string; llmEnhanced: boolean }): Promise<void>;
     deleteEntry(id: string): Promise<void>;
     clear(): Promise<void>;
     onEntryAdded(callback: () => void): void;
@@ -227,6 +228,7 @@ const voxApi: VoxAPI = {
   history: {
     get: (params) => ipcRenderer.invoke("history:get", params),
     search: (params) => ipcRenderer.invoke("history:search", params),
+    add: (entry) => ipcRenderer.invoke("history:add", entry),
     deleteEntry: (id) => ipcRenderer.invoke("history:delete-entry", id),
     clear: () => ipcRenderer.invoke("history:clear"),
     onEntryAdded: (callback) => {
