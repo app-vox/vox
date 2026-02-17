@@ -25,11 +25,17 @@ export function TryItStep() {
     setTestError(null);
 
     try {
-      const recording = await recordAudio(5);
+      const recording = await recordAudio(3);
       const text = await window.voxApi.whisper.test(recording);
       if (text) {
         setTestResult(text);
-        await window.voxApi.clipboard.write(text);
+        await window.voxApi.history.add({
+          text,
+          originalText: text,
+          audioDurationMs: 3000,
+          whisperModel: config?.whisper?.model || "small",
+          llmEnhanced: false,
+        });
       } else {
         setTestResult(null);
         setTestError("no-speech");
@@ -48,7 +54,7 @@ export function TryItStep() {
   return (
     <div className={styles.stepContent}>
       <h2 className={styles.stepTitle}>
-        {t("onboarding.tryIt.stepLabel", { current: "4", total: "4" })}
+        {t("onboarding.tryIt.stepLabel", { current: "4", total: "8" })}
         {" — "}
         {t("onboarding.tryIt.title")}
       </h2>
@@ -57,12 +63,20 @@ export function TryItStep() {
         {t("onboarding.tryIt.instruction", { shortcut: holdShortcut })}
       </p>
 
+      <div className={styles.suggestedPhrases}>
+        <span>{t("onboarding.tryIt.suggestedPhrasesLabel")}</span>
+        <span>{t("onboarding.tryIt.suggestedPhrase1")}</span>
+        <span>{t("onboarding.tryIt.suggestedPhrase2")}</span>
+        <span>{t("onboarding.tryIt.suggestedPhrase3")}</span>
+      </div>
+
       <div className={styles.testArea}>
+        <div className={styles.testResultBox}>
+          {testResult || ""}
+        </div>
+
         {testResult && (
-          <>
-            <div className={styles.testResultBox}>{testResult}</div>
-            <p className={styles.successMessage}>{t("onboarding.tryIt.success")}</p>
-          </>
+          <p className={styles.successMessage}>{t("onboarding.tryIt.success")}</p>
         )}
         {testError === "no-speech" && (
           <p className={styles.errorMessage}>{t("onboarding.tryIt.noSpeech")}</p>
@@ -72,6 +86,8 @@ export function TryItStep() {
         )}
         {statusMessage && <p className={styles.statusMessage}>{statusMessage}</p>}
       </div>
+
+      <p className={styles.hint}>{t("onboarding.tryIt.orPressButton")}</p>
 
       <div className={styles.buttonRow}>
         {!testResult ? (
@@ -90,7 +106,7 @@ export function TryItStep() {
           </>
         ) : (
           <button className={`${btn.btn} ${btn.primary} ${styles.ctaButton}`} onClick={next}>
-            {t("onboarding.tryIt.finishSetup")}
+            {t("onboarding.navigation.continue")}
           </button>
         )}
       </div>
