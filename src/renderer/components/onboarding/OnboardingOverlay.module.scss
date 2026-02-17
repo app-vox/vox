@@ -14,9 +14,10 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 520px;
+  max-width: 560px;
   min-height: 400px;
-  padding: var(--spacing-6);
+  padding: var(--spacing-6) var(--spacing-4);
+  position: relative;
 }
 
 /* ---- Top navigation ---- */
@@ -400,14 +401,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-3);
+  gap: var(--spacing-2);
   width: 100%;
   min-height: 80px;
 }
 
 .testResultBox {
   width: 100%;
-  padding: var(--spacing-4);
+  padding: var(--spacing-3) var(--spacing-4);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-bg-card);
@@ -415,6 +416,14 @@
   color: var(--color-text-primary);
   line-height: var(--line-height-relaxed);
   text-align: left;
+  resize: none;
+  font-family: inherit;
+  min-height: 80px;
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
 }
 
 .successMessage {

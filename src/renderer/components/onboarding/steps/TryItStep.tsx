@@ -1,3 +1,4 @@
+import { useRef, useEffect, useMemo } from "react";
 import { useT } from "../../../i18n-context";
 import { useOnboardingStore } from "../use-onboarding-store";
 import { useConfigStore } from "../../../stores/config-store";
@@ -18,8 +19,23 @@ export function TryItStep() {
   const config = useConfigStore((s) => s.config);
 
   const holdShortcut = config?.shortcuts.hold || "Alt+Space";
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
+
+  const suggestedPhrase = useMemo(() => {
+    const phrases = [
+      t("onboarding.tryIt.suggestedPhrase1"),
+      t("onboarding.tryIt.suggestedPhrase2"),
+      t("onboarding.tryIt.suggestedPhrase3"),
+    ];
+    return phrases[Math.floor(Math.random() * phrases.length)];
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleTest = async () => {
+    textareaRef.current?.focus();
     setTesting(true);
     setTestResult(null);
     setTestError(null);
@@ -63,17 +79,19 @@ export function TryItStep() {
         {t("onboarding.tryIt.instruction", { shortcut: holdShortcut })}
       </p>
 
-      <div className={styles.suggestedPhrases}>
-        <span>{t("onboarding.tryIt.suggestedPhrasesLabel")}</span>
-        <span>{t("onboarding.tryIt.suggestedPhrase1")}</span>
-        <span>{t("onboarding.tryIt.suggestedPhrase2")}</span>
-        <span>{t("onboarding.tryIt.suggestedPhrase3")}</span>
-      </div>
+      <p className={styles.hint}>
+        {t("onboarding.tryIt.suggestedPhrasesLabel")} ({suggestedPhrase})
+      </p>
 
       <div className={styles.testArea}>
-        <div className={styles.testResultBox}>
-          {testResult || ""}
-        </div>
+        <textarea
+          ref={textareaRef}
+          className={styles.testResultBox}
+          value={testResult || ""}
+          readOnly
+          rows={3}
+          placeholder=""
+        />
 
         {testResult && (
           <p className={styles.successMessage}>{t("onboarding.tryIt.success")}</p>
@@ -87,7 +105,9 @@ export function TryItStep() {
         {statusMessage && <p className={styles.statusMessage}>{statusMessage}</p>}
       </div>
 
-      <p className={styles.hint}>{t("onboarding.tryIt.orPressButton")}</p>
+      {!testResult && (
+        <p className={styles.hint}>{t("onboarding.tryIt.orPressButton")}</p>
+      )}
 
       <div className={styles.buttonRow}>
         {!testResult ? (
