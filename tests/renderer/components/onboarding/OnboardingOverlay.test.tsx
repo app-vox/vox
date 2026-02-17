@@ -22,9 +22,12 @@ vi.mock("../../../../src/renderer/components/shared/card.module.scss", () => ({
 
 vi.mock("../../../../src/shared/icons", () => ({
   MicIcon: (props: Record<string, unknown>) => <svg data-testid="mic-icon" {...props} />,
+  MicSimpleIcon: (props: Record<string, unknown>) => <svg data-testid="mic-simple-icon" {...props} />,
   LockIcon: (props: Record<string, unknown>) => <svg data-testid="lock-icon" {...props} />,
   RecordIcon: (props: Record<string, unknown>) => <svg data-testid="record-icon" {...props} />,
   AlertTriangleIcon: (props: Record<string, unknown>) => <svg data-testid="alert-icon" {...props} />,
+  XIcon: (props: Record<string, unknown>) => <svg data-testid="x-icon" {...props} />,
+  SparkleIcon: (props: Record<string, unknown>) => <svg data-testid="sparkle-icon" {...props} />,
 }));
 
 vi.mock("../../../../src/renderer/components/ui/OfflineBanner", () => ({
