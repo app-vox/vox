@@ -21,11 +21,13 @@ export interface PipelineDeps {
     audioBuffer: Float32Array,
     sampleRate: number,
     modelPath: string,
-    dictionary?: string[]
+    dictionary?: string[],
+    speechLanguages?: string[]
   ): Promise<TranscriptionResult>;
   llmProvider: LlmProvider;
   modelPath: string;
   dictionary?: string[];
+  speechLanguages?: string[];
   hasCustomPrompt?: boolean;
   llmModelName?: string;
   analytics?: {
@@ -198,7 +200,8 @@ export class Pipeline {
         recording.audioBuffer,
         recording.sampleRate,
         this.deps.modelPath,
-        this.deps.dictionary ?? []
+        this.deps.dictionary ?? [],
+        this.deps.speechLanguages ?? []
       );
     } catch (err: unknown) {
       this.deps.analytics?.track("transcription_failed", {
@@ -258,6 +261,13 @@ export class Pipeline {
 
     if (this.deps.hasCustomPrompt) {
       this.deps.analytics?.track("custom_prompt_used");
+    }
+
+    if (this.deps.speechLanguages && this.deps.speechLanguages.length > 0) {
+      this.deps.analytics?.track("speech_languages_used", {
+        language_count: this.deps.speechLanguages.length,
+        languages: this.deps.speechLanguages.join(","),
+      });
     }
 
     const llmStartTime = performance.now();

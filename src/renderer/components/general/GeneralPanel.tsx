@@ -1,15 +1,16 @@
-import { type ReactNode, useState, useRef, useCallback, useEffect } from "react";
+import { type ReactNode, useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
 import { usePermissions } from "../../hooks/use-permissions";
 import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useT } from "../../i18n-context";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
+import { WHISPER_LANGUAGES } from "../../../shared/constants";
 import { useOnboardingStore } from "../onboarding/use-onboarding-store";
 import type { OnboardingStep } from "../onboarding/use-onboarding-store";
 import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, KeyboardIcon, ChevronDownIcon, MoveIcon, RefreshIcon, InfoCircleIcon } from "../../../shared/icons";
 import type { ThemeMode, SupportedLanguage, WidgetPosition } from "../../../shared/config";
-import { CustomSelect, type SelectItem } from "../ui/CustomSelect";
+import { CustomSelect, MultiSelect, type SelectItem } from "../ui/CustomSelect";
 import { OfflineBanner } from "../ui/OfflineBanner";
 import card from "../shared/card.module.scss";
 import buttons from "../shared/buttons.module.scss";
@@ -38,6 +39,32 @@ const LANGUAGE_NAMES: Record<SupportedLanguage, string> = {
   ru: "\u0420\u0443\u0441\u0441\u043a\u0438\u0439",
   tr: "T\u00fcrk\u00e7e",
 };
+
+const POPULAR_LANGUAGE_CODES = new Set(["en", "zh", "es", "fr", "de", "pt", "ja", "ko", "it", "ru"]);
+
+function buildSpeechLanguageItems(popularLabel: string): SelectItem[] {
+  const popular: { value: string; label: string }[] = [];
+  const rest: { value: string; label: string }[] = [];
+
+  for (const lang of WHISPER_LANGUAGES) {
+    const item = { value: lang.code, label: lang.name };
+    if (POPULAR_LANGUAGE_CODES.has(lang.code)) {
+      popular.push(item);
+    } else {
+      rest.push(item);
+    }
+  }
+
+  popular.sort((a, b) => a.label.localeCompare(b.label));
+  rest.sort((a, b) => a.label.localeCompare(b.label));
+
+  return [
+    { divider: true, label: popularLabel },
+    ...popular,
+    { divider: true },
+    ...rest,
+  ];
+}
 
 function previewCue(cue: string) {
   window.voxApi.audio.previewCue(cue).catch(() => {});
@@ -112,6 +139,8 @@ export function GeneralPanel() {
       label: LANGUAGE_NAMES[lang],
     })),
   ];
+
+  const speechLanguageItems = useMemo(() => buildSpeechLanguageItems(t("general.speechLanguages.popular")), [t]);
 
   const positionItems: SelectItem[] = [
     { value: "top-left", label: t("general.position.topLeft") },
@@ -372,21 +401,59 @@ export function GeneralPanel() {
         </div>
       )}
 
-      {/* Language */}
+      {/* Languages */}
       <div className={card.card}>
         <div className={card.header}>
-          <h2>{t("general.language.title")}</h2>
-          <p className={card.description}>{t("general.language.description")}</p>
+          <h2>{t("general.languages.title")}</h2>
+          <p className={card.description}>{t("general.languages.description")}</p>
         </div>
         <div className={card.body}>
-          <CustomSelect
-            value={config.language}
-            items={languageItems}
-            onChange={(val) => {
-              updateConfig({ language: val as SupportedLanguage | "system" });
-              saveConfig(false).then(() => triggerToast());
-            }}
-          />
+          <div className={styles.fieldRow}>
+            <label>{t("general.language.title")}</label>
+            <CustomSelect
+              value={config.language}
+              items={languageItems}
+              onChange={(val) => {
+                updateConfig({ language: val as SupportedLanguage | "system" });
+                saveConfig(false).then(() => triggerToast());
+              }}
+            />
+          </div>
+
+          {setupComplete && (
+            <>
+              <div className={styles.sectionDivider} />
+              <div className={styles.fieldRow}>
+                <label>{t("general.speechLanguages.title")}</label>
+                <p className={styles.speechHint}>{t("general.speechLanguages.description")}</p>
+
+                <MultiSelect
+                  values={config.speechLanguages}
+                  items={speechLanguageItems}
+                  onAdd={(val) => {
+                    if (config.speechLanguages.includes(val)) return;
+                    updateConfig({
+                      speechLanguages: [...config.speechLanguages, val],
+                    });
+                    void saveConfig(false);
+                  }}
+                  onRemove={(val) => {
+                    updateConfig({
+                      speechLanguages: config.speechLanguages.filter((c) => c !== val),
+                    });
+                    void saveConfig(false);
+                  }}
+                  onReorder={(reordered) => {
+                    updateConfig({ speechLanguages: reordered });
+                    void saveConfig(false);
+                  }}
+                  placeholder={t("general.speechLanguages.placeholder")}
+                  searchPlaceholder={t("general.speechLanguages.search")}
+                  removeLabel={(label) => t("general.speechLanguages.remove", { language: label })}
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
 

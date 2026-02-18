@@ -581,3 +581,9 @@
 .previewOverlay_bottom_left { bottom: 8px; left: 10px; }
 .previewOverlay_bottom_center { bottom: 8px; left: 50%; transform: translateX(-50%); }
 .previewOverlay_bottom_right { bottom: 8px; right: 10px; }
+
+.speechHint {
+  margin-top: var(--spacing-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+}

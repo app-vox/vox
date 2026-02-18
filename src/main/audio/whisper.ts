@@ -3,7 +3,7 @@ import { execFile } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
-import { buildWhisperPrompt } from "../../shared/constants";
+import { buildWhisperPrompt, buildWhisperArgs } from "../../shared/constants";
 
 export interface TranscriptionResult {
   text: string;
@@ -19,7 +19,8 @@ export async function transcribe(
   audioBuffer: Float32Array,
   sampleRate: number,
   modelPath: string,
-  dictionary: string[] = []
+  dictionary: string[] = [],
+  speechLanguages: string[] = []
 ): Promise<TranscriptionResult> {
   const tempPath = path.join(os.tmpdir(), `vox-recording-${Date.now()}.wav`);
 
@@ -27,8 +28,9 @@ export async function transcribe(
     const wavBuffer = encodeWav(audioBuffer, sampleRate);
     fs.writeFileSync(tempPath, wavBuffer);
 
-    const prompt = buildWhisperPrompt(dictionary);
-    const stdout = await runWhisper(modelPath, tempPath, prompt);
+    const whisperArgs = buildWhisperArgs(speechLanguages);
+    const prompt = buildWhisperPrompt(dictionary, whisperArgs.promptPrefix);
+    const stdout = await runWhisper(modelPath, tempPath, prompt, whisperArgs.language);
     const text = parseWhisperOutput(stdout);
 
     return { text };
@@ -39,12 +41,12 @@ export async function transcribe(
   }
 }
 
-function runWhisper(modelPath: string, filePath: string, prompt: string): Promise<string> {
+function runWhisper(modelPath: string, filePath: string, prompt: string, language = "auto"): Promise<string> {
   return new Promise((resolve, reject) => {
     execFile(
       WHISPER_BIN,
       [
-        "-l", "auto",
+        "-l", language,
         "-m", modelPath,
         "-f", filePath,
         "--best-of", "5",         // Greedy default (whisper.cpp max decoders = 8)

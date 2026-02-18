@@ -56,6 +56,7 @@ function setupPipeline(): void {
     llmProvider,
     modelPath,
     dictionary: config.dictionary ?? [],
+    speechLanguages: config.speechLanguages ?? [],
     hasCustomPrompt: Boolean(config.customPrompt),
     llmModelName: config.enableLlmEnhancement ? getLlmModelName(config.llm) : undefined,
     analytics,

@@ -1,9 +1,14 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
 import { ConfigManager, type SecretStore, migrateHudPosition } from "../../../src/main/config/manager";
 import { createDefaultConfig } from "../../../src/shared/config";
+import { app } from "electron";
+
+vi.mock("electron", () => ({
+  app: { isPackaged: false, getLocale: vi.fn(() => "en-US") },
+}));
 
 function createMockSecretStore(): SecretStore {
   return {
@@ -45,8 +50,11 @@ describe("ConfigManager", () => {
   });
 
   it("should return default config when no config file exists", () => {
+    vi.mocked(app.getLocale).mockReturnValue("en-US");
     const config = manager.load();
-    expect(config).toEqual(createDefaultConfig());
+    const expected = createDefaultConfig();
+    expected.speechLanguages = ["en"];
+    expect(config).toEqual(expected);
   });
 
   it("should save and load config", () => {
@@ -257,6 +265,50 @@ describe("ConfigManager", () => {
 
     const loaded = manager.load();
     expect(loaded.hudPosition).toBe("top-center");
+  });
+
+  it("should auto-populate speechLanguages from system locale when absent", () => {
+    vi.mocked(app.getLocale).mockReturnValue("pt-BR");
+    const oldConfig = {
+      llm: { provider: "foundry", endpoint: "", apiKey: "", model: "gpt-4o" },
+      theme: "system",
+    };
+    fs.mkdirSync(testDir, { recursive: true });
+    fs.writeFileSync(path.join(testDir, "config.json"), JSON.stringify(oldConfig));
+
+    const loaded = manager.load();
+    expect(loaded.speechLanguages).toEqual(["pt"]);
+  });
+
+  it("should auto-populate speechLanguages from system locale when empty array", () => {
+    vi.mocked(app.getLocale).mockReturnValue("es-MX");
+    const configWithEmpty = {
+      llm: { provider: "foundry", endpoint: "", apiKey: "", model: "gpt-4o" },
+      speechLanguages: [],
+    };
+    fs.mkdirSync(testDir, { recursive: true });
+    fs.writeFileSync(path.join(testDir, "config.json"), JSON.stringify(configWithEmpty));
+
+    const loaded = manager.load();
+    expect(loaded.speechLanguages).toEqual(["es"]);
+  });
+
+  it("should auto-populate speechLanguages for new install (no config file)", () => {
+    vi.mocked(app.getLocale).mockReturnValue("fr-FR");
+    const loaded = manager.load();
+    expect(loaded.speechLanguages).toEqual(["fr"]);
+  });
+
+  it("should preserve speechLanguages when present in saved config", () => {
+    const configWithLangs = {
+      llm: { provider: "foundry", endpoint: "", apiKey: "", model: "gpt-4o" },
+      speechLanguages: ["pt", "en"],
+    };
+    fs.mkdirSync(testDir, { recursive: true });
+    fs.writeFileSync(path.join(testDir, "config.json"), JSON.stringify(configWithLangs));
+
+    const loaded = manager.load();
+    expect(loaded.speechLanguages).toEqual(["pt", "en"]);
   });
 
   it("should preserve credentials from other providers on save (round-trip)", () => {

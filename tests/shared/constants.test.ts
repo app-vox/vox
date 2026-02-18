@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { WHISPER_MODELS, APP_NAME, LLM_SYSTEM_PROMPT, buildWhisperPrompt, WHISPER_PROMPT, buildSystemPrompt } from "../../src/shared/constants";
+import { WHISPER_MODELS, APP_NAME, LLM_SYSTEM_PROMPT, buildWhisperPrompt, WHISPER_PROMPT, buildSystemPrompt, WHISPER_LANGUAGES, resolveWhisperLanguage } from "../../src/shared/constants";
 
 describe("constants", () => {
   it("should define all whisper model sizes with URLs and sizes", () => {
@@ -51,6 +51,19 @@ describe("buildWhisperPrompt", () => {
     expect(termsSection).not.toMatch(/,\s*$/);
     expect(termsSection).toMatch(/\w$/);
   });
+
+  it("should prepend language hint before dictionary and base prompt", () => {
+    const result = buildWhisperPrompt(["Kubernetes"], "The speaker may use: Portuguese, English.");
+    expect(result).toContain("The speaker may use: Portuguese, English.");
+    expect(result).toContain("Kubernetes");
+    expect(result).toContain(WHISPER_PROMPT);
+    expect(result.indexOf("The speaker may use")).toBeLessThan(result.indexOf("Kubernetes"));
+  });
+
+  it("should not add prefix when empty", () => {
+    const result = buildWhisperPrompt(["Kubernetes"], "");
+    expect(result).not.toContain("The speaker may use");
+  });
 });
 
 describe("buildSystemPrompt", () => {
@@ -83,5 +96,72 @@ describe("buildSystemPrompt", () => {
     const result = buildSystemPrompt("Be formal", []);
     expect(result).not.toContain("DICTIONARY");
     expect(result).toContain("Be formal");
+  });
+
+  it("should include language context when speechLanguages provided", () => {
+    const result = buildSystemPrompt("", [], ["pt", "en"]);
+    expect(result).toContain("Português");
+    expect(result).toContain("English");
+    expect(result).toContain("primarily speaks");
+  });
+
+  it("should not include language context when speechLanguages is empty", () => {
+    const result = buildSystemPrompt("", [], []);
+    expect(result).not.toContain("primarily speaks");
+  });
+
+  it("should place language context before dictionary", () => {
+    const result = buildSystemPrompt("", ["Kubernetes"], ["pt"]);
+    const langIdx = result.indexOf("primarily speaks");
+    const dictIdx = result.indexOf("DICTIONARY");
+    expect(langIdx).toBeLessThan(dictIdx);
+  });
+});
+
+describe("WHISPER_LANGUAGES", () => {
+  it("should contain at least 20 languages", () => {
+    expect(WHISPER_LANGUAGES.length).toBeGreaterThanOrEqual(20);
+  });
+
+  it("should have unique codes", () => {
+    const codes = WHISPER_LANGUAGES.map((l) => l.code);
+    expect(new Set(codes).size).toBe(codes.length);
+  });
+
+  it("should include common languages", () => {
+    const codes = WHISPER_LANGUAGES.map((l) => l.code);
+    expect(codes).toContain("en");
+    expect(codes).toContain("pt");
+    expect(codes).toContain("es");
+    expect(codes).toContain("fr");
+    expect(codes).toContain("de");
+    expect(codes).toContain("zh");
+    expect(codes).toContain("ja");
+    expect(codes).toContain("ko");
+  });
+
+  it("should have code and name for each entry", () => {
+    for (const lang of WHISPER_LANGUAGES) {
+      expect(lang.code).toBeTruthy();
+      expect(lang.name).toBeTruthy();
+    }
+  });
+});
+
+describe("resolveWhisperLanguage", () => {
+  it("should resolve pt-BR to pt", () => {
+    expect(resolveWhisperLanguage("pt-BR")).toBe("pt");
+  });
+
+  it("should resolve en-US to en", () => {
+    expect(resolveWhisperLanguage("en-US")).toBe("en");
+  });
+
+  it("should resolve exact match zh to zh", () => {
+    expect(resolveWhisperLanguage("zh")).toBe("zh");
+  });
+
+  it("should return null for unsupported locale", () => {
+    expect(resolveWhisperLanguage("xx-YY")).toBeNull();
   });
 });

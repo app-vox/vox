@@ -539,6 +539,7 @@ export function DevPanel() {
       rows: [
         { label: "Theme", render: () => <>{config?.theme || "system"}</> },
         { label: "Language", render: () => <>{config?.language || "system"}</> },
+        { label: "Speech Languages", render: () => <>{config?.speechLanguages?.length ? config.speechLanguages.join(", ") : "(auto-detect)"}</> },
         { label: "Launch at Login", render: () => <>{boolDot(config?.launchAtLogin)}</> },
         { label: "Dictionary", render: () => <>{config?.dictionary?.length ?? 0} words</> },
       ],
@@ -701,6 +702,7 @@ export function DevPanel() {
       rows: [
         { label: "Locale", render: () => <>{systemLocale || "(loading)"}</> },
         { label: "Language", render: () => <>{config?.language || "system"}</> },
+        { label: "Speech Langs", render: () => <>{config?.speechLanguages?.join(", ") || "(none)"}</> },
         { label: "Supported", render: () => <>{SUPPORTED_LANGUAGES.join(", ")}</> },
       ],
     },
