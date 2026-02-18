@@ -241,16 +241,24 @@ export class ShortcutManager {
   }
 
   /** Cancel current operation silently and immediately start a new recording. */
-  private restartRecording(): void {
-    slog.info("Restart requested — canceling silently and starting new recording");
+  private restartRecording(mode: "hold" | "toggle" = "toggle"): void {
+    slog.info("Restart requested (mode=%s) — aborting current pipeline and starting new recording", mode);
+    this.deps.analytics?.track("recording_restarted", {
+      previous_state: this.stateMachine.getState(),
+      mode,
+    });
     this.recordingGeneration++;
+    this.micActiveAt = 0;
     const pipeline = this.deps.getPipeline();
     pipeline.cancel().catch((err) => {
       slog.error("Error during restart cancel", err);
     });
     this.stateMachine.setIdle();
-    // Start new recording via toggle (no error cue — this is intentional restart)
-    this.stateMachine.handleTogglePress();
+    if (mode === "hold") {
+      this.stateMachine.handleHoldKeyDown();
+    } else {
+      this.stateMachine.handleTogglePress();
+    }
     this.updateTrayState();
   }
 
@@ -351,7 +359,7 @@ export class ShortcutManager {
         return;
       }
       if (this.stateMachine.getState() === "processing") {
-        this.restartRecording();
+        this.restartRecording("hold");
         return;
       }
       this.stateMachine.handleHoldKeyDown();
@@ -545,7 +553,7 @@ export class ShortcutManager {
     this.updateTrayState();
 
     this.micActiveAt = 0;
-    pipeline.startRecording().then(() => {
+    pipeline.startRecording().then(async () => {
       if (gen !== this.recordingGeneration) {
         slog.info("Stale recording start (gen=%d, current=%d) — stopping mic", gen, this.recordingGeneration);
         pipeline.cancel().catch((e) => slog.error("Error stopping stale recording", e));
@@ -553,11 +561,22 @@ export class ShortcutManager {
       }
       this.micActiveAt = Date.now();
       slog.info("Recording started — mic active");
-      this.hud.setState("listening");
 
       const config = this.deps.configManager.load();
       const cueType = (config.recordingAudioCue ?? "tap") as AudioCueType;
-      this.playCue(cueType);
+
+      await Promise.race([
+        this.playCue(cueType),
+        new Promise<void>((resolve) => setTimeout(resolve, 1500)),
+      ]);
+
+      if (gen !== this.recordingGeneration) {
+        slog.info("Stale recording after cue (gen=%d, current=%d) — stopping mic", gen, this.recordingGeneration);
+        pipeline.cancel().catch((e: Error) => slog.error("Error stopping stale recording", e));
+        return;
+      }
+
+      this.hud.setState("listening");
     }).catch((err: Error) => {
       if (gen !== this.recordingGeneration) {
         slog.info("Stale recording error (gen=%d, current=%d) — discarding", gen, this.recordingGeneration);
