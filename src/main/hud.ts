@@ -438,6 +438,7 @@ interactiveEls.forEach(function(el) {
     window.electronAPI?.setIgnoreMouseEvents(false);
   });
   el.addEventListener('mouseleave', function() {
+    if (currentState !== 'idle') return;
     ignoreDisabled = false;
     window.electronAPI?.setIgnoreMouseEvents(true);
   });
@@ -664,6 +665,14 @@ function setState(newState, cfg) {
       document.getElementById('v-logo').classList.remove('off');
       document.getElementById('mic-icon').classList.add('off');
     }
+  }
+
+  if (isPill) {
+    ignoreDisabled = true;
+    window.electronAPI?.setIgnoreMouseEvents(false);
+  } else if (isIdle && !isMouseOver) {
+    ignoreDisabled = false;
+    window.electronAPI?.setIgnoreMouseEvents(true);
   }
 
   var circleCancel = document.getElementById('circle-cancel');
