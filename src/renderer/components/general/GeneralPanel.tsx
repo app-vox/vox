@@ -75,6 +75,7 @@ export function GeneralPanel() {
     ...(devAccOverride !== undefined ? { accessibility: devAccOverride } : {}),
   };
 
+  const onboardingOpen = useOnboardingStore((s) => s.forceOpen);
   const bannersReady = !loading && realStatus !== null;
   const needsSetup = !setupComplete || permissionStatus.microphone !== "granted" || permissionStatus.accessibility !== true;
 
@@ -323,7 +324,7 @@ export function GeneralPanel() {
       )}
 
       {/* Shortcuts discovery banner */}
-      {bannersReady && setupComplete && !shortcutsBannerDismissed && (devVisitedShortcuts === false || !config.onboardingCompleted) && (
+      {bannersReady && setupComplete && !shortcutsBannerDismissed && !onboardingOpen && (devVisitedShortcuts === false || !config.onboardingCompleted) && (
         <div className={`${card.card} ${styles.setupBanner}`}>
           <div className={card.body}>
             <div className={styles.hudBannerContent}>

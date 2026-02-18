@@ -265,6 +265,7 @@ app.whenReady().then(async () => {
       shortcutManager?.updateHud();
       updateTrayConfig(cfg);
       refreshAppMenu();
+      openHome(reloadConfig);
       for (const win of BrowserWindow.getAllWindows()) {
         win.webContents.send("config:changed");
       }
