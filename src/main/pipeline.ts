@@ -21,7 +21,8 @@ export interface PipelineDeps {
     audioBuffer: Float32Array,
     sampleRate: number,
     modelPath: string,
-    dictionary?: string[]
+    dictionary?: string[],
+    speechLanguages?: string[]
   ): Promise<TranscriptionResult>;
   llmProvider: LlmProvider;
   modelPath: string;
@@ -199,7 +200,8 @@ export class Pipeline {
         recording.audioBuffer,
         recording.sampleRate,
         this.deps.modelPath,
-        this.deps.dictionary ?? []
+        this.deps.dictionary ?? [],
+        this.deps.speechLanguages ?? []
       );
     } catch (err: unknown) {
       this.deps.analytics?.track("transcription_failed", {
