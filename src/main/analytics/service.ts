@@ -111,8 +111,8 @@ export class AnalyticsService {
     }
   }
 
-  captureError(error: Error, context?: Record<string, unknown>): void {
-    if (!this.enabled || !this.posthog) return;
+  captureError(error: Error, context?: Record<string, unknown>, { force = false }: { force?: boolean } = {}): void {
+    if ((!this.enabled && !force) || !this.posthog) return;
 
     try {
       const props = {
