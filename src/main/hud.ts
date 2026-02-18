@@ -1119,6 +1119,10 @@ export class HudWindow {
     this.execJs(`document.getElementById('widget').classList.remove('highlight')`);
   }
 
+  reposition(): void {
+    this.positionWindow();
+  }
+
   setIgnoreMouseEvents(ignore: boolean): void {
     if (!this.window || this.window.isDestroyed()) return;
     if (ignore) {
