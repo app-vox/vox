@@ -13,6 +13,7 @@ interface PermissionRowProps {
   onRequest?: () => void;
   requesting?: boolean;
   setupRequired?: boolean;
+  variant?: "default" | "onboarding";
 }
 
 export function PermissionRow({
@@ -25,13 +26,18 @@ export function PermissionRow({
   onRequest,
   requesting,
   setupRequired = false,
+  variant = "default",
 }: PermissionRowProps) {
   const t = useT();
 
   return (
-    <div className={styles.row}>
+    <div className={`${styles.row} ${variant === "onboarding" ? styles.rowOnboarding : ""}`}>
       <div className={styles.info}>
-        {icon}
+        {variant === "onboarding" ? (
+          <div className={styles.iconWrapper}>{icon}</div>
+        ) : (
+          icon
+        )}
         <div>
           <div className={styles.name}>{name}</div>
           <div className={styles.desc}>{description}</div>
@@ -44,9 +50,14 @@ export function PermissionRow({
           <span className={`${styles.badge} ${styles.granted}`}>{t("permissions.granted")}</span>
         ) : (
           <>
-            <span className={`${styles.badge} ${styles.missing}`}>
-              {statusText || t("permissions.notGranted")}
-            </span>
+            {variant === "default" && (
+              <span className={`${styles.badge} ${styles.missing}`}>
+                {statusText || t("permissions.notGranted")}
+              </span>
+            )}
+            {variant === "onboarding" && statusText && (
+              <span className={`${styles.badge} ${styles.missing}`}>{statusText}</span>
+            )}
             {buttonText && onRequest && (
               <button
                 onClick={onRequest}
