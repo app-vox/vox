@@ -228,3 +228,27 @@ export function resolveWhisperLanguage(locale: string): string | null {
   const code = locale.split("-")[0].toLowerCase();
   return WHISPER_LANGUAGES.some((l) => l.code === code) ? code : null;
 }
+
+export interface WhisperArgs {
+  language: string;
+  promptPrefix: string;
+}
+
+export function buildWhisperArgs(speechLanguages: string[]): WhisperArgs {
+  if (speechLanguages.length === 0) {
+    return { language: "auto", promptPrefix: "" };
+  }
+
+  if (speechLanguages.length === 1) {
+    return { language: speechLanguages[0], promptPrefix: "" };
+  }
+
+  const names = speechLanguages
+    .map((code) => WHISPER_LANGUAGES.find((l) => l.code === code)?.name.split(" (")[0] ?? code)
+    .join(", ");
+
+  return {
+    language: "auto",
+    promptPrefix: `The speaker may use: ${names}.`,
+  };
+}
