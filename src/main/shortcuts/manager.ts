@@ -242,7 +242,10 @@ export class ShortcutManager {
 
   /** Cancel current operation silently and immediately start a new recording. */
   private restartRecording(): void {
-    slog.info("Restart requested — canceling current pipeline and starting new recording");
+    slog.info("Restart requested — aborting current pipeline and starting new recording");
+    this.deps.analytics?.track("recording_restarted", {
+      previous_state: this.stateMachine.getState(),
+    });
     this.recordingGeneration++;
     this.micActiveAt = 0;
     const pipeline = this.deps.getPipeline();

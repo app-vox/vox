@@ -143,6 +143,7 @@ export class NoModelError extends Error {
 export class Pipeline {
   private readonly deps: PipelineDeps;
   private canceled = false;
+  private generation = 0;
 
   private get whisperModelName(): string {
     return this.deps.modelPath.split("/").pop()?.replace("ggml-", "").replace(".bin", "") ?? "unknown";
@@ -172,15 +173,17 @@ export class Pipeline {
     if (!existsSync(this.deps.modelPath)) {
       throw new NoModelError();
     }
-    this.canceled = false; // Reset cancel flag on new recording
+    this.canceled = false;
+    this.generation++;
     await this.deps.recorder.start();
   }
 
   async stopAndProcess(): Promise<string> {
     const processingStartTime = performance.now();
+    const gen = this.generation;
     const recording = await this.deps.recorder.stop();
 
-    if (this.canceled) {
+    if (this.canceled || gen !== this.generation) {
       throw new CanceledError();
     }
 
@@ -211,7 +214,7 @@ export class Pipeline {
       throw err;
     }
 
-    if (this.canceled) {
+    if (this.canceled || gen !== this.generation) {
       throw new CanceledError();
     }
 
@@ -249,7 +252,7 @@ export class Pipeline {
     }
     slog.info("Transcription passed, sending to LLM");
 
-    if (this.canceled) {
+    if (this.canceled || gen !== this.generation) {
       throw new CanceledError();
     }
 
@@ -305,7 +308,7 @@ export class Pipeline {
       finalText = rawText;
     }
 
-    if (this.canceled) {
+    if (this.canceled || gen !== this.generation) {
       throw new CanceledError();
     }
 
