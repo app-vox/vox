@@ -204,7 +204,7 @@ export class ShortcutManager {
       return;
     }
     if (this.stateMachine.getState() === "processing") {
-      this.cancelRecording();
+      this.restartRecording();
       return;
     }
     this.stateMachine.handleTogglePress();
@@ -238,6 +238,20 @@ export class ShortcutManager {
       this.hud.setState("canceled");
       this.updateTrayState();
     }
+  }
+
+  /** Cancel current operation silently and immediately start a new recording. */
+  private restartRecording(): void {
+    slog.info("Restart requested — canceling current pipeline and starting new recording");
+    this.recordingGeneration++;
+    this.micActiveAt = 0;
+    const pipeline = this.deps.getPipeline();
+    pipeline.cancel().catch((err) => {
+      slog.error("Error during restart cancel", err);
+    });
+    this.stateMachine.setIdle();
+    this.stateMachine.handleTogglePress();
+    this.updateTrayState();
   }
 
   dismissHud(): void {
@@ -337,7 +351,7 @@ export class ShortcutManager {
         return;
       }
       if (this.stateMachine.getState() === "processing") {
-        this.cancelRecording();
+        this.restartRecording();
         return;
       }
       this.stateMachine.handleHoldKeyDown();
@@ -349,7 +363,7 @@ export class ShortcutManager {
         return;
       }
       if (this.stateMachine.getState() === "processing") {
-        this.cancelRecording();
+        this.restartRecording();
         return;
       }
       this.stateMachine.handleTogglePress();
@@ -387,7 +401,7 @@ export class ShortcutManager {
 
     ipcMain.handle("hud:start-recording", () => {
       if (this.stateMachine.getState() === "processing") {
-        this.cancelRecording();
+        this.restartRecording();
       } else if (!this.isRecording()) {
         this.triggerToggle();
       }
