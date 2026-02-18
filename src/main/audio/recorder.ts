@@ -49,28 +49,33 @@ export class AudioRecorder {
     await win.webContents.executeJavaScript(`
       (async () => {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const ctx = new AudioContext({ sampleRate: ${TARGET_RATE} });
-        if (ctx.state === "suspended") await ctx.resume();
+        try {
+          const ctx = new AudioContext({ sampleRate: ${TARGET_RATE} });
+          if (ctx.state === "suspended") await ctx.resume();
 
-        const source = ctx.createMediaStreamSource(stream);
+          const source = ctx.createMediaStreamSource(stream);
 
-        const analyser = ctx.createAnalyser();
-        analyser.fftSize = 128;
-        analyser.smoothingTimeConstant = 0.6;
-        source.connect(analyser);
-        window._recAnalyser = analyser;
+          const analyser = ctx.createAnalyser();
+          analyser.fftSize = 128;
+          analyser.smoothingTimeConstant = 0.6;
+          source.connect(analyser);
+          window._recAnalyser = analyser;
 
-        const processor = ctx.createScriptProcessor(4096, 1, 1);
-        window._recChunks = [];
-        window._recStream = stream;
-        window._recCtx = ctx;
-        window._recProcessor = processor;
+          const processor = ctx.createScriptProcessor(4096, 1, 1);
+          window._recChunks = [];
+          window._recStream = stream;
+          window._recCtx = ctx;
+          window._recProcessor = processor;
 
-        processor.onaudioprocess = (e) => {
-          window._recChunks.push(Array.from(e.inputBuffer.getChannelData(0)));
-        };
-        source.connect(processor);
-        processor.connect(ctx.destination);
+          processor.onaudioprocess = (e) => {
+            window._recChunks.push(Array.from(e.inputBuffer.getChannelData(0)));
+          };
+          source.connect(processor);
+          processor.connect(ctx.destination);
+        } catch (err) {
+          stream.getTracks().forEach(t => t.stop());
+          throw err;
+        }
       })()
     `);
 
@@ -187,20 +192,22 @@ export class AudioRecorder {
       (async () => {
         const samples = new Float32Array(${JSON.stringify(Array.from(samples))});
         const rate = ${rate} || undefined;
-        // Reuse the recording AudioContext when available — it already has
-        // getUserMedia gesture so it won't be blocked by autoplay policy
-        // in hidden BrowserWindows. Fall back to a new context otherwise.
-        var ctx = window._recCtx && window._recCtx.state !== "closed" ? window._recCtx : null;
-        var ownCtx = false;
-        if (!ctx) {
-          ownCtx = true;
-          ctx = new AudioContext();
-          let retries = 0;
-          while (ctx.state === "suspended" && retries < 5) {
-            await ctx.resume();
-            if (ctx.state === "suspended") await new Promise(r => setTimeout(r, 50));
-            retries++;
-          }
+        // Always create a dedicated AudioContext for cue playback so that
+        // closing the recording context (in stop()) doesn't kill the sound.
+        try {
+          const tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          tempStream.getTracks().forEach(t => t.stop());
+        } catch {}
+        const ctx = new AudioContext();
+        let retries = 0;
+        while (ctx.state === "suspended" && retries < 10) {
+          await ctx.resume();
+          if (ctx.state === "suspended") await new Promise(r => setTimeout(r, 30));
+          retries++;
+        }
+        if (ctx.state === "suspended") {
+          ctx.close();
+          return;
         }
         const buffer = ctx.createBuffer(1, samples.length, rate || ctx.sampleRate);
         buffer.getChannelData(0).set(samples.length <= buffer.length
@@ -210,7 +217,7 @@ export class AudioRecorder {
         source.buffer = buffer;
         source.connect(ctx.destination);
         source.start();
-        if (ownCtx) source.onended = () => ctx.close();
+        source.onended = () => ctx.close();
       })()
     `, true);
   }
@@ -222,9 +229,25 @@ export class AudioRecorder {
     }
   }
 
-  dispose(): void {
+  async dispose(): Promise<void> {
     this.stopLevels();
     if (this.win && !this.win.isDestroyed()) {
+      try {
+        await this.win.webContents.executeJavaScript(`
+          (() => {
+            if (window._recProcessor) try { window._recProcessor.disconnect(); } catch {}
+            if (window._recStream) window._recStream.getTracks().forEach(t => t.stop());
+            if (window._recCtx && window._recCtx.state !== "closed") window._recCtx.close();
+            window._recChunks = null;
+            window._recStream = null;
+            window._recCtx = null;
+            window._recProcessor = null;
+            window._recAnalyser = null;
+          })()
+        `);
+      } catch {
+        // Window may already be in a bad state
+      }
       this.win.destroy();
     }
     this.win = null;
