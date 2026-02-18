@@ -52,6 +52,11 @@ describe("VoxConfig", () => {
     const config = createDefaultConfig();
     expect(config.analyticsEnabled).toBe(true);
   });
+
+  it("should include speechLanguages defaulting to empty array", () => {
+    const config = createDefaultConfig();
+    expect(config.speechLanguages).toEqual([]);
+  });
 });
 
 describe("createDefaultLlmFlat", () => {
