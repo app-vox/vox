@@ -334,4 +334,8 @@ export function registerIpcHandlers(
   ipcMain.handle("i18n:system-locale", () => {
     return app.getLocale();
   });
+
+  ipcMain.handle("analytics:track", (_event, name: string, properties?: Record<string, unknown>) => {
+    analytics?.track(name, properties);
+  });
 }

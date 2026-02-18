@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { screen, cleanup, waitFor, fireEvent } from "@testing-library/react";
 import { useConfigStore } from "../../../../src/renderer/stores/config-store";
+import { usePermissionsStore } from "../../../../src/renderer/stores/permissions-store";
 import { useOnboardingStore } from "../../../../src/renderer/components/onboarding/use-onboarding-store";
 import { createDefaultConfig } from "../../../../src/shared/config";
 import { installVoxApiMock, resetStores, renderWithI18n } from "../../helpers/setup";
@@ -19,6 +20,12 @@ vi.mock("../../../../src/renderer/components/shared/buttons.module.scss", () => 
 vi.mock("../../../../src/renderer/components/shared/card.module.scss", () => ({
   default: new Proxy({}, { get: (_, prop) => `mock-card-${String(prop)}` }),
 }));
+vi.mock("../../../../src/renderer/components/permissions/PermissionRow.module.scss", () => ({
+  default: new Proxy({}, { get: (_, prop) => `mock-perm-${String(prop)}` }),
+}));
+vi.mock("../../../../src/renderer/components/whisper/ModelRow.module.scss", () => ({
+  default: new Proxy({}, { get: (_, prop) => `mock-model-${String(prop)}` }),
+}));
 
 vi.mock("../../../../src/shared/icons", () => ({
   MicIcon: (props: Record<string, unknown>) => <svg data-testid="mic-icon" {...props} />,
@@ -28,6 +35,7 @@ vi.mock("../../../../src/shared/icons", () => ({
   AlertTriangleIcon: (props: Record<string, unknown>) => <svg data-testid="alert-icon" {...props} />,
   XIcon: (props: Record<string, unknown>) => <svg data-testid="x-icon" {...props} />,
   SparkleIcon: (props: Record<string, unknown>) => <svg data-testid="sparkle-icon" {...props} />,
+  TrashIcon: (props: Record<string, unknown>) => <svg data-testid="trash-icon" {...props} />,
 }));
 
 vi.mock("../../../../src/renderer/components/ui/OfflineBanner", () => ({
@@ -48,6 +56,7 @@ beforeEach(() => {
   vi.restoreAllMocks();
   resetStores();
   useOnboardingStore.getState().reset();
+  usePermissionsStore.setState({ status: null, keychainStatus: null });
   voxApi = installVoxApiMock();
   Element.prototype.scrollIntoView = vi.fn();
 
@@ -164,5 +173,36 @@ describe("OnboardingOverlay", () => {
     renderWithI18n(<OnboardingOverlay />);
     expect(screen.getByText("Back")).toBeInTheDocument();
     expect(screen.getByText("Skip Setup")).toBeInTheDocument();
+  });
+
+  it("fires onboarding_started event with is_first_time true on mount", () => {
+    renderWithI18n(<OnboardingOverlay />);
+    expect(voxApi.analytics.track).toHaveBeenCalledWith("onboarding_started", { is_first_time: true });
+  });
+
+  it("fires onboarding_started event with is_first_time false when force opened", () => {
+    useOnboardingStore.setState({ forceOpen: true });
+    renderWithI18n(<OnboardingOverlay />);
+    expect(voxApi.analytics.track).toHaveBeenCalledWith("onboarding_started", { is_first_time: false });
+  });
+
+  it("fires onboarding_skipped event when user skips", async () => {
+    useOnboardingStore.setState({ step: 3 });
+    renderWithI18n(<OnboardingOverlay />);
+    fireEvent.click(screen.getByText("Skip Setup"));
+
+    await waitFor(() => {
+      expect(voxApi.analytics.track).toHaveBeenCalledWith("onboarding_skipped", { skipped_at_step: 3 });
+    });
+  });
+
+  it("fires onboarding_completed event when user finishes", async () => {
+    useOnboardingStore.setState({ step: 7 });
+    renderWithI18n(<OnboardingOverlay />);
+    fireEvent.click(screen.getByText("Start Using Vox"));
+
+    await waitFor(() => {
+      expect(voxApi.analytics.track).toHaveBeenCalledWith("onboarding_completed", { completed_step: 7, skipped: false });
+    });
   });
 });

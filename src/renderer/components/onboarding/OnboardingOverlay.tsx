@@ -21,12 +21,23 @@ export function OnboardingOverlay() {
   const step = useOnboardingStore((s) => s.step);
   const back = useOnboardingStore((s) => s.back);
   const reset = useOnboardingStore((s) => s.reset);
+  const forceOpen = useOnboardingStore((s) => s.forceOpen);
   const setForceOpen = useOnboardingStore((s) => s.setForceOpen);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const setActiveTab = useConfigStore((s) => s.setActiveTab);
   const [closing, setClosing] = useState(false);
   const closingRef = useRef(false);
+  const trackedRef = useRef(false);
+
+  useEffect(() => {
+    if (trackedRef.current) return;
+    trackedRef.current = true;
+    window.voxApi.analytics.track("onboarding_started", {
+      is_first_time: !forceOpen,
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const completeOnboarding = useCallback(async () => {
     setForceOpen(false);
@@ -41,26 +52,35 @@ export function OnboardingOverlay() {
       if (closingRef.current) return;
       closingRef.current = true;
       setClosing(true);
-      setActiveTab("general");
       setTimeout(async () => {
         await completeOnboarding();
         document.querySelector(".content")?.scrollTo({ top: 0 });
         afterClose();
       }, CLOSE_ANIMATION_MS);
     },
-    [completeOnboarding, setActiveTab],
+    [completeOnboarding],
   );
 
   const handleSkip = useCallback(() => {
-    animateClose(() => {});
-  }, [animateClose]);
+    const currentStep = useOnboardingStore.getState().step;
+    animateClose(() => {
+      window.voxApi.analytics.track("onboarding_skipped", { skipped_at_step: currentStep });
+      setActiveTab("general");
+    });
+  }, [animateClose, setActiveTab]);
 
   const handleComplete = useCallback(() => {
-    animateClose(() => setActiveTab("transcriptions"));
+    animateClose(() => {
+      window.voxApi.analytics.track("onboarding_completed", { completed_step: 7, skipped: false });
+      setActiveTab("transcriptions");
+    });
   }, [animateClose, setActiveTab]);
 
   const handleExploreSettings = useCallback(() => {
-    animateClose(() => setActiveTab("general"));
+    animateClose(() => {
+      window.voxApi.analytics.track("onboarding_completed", { completed_step: 7, skipped: false });
+      setActiveTab("general");
+    });
   }, [animateClose, setActiveTab]);
 
   useEffect(() => {

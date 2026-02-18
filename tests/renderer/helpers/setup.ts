@@ -70,6 +70,7 @@ export function createVoxApiMock(): VoxAPI {
     history: {
       get: vi.fn().mockResolvedValue({ entries: [], total: 0 }),
       search: vi.fn().mockResolvedValue({ entries: [], total: 0 }),
+      add: vi.fn().mockResolvedValue(undefined),
       deleteEntry: vi.fn().mockResolvedValue(undefined),
       clear: vi.fn().mockResolvedValue(undefined),
       onEntryAdded: vi.fn(),
@@ -89,6 +90,9 @@ export function createVoxApiMock(): VoxAPI {
     dev: {
       getRuntimeState: vi.fn().mockResolvedValue({ shortcutState: "", isRecording: false, indicatorVisible: false, indicatorMode: null, isListening: false, hasModel: false, trayActive: false }),
       getSystemInfo: vi.fn().mockResolvedValue({ electronVersion: "", nodeVersion: "", chromeVersion: "", v8Version: "", platform: "", arch: "", isPackaged: false, appVersion: "", appPath: "", userDataPath: "", logsPath: "", logLevelFile: "", logLevelConsole: "", whisperLib: "" }),
+    },
+    analytics: {
+      track: vi.fn().mockResolvedValue(undefined),
     },
   };
 }

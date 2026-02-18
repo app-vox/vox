@@ -154,6 +154,9 @@ export interface VoxAPI {
     setAnalyticsEnabled(enabled: boolean): Promise<boolean>;
     testError(): Promise<void>;
   };
+  analytics: {
+    track(event: string, properties?: Record<string, unknown>): Promise<void>;
+  };
 }
 
 const voxApi: VoxAPI = {
@@ -259,6 +262,10 @@ const voxApi: VoxAPI = {
     getSystemInfo: () => ipcRenderer.invoke("dev:get-system-info"),
     setAnalyticsEnabled: (enabled: boolean) => ipcRenderer.invoke("dev:set-analytics-enabled", enabled),
     testError: () => ipcRenderer.invoke("dev:test-error"),
+  },
+  analytics: {
+    track: (event: string, properties?: Record<string, unknown>) =>
+      ipcRenderer.invoke("analytics:track", event, properties),
   },
 };
 

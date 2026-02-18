@@ -627,21 +627,20 @@ export function DevPanel() {
           render: () => (
             <>
               <span className={styles.realValue}>{boolDot(config?.onboardingCompleted)}</span>
-              {config?.onboardingCompleted && (
-                <button
-                  className={styles.setBtn}
-                  onClick={async () => {
-                    const { useOnboardingStore } = await import("../onboarding/use-onboarding-store");
-                    useOnboardingStore.getState().setForceOpen(true);
-                    const store = useConfigStore.getState();
-                    store.updateConfig({ onboardingCompleted: false });
-                    await store.saveConfig(false);
-                    triggerToast();
-                  }}
-                >
-                  Reset
-                </button>
-              )}
+              <button
+                className={styles.setBtn}
+                onClick={async () => {
+                  const { useOnboardingStore } = await import("../onboarding/use-onboarding-store");
+                  useOnboardingStore.getState().reset();
+                  useOnboardingStore.getState().setForceOpen(true);
+                  const store = useConfigStore.getState();
+                  store.updateConfig({ onboardingCompleted: false });
+                  await store.saveConfig(false);
+                  triggerToast();
+                }}
+              >
+                {config?.onboardingCompleted ? "Reset" : "Open"}
+              </button>
             </>
           ),
         },
