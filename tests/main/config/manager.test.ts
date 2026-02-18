@@ -259,6 +259,30 @@ describe("ConfigManager", () => {
     expect(loaded.hudPosition).toBe("top-center");
   });
 
+  it("should default speechLanguages to [] when absent from saved config", () => {
+    const oldConfig = {
+      llm: { provider: "foundry", endpoint: "", apiKey: "", model: "gpt-4o" },
+      theme: "system",
+    };
+    fs.mkdirSync(testDir, { recursive: true });
+    fs.writeFileSync(path.join(testDir, "config.json"), JSON.stringify(oldConfig));
+
+    const loaded = manager.load();
+    expect(loaded.speechLanguages).toEqual([]);
+  });
+
+  it("should preserve speechLanguages when present in saved config", () => {
+    const configWithLangs = {
+      llm: { provider: "foundry", endpoint: "", apiKey: "", model: "gpt-4o" },
+      speechLanguages: ["pt", "en"],
+    };
+    fs.mkdirSync(testDir, { recursive: true });
+    fs.writeFileSync(path.join(testDir, "config.json"), JSON.stringify(configWithLangs));
+
+    const loaded = manager.load();
+    expect(loaded.speechLanguages).toEqual(["pt", "en"]);
+  });
+
   it("should preserve credentials from other providers on save (round-trip)", () => {
     const foundryConfig = createDefaultConfig();
     foundryConfig.llm = { provider: "foundry", endpoint: "https://foundry.com", apiKey: "foundry-key", model: "gpt-4o" };

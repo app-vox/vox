@@ -61,6 +61,7 @@ export class ConfigManager {
         customPrompt: saved.customPrompt ?? defaults.customPrompt,
         launchAtLogin: saved.launchAtLogin ?? defaults.launchAtLogin,
         dictionary: Array.isArray(saved.dictionary) ? saved.dictionary : defaults.dictionary,
+        speechLanguages: Array.isArray(saved.speechLanguages) ? saved.speechLanguages : defaults.speechLanguages,
         language: saved.language ?? defaults.language,
         recordingAudioCue: saved.recordingAudioCue ?? defaults.recordingAudioCue,
         recordingStopAudioCue: saved.recordingStopAudioCue ?? defaults.recordingStopAudioCue,
