@@ -104,8 +104,15 @@ export function buildWhisperPrompt(dictionary: string[], promptPrefix = ""): str
   return `${prefix}${cleanTerms}${separator}${WHISPER_PROMPT}`;
 }
 
-export function buildSystemPrompt(customPrompt: string, dictionary: string[] = []): string {
+export function buildSystemPrompt(customPrompt: string, dictionary: string[] = [], speechLanguages: string[] = []): string {
   let prompt = LLM_SYSTEM_PROMPT;
+
+  if (speechLanguages.length > 0) {
+    const names = speechLanguages
+      .map((code) => WHISPER_LANGUAGES.find((l) => l.code === code)?.name.split(" (")[0] ?? code)
+      .join(", ");
+    prompt += `\n\nSPEAKER LANGUAGE CONTEXT:\nThe user primarily speaks: ${names}. Respond in the same language as the transcribed text. Preserve language-specific idioms, slang, and expressions.`;
+  }
 
   if (dictionary.length > 0) {
     const terms = dictionary.map(t => `"${t}"`).join(", ");

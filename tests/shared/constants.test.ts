@@ -97,6 +97,25 @@ describe("buildSystemPrompt", () => {
     expect(result).not.toContain("DICTIONARY");
     expect(result).toContain("Be formal");
   });
+
+  it("should include language context when speechLanguages provided", () => {
+    const result = buildSystemPrompt("", [], ["pt", "en"]);
+    expect(result).toContain("Português");
+    expect(result).toContain("English");
+    expect(result).toContain("primarily speaks");
+  });
+
+  it("should not include language context when speechLanguages is empty", () => {
+    const result = buildSystemPrompt("", [], []);
+    expect(result).not.toContain("primarily speaks");
+  });
+
+  it("should place language context before dictionary", () => {
+    const result = buildSystemPrompt("", ["Kubernetes"], ["pt"]);
+    const langIdx = result.indexOf("primarily speaks");
+    const dictIdx = result.indexOf("DICTIONARY");
+    expect(langIdx).toBeLessThan(dictIdx);
+  });
 });
 
 describe("WHISPER_LANGUAGES", () => {
