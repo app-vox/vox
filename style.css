@@ -955,6 +955,187 @@ body {
     }
 }
 
+/* Custom Prompt Showcase Section */
+.showcase {
+    padding: var(--spacing-2xl) 0;
+}
+
+@media (min-width: 768px) {
+    .showcase {
+        padding: 5rem 0;
+    }
+}
+
+.showcase-header {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto var(--spacing-2xl);
+}
+
+.showcase-title {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    line-height: var(--line-height-tight);
+    margin-bottom: var(--spacing-sm);
+}
+
+.showcase-title span {
+    background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+@media (min-width: 768px) {
+    .showcase-title {
+        font-size: var(--font-size-2xl);
+    }
+}
+
+.showcase-subtitle {
+    font-size: var(--font-size-base);
+    color: var(--text-secondary);
+    line-height: var(--line-height-relaxed);
+}
+
+@media (min-width: 768px) {
+    .showcase-subtitle {
+        font-size: var(--font-size-lg);
+    }
+}
+
+.showcase-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+    .showcase-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.showcase-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-lg);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+.showcase-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (hover: hover) {
+    .showcase-card.visible:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
+    }
+}
+
+.showcase-card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-sm);
+}
+
+.showcase-icon-medical {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.showcase-icon-developer {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.showcase-icon-writer {
+    background-color: rgba(168, 85, 247, 0.1);
+    color: #a855f7;
+}
+
+.showcase-icon-language {
+    background-color: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+}
+
+.showcase-card-title {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+}
+
+.showcase-card-prompt {
+    font-size: var(--font-size-sm);
+    color: var(--accent);
+    font-style: italic;
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background-color: rgba(99, 102, 241, 0.05);
+    border-left: 2px solid var(--accent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.showcase-card-example {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.showcase-before,
+.showcase-after {
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
+}
+
+.showcase-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.showcase-before .showcase-label {
+    color: var(--text-secondary);
+}
+
+.showcase-after .showcase-label {
+    color: var(--accent);
+}
+
+.showcase-before p {
+    color: var(--text-secondary);
+    text-decoration: line-through;
+    text-decoration-color: rgba(163, 163, 163, 0.4);
+}
+
+.showcase-after p {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* Reduced Motion: show cards immediately */
+@media (prefers-reduced-motion: reduce) {
+    .showcase-card {
+        opacity: 1;
+        transform: none;
+    }
+}
+
 /* Privacy Section */
 .privacy {
     padding: var(--spacing-2xl) 0;
