@@ -3,6 +3,7 @@ import { useT } from "../../../i18n-context";
 import { useOnboardingStore } from "../use-onboarding-store";
 import { useConfigStore } from "../../../stores/config-store";
 import { MicSimpleIcon } from "../../../../shared/icons";
+import { RadioGroup } from "../../ui/RadioGroup";
 import styles from "../OnboardingOverlay.module.scss";
 import btn from "../../shared/buttons.module.scss";
 
@@ -16,6 +17,20 @@ export function HudDemoStep() {
   const [choice, setChoice] = useState<HudChoice>("enable");
 
   const config = useConfigStore((s) => s.config);
+
+  const options = [
+    {
+      value: "enable",
+      label: t("onboarding.hud.choice.enable"),
+      description: t("onboarding.hud.choice.enableDesc"),
+      recommended: true,
+    },
+    {
+      value: "later",
+      label: t("onboarding.hud.choice.later"),
+      description: t("onboarding.hud.choice.laterDesc"),
+    },
+  ];
 
   const handleContinue = async () => {
     if (choice === "enable") {
@@ -51,30 +66,13 @@ export function HudDemoStep() {
         </div>
       </div>
 
-      <div className={styles.modelList}>
-        {(["enable", "later"] as const).map((opt) => (
-          <label
-            key={opt}
-            className={`${styles.modelRow} ${choice === opt ? styles.modelRowSelected : ""}`}
-          >
-            <input
-              type="radio"
-              name="hud-choice"
-              checked={choice === opt}
-              onChange={() => setChoice(opt)}
-            />
-            <div className={styles.modelInfo}>
-              <span className={styles.modelName}>
-                {t(`onboarding.hud.choice.${opt}`)}
-                {opt === "enable" && (
-                  <span className={styles.recommendedBadge}>{t("onboarding.model.recommended")}</span>
-                )}
-              </span>
-              <span className={styles.modelDesc}>{t(`onboarding.hud.choice.${opt}Desc`)}</span>
-            </div>
-          </label>
-        ))}
-      </div>
+      <RadioGroup
+        name="hud-choice"
+        value={choice}
+        options={options}
+        onChange={(v) => setChoice(v as HudChoice)}
+        recommendedLabel={t("onboarding.model.recommended")}
+      />
 
       <div className={styles.hudButtonRow}>
         <button

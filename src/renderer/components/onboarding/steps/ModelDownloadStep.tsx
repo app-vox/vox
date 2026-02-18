@@ -4,6 +4,7 @@ import { useOnboardingStore } from "../use-onboarding-store";
 import { useOnlineStatus } from "../../../hooks/use-online-status";
 import { useConfigStore } from "../../../stores/config-store";
 import { OfflineBanner } from "../../ui/OfflineBanner";
+import { ModelRow } from "../../whisper/ModelRow";
 import type { ModelInfo } from "../../../../preload/index";
 import type { WhisperModelSize } from "../../../../shared/config";
 import styles from "../OnboardingOverlay.module.scss";
@@ -22,8 +23,6 @@ export function ModelDownloadStep() {
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [selectedSize, setSelectedSize] = useState<string>("");
-  const [downloading, setDownloading] = useState<string | null>(null);
-  const [progress, setProgress] = useState({ downloaded: 0, total: 0 });
 
   const refreshModels = useCallback(async () => {
     const list = await window.voxApi.models.list();
@@ -31,7 +30,6 @@ export function ModelDownloadStep() {
     const anyDownloaded = list.some((m) => m.downloaded);
     setModelDownloaded(anyDownloaded);
 
-    // Pre-select model if one is already downloaded and configured
     if (anyDownloaded) {
       const configuredModel = config?.whisper.model;
       const configuredAndDownloaded = list.find(
@@ -41,7 +39,6 @@ export function ModelDownloadStep() {
       if (configuredAndDownloaded) {
         setSelectedSize(configuredAndDownloaded.size);
       } else if (!selectedSize || !list.find((m) => m.size === selectedSize && m.downloaded)) {
-        // If no valid selection, pick the first downloaded model
         const first = list.find((m) => m.downloaded);
         if (first) setSelectedSize(first.size);
       }
@@ -54,40 +51,12 @@ export function ModelDownloadStep() {
 
   useEffect(() => {
     const cleanup = window.voxApi.models.onDownloadProgress((p) => {
-      if (p.size === downloading) {
-        setProgress({ downloaded: p.downloaded, total: p.total });
-        if (p.downloaded === p.total && p.total > 0) {
-          setTimeout(() => {
-            setDownloading(null);
-            setProgress({ downloaded: 0, total: 0 });
-            refreshModels();
-          }, 100);
-        }
+      if (p.downloaded === p.total && p.total > 0) {
+        setTimeout(() => refreshModels(), 100);
       }
     });
     return cleanup;
-  }, [downloading, refreshModels]);
-
-  const handleDownload = async (size: string) => {
-    setDownloading(size);
-    setProgress({ downloaded: 0, total: 0 });
-    try {
-      await window.voxApi.models.download(size);
-      setSelectedSize(size);
-      updateConfig({ whisper: { model: size as WhisperModelSize } });
-      await saveConfig(false);
-    } catch {
-      setDownloading(null);
-    }
-  };
-
-  const handleCancel = async () => {
-    if (downloading) {
-      await window.voxApi.models.cancelDownload(downloading);
-      setDownloading(null);
-      setProgress({ downloaded: 0, total: 0 });
-    }
-  };
+  }, [refreshModels]);
 
   const handleSelect = async (size: string) => {
     setSelectedSize(size);
@@ -102,10 +71,6 @@ export function ModelDownloadStep() {
     next();
   };
 
-  const percent = progress.total > 0
-    ? Math.min(100, Math.round((progress.downloaded / progress.total) * 100))
-    : 0;
-
   return (
     <div className={styles.stepContent}>
       <h2 className={styles.stepTitle}>
@@ -117,57 +82,20 @@ export function ModelDownloadStep() {
 
       <OfflineBanner />
 
-      <div className={styles.modelList}>
-        {models.map((model) => {
-          const isDownloading = downloading === model.size;
-          const isRecommended = model.size === RECOMMENDED_MODEL;
-          return (
-            <label
-              key={model.size}
-              className={`${styles.modelRow} ${selectedSize === model.size ? styles.modelRowSelected : ""}`}
-            >
-              <input
-                type="radio"
-                name="onboarding-model"
-                checked={selectedSize === model.size}
-                onChange={() => handleSelect(model.size)}
-              />
-              <div className={styles.modelInfo}>
-                <span className={styles.modelName}>
-                  {t("whisper.model." + model.size + ".label")}
-                  {isRecommended && (
-                    <span className={styles.recommendedBadge}>{t("onboarding.model.recommended")}</span>
-                  )}
-                </span>
-                <span className={styles.modelDesc}>{t("whisper.model." + model.size + ".description")}</span>
-              </div>
-              <div className={styles.modelAction}>
-                {isDownloading ? (
-                  <div className={styles.modelProgress}>
-                    <div className={styles.progressBar}>
-                      <div className={styles.progressFill} style={{ width: `${percent}%` }} />
-                    </div>
-                    {/* eslint-disable-next-line i18next/no-literal-string */}
-                    <span className={styles.progressText}>{percent}%</span>
-                    {/* eslint-disable-next-line i18next/no-literal-string */}
-                    <button className={styles.cancelBtn} onClick={handleCancel} type="button">&times;</button>
-                  </div>
-                ) : model.downloaded ? (
-                  <span className={styles.downloadedBadge}>{t("model.downloaded")}</span>
-                ) : (
-                  <button
-                    className={`${btn.btn} ${btn.secondary} ${btn.sm}`}
-                    onClick={() => handleDownload(model.size)}
-                    disabled={!online}
-                    type="button"
-                  >
-                    {t("model.download")}
-                  </button>
-                )}
-              </div>
-            </label>
-          );
-        })}
+      <div className={styles.modelRowList}>
+        {models.map((model) => (
+          <ModelRow
+            key={model.size}
+            model={model}
+            selected={selectedSize === model.size}
+            onSelect={handleSelect}
+            onDelete={refreshModels}
+            downloadDisabled={!online}
+            compact
+            recommended={model.size === RECOMMENDED_MODEL}
+            recommendedLabel={t("onboarding.model.recommended")}
+          />
+        ))}
       </div>
 
       <button

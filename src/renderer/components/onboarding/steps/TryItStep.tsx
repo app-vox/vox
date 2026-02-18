@@ -1,66 +1,49 @@
-import { useRef, useEffect, useMemo } from "react";
+import { useRef, useEffect, useCallback } from "react";
 import { useT } from "../../../i18n-context";
 import { useOnboardingStore } from "../use-onboarding-store";
 import { useConfigStore } from "../../../stores/config-store";
-import { recordAudio } from "../../../utils/record-audio";
+import { useWhisperTest } from "../../../hooks/use-whisper-test";
 import { RecordIcon } from "../../../../shared/icons";
 import styles from "../OnboardingOverlay.module.scss";
 import btn from "../../shared/buttons.module.scss";
 
+const PHRASE_KEYS = [
+  "onboarding.tryIt.suggestedPhrase1",
+  "onboarding.tryIt.suggestedPhrase2",
+  "onboarding.tryIt.suggestedPhrase3",
+] as const;
+
+const randomPhraseIndex = Math.floor(Math.random() * PHRASE_KEYS.length);
+
 export function TryItStep() {
   const t = useT();
   const next = useOnboardingStore((s) => s.next);
-  const testing = useOnboardingStore((s) => s.testing);
-  const testResult = useOnboardingStore((s) => s.testResult);
-  const testError = useOnboardingStore((s) => s.testError);
-  const setTesting = useOnboardingStore((s) => s.setTesting);
-  const setTestResult = useOnboardingStore((s) => s.setTestResult);
-  const setTestError = useOnboardingStore((s) => s.setTestError);
   const config = useConfigStore((s) => s.config);
 
   const holdShortcut = config?.shortcuts.hold || "Alt+Space";
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const onSuccess = useCallback(async (text: string) => {
+    await window.voxApi.history.add({
+      text,
+      originalText: text,
+      audioDurationMs: 3000,
+      whisperModel: config?.whisper?.model || "small",
+      llmEnhanced: false,
+    });
+  }, [config?.whisper?.model]);
+
+  const { testing, testResult, testError, runTest, setTestResult } = useWhisperTest({ onSuccess });
+
   useEffect(() => {
     textareaRef.current?.focus();
   }, []);
 
-  const suggestedPhrase = useMemo(() => {
-    const phrases = [
-      t("onboarding.tryIt.suggestedPhrase1"),
-      t("onboarding.tryIt.suggestedPhrase2"),
-      t("onboarding.tryIt.suggestedPhrase3"),
-    ];
-    return phrases[Math.floor(Math.random() * phrases.length)];
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const suggestedPhrase = t(PHRASE_KEYS[randomPhraseIndex]);
 
   const handleTest = async () => {
     textareaRef.current?.focus();
-    setTesting(true);
-    setTestResult(null);
-    setTestError(null);
-
-    try {
-      const recording = await recordAudio(3);
-      const text = await window.voxApi.whisper.test(recording);
-      if (text) {
-        setTestResult(text);
-        await window.voxApi.history.add({
-          text,
-          originalText: text,
-          audioDurationMs: 3000,
-          whisperModel: config?.whisper?.model || "small",
-          llmEnhanced: false,
-        });
-      } else {
-        setTestResult(null);
-        setTestError("no-speech");
-      }
-    } catch (err: unknown) {
-      setTestError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setTesting(false);
-    }
+    await runTest(3);
   };
 
   const statusMessage = testing
