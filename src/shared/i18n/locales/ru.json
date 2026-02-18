@@ -23,6 +23,8 @@
   "general.speechLanguages.hintSingle": "С одним выбранным языком транскрипция быстрее и точнее.",
   "general.speechLanguages.hintMultiple": "Выбрано несколько языков — Vox будет определять, какой вы используете каждый раз.",
   "general.speechLanguages.remove": "Удалить {language}",
+  "general.speechLanguages.popular": "Популярные",
+  "general.speechLanguages.search": "Поиск языков...",
   "general.startup.title": "Автозапуск",
   "general.startup.description": "Управляйте запуском Vox в вашей системе.",
   "general.startup.launchAtLogin": "Запускать при входе",

@@ -23,6 +23,8 @@
   "general.speechLanguages.hintSingle": "Tek bir dil seçildiğinde transkripsiyon daha hızlı ve doğru olur.",
   "general.speechLanguages.hintMultiple": "Birden fazla dil seçildi — Vox her seferinde hangisini kullandığınızı algılayacak.",
   "general.speechLanguages.remove": "{language} kaldır",
+  "general.speechLanguages.popular": "Popüler",
+  "general.speechLanguages.search": "Dil ara...",
   "general.startup.title": "Başlatıcı",
   "general.startup.description": "Vox'un sisteminizde nasıl başlatılacağını kontrol edin.",
   "general.startup.launchAtLogin": "Oturum açılırken başlat",

@@ -1,4 +1,4 @@
-import { type ReactNode, useState, useRef, useCallback, useEffect } from "react";
+import { type ReactNode, useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
 import { usePermissions } from "../../hooks/use-permissions";
@@ -39,6 +39,32 @@ const LANGUAGE_NAMES: Record<SupportedLanguage, string> = {
   ru: "\u0420\u0443\u0441\u0441\u043a\u0438\u0439",
   tr: "T\u00fcrk\u00e7e",
 };
+
+const POPULAR_LANGUAGE_CODES = new Set(["en", "zh", "es", "fr", "de", "pt", "ja", "ko", "it", "ru"]);
+
+function buildSpeechLanguageItems(popularLabel: string): SelectItem[] {
+  const popular: { value: string; label: string }[] = [];
+  const rest: { value: string; label: string }[] = [];
+
+  for (const lang of WHISPER_LANGUAGES) {
+    const item = { value: lang.code, label: lang.name };
+    if (POPULAR_LANGUAGE_CODES.has(lang.code)) {
+      popular.push(item);
+    } else {
+      rest.push(item);
+    }
+  }
+
+  popular.sort((a, b) => a.label.localeCompare(b.label));
+  rest.sort((a, b) => a.label.localeCompare(b.label));
+
+  return [
+    { divider: true, label: popularLabel },
+    ...popular,
+    { divider: true },
+    ...rest,
+  ];
+}
 
 function previewCue(cue: string) {
   window.voxApi.audio.previewCue(cue).catch(() => {});
@@ -113,6 +139,8 @@ export function GeneralPanel() {
       label: LANGUAGE_NAMES[lang],
     })),
   ];
+
+  const speechLanguageItems = useMemo(() => buildSpeechLanguageItems(t("general.speechLanguages.popular")), [t]);
 
   const positionItems: SelectItem[] = [
     { value: "top-left", label: t("general.position.topLeft") },
@@ -401,7 +429,7 @@ export function GeneralPanel() {
 
                 <MultiSelect
                   values={config.speechLanguages}
-                  items={WHISPER_LANGUAGES.map((l) => ({ value: l.code, label: l.name }))}
+                  items={speechLanguageItems}
                   onAdd={(val) => {
                     if (config.speechLanguages.includes(val)) return;
                     updateConfig({
@@ -416,6 +444,7 @@ export function GeneralPanel() {
                     void saveConfig(false);
                   }}
                   placeholder={t("general.speechLanguages.placeholder")}
+                  searchPlaceholder={t("general.speechLanguages.search")}
                   removeLabel={(label) => t("general.speechLanguages.remove", { language: label })}
                 />
 

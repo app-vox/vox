@@ -31,10 +31,11 @@ interface CustomSelectProps {
 
 interface MultiSelectProps {
   values: string[];
-  items: SelectOption[];
+  items: SelectItem[];
   onAdd: (value: string) => void;
   onRemove: (value: string) => void;
   placeholder?: string;
+  searchPlaceholder?: string;
   removeLabel?: (label: string) => string;
   disabled?: boolean;
 }
@@ -236,15 +237,31 @@ export function CustomSelect({ value, items, onChange, onPreview, id, disabled }
   );
 }
 
-export function MultiSelect({ values, items, onAdd, onRemove, placeholder, removeLabel, disabled }: MultiSelectProps) {
+export function MultiSelect({ values, items, onAdd, onRemove, placeholder, searchPlaceholder, removeLabel, disabled }: MultiSelectProps) {
   const [open, setOpen] = useState(false);
   const [focusIndex, setFocusIndex] = useState(-1);
+  const [search, setSearch] = useState("");
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
   const triggerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
 
-  const available = items.filter((item) => !values.includes(item.value));
-  const selectedItems = values.map((v) => items.find((i) => i.value === v)).filter(Boolean) as SelectOption[];
+  const allOptions = items.filter((item): item is SelectOption => !isDivider(item));
+  const available = items.filter((item) => {
+    if (isDivider(item)) return true;
+    return !values.includes(item.value);
+  });
+  const selectedItems = values.map((v) => allOptions.find((i) => i.value === v)).filter(Boolean) as SelectOption[];
+
+  const query = search.toLowerCase();
+  const filtered = query
+    ? available.filter((item) => {
+        if (isDivider(item)) return false;
+        return item.label.toLowerCase().includes(query);
+      })
+    : available;
+
+  const filteredOptions = filtered.filter((item): item is SelectOption => !isDivider(item));
 
   const updatePosition = useCallback(() => {
     if (triggerRef.current) {
@@ -288,18 +305,11 @@ export function MultiSelect({ values, items, onAdd, onRemove, placeholder, remov
     }
   }, [focusIndex, open]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!open) {
-      if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
-        e.preventDefault();
-        if (available.length > 0) {
-          setOpen(true);
-          setFocusIndex(0);
-        }
-      }
-      return;
-    }
+  useEffect(() => {
+    if (open) requestAnimationFrame(() => searchRef.current?.focus());
+  }, [open]);
 
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
     switch (e.key) {
       case "Escape":
         e.preventDefault();
@@ -307,30 +317,46 @@ export function MultiSelect({ values, items, onAdd, onRemove, placeholder, remov
         break;
       case "ArrowDown":
         e.preventDefault();
-        setFocusIndex((prev) => (prev < available.length - 1 ? prev + 1 : 0));
+        setFocusIndex((prev) => (prev < filteredOptions.length - 1 ? prev + 1 : 0));
         break;
       case "ArrowUp":
         e.preventDefault();
-        setFocusIndex((prev) => (prev > 0 ? prev - 1 : available.length - 1));
+        setFocusIndex((prev) => (prev > 0 ? prev - 1 : filteredOptions.length - 1));
         break;
-      case "Enter":
-      case " ": {
+      case "Enter": {
         e.preventDefault();
-        const item = available[focusIndex];
+        const item = filteredOptions[focusIndex];
         if (item) {
           onAdd(item.value);
-          setFocusIndex((prev) => Math.min(prev, available.length - 2));
+          setSearch("");
+          setFocusIndex((prev) => Math.min(prev, filteredOptions.length - 2));
         }
         break;
       }
     }
   };
 
+  const handleTriggerKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+      e.preventDefault();
+      if (!disabled) {
+        setSearch("");
+        setOpen(true);
+        setFocusIndex(0);
+      }
+    }
+  };
+
   const handleToggle = () => {
-    if (disabled || available.length === 0) return;
-    if (!open) setFocusIndex(0);
+    if (disabled) return;
+    if (!open) {
+      setFocusIndex(0);
+      setSearch("");
+    }
     setOpen(!open);
   };
+
+  const hasAvailable = allOptions.some((item) => !values.includes(item.value));
 
   return (
     <>
@@ -342,7 +368,7 @@ export function MultiSelect({ values, items, onAdd, onRemove, placeholder, remov
         aria-haspopup="listbox"
         tabIndex={disabled ? -1 : 0}
         onClick={handleToggle}
-        onKeyDown={handleKeyDown}
+        onKeyDown={handleTriggerKeyDown}
       >
         <div className={styles.multiChips}>
           {selectedItems.map((item) => (
@@ -363,14 +389,14 @@ export function MultiSelect({ values, items, onAdd, onRemove, placeholder, remov
               </button>
             </span>
           ))}
-          {available.length > 0 && (
+          {hasAvailable && (
             <span className={styles.multiPlaceholder}>{placeholder}</span>
           )}
         </div>
         <ChevronDownIcon width={12} height={12} />
       </div>
 
-      {open && available.length > 0 && createPortal(
+      {open && createPortal(
         <div
           className={styles.dropdown}
           ref={listRef}
@@ -378,26 +404,55 @@ export function MultiSelect({ values, items, onAdd, onRemove, placeholder, remov
           aria-multiselectable="true"
           style={{ top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width }}
         >
-          {available.map((item, i) => (
-            <div
-              key={item.value}
-              role="option"
-              aria-selected={false}
-              className={`${styles.option} ${i === focusIndex ? styles.focused : ""}`}
-              onMouseEnter={() => setFocusIndex(i)}
-            >
-              <button
-                type="button"
-                className={styles.optionLabel}
-                onClick={() => {
-                  onAdd(item.value);
-                  setFocusIndex((prev) => Math.min(prev, available.length - 2));
-                }}
+          <div className={styles.searchBox}>
+            <input
+              ref={searchRef}
+              type="text"
+              className={styles.searchInput}
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setFocusIndex(0);
+              }}
+              onKeyDown={handleSearchKeyDown}
+              placeholder={searchPlaceholder ?? placeholder}
+            />
+          </div>
+          {filtered.map((item, i) => {
+            if (isDivider(item)) {
+              if (item.label) {
+                return (
+                  <div key={`d-${i}`} className={styles.divider}>
+                    <span className={styles.dividerLabel}>{item.label}</span>
+                  </div>
+                );
+              }
+              return <div key={`d-${i}`} className={styles.dividerPlain} />;
+            }
+
+            const optionIdx = filteredOptions.indexOf(item);
+            return (
+              <div
+                key={item.value}
+                role="option"
+                aria-selected={false}
+                className={`${styles.option} ${optionIdx === focusIndex ? styles.focused : ""}`}
+                onMouseEnter={() => setFocusIndex(optionIdx)}
               >
-                {item.label}
-              </button>
-            </div>
-          ))}
+                <button
+                  type="button"
+                  className={styles.optionLabel}
+                  onClick={() => {
+                    onAdd(item.value);
+                    setSearch("");
+                    setFocusIndex((prev) => Math.min(prev, filteredOptions.length - 2));
+                  }}
+                >
+                  {item.label}
+                </button>
+              </div>
+            );
+          })}
         </div>,
         document.body
       )}

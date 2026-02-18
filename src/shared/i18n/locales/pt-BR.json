@@ -23,6 +23,8 @@
   "general.speechLanguages.hintSingle": "Com um idioma selecionado, a transcrição é mais rápida e precisa.",
   "general.speechLanguages.hintMultiple": "Vários idiomas selecionados — o Vox detectará qual você está usando a cada vez.",
   "general.speechLanguages.remove": "Remover {language}",
+  "general.speechLanguages.popular": "Populares",
+  "general.speechLanguages.search": "Buscar idiomas...",
   "general.startup.title": "Inicialização",
   "general.startup.description": "Controle como o Vox inicia no seu sistema.",
   "general.startup.launchAtLogin": "Iniciar ao fazer login",
