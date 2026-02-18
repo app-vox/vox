@@ -187,9 +187,9 @@ const translations = {
       },
       language: {
         title: 'Estudante de Idiomas',
-        prompt: 'Traduza para alemão e corrija a gramática',
-        before: 'I need to uh tell my landlord that the heater is broken and um ask when someone can fix it',
-        after: 'Ich muss meinem Vermieter mitteilen, dass die Heizung kaputt ist, und fragen, wann jemand sie reparieren kann.'
+        prompt: 'Traduza para inglês e corrija a gramática',
+        before: 'eu preciso é falar pro meu senhorio que o aquecedor tá quebrado e pedir pra alguém consertar',
+        after: 'I need to tell my landlord that the heater is broken and ask when someone can fix it.'
       }
     },
     footer: {
@@ -288,9 +288,9 @@ const translations = {
       },
       language: {
         title: 'Estudante de Idiomas',
-        prompt: 'Traduza para alemão e corrija a gramática',
-        before: 'I need to uh tell my landlord that the heater is broken and um ask when someone can fix it',
-        after: 'Ich muss meinem Vermieter mitteilen, dass die Heizung kaputt ist, und fragen, wann jemand sie reparieren kann.'
+        prompt: 'Traduza para inglês e corrija a gramática',
+        before: 'eu preciso tipo dizer ao meu senhorio que o aquecedor está avariado e perguntar quando é que alguém pode arranjar',
+        after: 'I need to tell my landlord that the heater is broken and ask when someone can fix it.'
       }
     },
     footer: {
@@ -389,9 +389,9 @@ const translations = {
       },
       language: {
         title: 'Estudiante de Idiomas',
-        prompt: 'Traducir al alemán y corregir la gramática',
-        before: 'I need to uh tell my landlord that the heater is broken and um ask when someone can fix it',
-        after: 'Ich muss meinem Vermieter mitteilen, dass die Heizung kaputt ist, und fragen, wann jemand sie reparieren kann.'
+        prompt: 'Traducir al francés y corregir la gramática',
+        before: 'necesito eh decirle a mi casero que la calefacción está rota y preguntarle cuándo pueden arreglarla',
+        after: 'Je dois informer mon propriétaire que le chauffage est en panne et demander quand quelqu\'un peut le réparer.'
       }
     },
     footer: {
@@ -490,9 +490,9 @@ const translations = {
       },
       language: {
         title: 'Apprenant en Langues',
-        prompt: 'Traduire en allemand et corriger la grammaire',
-        before: 'I need to uh tell my landlord that the heater is broken and um ask when someone can fix it',
-        after: 'Ich muss meinem Vermieter mitteilen, dass die Heizung kaputt ist, und fragen, wann jemand sie reparieren kann.'
+        prompt: 'Traduire en espagnol et corriger la grammaire',
+        before: 'je dois euh dire à mon propriétaire que le chauffage est cassé et demander quand quelqu\'un peut le réparer',
+        after: 'Necesito decirle a mi casero que la calefacción está rota y preguntar cuándo alguien puede arreglarla.'
       }
     },
     footer: {
@@ -591,9 +591,9 @@ const translations = {
       },
       language: {
         title: 'Sprachschüler',
-        prompt: 'Ins Deutsche übersetzen und Grammatik korrigieren',
-        before: 'I need to uh tell my landlord that the heater is broken and um ask when someone can fix it',
-        after: 'Ich muss meinem Vermieter mitteilen, dass die Heizung kaputt ist, und fragen, wann jemand sie reparieren kann.'
+        prompt: 'Ins Englische übersetzen und Grammatik korrigieren',
+        before: 'ich muss äh meinem Vermieter sagen dass die Heizung kaputt ist und fragen wann jemand das reparieren kann',
+        after: 'I need to tell my landlord that the heater is broken and ask when someone can fix it.'
       }
     },
     footer: {
@@ -693,7 +693,7 @@ const translations = {
       language: {
         title: 'Studente di Lingue',
         prompt: 'Tradurre in tedesco e correggere la grammatica',
-        before: 'I need to uh tell my landlord that the heater is broken and um ask when someone can fix it',
+        before: 'devo ehm dire al mio padrone di casa che il riscaldamento è rotto e chiedere quando qualcuno può aggiustarlo',
         after: 'Ich muss meinem Vermieter mitteilen, dass die Heizung kaputt ist, und fragen, wann jemand sie reparieren kann.'
       }
     },
@@ -793,9 +793,9 @@ const translations = {
       },
       language: {
         title: 'Изучающий языки',
-        prompt: 'Перевести на немецкий и исправить грамматику',
-        before: 'I need to uh tell my landlord that the heater is broken and um ask when someone can fix it',
-        after: 'Ich muss meinem Vermieter mitteilen, dass die Heizung kaputt ist, und fragen, wann jemand sie reparieren kann.'
+        prompt: 'Перевести на английский и исправить грамматику',
+        before: 'мне надо эм сказать хозяину что отопление сломалось и спросить когда кто-нибудь починит',
+        after: 'I need to tell my landlord that the heater is broken and ask when someone can fix it.'
       }
     },
     footer: {
@@ -894,9 +894,9 @@ const translations = {
       },
       language: {
         title: 'Dil Öğrencisi',
-        prompt: 'Almancaya çevirin ve dilbilgisini düzeltin',
-        before: 'I need to uh tell my landlord that the heater is broken and um ask when someone can fix it',
-        after: 'Ich muss meinem Vermieter mitteilen, dass die Heizung kaputt ist, und fragen, wann jemand sie reparieren kann.'
+        prompt: 'Fransızcaya çevirin ve dilbilgisini düzeltin',
+        before: 'ev sahibime şey kalorifer bozuldu diye söylemem lazım ve hım birinin ne zaman tamir edebileceğini sormam lazım',
+        after: 'Je dois informer mon propriétaire que le chauffage est en panne et demander quand quelqu\'un peut le réparer.'
       }
     },
     footer: {
