@@ -61,6 +61,36 @@ const translations = {
         openSource: 'Open source'
       }
     },
+    customPrompt: {
+      title: 'Your voice, your rules',
+      subtitle: 'Add custom instructions to tailor corrections for your workflow. From medical jargon to creative writing — Vox adapts to you.',
+      beforeLabel: 'You said:',
+      afterLabel: 'Vox output:',
+      medical: {
+        title: 'Medical Professional',
+        prompt: 'Preserve medical terminology and standard abbreviations',
+        before: 'the patient presented with uh bilateral knee oh tea so we started physical therapy',
+        after: 'The patient presented with bilateral knee OA, so we started physical therapy.'
+      },
+      developer: {
+        title: 'Developer',
+        prompt: 'Format as concise technical documentation',
+        before: 'so basically the function like takes a callback and um returns a promise that resolves when done',
+        after: 'The function takes a callback and returns a Promise that resolves on completion.'
+      },
+      writer: {
+        title: 'Creative Writer',
+        prompt: 'Enhance prose while maintaining the author\'s voice',
+        before: 'the sun was um setting and like everything had this golden uh glow to it you know',
+        after: 'The sun was setting, and everything was bathed in a golden glow.'
+      },
+      language: {
+        title: 'Language Learner',
+        prompt: 'Translate to German and correct grammar',
+        before: 'I need to uh tell my landlord that the heater is broken and um ask when someone can fix it',
+        after: 'Ich muss meinem Vermieter mitteilen, dass die Heizung kaputt ist, und fragen, wann jemand sie reparieren kann.'
+      }
+    },
     footer: {
       builtBy: 'Built by the open-source community',
       docs: 'Docs',
@@ -130,6 +160,36 @@ const translations = {
         local: 'Processamento local',
         noCloud: 'Sem áudio na nuvem',
         openSource: 'Código aberto'
+      }
+    },
+    customPrompt: {
+      title: 'Sua voz, suas regras',
+      subtitle: 'Adicione instruções personalizadas para adaptar as correções ao seu fluxo de trabalho. De jargão médico a escrita criativa — o Vox se adapta a você.',
+      beforeLabel: 'Você disse:',
+      afterLabel: 'Resultado do Vox:',
+      medical: {
+        title: 'Profissional de Saúde',
+        prompt: 'Preserve terminologia médica e abreviações padrão',
+        before: 'o paciente apresentou é bilateral no joelho oh ah artrose então a gente começou a fisioterapia',
+        after: 'O paciente apresentou OA bilateral no joelho, então iniciamos a fisioterapia.'
+      },
+      developer: {
+        title: 'Desenvolvedor',
+        prompt: 'Formate como documentação técnica concisa',
+        before: 'então basicamente a função tipo recebe um callback e hm retorna uma promise que resolve quando termina',
+        after: 'A função recebe um callback e retorna uma Promise que resolve ao completar.'
+      },
+      writer: {
+        title: 'Escritor Criativo',
+        prompt: 'Aprimore a prosa mantendo a voz do autor',
+        before: 'o sol tava tipo se pondo e tudo tinha esse brilho dourado sabe',
+        after: 'O sol se punha, e tudo estava banhado por um brilho dourado.'
+      },
+      language: {
+        title: 'Estudante de Idiomas',
+        prompt: 'Traduza para alemão e corrija a gramática',
+        before: 'I need to uh tell my landlord that the heater is broken and um ask when someone can fix it',
+        after: 'Ich muss meinem Vermieter mitteilen, dass die Heizung kaputt ist, und fragen, wann jemand sie reparieren kann.'
       }
     },
     footer: {
@@ -203,6 +263,36 @@ const translations = {
         openSource: 'Código aberto'
       }
     },
+    customPrompt: {
+      title: 'A sua voz, as suas regras',
+      subtitle: 'Adicione instruções personalizadas para adaptar as correções ao seu fluxo de trabalho. De jargão médico a escrita criativa — o Vox adapta-se a si.',
+      beforeLabel: 'Disse:',
+      afterLabel: 'Resultado do Vox:',
+      medical: {
+        title: 'Profissional de Saúde',
+        prompt: 'Preserve terminologia médica e abreviaturas padrão',
+        before: 'o paciente apresentou é bilateral no joelho ah artrose então começámos a fisioterapia',
+        after: 'O paciente apresentou OA bilateral no joelho, pelo que iniciámos a fisioterapia.'
+      },
+      developer: {
+        title: 'Programador',
+        prompt: 'Formate como documentação técnica concisa',
+        before: 'então basicamente a função tipo recebe um callback e hm retorna uma promise que resolve quando acaba',
+        after: 'A função recebe um callback e retorna uma Promise que resolve ao completar.'
+      },
+      writer: {
+        title: 'Escritor Criativo',
+        prompt: 'Melhore a prosa mantendo a voz do autor',
+        before: 'o sol estava tipo a pôr-se e tudo tinha aquele brilho dourado sabes',
+        after: 'O sol punha-se, e tudo estava envolto num brilho dourado.'
+      },
+      language: {
+        title: 'Estudante de Idiomas',
+        prompt: 'Traduza para alemão e corrija a gramática',
+        before: 'I need to uh tell my landlord that the heater is broken and um ask when someone can fix it',
+        after: 'Ich muss meinem Vermieter mitteilen, dass die Heizung kaputt ist, und fragen, wann jemand sie reparieren kann.'
+      }
+    },
     footer: {
       builtBy: 'Construído pela comunidade open-source',
       docs: 'Documentação',
@@ -272,6 +362,36 @@ const translations = {
         local: 'Procesamiento local',
         noCloud: 'Sin audio en la nube',
         openSource: 'Código abierto'
+      }
+    },
+    customPrompt: {
+      title: 'Tu voz, tus reglas',
+      subtitle: 'Añade instrucciones personalizadas para adaptar las correcciones a tu flujo de trabajo. Desde jerga médica hasta escritura creativa — Vox se adapta a ti.',
+      beforeLabel: 'Dijiste:',
+      afterLabel: 'Resultado de Vox:',
+      medical: {
+        title: 'Profesional Médico',
+        prompt: 'Preservar terminología médica y abreviaturas estándar',
+        before: 'el paciente presentó eh bilateral en la rodilla ah artrosis entonces empezamos la fisioterapia',
+        after: 'El paciente presentó OA bilateral de rodilla, por lo que iniciamos la fisioterapia.'
+      },
+      developer: {
+        title: 'Desarrollador',
+        prompt: 'Formatear como documentación técnica concisa',
+        before: 'entonces básicamente la función como que recibe un callback y em devuelve una promesa que se resuelve cuando termina',
+        after: 'La función recibe un callback y devuelve una Promise que se resuelve al completarse.'
+      },
+      writer: {
+        title: 'Escritor Creativo',
+        prompt: 'Mejorar la prosa manteniendo la voz del autor',
+        before: 'el sol se estaba como poniendo y todo tenía ese brillo dorado eh sabes',
+        after: 'El sol se ponía, y todo estaba bañado por un resplandor dorado.'
+      },
+      language: {
+        title: 'Estudiante de Idiomas',
+        prompt: 'Traducir al alemán y corregir la gramática',
+        before: 'I need to uh tell my landlord that the heater is broken and um ask when someone can fix it',
+        after: 'Ich muss meinem Vermieter mitteilen, dass die Heizung kaputt ist, und fragen, wann jemand sie reparieren kann.'
       }
     },
     footer: {
@@ -345,6 +465,36 @@ const translations = {
         openSource: 'Open source'
       }
     },
+    customPrompt: {
+      title: 'Votre voix, vos règles',
+      subtitle: 'Ajoutez des instructions personnalisées pour adapter les corrections à votre flux de travail. Du jargon médical à l\'écriture créative — Vox s\'adapte à vous.',
+      beforeLabel: 'Vous avez dit :',
+      afterLabel: 'Résultat de Vox :',
+      medical: {
+        title: 'Professionnel de Santé',
+        prompt: 'Préserver la terminologie médicale et les abréviations standard',
+        before: 'le patient a présenté euh bilatéral au genou ah arthrose donc on a commencé la kinésithérapie',
+        after: 'Le patient a présenté une gonarthrose bilatérale, nous avons donc débuté la kinésithérapie.'
+      },
+      developer: {
+        title: 'Développeur',
+        prompt: 'Formater comme documentation technique concise',
+        before: 'alors en gros la fonction genre prend un callback et euh renvoie une promesse qui se résout quand c\'est fini',
+        after: 'La fonction prend un callback et renvoie une Promise qui se résout à la complétion.'
+      },
+      writer: {
+        title: 'Écrivain Créatif',
+        prompt: 'Améliorer la prose en préservant la voix de l\'auteur',
+        before: 'le soleil était genre en train de se coucher et tout avait cette lueur dorée euh tu vois',
+        after: 'Le soleil se couchait, et tout baignait dans une lueur dorée.'
+      },
+      language: {
+        title: 'Apprenant en Langues',
+        prompt: 'Traduire en allemand et corriger la grammaire',
+        before: 'I need to uh tell my landlord that the heater is broken and um ask when someone can fix it',
+        after: 'Ich muss meinem Vermieter mitteilen, dass die Heizung kaputt ist, und fragen, wann jemand sie reparieren kann.'
+      }
+    },
     footer: {
       builtBy: 'Construit par la communauté open-source',
       docs: 'Documentation',
@@ -414,6 +564,36 @@ const translations = {
         local: 'Lokale Verarbeitung',
         noCloud: 'Kein Cloud-Audio',
         openSource: 'Open Source'
+      }
+    },
+    customPrompt: {
+      title: 'Deine Stimme, deine Regeln',
+      subtitle: 'Füge individuelle Anweisungen hinzu, um Korrekturen an deinen Workflow anzupassen. Von medizinischem Fachjargon bis kreativem Schreiben — Vox passt sich dir an.',
+      beforeLabel: 'Du sagtest:',
+      afterLabel: 'Vox-Ergebnis:',
+      medical: {
+        title: 'Mediziner',
+        prompt: 'Medizinische Fachbegriffe und Standardabkürzungen beibehalten',
+        before: 'der Patient hatte äh bilateral am Knie also Arthrose und dann haben wir mit der Physiotherapie angefangen',
+        after: 'Der Patient wies eine bilaterale Gonarthrose auf, woraufhin wir die Physiotherapie einleiteten.'
+      },
+      developer: {
+        title: 'Entwickler',
+        prompt: 'Als prägnante technische Dokumentation formatieren',
+        before: 'also im Grunde nimmt die Funktion halt einen Callback und ähm gibt ein Promise zurück das auflöst wenn es fertig ist',
+        after: 'Die Funktion nimmt einen Callback entgegen und gibt ein Promise zurück, das bei Abschluss aufgelöst wird.'
+      },
+      writer: {
+        title: 'Kreativschreiber',
+        prompt: 'Prosa verbessern und dabei die Stimme des Autors bewahren',
+        before: 'die Sonne ging so unter und alles hatte diesen goldenen äh Schimmer weißt du',
+        after: 'Die Sonne ging unter, und alles war in ein goldenes Leuchten getaucht.'
+      },
+      language: {
+        title: 'Sprachschüler',
+        prompt: 'Ins Deutsche übersetzen und Grammatik korrigieren',
+        before: 'I need to uh tell my landlord that the heater is broken and um ask when someone can fix it',
+        after: 'Ich muss meinem Vermieter mitteilen, dass die Heizung kaputt ist, und fragen, wann jemand sie reparieren kann.'
       }
     },
     footer: {
@@ -487,6 +667,36 @@ const translations = {
         openSource: 'Open source'
       }
     },
+    customPrompt: {
+      title: 'La tua voce, le tue regole',
+      subtitle: 'Aggiungi istruzioni personalizzate per adattare le correzioni al tuo flusso di lavoro. Dal gergo medico alla scrittura creativa — Vox si adatta a te.',
+      beforeLabel: 'Hai detto:',
+      afterLabel: 'Risultato di Vox:',
+      medical: {
+        title: 'Professionista Sanitario',
+        prompt: 'Preservare la terminologia medica e le abbreviazioni standard',
+        before: 'il paziente presentava ehm bilaterale al ginocchio ah artrosi quindi abbiamo iniziato la fisioterapia',
+        after: 'Il paziente presentava gonartrosi bilaterale, pertanto abbiamo avviato la fisioterapia.'
+      },
+      developer: {
+        title: 'Sviluppatore',
+        prompt: 'Formattare come documentazione tecnica concisa',
+        before: 'quindi praticamente la funzione tipo prende un callback e ehm restituisce una promessa che si risolve quando finisce',
+        after: 'La funzione accetta un callback e restituisce una Promise che si risolve al completamento.'
+      },
+      writer: {
+        title: 'Scrittore Creativo',
+        prompt: 'Migliorare la prosa mantenendo la voce dell\'autore',
+        before: 'il sole stava tipo tramontando e tutto aveva questa luce dorata ehm sai',
+        after: 'Il sole tramontava, e tutto era avvolto in una luce dorata.'
+      },
+      language: {
+        title: 'Studente di Lingue',
+        prompt: 'Tradurre in tedesco e correggere la grammatica',
+        before: 'I need to uh tell my landlord that the heater is broken and um ask when someone can fix it',
+        after: 'Ich muss meinem Vermieter mitteilen, dass die Heizung kaputt ist, und fragen, wann jemand sie reparieren kann.'
+      }
+    },
     footer: {
       builtBy: 'Costruito dalla comunità open-source',
       docs: 'Documentazione',
@@ -558,6 +768,36 @@ const translations = {
         openSource: 'Открытый код'
       }
     },
+    customPrompt: {
+      title: 'Ваш голос, ваши правила',
+      subtitle: 'Добавьте пользовательские инструкции для настройки коррекции под ваш рабочий процесс. От медицинской терминологии до художественного письма — Vox адаптируется к вам.',
+      beforeLabel: 'Вы сказали:',
+      afterLabel: 'Результат Vox:',
+      medical: {
+        title: 'Медицинский работник',
+        prompt: 'Сохранять медицинскую терминологию и стандартные сокращения',
+        before: 'у пациента эм двусторонний в колене ну артроз и мы начали физиотерапию',
+        after: 'У пациента выявлен двусторонний гонартроз, в связи с чем начата физиотерапия.'
+      },
+      developer: {
+        title: 'Разработчик',
+        prompt: 'Форматировать как краткую техническую документацию',
+        before: 'ну в общем функция типа принимает коллбэк и эм возвращает промис который резолвится когда закончит',
+        after: 'Функция принимает callback и возвращает Promise, который разрешается по завершении.'
+      },
+      writer: {
+        title: 'Писатель',
+        prompt: 'Улучшить прозу, сохраняя авторский голос',
+        before: 'солнце типа садилось и всё было в таком золотом эм сиянии ну ты понимаешь',
+        after: 'Солнце садилось, и всё было залито золотым сиянием.'
+      },
+      language: {
+        title: 'Изучающий языки',
+        prompt: 'Перевести на немецкий и исправить грамматику',
+        before: 'I need to uh tell my landlord that the heater is broken and um ask when someone can fix it',
+        after: 'Ich muss meinem Vermieter mitteilen, dass die Heizung kaputt ist, und fragen, wann jemand sie reparieren kann.'
+      }
+    },
     footer: {
       builtBy: 'Создано open-source сообществом',
       docs: 'Документация',
@@ -627,6 +867,36 @@ const translations = {
         local: 'Yerel işleme',
         noCloud: 'Bulutta ses yok',
         openSource: 'Açık kaynak'
+      }
+    },
+    customPrompt: {
+      title: 'Sesin, kuralların',
+      subtitle: 'İş akışınıza göre düzeltmeleri uyarlamak için özel talimatlar ekleyin. Tıbbi jargondan yaratıcı yazarlığa — Vox size uyum sağlar.',
+      beforeLabel: 'Söylediniz:',
+      afterLabel: 'Vox sonucu:',
+      medical: {
+        title: 'Sağlık Uzmanı',
+        prompt: 'Tıbbi terminolojiyi ve standart kısaltmaları koruyun',
+        before: 'hasta şey iki taraflı dizde hım artroz vardı sonra fizik tedaviye başladık',
+        after: 'Hastada bilateral gonartroz saptanmış olup fizik tedavi başlatılmıştır.'
+      },
+      developer: {
+        title: 'Geliştirici',
+        prompt: 'Kısa teknik dokümantasyon olarak biçimlendirin',
+        before: 'yani aslında fonksiyon hani bir callback alıyor ve şey tamamlandığında çözülen bir promise döndürüyor',
+        after: 'Fonksiyon bir callback alır ve tamamlandığında çözülen bir Promise döndürür.'
+      },
+      writer: {
+        title: 'Yaratıcı Yazar',
+        prompt: 'Yazarın sesini koruyarak nesri geliştirin',
+        before: 'güneş hani batıyordu ve her şeyde şöyle altın bir ışıltı vardı hım bilirsin',
+        after: 'Güneş batıyordu ve her şey altın bir ışıltıya bürünmüştü.'
+      },
+      language: {
+        title: 'Dil Öğrencisi',
+        prompt: 'Almancaya çevirin ve dilbilgisini düzeltin',
+        before: 'I need to uh tell my landlord that the heater is broken and um ask when someone can fix it',
+        after: 'Ich muss meinem Vermieter mitteilen, dass die Heizung kaputt ist, und fragen, wann jemand sie reparieren kann.'
       }
     },
     footer: {
