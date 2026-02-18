@@ -206,7 +206,7 @@ app.whenReady().then(async () => {
   });
 
   ipcMain.handle("dev:test-error", () => {
-    analytics.captureError(new Error("Test error from Dev Panel"), { scope: "devPanel" });
+    analytics.captureError(new Error("Test error from Dev Panel"), { scope: "devPanel" }, { force: true });
   });
 
   ipcMain.handle("dev:get-system-info", () => {
