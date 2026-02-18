@@ -223,3 +223,8 @@ export const WHISPER_LANGUAGES: WhisperLanguage[] = [
   { code: "su", name: "Basa Sunda (Sundanese)" },
   { code: "yue", name: "粵語 (Cantonese)" },
 ];
+
+export function resolveWhisperLanguage(locale: string): string | null {
+  const code = locale.split("-")[0].toLowerCase();
+  return WHISPER_LANGUAGES.some((l) => l.code === code) ? code : null;
+}

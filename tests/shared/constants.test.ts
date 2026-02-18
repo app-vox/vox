@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { WHISPER_MODELS, APP_NAME, LLM_SYSTEM_PROMPT, buildWhisperPrompt, WHISPER_PROMPT, buildSystemPrompt, WHISPER_LANGUAGES } from "../../src/shared/constants";
+import { WHISPER_MODELS, APP_NAME, LLM_SYSTEM_PROMPT, buildWhisperPrompt, WHISPER_PROMPT, buildSystemPrompt, WHISPER_LANGUAGES, resolveWhisperLanguage } from "../../src/shared/constants";
 
 describe("constants", () => {
   it("should define all whisper model sizes with URLs and sizes", () => {
@@ -113,5 +113,23 @@ describe("WHISPER_LANGUAGES", () => {
       expect(lang.code).toBeTruthy();
       expect(lang.name).toBeTruthy();
     }
+  });
+});
+
+describe("resolveWhisperLanguage", () => {
+  it("should resolve pt-BR to pt", () => {
+    expect(resolveWhisperLanguage("pt-BR")).toBe("pt");
+  });
+
+  it("should resolve en-US to en", () => {
+    expect(resolveWhisperLanguage("en-US")).toBe("en");
+  });
+
+  it("should resolve exact match zh to zh", () => {
+    expect(resolveWhisperLanguage("zh")).toBe("zh");
+  });
+
+  it("should return null for unsupported locale", () => {
+    expect(resolveWhisperLanguage("xx-YY")).toBeNull();
   });
 });
