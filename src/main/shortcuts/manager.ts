@@ -545,7 +545,7 @@ export class ShortcutManager {
     this.updateTrayState();
 
     this.micActiveAt = 0;
-    pipeline.startRecording().then(() => {
+    pipeline.startRecording().then(async () => {
       if (gen !== this.recordingGeneration) {
         slog.info("Stale recording start (gen=%d, current=%d) — stopping mic", gen, this.recordingGeneration);
         pipeline.cancel().catch((e) => slog.error("Error stopping stale recording", e));
@@ -553,11 +553,22 @@ export class ShortcutManager {
       }
       this.micActiveAt = Date.now();
       slog.info("Recording started — mic active");
-      this.hud.setState("listening");
 
       const config = this.deps.configManager.load();
       const cueType = (config.recordingAudioCue ?? "tap") as AudioCueType;
-      this.playCue(cueType);
+
+      await Promise.race([
+        this.playCue(cueType),
+        new Promise<void>((resolve) => setTimeout(resolve, 500)),
+      ]);
+
+      if (gen !== this.recordingGeneration) {
+        slog.info("Stale recording after cue (gen=%d, current=%d) — stopping mic", gen, this.recordingGeneration);
+        pipeline.cancel().catch((e: Error) => slog.error("Error stopping stale recording", e));
+        return;
+      }
+
+      this.hud.setState("listening");
     }).catch((err: Error) => {
       if (gen !== this.recordingGeneration) {
         slog.info("Stale recording error (gen=%d, current=%d) — discarding", gen, this.recordingGeneration);

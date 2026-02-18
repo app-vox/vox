@@ -82,7 +82,7 @@ vi.mock("../../../src/main/input/paster", () => ({
   isAccessibilityGranted: vi.fn().mockReturnValue(true),
 }));
 
-import { ShortcutManager } from "../../../src/main/shortcuts/manager";
+import { ShortcutManager, type ShortcutManagerDeps } from "../../../src/main/shortcuts/manager";
 
 function createMockPipeline(overrides: Record<string, unknown> = {}) {
   return {
@@ -118,16 +118,18 @@ describe("ShortcutManager — recording start flow", () => {
     mockConfigManager = { load: vi.fn().mockReturnValue(createMockConfig()) };
 
     manager = new ShortcutManager({
-      configManager: mockConfigManager as any,
-      getPipeline: () => mockPipeline as any,
-    });
+      configManager: mockConfigManager,
+      getPipeline: () => mockPipeline,
+    } as unknown as ShortcutManagerDeps);
 
     mockHud = {
       setState: vi.fn(),
       showError: vi.fn(),
       hide: vi.fn(),
     };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- access private member for testing
     (manager as any).hud = mockHud;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- access private member for testing
     (manager as any).stateMachine = {
       setIdle: vi.fn(),
       setProcessing: vi.fn(),
@@ -146,6 +148,7 @@ describe("ShortcutManager — recording start flow", () => {
     });
     mockPipeline.playAudioCue.mockReturnValue(cuePromise);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- call private method for testing
     (manager as any).onRecordingStart();
 
     // Wait for startRecording to resolve (microtask)
@@ -174,6 +177,7 @@ describe("ShortcutManager — recording start flow", () => {
     // Create a promise that never resolves
     mockPipeline.playAudioCue.mockReturnValue(new Promise<void>(() => {}));
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- call private method for testing
     (manager as any).onRecordingStart();
 
     // Let startRecording resolve
@@ -195,6 +199,7 @@ describe("ShortcutManager — recording start flow", () => {
   it("should transition immediately when cue is none", async () => {
     mockConfigManager.load.mockReturnValue(createMockConfig({ recordingAudioCue: "none" }));
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- call private method for testing
     (manager as any).onRecordingStart();
 
     // Let startRecording resolve and .then() callback execute
