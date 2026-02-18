@@ -445,7 +445,7 @@ interactiveEls.forEach(function(el) {
 /* Safety net: any click on the window body that didn't land on an interactive
    element should re-enable click-through immediately. */
 document.addEventListener('click', function(e) {
-  if (!e.target.closest('.widget, .hover-btn, .pill-cancel, .circle-cancel')) {
+  if (!e.target.closest('.widget, .hover-btn, .pill-cancel, .pill-stop, .circle-cancel')) {
     if (ignoreDisabled) {
       ignoreDisabled = false;
       window.electronAPI?.setIgnoreMouseEvents(true);
