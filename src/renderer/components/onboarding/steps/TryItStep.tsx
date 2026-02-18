@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useT } from "../../../i18n-context";
 import { useOnboardingStore } from "../use-onboarding-store";
 import { useConfigStore } from "../../../stores/config-store";
@@ -19,14 +19,14 @@ export function TryItStep() {
     textareaRef.current?.focus();
   }, []);
 
-  const suggestedPhrase = useMemo(() => {
+  const [suggestedPhrase] = useState(() => {
     const phrases = [
       t("onboarding.tryIt.suggestedPhrase1"),
       t("onboarding.tryIt.suggestedPhrase2"),
       t("onboarding.tryIt.suggestedPhrase3"),
     ];
     return phrases[Math.floor(Math.random() * phrases.length)];
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  });
 
   const handleTest = async () => {
     textareaRef.current?.focus();

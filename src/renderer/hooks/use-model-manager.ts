@@ -4,7 +4,6 @@ import type { ModelInfo } from "../../preload/index";
 import type { WhisperModelSize } from "../../shared/config";
 
 export function useModelManager() {
-  const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
   const loadConfig = useConfigStore((s) => s.loadConfig);
@@ -41,7 +40,7 @@ export function useModelManager() {
   }, [updateConfig, saveConfig]);
 
   useEffect(() => {
-    refreshModels();
+    refreshModels(); // eslint-disable-line react-hooks/set-state-in-effect
   }, [refreshModels]);
 
   useEffect(() => {
