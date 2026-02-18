@@ -50,6 +50,10 @@ export class AudioRecorder {
       (async () => {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         try {
+          const track = stream.getAudioTracks()[0];
+          const label = (track && track.label || "").toLowerCase();
+          const isBT = /bluetooth|airpods|bose|beats|jabra|sony (wh|wf)|galaxy buds|pixel buds/i.test(label);
+
           const ctx = new AudioContext({ sampleRate: ${TARGET_RATE} });
           if (ctx.state === "suspended") await ctx.resume();
 
@@ -74,7 +78,11 @@ export class AudioRecorder {
               if (!processor._micReady) {
                 processor._micReady = true;
                 clearTimeout(timeout);
-                setTimeout(() => resolve(), 300);
+                if (isBT) {
+                  setTimeout(() => resolve(), 300);
+                } else {
+                  resolve();
+                }
               }
             };
             source.connect(processor);
