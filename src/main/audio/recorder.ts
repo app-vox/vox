@@ -74,7 +74,7 @@ export class AudioRecorder {
               if (!processor._micReady) {
                 processor._micReady = true;
                 clearTimeout(timeout);
-                setTimeout(() => resolve(), 150);
+                setTimeout(() => resolve(), 300);
               }
             };
             source.connect(processor);
@@ -195,23 +195,33 @@ export class AudioRecorder {
     if (samples.length === 0) return;
     const win = await this.ensureWindow();
 
-    const skipWarmup = this.recording;
+    const useRecCtx = this.recording;
     const rate = sampleRate ?? 0; // 0 = use ctx.sampleRate
     await win.webContents.executeJavaScript(`
       (async () => {
         const samples = new Float32Array(${JSON.stringify(Array.from(samples))});
         const rate = ${rate} || undefined;
-        // Create a dedicated AudioContext for cue playback so that
-        // closing the recording context (in stop()) doesn't kill the sound.
-        // Skip getUserMedia warmup when already recording — calling it again
-        // on Bluetooth devices (AirPods) renegotiates the audio profile and
-        // disrupts the active recording stream.
-        if (!${skipWarmup}) {
-          try {
-            const tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            tempStream.getTracks().forEach(t => t.stop());
-          } catch {}
+        // When recording is active, play through the existing recording
+        // AudioContext — it's already running and won't be suspended.
+        // Creating a new AudioContext during recording may stay suspended
+        // (no getUserMedia warmup available without disrupting Bluetooth).
+        if (${useRecCtx} && window._recCtx && window._recCtx.state === "running") {
+          const ctx = window._recCtx;
+          const buffer = ctx.createBuffer(1, samples.length, rate || ctx.sampleRate);
+          buffer.getChannelData(0).set(samples.length <= buffer.length
+            ? samples
+            : samples.slice(0, buffer.length));
+          const source = ctx.createBufferSource();
+          source.buffer = buffer;
+          source.connect(ctx.destination);
+          source.start();
+          return;
         }
+        // Not recording — use dedicated AudioContext with getUserMedia warmup
+        try {
+          const tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          tempStream.getTracks().forEach(t => t.stop());
+        } catch {}
         const ctx = new AudioContext();
         let retries = 0;
         while (ctx.state === "suspended" && retries < 10) {

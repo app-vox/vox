@@ -171,7 +171,7 @@ describe("ShortcutManager — recording start flow", () => {
     });
   });
 
-  it("should transition to listening within 500ms even if cue hangs", async () => {
+  it("should transition to listening within 1500ms even if cue hangs", async () => {
     vi.useFakeTimers();
 
     // Create a promise that never resolves
@@ -188,8 +188,8 @@ describe("ShortcutManager — recording start flow", () => {
     // Cue is hanging — listening should not yet be set
     expect(mockHud.setState).not.toHaveBeenCalledWith("listening");
 
-    // Advance 500ms — the timeout guard should fire
-    await vi.advanceTimersByTimeAsync(500);
+    // Advance 1500ms — the timeout guard should fire
+    await vi.advanceTimersByTimeAsync(1500);
 
     expect(mockHud.setState).toHaveBeenCalledWith("listening");
 

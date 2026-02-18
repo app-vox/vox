@@ -559,7 +559,7 @@ export class ShortcutManager {
 
       await Promise.race([
         this.playCue(cueType),
-        new Promise<void>((resolve) => setTimeout(resolve, 500)),
+        new Promise<void>((resolve) => setTimeout(resolve, 1500)),
       ]);
 
       if (gen !== this.recordingGeneration) {
