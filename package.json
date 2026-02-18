@@ -25,6 +25,9 @@
   },
   "author": "Rodrigo Silva (https://github.com/rodrigoluizs)",
   "license": "MIT",
+  "overrides": {
+    "fast-xml-parser": "^5.3.6"
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@tailwindcss/vite": "^4.1.18",
