@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { WHISPER_MODELS, APP_NAME, LLM_SYSTEM_PROMPT, buildWhisperPrompt, WHISPER_PROMPT, buildSystemPrompt } from "../../src/shared/constants";
+import { WHISPER_MODELS, APP_NAME, LLM_SYSTEM_PROMPT, buildWhisperPrompt, WHISPER_PROMPT, buildSystemPrompt, WHISPER_LANGUAGES } from "../../src/shared/constants";
 
 describe("constants", () => {
   it("should define all whisper model sizes with URLs and sizes", () => {
@@ -83,5 +83,35 @@ describe("buildSystemPrompt", () => {
     const result = buildSystemPrompt("Be formal", []);
     expect(result).not.toContain("DICTIONARY");
     expect(result).toContain("Be formal");
+  });
+});
+
+describe("WHISPER_LANGUAGES", () => {
+  it("should contain at least 20 languages", () => {
+    expect(WHISPER_LANGUAGES.length).toBeGreaterThanOrEqual(20);
+  });
+
+  it("should have unique codes", () => {
+    const codes = WHISPER_LANGUAGES.map((l) => l.code);
+    expect(new Set(codes).size).toBe(codes.length);
+  });
+
+  it("should include common languages", () => {
+    const codes = WHISPER_LANGUAGES.map((l) => l.code);
+    expect(codes).toContain("en");
+    expect(codes).toContain("pt");
+    expect(codes).toContain("es");
+    expect(codes).toContain("fr");
+    expect(codes).toContain("de");
+    expect(codes).toContain("zh");
+    expect(codes).toContain("ja");
+    expect(codes).toContain("ko");
+  });
+
+  it("should have code and name for each entry", () => {
+    for (const lang of WHISPER_LANGUAGES) {
+      expect(lang.code).toBeTruthy();
+      expect(lang.name).toBeTruthy();
+    }
   });
 });
