@@ -29,6 +29,16 @@ interface CustomSelectProps {
   disabled?: boolean;
 }
 
+interface MultiSelectProps {
+  values: string[];
+  items: SelectOption[];
+  onAdd: (value: string) => void;
+  onRemove: (value: string) => void;
+  placeholder?: string;
+  removeLabel?: (label: string) => string;
+  disabled?: boolean;
+}
+
 export function CustomSelect({ value, items, onChange, onPreview, id, disabled }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
   const [focusIndex, setFocusIndex] = useState(-1);
@@ -219,6 +229,175 @@ export function CustomSelect({ value, items, onChange, onPreview, id, disabled }
               </div>
             );
           })}
+        </div>,
+        document.body
+      )}
+    </>
+  );
+}
+
+export function MultiSelect({ values, items, onAdd, onRemove, placeholder, removeLabel, disabled }: MultiSelectProps) {
+  const [open, setOpen] = useState(false);
+  const [focusIndex, setFocusIndex] = useState(-1);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const available = items.filter((item) => !values.includes(item.value));
+  const selectedItems = values.map((v) => items.find((i) => i.value === v)).filter(Boolean) as SelectOption[];
+
+  const updatePosition = useCallback(() => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+    }
+  }, []);
+
+  useLayoutEffect(() => {
+    if (open) updatePosition();
+  }, [open, updatePosition]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleScroll = () => setOpen(false);
+    const scrollContainer = triggerRef.current?.closest("[class*='content']") ?? window;
+    scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", updatePosition);
+    return () => {
+      scrollContainer.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", updatePosition);
+    };
+  }, [open, updatePosition]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (triggerRef.current?.contains(target)) return;
+      if (listRef.current?.contains(target)) return;
+      setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  useEffect(() => {
+    if (open && listRef.current) {
+      const focused = listRef.current.querySelector(`.${styles.focused}`) as HTMLElement;
+      if (focused) focused.scrollIntoView({ block: "nearest" });
+    }
+  }, [focusIndex, open]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!open) {
+      if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+        e.preventDefault();
+        if (available.length > 0) {
+          setOpen(true);
+          setFocusIndex(0);
+        }
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case "Escape":
+        e.preventDefault();
+        setOpen(false);
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        setFocusIndex((prev) => (prev < available.length - 1 ? prev + 1 : 0));
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setFocusIndex((prev) => (prev > 0 ? prev - 1 : available.length - 1));
+        break;
+      case "Enter":
+      case " ": {
+        e.preventDefault();
+        const item = available[focusIndex];
+        if (item) {
+          onAdd(item.value);
+          setFocusIndex((prev) => Math.min(prev, available.length - 2));
+        }
+        break;
+      }
+    }
+  };
+
+  const handleToggle = () => {
+    if (disabled || available.length === 0) return;
+    if (!open) setFocusIndex(0);
+    setOpen(!open);
+  };
+
+  return (
+    <>
+      <div
+        ref={triggerRef}
+        className={`${styles.trigger} ${styles.multiTrigger} ${open ? styles.open : ""} ${disabled ? styles.disabled : ""}`}
+        role="combobox"
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        tabIndex={disabled ? -1 : 0}
+        onClick={handleToggle}
+        onKeyDown={handleKeyDown}
+      >
+        <div className={styles.multiChips}>
+          {selectedItems.map((item) => (
+            <span key={item.value} className={styles.multiChip}>
+              {item.label}
+              <button
+                type="button"
+                className={styles.multiChipRemove}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove(item.value);
+                }}
+                aria-label={removeLabel?.(item.label) ?? `Remove ${item.label}`}
+                tabIndex={-1}
+              >
+                {/* eslint-disable-next-line i18next/no-literal-string */}
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </span>
+          ))}
+          {available.length > 0 && (
+            <span className={styles.multiPlaceholder}>{placeholder}</span>
+          )}
+        </div>
+        <ChevronDownIcon width={12} height={12} />
+      </div>
+
+      {open && available.length > 0 && createPortal(
+        <div
+          className={styles.dropdown}
+          ref={listRef}
+          role="listbox"
+          aria-multiselectable="true"
+          style={{ top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width }}
+        >
+          {available.map((item, i) => (
+            <div
+              key={item.value}
+              role="option"
+              aria-selected={false}
+              className={`${styles.option} ${i === focusIndex ? styles.focused : ""}`}
+              onMouseEnter={() => setFocusIndex(i)}
+            >
+              <button
+                type="button"
+                className={styles.optionLabel}
+                onClick={() => {
+                  onAdd(item.value);
+                  setFocusIndex((prev) => Math.min(prev, available.length - 2));
+                }}
+              >
+                {item.label}
+              </button>
+            </div>
+          ))}
         </div>,
         document.body
       )}

@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { app } from "electron";
 import { type VoxConfig, type LlmConfigFlat, type WidgetPosition, createDefaultConfig, createDefaultLlmFlat, narrowLlmConfig } from "../../shared/config";
+import { resolveWhisperLanguage } from "../../shared/constants";
 import { ENCRYPTED_PREFIX } from "./secrets";
 
 export function migrateHudPosition(raw: string | undefined): WidgetPosition {
@@ -61,7 +62,10 @@ export class ConfigManager {
         customPrompt: saved.customPrompt ?? defaults.customPrompt,
         launchAtLogin: saved.launchAtLogin ?? defaults.launchAtLogin,
         dictionary: Array.isArray(saved.dictionary) ? saved.dictionary : defaults.dictionary,
-        speechLanguages: Array.isArray(saved.speechLanguages) ? saved.speechLanguages : defaults.speechLanguages,
+        speechLanguages: Array.isArray(saved.speechLanguages) ? saved.speechLanguages : (() => {
+          const resolved = resolveWhisperLanguage(app?.getLocale?.() ?? "");
+          return resolved ? [resolved] : defaults.speechLanguages;
+        })(),
         language: saved.language ?? defaults.language,
         recordingAudioCue: saved.recordingAudioCue ?? defaults.recordingAudioCue,
         recordingStopAudioCue: saved.recordingStopAudioCue ?? defaults.recordingStopAudioCue,

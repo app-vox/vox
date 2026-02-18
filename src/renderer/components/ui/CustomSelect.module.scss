@@ -173,3 +173,66 @@
   background: var(--color-border);
   margin: var(--spacing-1) 12px;
 }
+
+.multiTrigger {
+  flex-wrap: wrap;
+  gap: var(--spacing-1);
+  min-height: 36px;
+  height: auto;
+  cursor: pointer;
+
+  > svg {
+    margin-left: auto;
+    align-self: center;
+  }
+}
+
+.multiChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-1);
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+}
+
+.multiChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-half);
+  padding: var(--spacing-half) var(--spacing-2);
+  background: var(--color-bg-hover);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
+
+.multiChipRemove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  line-height: 1;
+  transition: color var(--duration-fast) var(--ease-default),
+    background var(--duration-fast) var(--ease-default);
+
+  &:hover {
+    color: var(--color-text-primary);
+    background: var(--color-bg-input);
+  }
+}
+
+.multiPlaceholder {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+}

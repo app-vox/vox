@@ -582,48 +582,6 @@
 .previewOverlay_bottom_center { bottom: 8px; left: 50%; transform: translateX(-50%); }
 .previewOverlay_bottom_right { bottom: 8px; right: 10px; }
 
-.chipList {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-2);
-  margin-bottom: var(--spacing-3);
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-1);
-  padding: var(--spacing-1) var(--spacing-3);
-  background: var(--color-bg-hover);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-primary);
-}
-
-.chipRemove {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--color-text-tertiary);
-  cursor: pointer;
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-sm);
-  line-height: 1;
-  transition: color var(--duration-fast) var(--ease-default),
-    background var(--duration-fast) var(--ease-default);
-
-  &:hover {
-    color: var(--color-text-primary);
-    background: var(--color-bg-input);
-  }
-}
-
 .speechHint {
   margin-top: var(--spacing-2);
   font-size: var(--font-size-sm);

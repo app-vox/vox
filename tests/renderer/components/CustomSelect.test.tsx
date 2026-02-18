@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { CustomSelect, type SelectItem } from "../../../src/renderer/components/ui/CustomSelect";
+import { CustomSelect, MultiSelect, type SelectItem } from "../../../src/renderer/components/ui/CustomSelect";
 
 // Mock SCSS modules
 vi.mock("../../../src/renderer/components/ui/CustomSelect.module.scss", () => ({
@@ -169,5 +169,84 @@ describe("CustomSelect", () => {
 
     await user.click(screen.getByText("Outside"));
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+  });
+});
+
+const multiItems = [
+  { value: "en", label: "English" },
+  { value: "pt", label: "Portuguese" },
+  { value: "es", label: "Spanish" },
+];
+
+describe("MultiSelect", () => {
+  it("renders selected chips inside the trigger", () => {
+    render(
+      <MultiSelect values={["en", "pt"]} items={multiItems} onAdd={vi.fn()} onRemove={vi.fn()} />
+    );
+    expect(screen.getByText("English")).toBeInTheDocument();
+    expect(screen.getByText("Portuguese")).toBeInTheDocument();
+  });
+
+  it("shows placeholder text", () => {
+    render(
+      <MultiSelect values={[]} items={multiItems} onAdd={vi.fn()} onRemove={vi.fn()} placeholder="Add a language..." />
+    );
+    expect(screen.getByText("Add a language...")).toBeInTheDocument();
+  });
+
+  it("opens dropdown showing only unselected items", async () => {
+    const user = userEvent.setup();
+    render(
+      <MultiSelect values={["en"]} items={multiItems} onAdd={vi.fn()} onRemove={vi.fn()} />
+    );
+
+    await user.click(screen.getByRole("combobox"));
+
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+    const options = screen.getAllByRole("option");
+    expect(options).toHaveLength(2);
+    expect(screen.getByText("Portuguese")).toBeInTheDocument();
+    expect(screen.getByText("Spanish")).toBeInTheDocument();
+  });
+
+  it("calls onAdd when selecting an option", async () => {
+    const onAdd = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <MultiSelect values={["en"]} items={multiItems} onAdd={onAdd} onRemove={vi.fn()} />
+    );
+
+    await user.click(screen.getByRole("combobox"));
+    await user.click(screen.getByText("Spanish"));
+
+    expect(onAdd).toHaveBeenCalledWith("es");
+  });
+
+  it("calls onRemove when clicking chip remove button", async () => {
+    const onRemove = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <MultiSelect values={["en", "pt"]} items={multiItems} onAdd={vi.fn()} onRemove={onRemove} removeLabel={(l) => `Remove ${l}`} />
+    );
+
+    const removeBtn = screen.getByLabelText("Remove English");
+    await user.click(removeBtn);
+
+    expect(onRemove).toHaveBeenCalledWith("en");
+  });
+
+  it("keeps dropdown open after selecting (multi-pick)", async () => {
+    const onAdd = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <MultiSelect values={[]} items={multiItems} onAdd={onAdd} onRemove={vi.fn()} />
+    );
+
+    await user.click(screen.getByRole("combobox"));
+    await user.click(screen.getByText("English"));
+
+    expect(onAdd).toHaveBeenCalledWith("en");
+    // Dropdown should still be visible (it re-renders with updated available items)
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
   });
 });

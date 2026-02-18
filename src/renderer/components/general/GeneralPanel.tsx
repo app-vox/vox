@@ -10,7 +10,7 @@ import { useOnboardingStore } from "../onboarding/use-onboarding-store";
 import type { OnboardingStep } from "../onboarding/use-onboarding-store";
 import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, KeyboardIcon, ChevronDownIcon, MoveIcon, RefreshIcon, InfoCircleIcon } from "../../../shared/icons";
 import type { ThemeMode, SupportedLanguage, WidgetPosition } from "../../../shared/config";
-import { CustomSelect, type SelectItem } from "../ui/CustomSelect";
+import { CustomSelect, MultiSelect, type SelectItem } from "../ui/CustomSelect";
 import { OfflineBanner } from "../ui/OfflineBanner";
 import card from "../shared/card.module.scss";
 import buttons from "../shared/buttons.module.scss";
@@ -399,44 +399,24 @@ export function GeneralPanel() {
                 <label>{t("general.speechLanguages.title")}</label>
                 <p className={styles.speechHint}>{t("general.speechLanguages.description")}</p>
 
-                {config.speechLanguages.length > 0 && (
-                  <div className={styles.chipList}>
-                    {config.speechLanguages.map((code) => {
-                      const lang = WHISPER_LANGUAGES.find((l) => l.code === code);
-                      return (
-                        <span key={code} className={styles.chip}>
-                          {lang?.name ?? code}
-                          <button
-                            className={styles.chipRemove}
-                            onClick={() => {
-                              updateConfig({
-                                speechLanguages: config.speechLanguages.filter((c) => c !== code),
-                              });
-                              void saveConfig(false);
-                            }}
-                            aria-label={t("general.speechLanguages.remove", { language: lang?.name ?? code })}
-                          >
-                            {/* eslint-disable-next-line i18next/no-literal-string */}
-                            <span aria-hidden="true">&times;</span>
-                          </button>
-                        </span>
-                      );
-                    })}
-                  </div>
-                )}
-
-                <CustomSelect
-                  value=""
-                  items={WHISPER_LANGUAGES
-                    .filter((l) => !config.speechLanguages.includes(l.code))
-                    .map((l) => ({ value: l.code, label: l.name }))}
-                  onChange={(val) => {
-                    if (!val || config.speechLanguages.includes(val)) return;
+                <MultiSelect
+                  values={config.speechLanguages}
+                  items={WHISPER_LANGUAGES.map((l) => ({ value: l.code, label: l.name }))}
+                  onAdd={(val) => {
+                    if (config.speechLanguages.includes(val)) return;
                     updateConfig({
                       speechLanguages: [...config.speechLanguages, val],
                     });
                     void saveConfig(false);
                   }}
+                  onRemove={(val) => {
+                    updateConfig({
+                      speechLanguages: config.speechLanguages.filter((c) => c !== val),
+                    });
+                    void saveConfig(false);
+                  }}
+                  placeholder={t("general.speechLanguages.placeholder")}
+                  removeLabel={(label) => t("general.speechLanguages.remove", { language: label })}
                 />
 
                 {config.speechLanguages.length === 1 && (
