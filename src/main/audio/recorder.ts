@@ -67,19 +67,11 @@ export class AudioRecorder {
           window._recCtx = ctx;
           window._recProcessor = processor;
 
-          await new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => resolve(), 2000);
-            processor.onaudioprocess = (e) => {
-              window._recChunks.push(Array.from(e.inputBuffer.getChannelData(0)));
-              if (!processor._micReady) {
-                processor._micReady = true;
-                clearTimeout(timeout);
-                resolve();
-              }
-            };
-            source.connect(processor);
-            processor.connect(ctx.destination);
-          });
+          processor.onaudioprocess = (e) => {
+            window._recChunks.push(Array.from(e.inputBuffer.getChannelData(0)));
+          };
+          source.connect(processor);
+          processor.connect(ctx.destination);
         } catch (err) {
           stream.getTracks().forEach(t => t.stop());
           throw err;
