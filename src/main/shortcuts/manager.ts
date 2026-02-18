@@ -1,4 +1,4 @@
-import { BrowserWindow, globalShortcut, ipcMain, Notification } from "electron";
+import { BrowserWindow, globalShortcut, ipcMain, Notification, screen } from "electron";
 import { uIOhook, UiohookKey } from "uiohook-napi";
 import log from "electron-log/main";
 import { type ConfigManager } from "../config/manager";
@@ -90,6 +90,8 @@ export class ShortcutManager {
   private holdKeyCodes: Set<number> = new Set([UiohookKey.Space]);
   private accessibilityWasGranted = false;
   private watchdogTimer: ReturnType<typeof setInterval> | null = null;
+  private displayDebounce: ReturnType<typeof setTimeout> | null = null;
+  private displayChangeHandler: (() => void) | null = null;
   private isInitializing = true;
   private recordingGeneration = 0;
   private micActiveAt = 0;
@@ -150,6 +152,7 @@ export class ShortcutManager {
         this.isInitializing = false;
         slog.info("Initialization complete (limited mode — no accessibility)");
       }, 1000);
+      this.startDisplayChangeListener();
       this.updateHud();
       return;
     }
@@ -173,6 +176,7 @@ export class ShortcutManager {
         this.isInitializing = false;
         slog.info("Initialization complete (limited mode — hook failed)");
       }, 1000);
+      this.startDisplayChangeListener();
       this.updateHud();
       return;
     }
@@ -185,6 +189,7 @@ export class ShortcutManager {
       this.isInitializing = false;
       slog.info("Initialization complete, shortcuts enabled");
     }, 1000);
+    this.startDisplayChangeListener();
     this.updateHud();
   }
 
@@ -284,6 +289,7 @@ export class ShortcutManager {
 
   stop(): void {
     if (this.watchdogTimer) clearInterval(this.watchdogTimer);
+    this.stopDisplayChangeListener();
     this.hud.hide();
     globalShortcut.unregisterAll();
     uIOhook.stop();
@@ -503,6 +509,31 @@ export class ShortcutManager {
     }, 3000);
     timer.unref();
     this.watchdogTimer = timer;
+  }
+
+  private startDisplayChangeListener(): void {
+    this.displayChangeHandler = () => {
+      if (this.displayDebounce) clearTimeout(this.displayDebounce);
+      this.displayDebounce = setTimeout(() => {
+        this.displayDebounce = null;
+        slog.info("Display configuration changed — repositioning HUD");
+        this.hud.reposition();
+      }, 500);
+    };
+    screen.on("display-added", this.displayChangeHandler);
+    screen.on("display-removed", this.displayChangeHandler);
+  }
+
+  private stopDisplayChangeListener(): void {
+    if (this.displayChangeHandler) {
+      screen.removeListener("display-added", this.displayChangeHandler);
+      screen.removeListener("display-removed", this.displayChangeHandler);
+      this.displayChangeHandler = null;
+    }
+    if (this.displayDebounce) {
+      clearTimeout(this.displayDebounce);
+      this.displayDebounce = null;
+    }
   }
 
   private onRecordingStart(): void {
