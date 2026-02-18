@@ -63,7 +63,7 @@ const translations = {
     },
     customPrompt: {
       title: 'Your voice, your rules',
-      subtitle: 'Add custom instructions to tailor corrections for your workflow. From medical jargon to creative writing — Vox adapts to you.',
+      subtitle: 'Write your own instructions and define exactly how Vox handles your transcriptions. Not just grammar fixes — you set the rules for your workflow.',
       beforeLabel: 'You said:',
       afterLabel: 'Vox output:',
       medical: {
@@ -164,7 +164,7 @@ const translations = {
     },
     customPrompt: {
       title: 'Sua voz, suas regras',
-      subtitle: 'Adicione instruções personalizadas para adaptar as correções ao seu fluxo de trabalho. De jargão médico a escrita criativa — o Vox se adapta a você.',
+      subtitle: 'Escreva suas próprias instruções e defina exatamente como o Vox trata suas transcrições. Não é só correção — você define as regras do seu fluxo de trabalho.',
       beforeLabel: 'Você disse:',
       afterLabel: 'Resultado do Vox:',
       medical: {
@@ -265,7 +265,7 @@ const translations = {
     },
     customPrompt: {
       title: 'A sua voz, as suas regras',
-      subtitle: 'Adicione instruções personalizadas para adaptar as correções ao seu fluxo de trabalho. De jargão médico a escrita criativa — o Vox adapta-se a si.',
+      subtitle: 'Escreva as suas próprias instruções e defina exatamente como o Vox trata as suas transcrições. Não é apenas correção — é você quem define as regras do seu fluxo de trabalho.',
       beforeLabel: 'Disse:',
       afterLabel: 'Resultado do Vox:',
       medical: {
@@ -366,7 +366,7 @@ const translations = {
     },
     customPrompt: {
       title: 'Tu voz, tus reglas',
-      subtitle: 'Añade instrucciones personalizadas para adaptar las correcciones a tu flujo de trabajo. Desde jerga médica hasta escritura creativa — Vox se adapta a ti.',
+      subtitle: 'Escribe tus propias instrucciones y define exactamente cómo Vox maneja tus transcripciones. No es solo corrección — tú defines las reglas de tu flujo de trabajo.',
       beforeLabel: 'Dijiste:',
       afterLabel: 'Resultado de Vox:',
       medical: {
@@ -467,7 +467,7 @@ const translations = {
     },
     customPrompt: {
       title: 'Votre voix, vos règles',
-      subtitle: 'Ajoutez des instructions personnalisées pour adapter les corrections à votre flux de travail. Du jargon médical à l\'écriture créative — Vox s\'adapte à vous.',
+      subtitle: 'Rédigez vos propres instructions et définissez exactement comment Vox traite vos transcriptions. Pas seulement de la correction — vous définissez les règles de votre flux de travail.',
       beforeLabel: 'Vous avez dit :',
       afterLabel: 'Résultat de Vox :',
       medical: {
@@ -568,7 +568,7 @@ const translations = {
     },
     customPrompt: {
       title: 'Deine Stimme, deine Regeln',
-      subtitle: 'Füge individuelle Anweisungen hinzu, um Korrekturen an deinen Workflow anzupassen. Von medizinischem Fachjargon bis kreativem Schreiben — Vox passt sich dir an.',
+      subtitle: 'Schreibe deine eigenen Anweisungen und bestimme genau, wie Vox deine Transkriptionen verarbeitet. Nicht nur Korrektur — du bestimmst die Regeln für deinen Workflow.',
       beforeLabel: 'Du sagtest:',
       afterLabel: 'Vox-Ergebnis:',
       medical: {
@@ -669,7 +669,7 @@ const translations = {
     },
     customPrompt: {
       title: 'La tua voce, le tue regole',
-      subtitle: 'Aggiungi istruzioni personalizzate per adattare le correzioni al tuo flusso di lavoro. Dal gergo medico alla scrittura creativa — Vox si adatta a te.',
+      subtitle: 'Scrivi le tue istruzioni e definisci esattamente come Vox gestisce le tue trascrizioni. Non solo correzione — sei tu a definire le regole del tuo flusso di lavoro.',
       beforeLabel: 'Hai detto:',
       afterLabel: 'Risultato di Vox:',
       medical: {
@@ -770,7 +770,7 @@ const translations = {
     },
     customPrompt: {
       title: 'Ваш голос, ваши правила',
-      subtitle: 'Добавьте пользовательские инструкции для настройки коррекции под ваш рабочий процесс. От медицинской терминологии до художественного письма — Vox адаптируется к вам.',
+      subtitle: 'Напишите свои инструкции и определите, как именно Vox обрабатывает ваши транскрипции. Не просто исправление — вы сами задаёте правила для своего рабочего процесса.',
       beforeLabel: 'Вы сказали:',
       afterLabel: 'Результат Vox:',
       medical: {
@@ -871,7 +871,7 @@ const translations = {
     },
     customPrompt: {
       title: 'Sesin, kuralların',
-      subtitle: 'İş akışınıza göre düzeltmeleri uyarlamak için özel talimatlar ekleyin. Tıbbi jargondan yaratıcı yazarlığa — Vox size uyum sağlar.',
+      subtitle: 'Kendi talimatlarınızı yazın ve Vox\'un transkripsiyonlarınızı nasıl işleyeceğini tam olarak belirleyin. Sadece düzeltme değil — iş akışınızın kurallarını siz belirlersiniz.',
       beforeLabel: 'Söylediniz:',
       afterLabel: 'Vox sonucu:',
       medical: {
