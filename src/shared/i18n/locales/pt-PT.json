@@ -11,6 +11,8 @@
   "general.theme.light": "Claro",
   "general.theme.dark": "Escuro",
   "general.theme.system": "Sistema",
+    "general.languages.title": "Idiomas",
+    "general.languages.description": "Idioma de apresentação da app e idiomas preferidos de fala para transcrição.",
   "general.language.title": "Idioma do Sistema",
   "general.language.description": "Escolha o idioma de apresentação da interface da aplicação.",
   "general.language.system": "Predefinição do Sistema",

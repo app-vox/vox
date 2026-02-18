@@ -373,81 +373,83 @@ export function GeneralPanel() {
         </div>
       )}
 
-      {/* Language */}
+      {/* Languages */}
       <div className={card.card}>
         <div className={card.header}>
-          <h2>{t("general.language.title")}</h2>
-          <p className={card.description}>{t("general.language.description")}</p>
+          <h2>{t("general.languages.title")}</h2>
+          <p className={card.description}>{t("general.languages.description")}</p>
         </div>
         <div className={card.body}>
-          <CustomSelect
-            value={config.language}
-            items={languageItems}
-            onChange={(val) => {
-              updateConfig({ language: val as SupportedLanguage | "system" });
-              saveConfig(false).then(() => triggerToast());
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Speech Languages */}
-      {setupComplete && (
-        <div className={card.card}>
-          <div className={card.header}>
-            <h2>{t("general.speechLanguages.title")}</h2>
-            <p className={card.description}>{t("general.speechLanguages.description")}</p>
-          </div>
-          <div className={card.body}>
-            {config.speechLanguages.length > 0 && (
-              <div className={styles.chipList}>
-                {config.speechLanguages.map((code) => {
-                  const lang = WHISPER_LANGUAGES.find((l) => l.code === code);
-                  return (
-                    <span key={code} className={styles.chip}>
-                      {lang?.name ?? code}
-                      <button
-                        className={styles.chipRemove}
-                        onClick={() => {
-                          updateConfig({
-                            speechLanguages: config.speechLanguages.filter((c) => c !== code),
-                          });
-                          void saveConfig(false);
-                        }}
-                        aria-label={t("general.speechLanguages.remove", { language: lang?.name ?? code })}
-                      >
-                        {/* eslint-disable-next-line i18next/no-literal-string */}
-                        <span aria-hidden="true">&times;</span>
-                      </button>
-                    </span>
-                  );
-                })}
-              </div>
-            )}
-
+          <div className={styles.fieldRow}>
+            <label>{t("general.language.title")}</label>
             <CustomSelect
-              value=""
-              items={WHISPER_LANGUAGES
-                .filter((l) => !config.speechLanguages.includes(l.code))
-                .map((l) => ({ value: l.code, label: l.name }))}
+              value={config.language}
+              items={languageItems}
               onChange={(val) => {
-                if (!val || config.speechLanguages.includes(val)) return;
-                updateConfig({
-                  speechLanguages: [...config.speechLanguages, val],
-                });
-                void saveConfig(false);
+                updateConfig({ language: val as SupportedLanguage | "system" });
+                saveConfig(false).then(() => triggerToast());
               }}
             />
-
-            {config.speechLanguages.length === 1 && (
-              <p className={styles.speechHint}>{t("general.speechLanguages.hintSingle")}</p>
-            )}
-            {config.speechLanguages.length > 1 && (
-              <p className={styles.speechHint}>{t("general.speechLanguages.hintMultiple")}</p>
-            )}
           </div>
+
+          {setupComplete && (
+            <>
+              <div className={styles.sectionDivider} />
+              <div className={styles.fieldRow}>
+                <label>{t("general.speechLanguages.title")}</label>
+                <p className={styles.speechHint}>{t("general.speechLanguages.description")}</p>
+
+                {config.speechLanguages.length > 0 && (
+                  <div className={styles.chipList}>
+                    {config.speechLanguages.map((code) => {
+                      const lang = WHISPER_LANGUAGES.find((l) => l.code === code);
+                      return (
+                        <span key={code} className={styles.chip}>
+                          {lang?.name ?? code}
+                          <button
+                            className={styles.chipRemove}
+                            onClick={() => {
+                              updateConfig({
+                                speechLanguages: config.speechLanguages.filter((c) => c !== code),
+                              });
+                              void saveConfig(false);
+                            }}
+                            aria-label={t("general.speechLanguages.remove", { language: lang?.name ?? code })}
+                          >
+                            {/* eslint-disable-next-line i18next/no-literal-string */}
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <CustomSelect
+                  value=""
+                  items={WHISPER_LANGUAGES
+                    .filter((l) => !config.speechLanguages.includes(l.code))
+                    .map((l) => ({ value: l.code, label: l.name }))}
+                  onChange={(val) => {
+                    if (!val || config.speechLanguages.includes(val)) return;
+                    updateConfig({
+                      speechLanguages: [...config.speechLanguages, val],
+                    });
+                    void saveConfig(false);
+                  }}
+                />
+
+                {config.speechLanguages.length === 1 && (
+                  <p className={styles.speechHint}>{t("general.speechLanguages.hintSingle")}</p>
+                )}
+                {config.speechLanguages.length > 1 && (
+                  <p className={styles.speechHint}>{t("general.speechLanguages.hintMultiple")}</p>
+                )}
+              </div>
+            </>
+          )}
         </div>
-      )}
+      </div>
 
       {/* HUD discovery banner */}
       {bannersReady && setupComplete && !config.showHud && !hudBannerDismissed && (
