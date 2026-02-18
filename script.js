@@ -259,6 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const elementsToAnimate = [
         '.hero-content',
         '.demo-container',
+        '.showcase-header',
         '.privacy-card'
     ];
 
@@ -268,6 +269,29 @@ document.addEventListener('DOMContentLoaded', () => {
             observer.observe(element);
         }
     });
+
+    // 4b. Staggered reveal for showcase cards
+    const showcaseCards = document.querySelectorAll('.showcase-card');
+    if (showcaseCards.length > 0) {
+        const cardObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const cards = entry.target.querySelectorAll('.showcase-card');
+                    cards.forEach((card, index) => {
+                        setTimeout(() => {
+                            card.classList.add('visible');
+                        }, index * 150);
+                    });
+                    cardObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        const showcaseGrid = document.querySelector('.showcase-grid');
+        if (showcaseGrid) {
+            cardObserver.observe(showcaseGrid);
+        }
+    }
 
     // 5. Typing animation synced with 10s CSS cycle
     const animateTypingLoop = () => {
