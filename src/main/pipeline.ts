@@ -26,6 +26,7 @@ export interface PipelineDeps {
   llmProvider: LlmProvider;
   modelPath: string;
   dictionary?: string[];
+  speechLanguages?: string[];
   hasCustomPrompt?: boolean;
   llmModelName?: string;
   analytics?: {
@@ -258,6 +259,13 @@ export class Pipeline {
 
     if (this.deps.hasCustomPrompt) {
       this.deps.analytics?.track("custom_prompt_used");
+    }
+
+    if (this.deps.speechLanguages && this.deps.speechLanguages.length > 0) {
+      this.deps.analytics?.track("speech_languages_used", {
+        language_count: this.deps.speechLanguages.length,
+        languages: this.deps.speechLanguages.join(","),
+      });
     }
 
     const llmStartTime = performance.now();
