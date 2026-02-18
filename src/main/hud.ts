@@ -906,6 +906,10 @@ export class HudWindow {
       this.window.showInactive();
       this.execSetScale(1.0);
     }
+
+    if (this.showOnHover && state === "idle" && this.alwaysShow) {
+      this.startHoverTracking();
+    }
   }
 
   sendAudioLevels(levels: number[]): void {
