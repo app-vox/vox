@@ -443,17 +443,14 @@ export function GeneralPanel() {
                     });
                     void saveConfig(false);
                   }}
+                  onReorder={(reordered) => {
+                    updateConfig({ speechLanguages: reordered });
+                    void saveConfig(false);
+                  }}
                   placeholder={t("general.speechLanguages.placeholder")}
                   searchPlaceholder={t("general.speechLanguages.search")}
                   removeLabel={(label) => t("general.speechLanguages.remove", { language: label })}
                 />
-
-                {config.speechLanguages.length === 1 && (
-                  <p className={styles.speechHint}>{t("general.speechLanguages.hintSingle")}</p>
-                )}
-                {config.speechLanguages.length > 1 && (
-                  <p className={styles.speechHint}>{t("general.speechLanguages.hintMultiple")}</p>
-                )}
               </div>
             </>
           )}

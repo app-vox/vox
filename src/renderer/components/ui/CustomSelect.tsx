@@ -34,6 +34,7 @@ interface MultiSelectProps {
   items: SelectItem[];
   onAdd: (value: string) => void;
   onRemove: (value: string) => void;
+  onReorder?: (values: string[]) => void;
   placeholder?: string;
   searchPlaceholder?: string;
   removeLabel?: (label: string) => string;
@@ -237,11 +238,12 @@ export function CustomSelect({ value, items, onChange, onPreview, id, disabled }
   );
 }
 
-export function MultiSelect({ values, items, onAdd, onRemove, placeholder, searchPlaceholder, removeLabel, disabled }: MultiSelectProps) {
+export function MultiSelect({ values, items, onAdd, onRemove, onReorder, placeholder, searchPlaceholder, removeLabel, disabled }: MultiSelectProps) {
   const [open, setOpen] = useState(false);
   const [focusIndex, setFocusIndex] = useState(-1);
   const [search, setSearch] = useState("");
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -371,8 +373,31 @@ export function MultiSelect({ values, items, onAdd, onRemove, placeholder, searc
         onKeyDown={handleTriggerKeyDown}
       >
         <div className={styles.multiChips}>
-          {selectedItems.map((item) => (
-            <span key={item.value} className={styles.multiChip}>
+          {selectedItems.map((item, idx) => (
+            <span
+              key={item.value}
+              className={`${styles.multiChip} ${dragIdx === idx ? styles.multiChipDragging : ""}`}
+              draggable={!!onReorder && selectedItems.length > 1}
+              onDragStart={(e) => {
+                setDragIdx(idx);
+                e.dataTransfer.effectAllowed = "move";
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (dragIdx !== null && dragIdx !== idx && onReorder) {
+                  const reordered = [...values];
+                  const [moved] = reordered.splice(dragIdx, 1);
+                  reordered.splice(idx, 0, moved);
+                  onReorder(reordered);
+                }
+                setDragIdx(null);
+              }}
+              onDragEnd={() => setDragIdx(null)}
+            >
               {item.label}
               <button
                 type="button"

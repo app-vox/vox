@@ -209,6 +209,18 @@
   line-height: 1.3;
 }
 
+.multiChip[draggable="true"] {
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.multiChipDragging {
+  opacity: 0.4;
+}
+
 .multiChipRemove {
   display: inline-flex;
   align-items: center;
