@@ -241,10 +241,11 @@ export class ShortcutManager {
   }
 
   /** Cancel current operation silently and immediately start a new recording. */
-  private restartRecording(): void {
-    slog.info("Restart requested — aborting current pipeline and starting new recording");
+  private restartRecording(mode: "hold" | "toggle" = "toggle"): void {
+    slog.info("Restart requested (mode=%s) — aborting current pipeline and starting new recording", mode);
     this.deps.analytics?.track("recording_restarted", {
       previous_state: this.stateMachine.getState(),
+      mode,
     });
     this.recordingGeneration++;
     this.micActiveAt = 0;
@@ -253,7 +254,11 @@ export class ShortcutManager {
       slog.error("Error during restart cancel", err);
     });
     this.stateMachine.setIdle();
-    this.stateMachine.handleTogglePress();
+    if (mode === "hold") {
+      this.stateMachine.handleHoldKeyDown();
+    } else {
+      this.stateMachine.handleTogglePress();
+    }
     this.updateTrayState();
   }
 
@@ -354,7 +359,7 @@ export class ShortcutManager {
         return;
       }
       if (this.stateMachine.getState() === "processing") {
-        this.restartRecording();
+        this.restartRecording("hold");
         return;
       }
       this.stateMachine.handleHoldKeyDown();
