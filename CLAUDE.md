@@ -46,6 +46,10 @@ Sections: `general.`, `whisper.`, `llm.`, `permissions.`, `shortcuts.`, `tray.`,
 - Transcribed speech content
 - User-entered content (custom prompts)
 
+## Onboarding and Settings Consistency
+
+The onboarding wizard (`src/renderer/components/onboarding/`) and the settings panels (`src/renderer/components/`) share UI components via `src/renderer/components/shared/`, `src/renderer/components/permissions/`, and `src/renderer/components/whisper/`. When modifying settings panels (WhisperPanel, PermissionsPanel, etc.), always check whether the corresponding onboarding step needs the same update — and vice versa. Shared components like `PermissionRow`, `ModelRow`, `RadioGroup`, and the `useWhisperTest` hook exist to keep both surfaces in sync.
+
 ## Validation: Run All Linters Before Completing Work
 
 Before claiming any implementation is done, you MUST run all validation commands and confirm they pass:
