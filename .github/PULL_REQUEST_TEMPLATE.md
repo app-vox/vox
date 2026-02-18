@@ -20,3 +20,7 @@ Brief description of the changes.
 - [ ] **CSS** — CSS Modules with CSS custom properties. No hardcoded color/spacing values.
 - [ ] **SVGs** — SVG assets in separate files, not inlined in TSX.
 - [ ] **Accessibility** — Interactive elements are keyboard-navigable with appropriate ARIA attributes.
+
+### Screenshots
+
+<!-- If there's anything visual to review (UI changes, new components, layout tweaks), drop screenshots or a short recording here. Remove this section if not applicable. -->
