@@ -3,12 +3,12 @@ import { useConfigStore } from "../../stores/config-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
 import { useOnlineStatus } from "../../hooks/use-online-status";
 import { useDevOverrideValue } from "../../hooks/use-dev-override";
+import { useWhisperTest } from "../../hooks/use-whisper-test";
 import { useT } from "../../i18n-context";
 import { ModelRow } from "./ModelRow";
 import { StatusBox } from "../ui/StatusBox";
 import { OfflineBanner } from "../ui/OfflineBanner";
 import { RecordIcon, AlertTriangleIcon } from "../../../shared/icons";
-import { recordAudio } from "../../utils/record-audio";
 import type { ModelInfo } from "../../../preload/index";
 import type { WhisperModelSize } from "../../../shared/config";
 import card from "../shared/card.module.scss";
@@ -31,8 +31,17 @@ export function WhisperPanel() {
     : realSetupComplete;
   const triggerToast = useSaveToast((s) => s.trigger);
   const [models, setModels] = useState<ModelInfo[]>([]);
-  const [testing, setTesting] = useState(false);
-  const [testStatus, setTestStatus] = useState<{ text: string; type: "info" | "success" | "error" }>({ text: "", type: "info" });
+
+  const { testing, testResult, testError, runTest } = useWhisperTest();
+
+  const testStatusText = testing
+    ? t("whisper.recording")
+    : testError
+      ? testError === "no-speech" ? t("whisper.noSpeech") : t("whisper.testFailed", { error: testError })
+      : testResult
+        ? testResult
+        : "";
+  const testStatusType: "info" | "success" | "error" = testError ? "error" : testResult ? "success" : "info";
 
   const refreshModels = useCallback(async () => {
     const modelsList = await window.voxApi.models.list();
@@ -92,23 +101,8 @@ export function WhisperPanel() {
   };
 
   const handleTest = async () => {
-    setTesting(true);
-    setTestStatus({ text: t("whisper.recording"), type: "info" });
     await saveConfig();
-
-    try {
-      const recording = await recordAudio(5);
-      setTestStatus({ text: t("whisper.transcribing"), type: "info" });
-      const text = await window.voxApi.whisper.test(recording);
-      setTestStatus({
-        text: text || t("whisper.noSpeech"),
-        type: text ? "success" : "info",
-      });
-    } catch (err: unknown) {
-      setTestStatus({ text: t("whisper.testFailed", { error: err instanceof Error ? err.message : String(err) }), type: "error" });
-    } finally {
-      setTesting(false);
-    }
+    await runTest(5);
   };
 
   return (
@@ -148,7 +142,7 @@ export function WhisperPanel() {
             {t("whisper.testButton")}
           </button>
           <p className={form.hint}>{t("whisper.testHint")}</p>
-          <StatusBox text={testStatus.text} type={testStatus.type} />
+          <StatusBox text={testStatusText} type={testStatusType} />
         </div>
       </div>
     </div>
