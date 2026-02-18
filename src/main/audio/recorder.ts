@@ -187,17 +187,23 @@ export class AudioRecorder {
     if (samples.length === 0) return;
     const win = await this.ensureWindow();
 
+    const skipWarmup = this.recording;
     const rate = sampleRate ?? 0; // 0 = use ctx.sampleRate
     await win.webContents.executeJavaScript(`
       (async () => {
         const samples = new Float32Array(${JSON.stringify(Array.from(samples))});
         const rate = ${rate} || undefined;
-        // Always create a dedicated AudioContext for cue playback so that
+        // Create a dedicated AudioContext for cue playback so that
         // closing the recording context (in stop()) doesn't kill the sound.
-        try {
-          const tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          tempStream.getTracks().forEach(t => t.stop());
-        } catch {}
+        // Skip getUserMedia warmup when already recording — calling it again
+        // on Bluetooth devices (AirPods) renegotiates the audio profile and
+        // disrupts the active recording stream.
+        if (!${skipWarmup}) {
+          try {
+            const tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            tempStream.getTracks().forEach(t => t.stop());
+          } catch {}
+        }
         const ctx = new AudioContext();
         let retries = 0;
         while (ctx.state === "suspended" && retries < 10) {
