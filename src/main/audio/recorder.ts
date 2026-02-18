@@ -74,7 +74,7 @@ export class AudioRecorder {
               if (!processor._micReady) {
                 processor._micReady = true;
                 clearTimeout(timeout);
-                resolve();
+                setTimeout(() => resolve(), 150);
               }
             };
             source.connect(processor);
