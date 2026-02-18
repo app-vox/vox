@@ -259,6 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const elementsToAnimate = [
         '.hero-content',
         '.demo-container',
+        '.showcase-header',
         '.privacy-card'
     ];
 
@@ -268,6 +269,46 @@ document.addEventListener('DOMContentLoaded', () => {
             observer.observe(element);
         }
     });
+
+    // 4b. Staggered reveal for showcase cards + sparkle effects
+    const showcaseGrid = document.querySelector('.showcase-grid');
+    if (showcaseGrid) {
+        const spawnSparkles = (container) => {
+            const rect = container.getBoundingClientRect();
+            const count = 6;
+            for (let i = 0; i < count; i++) {
+                const spark = document.createElement('div');
+                spark.className = 'showcase-sparkle';
+                spark.style.left = Math.random() * 100 + '%';
+                spark.style.top = Math.random() * 100 + '%';
+                spark.style.animationDelay = (Math.random() * 0.5) + 's';
+                container.appendChild(spark);
+                spark.addEventListener('animationend', () => spark.remove());
+            }
+        };
+
+        const cardObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const cards = entry.target.querySelectorAll('.showcase-card');
+                    cards.forEach((card, index) => {
+                        setTimeout(() => {
+                            card.classList.add('visible');
+                            // Trigger sparkles on the after text
+                            const sparkleContainer = card.querySelector('.showcase-sparkles');
+                            if (sparkleContainer) {
+                                setTimeout(() => spawnSparkles(sparkleContainer), 300);
+                                setTimeout(() => spawnSparkles(sparkleContainer), 700);
+                            }
+                        }, index * 200);
+                    });
+                    cardObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        cardObserver.observe(showcaseGrid);
+    }
 
     // 5. Typing animation synced with 10s CSS cycle
     const animateTypingLoop = () => {
