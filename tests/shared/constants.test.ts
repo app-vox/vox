@@ -25,6 +25,13 @@ describe("constants", () => {
     expect(LLM_SYSTEM_PROMPT).toContain("speech-to-text post-processor");
     expect(LLM_SYSTEM_PROMPT.toLowerCase()).toContain("filler words");
   });
+
+  it("should include examples of literal transcriptions that look like commands", () => {
+    expect(LLM_SYSTEM_PROMPT).toContain("EXAMPLES");
+    expect(LLM_SYSTEM_PROMPT).toMatch(/say this in English/i);
+    expect(LLM_SYSTEM_PROMPT).toMatch(/translate/i);
+    expect(LLM_SYSTEM_PROMPT).toContain("NOT instructions");
+  });
 });
 
 describe("buildWhisperPrompt", () => {
