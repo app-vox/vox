@@ -84,21 +84,24 @@ OUTPUT:
 
 export const WHISPER_PROMPT_MAX_CHARS = 896;
 
-export function buildWhisperPrompt(dictionary: string[]): string {
-  if (dictionary.length === 0) return WHISPER_PROMPT;
+export function buildWhisperPrompt(dictionary: string[], promptPrefix = ""): string {
+  const prefix = promptPrefix ? `${promptPrefix} ` : "";
+
+  if (dictionary.length === 0) return `${prefix}${WHISPER_PROMPT}`;
 
   const terms = dictionary.join(", ");
   const separator = ". ";
-  const combined = `${terms}${separator}${WHISPER_PROMPT}`;
+  const combined = `${prefix}${terms}${separator}${WHISPER_PROMPT}`;
 
   if (combined.length <= WHISPER_PROMPT_MAX_CHARS) return combined;
 
-  const available = WHISPER_PROMPT_MAX_CHARS - WHISPER_PROMPT.length - separator.length;
+  const available = WHISPER_PROMPT_MAX_CHARS - prefix.length - WHISPER_PROMPT.length - separator.length;
+  if (available <= 0) return `${prefix}${WHISPER_PROMPT}`;
   const truncated = terms.slice(0, available);
   const lastComma = truncated.lastIndexOf(",");
   const cleanTerms = lastComma > 0 ? truncated.slice(0, lastComma) : truncated;
 
-  return `${cleanTerms}${separator}${WHISPER_PROMPT}`;
+  return `${prefix}${cleanTerms}${separator}${WHISPER_PROMPT}`;
 }
 
 export function buildSystemPrompt(customPrompt: string, dictionary: string[] = []): string {

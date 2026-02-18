@@ -51,6 +51,19 @@ describe("buildWhisperPrompt", () => {
     expect(termsSection).not.toMatch(/,\s*$/);
     expect(termsSection).toMatch(/\w$/);
   });
+
+  it("should prepend language hint before dictionary and base prompt", () => {
+    const result = buildWhisperPrompt(["Kubernetes"], "The speaker may use: Portuguese, English.");
+    expect(result).toContain("The speaker may use: Portuguese, English.");
+    expect(result).toContain("Kubernetes");
+    expect(result).toContain(WHISPER_PROMPT);
+    expect(result.indexOf("The speaker may use")).toBeLessThan(result.indexOf("Kubernetes"));
+  });
+
+  it("should not add prefix when empty", () => {
+    const result = buildWhisperPrompt(["Kubernetes"], "");
+    expect(result).not.toContain("The speaker may use");
+  });
 });
 
 describe("buildSystemPrompt", () => {
