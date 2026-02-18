@@ -5,6 +5,7 @@ import { usePermissions } from "../../hooks/use-permissions";
 import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useT } from "../../i18n-context";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
+import { WHISPER_LANGUAGES } from "../../../shared/constants";
 import { useOnboardingStore } from "../onboarding/use-onboarding-store";
 import type { OnboardingStep } from "../onboarding/use-onboarding-store";
 import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, KeyboardIcon, ChevronDownIcon, MoveIcon, RefreshIcon, InfoCircleIcon } from "../../../shared/icons";
@@ -389,6 +390,64 @@ export function GeneralPanel() {
           />
         </div>
       </div>
+
+      {/* Speech Languages */}
+      {setupComplete && (
+        <div className={card.card}>
+          <div className={card.header}>
+            <h2>{t("general.speechLanguages.title")}</h2>
+            <p className={card.description}>{t("general.speechLanguages.description")}</p>
+          </div>
+          <div className={card.body}>
+            {config.speechLanguages.length > 0 && (
+              <div className={styles.chipList}>
+                {config.speechLanguages.map((code) => {
+                  const lang = WHISPER_LANGUAGES.find((l) => l.code === code);
+                  return (
+                    <span key={code} className={styles.chip}>
+                      {lang?.name ?? code}
+                      <button
+                        className={styles.chipRemove}
+                        onClick={() => {
+                          updateConfig({
+                            speechLanguages: config.speechLanguages.filter((c) => c !== code),
+                          });
+                          void saveConfig(false);
+                        }}
+                        aria-label={t("general.speechLanguages.remove", { language: lang?.name ?? code })}
+                      >
+                        {/* eslint-disable-next-line i18next/no-literal-string */}
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+
+            <CustomSelect
+              value=""
+              items={WHISPER_LANGUAGES
+                .filter((l) => !config.speechLanguages.includes(l.code))
+                .map((l) => ({ value: l.code, label: l.name }))}
+              onChange={(val) => {
+                if (!val || config.speechLanguages.includes(val)) return;
+                updateConfig({
+                  speechLanguages: [...config.speechLanguages, val],
+                });
+                void saveConfig(false);
+              }}
+            />
+
+            {config.speechLanguages.length === 1 && (
+              <p className={styles.speechHint}>{t("general.speechLanguages.hintSingle")}</p>
+            )}
+            {config.speechLanguages.length > 1 && (
+              <p className={styles.speechHint}>{t("general.speechLanguages.hintMultiple")}</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* HUD discovery banner */}
       {bannersReady && setupComplete && !config.showHud && !hudBannerDismissed && (
