@@ -66,6 +66,9 @@
     "uiohook-napi": "^1.5.4",
     "whisper-node": "^1.1.1"
   },
+  "overrides": {
+    "fast-xml-parser": "5.3.6"
+  },
   "build": {
     "npmRebuild": false,
     "appId": "com.rodrigoluizs.vox",
