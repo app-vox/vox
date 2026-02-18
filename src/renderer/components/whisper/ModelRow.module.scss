@@ -79,6 +79,16 @@
   color: var(--color-text-tertiary);
 }
 
+.recommendedBadge {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  margin-left: var(--spacing-1);
+}
+
 .downloaded {
   display: inline-flex;
   align-items: center;

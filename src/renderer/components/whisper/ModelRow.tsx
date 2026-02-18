@@ -10,6 +10,9 @@ interface ModelRowProps {
   onSelect: (size: string) => void;
   onDelete?: () => void;
   downloadDisabled?: boolean;
+  compact?: boolean;
+  recommended?: boolean;
+  recommendedLabel?: string;
 }
 
 function formatBytes(bytes: number): string {
@@ -18,7 +21,7 @@ function formatBytes(bytes: number): string {
   return `${(bytes / 1_000_000_000).toFixed(1)} GB`;
 }
 
-export function ModelRow({ model, selected, onSelect, onDelete, downloadDisabled }: ModelRowProps) {
+export function ModelRow({ model, selected, onSelect, onDelete, downloadDisabled, compact, recommended, recommendedLabel }: ModelRowProps) {
   const t = useT();
   const [downloading, setDownloading] = useState(false);
   const [downloaded, setDownloaded] = useState(model.downloaded);
@@ -111,8 +114,14 @@ export function ModelRow({ model, selected, onSelect, onDelete, downloadDisabled
           onChange={() => onSelect(model.size)}
         />
         <span className={styles.nameBlock}>
-          <span className={styles.name}>{t("whisper.model." + model.size + ".label")} <span className={styles.desc}>{t("whisper.model." + model.size + ".description")}</span></span>
-          <span className={styles.technicalName}>{model.size}</span>
+          <span className={styles.name}>
+            {t("whisper.model." + model.size + ".label")}{" "}
+            <span className={styles.desc}>{t("whisper.model." + model.size + ".description")}</span>
+            {recommended && recommendedLabel && (
+              <span className={styles.recommendedBadge}>{recommendedLabel}</span>
+            )}
+          </span>
+          {!compact && <span className={styles.technicalName}>{model.size}</span>}
         </span>
       </label>
       {downloading ? (
@@ -141,18 +150,20 @@ export function ModelRow({ model, selected, onSelect, onDelete, downloadDisabled
       ) : downloaded ? (
         <div className={styles.actions}>
           <span className={styles.downloaded}>{t("model.downloaded")}</span>
-          {confirmingDelete ? (
-            <button ref={confirmBtnRef} onClick={handleDeleteClick} className={styles.confirmDeleteBtn}>
-              {t("model.confirmDelete")}
-            </button>
-          ) : (
-            <button
-              onClick={handleDeleteClick}
-              className={styles.deleteBtn}
-              title={t("model.deleteModel")}
-            >
-              <TrashIcon width={14} height={14} />
-            </button>
+          {!compact && (
+            confirmingDelete ? (
+              <button ref={confirmBtnRef} onClick={handleDeleteClick} className={styles.confirmDeleteBtn}>
+                {t("model.confirmDelete")}
+              </button>
+            ) : (
+              <button
+                onClick={handleDeleteClick}
+                className={styles.deleteBtn}
+                title={t("model.deleteModel")}
+              >
+                <TrashIcon width={14} height={14} />
+              </button>
+            )
           )}
         </div>
       ) : (
