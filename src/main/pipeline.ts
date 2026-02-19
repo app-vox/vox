@@ -144,6 +144,10 @@ export class Pipeline {
   private readonly deps: PipelineDeps;
   private canceled = false;
   private generation = 0;
+  private currentStage: PipelineStage | "listening" | null = null;
+  private cancelingStage: PipelineStage | "listening" | null = null;
+  private heldRecording: RecordingResult | null = null;
+  private heldTranscription: string | null = null;
 
   private get whisperModelName(): string {
     return this.deps.modelPath.split("/").pop()?.replace("ggml-", "").replace(".bin", "") ?? "unknown";
@@ -174,18 +178,80 @@ export class Pipeline {
       throw new NoModelError();
     }
     this.canceled = false;
+    this.cancelingStage = null;
+    this.heldRecording = null;
+    this.heldTranscription = null;
+    this.currentStage = "listening";
     this.generation++;
     await this.deps.recorder.start();
   }
 
   async stopAndProcess(): Promise<string> {
-    const processingStartTime = performance.now();
     const gen = this.generation;
     const recording = await this.deps.recorder.stop();
+    this.heldRecording = recording;
 
     if (this.canceled || gen !== this.generation) {
       throw new CanceledError();
     }
+
+    return this.processFromRecording(recording, gen);
+  }
+
+  gracefulCancel(): { stage: PipelineStage | "listening" } {
+    const stage = this.currentStage ?? "listening";
+    this.cancelingStage = stage;
+    this.canceled = true;
+
+    if (stage === "listening") {
+      this.deps.recorder.stop().then((recording) => {
+        this.heldRecording = recording;
+      }).catch(() => {
+        // If stop fails (already stopped), heldRecording may already be set
+      });
+    }
+
+    return { stage };
+  }
+
+  async undoCancel(): Promise<string> {
+    if (!this.cancelingStage) throw new Error("Not in canceling state");
+
+    const stage = this.cancelingStage;
+    this.cancelingStage = null;
+    this.canceled = false;
+    this.generation++;
+    const gen = this.generation;
+
+    if (stage === "enhancing" && this.heldTranscription) {
+      return this.processFromTranscription(this.heldTranscription, this.heldRecording!, gen);
+    }
+
+    return this.processFromRecording(this.heldRecording!, gen);
+  }
+
+  confirmCancel(): void {
+    this.cancelingStage = null;
+    this.heldRecording = null;
+    this.heldTranscription = null;
+    this.currentStage = null;
+    this.canceled = true;
+    try {
+      this.deps.recorder.cancel?.();
+    } catch (err) {
+      slog.error("Error canceling recorder", err);
+    }
+  }
+
+  isCanceling(): boolean {
+    return this.cancelingStage !== null;
+  }
+
+  private async processFromRecording(
+    recording: RecordingResult,
+    gen: number
+  ): Promise<string> {
+    const processingStartTime = performance.now();
 
     slog.info("Starting transcription pipeline");
     this.deps.analytics?.track("transcription_started", {
@@ -196,6 +262,7 @@ export class Pipeline {
       sampleRate: recording.sampleRate,
     });
 
+    this.currentStage = "transcribing";
     this.deps.onStage?.("transcribing");
     let transcription: TranscriptionResult;
     try {
@@ -219,6 +286,7 @@ export class Pipeline {
     }
 
     const rawText = transcription.text.trim();
+    this.heldTranscription = rawText;
     const audioDurationMs = Math.round((recording.audioBuffer.length / recording.sampleRate) * 1000);
     this.deps.analytics?.track("transcription_completed", {
       whisper_model: this.whisperModelName,
@@ -238,6 +306,7 @@ export class Pipeline {
       slog.info("LLM enhancement disabled", { processingTimeMs });
       this.deps.analytics?.track("llm_enhancement_skipped");
       if (!rawText) return "";
+      this.currentStage = null;
       this.deps.onComplete?.({ text: rawText, originalText: rawText, audioDurationMs });
       return rawText;
     }
@@ -255,6 +324,17 @@ export class Pipeline {
     if (this.canceled || gen !== this.generation) {
       throw new CanceledError();
     }
+
+    return this.processFromTranscription(rawText, recording, gen);
+  }
+
+  private async processFromTranscription(
+    rawText: string,
+    recording: RecordingResult,
+    gen: number
+  ): Promise<string> {
+    const processingStartTime = performance.now();
+    const audioDurationMs = Math.round((recording.audioBuffer.length / recording.sampleRate) * 1000);
 
     if (this.deps.dictionary && this.deps.dictionary.length > 0) {
       this.deps.analytics?.track("dictionary_used", {
@@ -282,6 +362,7 @@ export class Pipeline {
         provider: llmProviderName,
         model: this.deps.llmModelName,
       });
+      this.currentStage = "enhancing";
       this.deps.onStage?.("enhancing");
       finalText = await this.deps.llmProvider.correct(rawText);
       slog.debug("LLM enhanced text", {
@@ -297,7 +378,6 @@ export class Pipeline {
         duration_ms: Number((performance.now() - llmStartTime).toFixed(1)),
       });
     } catch (err: unknown) {
-      // LLM failed — fall back to raw transcription and mark as untested
       slog.warn("LLM enhancement failed, using raw transcription", err instanceof Error ? err.message : err);
       this.deps.analytics?.track("llm_enhancement_failed", {
         provider: llmProviderName,
@@ -314,6 +394,7 @@ export class Pipeline {
 
     const totalTimeMs = Number((performance.now() - processingStartTime).toFixed(1));
     slog.info("Pipeline complete", { totalTimeMs });
+    this.currentStage = null;
 
     this.deps.onComplete?.({ text: finalText, originalText: rawText, audioDurationMs });
     return finalText;
