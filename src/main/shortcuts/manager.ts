@@ -95,6 +95,7 @@ export class ShortcutManager {
   private isInitializing = true;
   private recordingGeneration = 0;
   private micActiveAt = 0;
+  private cancelTimer: ReturnType<typeof setTimeout> | null = null;
   private static readonly MIN_RECORDING_MS = 400;
 
   constructor(deps: ShortcutManagerDeps) {
@@ -125,8 +126,11 @@ export class ShortcutManager {
     uIOhook.on("keydown", (e) => {
       if (e.keycode === UiohookKey.Escape && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
         const state = this.stateMachine.getState();
-        if (state === "hold" || state === "toggle" || state === "processing") {
-          slog.info("Escape pressed, canceling operation");
+        if (state === "canceling") {
+          slog.info("Second ESC pressed during grace period — immediate cancel");
+          this.confirmCancel();
+        } else if (state === "hold" || state === "toggle" || state === "processing") {
+          slog.info("Escape pressed, starting graceful cancel");
           this.cancelRecording();
         } else {
           this.dismissHud();
@@ -224,24 +228,90 @@ export class ShortcutManager {
   cancelRecording(): void {
     const state = this.stateMachine.getState();
     if (state === "hold" || state === "toggle" || state === "processing") {
-      slog.info("Cancel requested");
-      this.micActiveAt = 0;
-      this.recordingGeneration++;
+      slog.info("Graceful cancel requested");
       const pipeline = this.deps.getPipeline();
-      pipeline.cancel().catch((err) => {
-        slog.error("Error during cancel", err);
-      });
-      const config = this.deps.configManager.load();
-      const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
-      this.playCue(errorCueType);
-      this.stateMachine.setIdle();
-      this.hud.setState("canceled");
+      const { stage } = pipeline.gracefulCancel();
+      slog.info("Pipeline paused at stage: %s", stage);
+
+      this.stateMachine.setCanceling();
+      this.hud.setState("canceling");
+
+      this.cancelTimer = setTimeout(() => {
+        this.confirmCancel();
+      }, 3000);
+
       this.updateTrayState();
     }
   }
 
   undoCancel(): void {
-    slog.info("Undo cancel — not yet implemented");
+    if (this.stateMachine.getState() !== "canceling") return;
+
+    slog.info("Undo cancel requested — resuming pipeline");
+    if (this.cancelTimer) {
+      clearTimeout(this.cancelTimer);
+      this.cancelTimer = null;
+    }
+
+    const pipeline = this.deps.getPipeline();
+    this.stateMachine.setProcessing();
+    this.recordingGeneration++;
+    const gen = this.recordingGeneration;
+
+    this.hud.setState("transcribing");
+    this.updateTrayState();
+
+    pipeline.undoCancel().then((text) => {
+      if (gen !== this.recordingGeneration) {
+        slog.info("Stale undo result — discarding");
+        return;
+      }
+
+      const trimmedText = text.trim();
+      if (!trimmedText) {
+        slog.info("No valid text after undo, showing error");
+        const config = this.deps.configManager.load();
+        const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
+        this.playCue(errorCueType);
+        this.stateMachine.setIdle();
+        this.hud.setState("error");
+      } else {
+        slog.info("Undo succeeded, pasting text");
+        pasteText(trimmedText);
+        this.deps.analytics?.track("paste_completed", { method: "undo-cancel" });
+        this.stateMachine.setIdle();
+        this.hud.setState("idle");
+      }
+      this.updateTrayState();
+    }).catch((err: unknown) => {
+      if (gen !== this.recordingGeneration) return;
+      slog.error("Undo pipeline failed", err);
+      const config = this.deps.configManager.load();
+      const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
+      this.playCue(errorCueType);
+      this.stateMachine.setIdle();
+      this.hud.setState("error");
+      this.updateTrayState();
+    });
+  }
+
+  private confirmCancel(): void {
+    if (this.stateMachine.getState() !== "canceling") return;
+
+    slog.info("Cancel confirmed — discarding");
+    this.cancelTimer = null;
+    this.micActiveAt = 0;
+    this.recordingGeneration++;
+    const pipeline = this.deps.getPipeline();
+    pipeline.confirmCancel();
+
+    const config = this.deps.configManager.load();
+    const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
+    this.playCue(errorCueType);
+
+    this.stateMachine.setIdle();
+    this.hud.setState("canceled");
+    this.updateTrayState();
   }
 
   /** Cancel current operation silently and immediately start a new recording. */
@@ -277,7 +347,7 @@ export class ShortcutManager {
   /** Get current recording state (for UI updates) */
   isRecording(): boolean {
     const state = this.stateMachine.getState();
-    return state === "hold" || state === "toggle" || state === "processing";
+    return state === "hold" || state === "toggle" || state === "processing" || state === "canceling";
   }
 
   updateHud(): void {
@@ -300,6 +370,10 @@ export class ShortcutManager {
   }
 
   stop(): void {
+    if (this.cancelTimer) {
+      clearTimeout(this.cancelTimer);
+      this.cancelTimer = null;
+    }
     if (this.watchdogTimer) clearInterval(this.watchdogTimer);
     this.stopDisplayChangeListener();
     this.hud.hide();
