@@ -1,114 +1,37 @@
-import { useState, useEffect, useCallback } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
 import { useOnlineStatus } from "../../hooks/use-online-status";
+import { useModelManager } from "../../hooks/use-model-manager";
+import { useTranscriptionTest } from "../../hooks/use-transcription-test";
 import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useT } from "../../i18n-context";
-import { ModelRow } from "./ModelRow";
-import { StatusBox } from "../ui/StatusBox";
+import { ModelSelector } from "../ui/ModelSelector";
+import { TranscriptionTest } from "../ui/TranscriptionTest";
 import { OfflineBanner } from "../ui/OfflineBanner";
-import { RecordIcon, AlertTriangleIcon } from "../../../shared/icons";
-import { recordAudio } from "../../utils/record-audio";
-import type { ModelInfo } from "../../../preload/index";
-import type { WhisperModelSize } from "../../../shared/config";
+import { AlertTriangleIcon } from "../../../shared/icons";
 import card from "../shared/card.module.scss";
-import btn from "../shared/buttons.module.scss";
 import form from "../shared/forms.module.scss";
 
 export function WhisperPanel() {
   const t = useT();
   const online = useOnlineStatus();
   const config = useConfigStore((s) => s.config);
-  const updateConfig = useConfigStore((s) => s.updateConfig);
-  const saveConfig = useConfigStore((s) => s.saveConfig);
-  const loadConfig = useConfigStore((s) => s.loadConfig);
   const realSetupComplete = useConfigStore((s) => s.setupComplete);
+  const triggerToast = useSaveToast((s) => s.trigger);
 
-  // Dev overrides (gated — tree-shaken in production)
   const setupComplete = import.meta.env.DEV
     // eslint-disable-next-line react-hooks/rules-of-hooks
     ? useDevOverrideValue("setupComplete", realSetupComplete)
     : realSetupComplete;
-  const triggerToast = useSaveToast((s) => s.trigger);
-  const [models, setModels] = useState<ModelInfo[]>([]);
-  const [testing, setTesting] = useState(false);
-  const [testStatus, setTestStatus] = useState<{ text: string; type: "info" | "success" | "error" }>({ text: "", type: "info" });
 
-  const refreshModels = useCallback(async () => {
-    const modelsList = await window.voxApi.models.list();
-    setModels(modelsList);
-
-    const currentConfig = useConfigStore.getState().config;
-    if (!currentConfig) return;
-
-    const selectedModel = currentConfig.whisper.model;
-    if (selectedModel) {
-      const stillDownloaded = modelsList.find(
-        (m) => m.size === selectedModel && m.downloaded
-      );
-
-      if (!stillDownloaded) {
-        const firstAvailable = modelsList.find((m) => m.downloaded);
-
-        if (firstAvailable) {
-          updateConfig({ whisper: { model: firstAvailable.size as WhisperModelSize } });
-          await saveConfig(false);
-        } else {
-          updateConfig({ whisper: { model: "" as WhisperModelSize } });
-          await saveConfig(false);
-        }
-      }
-    }
-  }, [updateConfig, saveConfig]);
-
-  useEffect(() => {
-    refreshModels();
-  }, [refreshModels]);
-
-  useEffect(() => {
-    const cleanup = window.voxApi.models.onDownloadProgress((progress) => {
-      if (progress.downloaded === progress.total && progress.total > 0) {
-        setTimeout(() => {
-          refreshModels();
-          loadConfig();
-          useConfigStore.getState().checkSetup();
-        }, 100);
-      }
-    });
-    return cleanup;
-  }, [loadConfig, refreshModels]);
+  const modelManager = useModelManager();
+  const transcriptionTest = useTranscriptionTest(5);
 
   if (!config) return null;
 
   const handleSelect = async (size: string) => {
-    const selectedModel = models.find((m) => m.size === size);
-    if (!selectedModel?.downloaded) {
-      return;
-    }
-
-    updateConfig({ whisper: { model: size as WhisperModelSize } });
-    await saveConfig(false);
+    await modelManager.select(size);
     triggerToast();
-  };
-
-  const handleTest = async () => {
-    setTesting(true);
-    setTestStatus({ text: t("whisper.recording"), type: "info" });
-    await saveConfig();
-
-    try {
-      const recording = await recordAudio(5);
-      setTestStatus({ text: t("whisper.transcribing"), type: "info" });
-      const text = await window.voxApi.whisper.test(recording);
-      setTestStatus({
-        text: text || t("whisper.noSpeech"),
-        type: text ? "success" : "info",
-      });
-    } catch (err: unknown) {
-      setTestStatus({ text: t("whisper.testFailed", { error: err instanceof Error ? err.message : String(err) }), type: "error" });
-    } finally {
-      setTesting(false);
-    }
   };
 
   return (
@@ -125,30 +48,27 @@ export function WhisperPanel() {
       )}
       <div className={card.body}>
         <OfflineBanner />
-        <div>
-          {models.map((model) => (
-            <ModelRow
-              key={model.size}
-              model={model}
-              selected={model.size === config.whisper.model}
-              onSelect={handleSelect}
-              onDelete={refreshModels}
-              downloadDisabled={!online}
-            />
-          ))}
-        </div>
+        <ModelSelector
+          models={setupComplete === false ? modelManager.models.map((m) => ({ ...m, downloaded: false })) : modelManager.models}
+          selectedSize={setupComplete === false ? "" : modelManager.selectedSize}
+          downloading={modelManager.downloading}
+          progress={modelManager.progress}
+          onSelect={handleSelect}
+          onDownload={modelManager.download}
+          onCancel={modelManager.cancelDownload}
+          onDelete={modelManager.deleteModel}
+          downloadDisabled={!online || setupComplete === false}
+        />
 
         <div className={form.testSection}>
-          <button
-            onClick={handleTest}
-            disabled={testing || !models.some(m => m.downloaded)}
-            className={`${btn.btn} ${btn.primary}`}
-          >
-            <RecordIcon width={16} height={16} />
-            {t("whisper.testButton")}
-          </button>
+          <TranscriptionTest
+            testing={transcriptionTest.testing}
+            result={transcriptionTest.result}
+            error={transcriptionTest.error}
+            onTest={transcriptionTest.run}
+            buttonText={t("whisper.testButton")}
+          />
           <p className={form.hint}>{t("whisper.testHint")}</p>
-          <StatusBox text={testStatus.text} type={testStatus.type} />
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 {
   "name": "vox",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Open-source macOS voice-to-text with local Whisper transcription and LLM correction",
   "main": "out/main/index.js",
   "engines": {
@@ -67,7 +67,7 @@
     "whisper-node": "^1.1.1"
   },
   "overrides": {
-    "fast-xml-parser": "5.3.6",
+    "fast-xml-parser": "^5.3.6",
     "minimatch": "10.2.1"
   },
   "build": {

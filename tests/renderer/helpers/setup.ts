@@ -37,6 +37,7 @@ export function createVoxApiMock(): VoxAPI {
     },
     pipeline: {
       testTranscribe: vi.fn().mockResolvedValue({ rawText: "", correctedText: null, llmError: null }),
+      onResult: vi.fn().mockReturnValue(() => {}),
     },
     permissions: {
       status: vi.fn().mockResolvedValue({ microphone: "granted", accessibility: true, pid: 1, execPath: "", bundleId: "" }),

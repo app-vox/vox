@@ -5,6 +5,10 @@ import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
 import { HistoryManager } from "./history/manager";
 import { AnalyticsService } from "./analytics/service";
+import { AudioRecorder } from "./audio/recorder";
+import { transcribe } from "./audio/whisper";
+import { createLlmProvider } from "./llm/factory";
+import { computeLlmConfigHash } from "../shared/llm-config-hash";
 import { type VoxConfig, type WhisperModelSize } from "../shared/config";
 import { getResourcePath } from "./resources";
 import { SetupChecker } from "./setup/checker";
@@ -101,9 +105,6 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle("llm:test", async (_event, rendererConfig: VoxConfig) => {
-    const { createLlmProvider } = await import("./llm/factory");
-    const { computeLlmConfigHash } = await import("../shared/llm-config-hash");
-
     // Use config sent directly from the renderer to avoid stale disk reads.
     // Force the guard fields so the factory ALWAYS creates a real provider —
     // the dynamic import can drop the `forTest` options bag in bundled builds.
@@ -157,42 +158,55 @@ export function registerIpcHandlers(
     return resampled;
   }
 
-  ipcMain.handle("whisper:test", async (_event, recording: { audioBuffer: number[]; sampleRate: number }) => {
-    const { transcribe } = await import("./audio/whisper");
+  ipcMain.handle("whisper:test", async (_event, durationSec: number) => {
     const config = configManager.load();
     if (!config.whisper.model) {
       throw new Error(t("error.noModel"));
     }
     const modelPath = modelManager.getModelPath(config.whisper.model);
-    const samples = resampleTo16kHz(new Float32Array(recording.audioBuffer), recording.sampleRate);
-    const result = await transcribe(samples, 16000, modelPath, config.dictionary ?? []);
-    return result.text;
+
+    const recorder = new AudioRecorder();
+    try {
+      await recorder.start();
+      await new Promise((r) => setTimeout(r, durationSec * 1000));
+      const recording = await recorder.stop();
+      const samples = resampleTo16kHz(recording.audioBuffer, recording.sampleRate);
+      const result = await transcribe(samples, 16000, modelPath, config.dictionary ?? []);
+      return result.text;
+    } finally {
+      await recorder.dispose();
+    }
   });
 
-  ipcMain.handle("test:transcribe", async (_event, recording: { audioBuffer: number[]; sampleRate: number }) => {
-    const { transcribe } = await import("./audio/whisper");
-    const { createLlmProvider } = await import("./llm/factory");
-
+  ipcMain.handle("test:transcribe", async (_event, durationSec: number) => {
     const config = configManager.load();
     if (!config.whisper.model) {
       throw new Error(t("error.noModel"));
     }
     const modelPath = modelManager.getModelPath(config.whisper.model);
-    const samples = resampleTo16kHz(new Float32Array(recording.audioBuffer), recording.sampleRate);
 
-    const result = await transcribe(samples, 16000, modelPath, config.dictionary ?? []);
-    const rawText = result.text;
-
-    let correctedText: string | null = null;
-    let llmError: string | null = null;
+    const recorder = new AudioRecorder();
     try {
-      const llm = createLlmProvider(config);
-      correctedText = await llm.correct(rawText);
-    } catch (err: unknown) {
-      llmError = err instanceof Error ? err.message : String(err);
-    }
+      await recorder.start();
+      await new Promise((r) => setTimeout(r, durationSec * 1000));
+      const recording = await recorder.stop();
+      const samples = resampleTo16kHz(recording.audioBuffer, recording.sampleRate);
+      const result = await transcribe(samples, 16000, modelPath, config.dictionary ?? []);
+      const rawText = result.text;
 
-    return { rawText, correctedText, llmError };
+      let correctedText: string | null = null;
+      let llmError: string | null = null;
+      try {
+        const llm = createLlmProvider(config);
+        correctedText = await llm.correct(rawText);
+      } catch (err: unknown) {
+        llmError = err instanceof Error ? err.message : String(err);
+      }
+
+      return { rawText, correctedText, llmError };
+    } finally {
+      await recorder.dispose();
+    }
   });
 
   ipcMain.handle("permissions:status", () => {

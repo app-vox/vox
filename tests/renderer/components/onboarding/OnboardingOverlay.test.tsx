@@ -46,10 +46,6 @@ vi.mock("../../../../src/renderer/hooks/use-online-status", () => ({
   useOnlineStatus: () => true,
 }));
 
-vi.mock("../../../../src/renderer/utils/record-audio", () => ({
-  recordAudio: vi.fn().mockResolvedValue({ audioBuffer: [0], sampleRate: 16000 }),
-}));
-
 let voxApi: VoxAPI;
 
 beforeEach(() => {

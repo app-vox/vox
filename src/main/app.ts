@@ -84,6 +84,7 @@ function setupPipeline(): void {
         });
         for (const win of BrowserWindow.getAllWindows()) {
           win.webContents.send("history:entry-added");
+          win.webContents.send("pipeline:result", result.text);
         }
       } catch (err) {
         slog.error("Failed to save transcription to history", err);
