@@ -65,6 +65,7 @@ export interface VoxAPI {
   };
   pipeline: {
     testTranscribe(durationSec: number): Promise<TranscribeResult>;
+    onResult(callback: (text: string) => void): () => void;
   };
   permissions: {
     status(): Promise<PermissionsStatus>;
@@ -187,6 +188,11 @@ const voxApi: VoxAPI = {
   },
   pipeline: {
     testTranscribe: (durationSec) => ipcRenderer.invoke("test:transcribe", durationSec),
+    onResult: (callback) => {
+      const handler = (_event: Electron.IpcRendererEvent, text: string) => callback(text);
+      ipcRenderer.on("pipeline:result", handler);
+      return () => ipcRenderer.removeListener("pipeline:result", handler);
+    },
   },
   permissions: {
     status: () => ipcRenderer.invoke("permissions:status"),

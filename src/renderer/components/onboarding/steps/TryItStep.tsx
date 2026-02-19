@@ -14,9 +14,16 @@ export function TryItStep() {
 
   const holdShortcut = config?.shortcuts.hold || "Alt+Space";
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [shortcutText, setShortcutText] = useState<string | null>(null);
 
   useEffect(() => {
     textareaRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    return window.voxApi.pipeline.onResult((text) => {
+      setShortcutText(text);
+    });
   }, []);
 
   const [suggestedPhrase] = useState(() => {
@@ -45,9 +52,10 @@ export function TryItStep() {
     }
   };
 
-  const resultText = transcriptionTest.result
-    ? transcriptionTest.result.correctedText || transcriptionTest.result.rawText
-    : "";
+  const resultText = shortcutText
+    || (transcriptionTest.result
+      ? transcriptionTest.result.correctedText || transcriptionTest.result.rawText
+      : "");
 
   const handleStepClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
