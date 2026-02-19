@@ -106,7 +106,7 @@ function ModelSelectorRow({
   return (
     <div className={styles.row}>
       <label>
-        <input type="radio" name="model-selector" value={model.size} checked={selected} onChange={onSelect} />
+        <input type="radio" name="model-selector" value={model.size} checked={selected} onChange={onSelect} disabled={!model.downloaded && !isDownloading} />
         <span className={styles.nameBlock}>
           <span className={styles.name}>
             {t("whisper.model." + model.size + ".label")}

@@ -62,12 +62,11 @@ export function useModelManager() {
   }, [downloading, refreshModels, loadConfig]);
 
   const select = useCallback(async (size: string) => {
-    setSelectedSize(size);
     const model = models.find((m) => m.size === size);
-    if (model?.downloaded) {
-      updateConfig({ whisper: { model: size as WhisperModelSize } });
-      await saveConfig(false);
-    }
+    if (!model?.downloaded) return;
+    setSelectedSize(size);
+    updateConfig({ whisper: { model: size as WhisperModelSize } });
+    await saveConfig(false);
   }, [models, updateConfig, saveConfig]);
 
   const download = useCallback(async (size: string) => {
