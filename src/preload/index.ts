@@ -43,6 +43,7 @@ export interface UpdateState {
 export interface VoxAPI {
   config: {
     load(): Promise<import("../shared/config").VoxConfig>;
+    loadLlmForProvider(provider: import("../shared/config").LlmProviderType): Promise<import("../shared/config").LlmConfig>;
     save(config: import("../shared/config").VoxConfig): Promise<void>;
     onConfigChanged(callback: () => void): () => void;
   };
@@ -158,6 +159,7 @@ export interface VoxAPI {
 const voxApi: VoxAPI = {
   config: {
     load: () => ipcRenderer.invoke("config:load"),
+    loadLlmForProvider: (provider) => ipcRenderer.invoke("config:load-llm-for-provider", provider),
     save: (config) => ipcRenderer.invoke("config:save", config),
     onConfigChanged: (callback) => {
       const handler = () => callback();
