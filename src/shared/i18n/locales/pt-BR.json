@@ -221,6 +221,8 @@
   "indicator.enhancing": "Melhorando...",
   "indicator.nothingHeard": "Nada ouvido",
   "indicator.canceled": "Cancelado",
+  "indicator.canceling": "Cancelando...",
+  "indicator.undo": "Desfazer",
   "dialog.accessibilityTitle": "Permissão de Acessibilidade Necessária",
   "dialog.accessibilityMessage": "O Vox precisa da permissão de Acessibilidade para usar atalhos de teclado",
   "dialog.accessibilityDetail": "O Vox usa atalhos de teclado globais (como Alt+Space) para ativar a gravação de voz.\n\nPara habilitar este recurso:\n\n1. Clique em \"Abrir Configurações do Sistema\" abaixo\n2. Encontre e habilite \"Electron\" ou \"Vox\" na lista de Acessibilidade\n3. Reinicie o Vox\n\nSem esta permissão, você ainda pode usar o Vox pela barra de menus, mas os atalhos de teclado não funcionarão.",

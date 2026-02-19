@@ -224,6 +224,8 @@
   "indicator.enhancing": "Enhancing...",
   "indicator.nothingHeard": "Nothing heard",
   "indicator.canceled": "Canceled",
+  "indicator.canceling": "Canceling...",
+  "indicator.undo": "Undo",
   "dialog.accessibilityTitle": "Accessibility Permission Required",
   "dialog.accessibilityMessage": "Vox needs Accessibility permission to use keyboard shortcuts",
   "dialog.accessibilityDetail": "Vox uses global keyboard shortcuts (like Alt+Space) to activate voice recording.\n\nTo enable this feature:\n\n1. Click \"Open System Settings\" below\n2. Find and enable \"Electron\" or \"Vox\" in the Accessibility list\n3. Restart Vox\n\nWithout this permission, you can still use Vox from the menu bar, but keyboard shortcuts won't work.",
