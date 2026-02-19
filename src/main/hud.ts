@@ -12,7 +12,7 @@ const WIN_HEIGHT = 100;
 const DOCK_MARGIN = 24;
 const MIN_SCALE = 0.55;
 
-export type HudState = "idle" | "initializing" | "listening" | "transcribing" | "enhancing" | "error" | "canceled";
+export type HudState = "idle" | "initializing" | "listening" | "transcribing" | "enhancing" | "error" | "canceled" | "canceling";
 
 
 function getLogoDataUrl(): string {
@@ -368,6 +368,40 @@ function buildHudHtml(): string {
   .circle-cancel:hover { background: #ff4444; border-color: rgba(239,68,68,0.5); }
   .circle-cancel svg { width: 10px; height: 10px; }
   .circle-cancel.visible { opacity: 1; pointer-events: auto; }
+
+  /* Undo bar (below widget during canceling) */
+  .undo-bar {
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 6px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s ease;
+    flex-shrink: 0;
+  }
+  .undo-bar.visible { opacity: 1; pointer-events: auto; }
+  .undo-bar .countdown-track {
+    width: 60px; height: 3px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .undo-bar .countdown-fill {
+    height: 100%; width: 100%;
+    background: #f59e0b;
+    border-radius: 2px;
+  }
+  .undo-bar .undo-btn {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 4px;
+    color: rgba(255,255,255,0.9);
+    font-size: 10px; font-weight: 600;
+    padding: 1px 6px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    line-height: 1.4;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  .undo-bar .undo-btn:hover { background: rgba(255,255,255,0.22); }
 </style></head>
 <body>
 <div class="scale-wrapper" id="scale-wrapper">
@@ -408,6 +442,10 @@ function buildHudHtml(): string {
   </div>
   <div class="circle-cancel" id="circle-cancel" onclick="event.stopPropagation(); window.electronAPI?.cancelRecording()">
     <svg viewBox="0 0 10 10" fill="none"><path d="M8 2L2 8M2 2L8 8" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+  </div>
+  <div class="undo-bar" id="undo-bar">
+    <div class="countdown-track"><div class="countdown-fill" id="countdown-fill"></div></div>
+    <button class="undo-btn" id="undo-btn" onclick="event.stopPropagation(); window.electronAPI?.undoCancelRecording()">Undo</button>
   </div>
 </div>
 <script>
@@ -456,6 +494,7 @@ document.addEventListener('click', function(e) {
 
 /* ---- Drag handling ---- */
 widget.addEventListener('mousedown', function(e) {
+  if (currentState === 'canceling') return;
   if (e.target.closest('.hover-btn') || e.target.closest('.pill-cancel') || e.target.closest('.pill-stop')) return;
   isDragging = false;
   wasDragged = false;
@@ -630,6 +669,13 @@ function setState(newState, cfg) {
   currentState = newState;
   clearHoverActions();
 
+  // Countdown: start on canceling, stop on any other state
+  if (newState === 'canceling') {
+    startCountdown(3000);
+  } else {
+    stopCountdown();
+  }
+
   var isIdle = newState === 'idle';
   var isPill = !isIdle;
   var wasInPill = prevState !== 'idle';
@@ -693,6 +739,24 @@ function setAudioLevels(levels) {
     bar.style.height = h + 'px';
   });
 }
+function startCountdown(durationMs) {
+  var bar = document.getElementById('undo-bar');
+  var fill = document.getElementById('countdown-fill');
+  bar.classList.add('visible');
+  fill.style.transition = 'none';
+  fill.style.width = '100%';
+  fill.offsetWidth; // force reflow
+  fill.style.transition = 'width ' + (durationMs / 1000) + 's linear';
+  fill.style.width = '0%';
+}
+function stopCountdown() {
+  var bar = document.getElementById('undo-bar');
+  var fill = document.getElementById('countdown-fill');
+  fill.style.transition = 'none';
+  fill.style.width = '0%';
+  bar.classList.remove('visible');
+}
+
 function setPerformanceFlags(reduceAnimations, reduceEffects) {
   var id = 'perf-overrides';
   var existing = document.getElementById(id);
@@ -736,6 +800,7 @@ const INDICATOR_KEYS: Record<string, string> = {
   enhancing: "indicator.enhancing",
   error: "indicator.nothingHeard",
   canceled: "indicator.canceled",
+  canceling: "indicator.canceling",
 };
 
 const PILL_MODES: Record<string, Omit<PillModeConfig, "labelText">> = {
@@ -745,6 +810,7 @@ const PILL_MODES: Record<string, Omit<PillModeConfig, "labelText">> = {
   enhancing:    { color: "#44aaff", icon: "dot", showLabel: true, showCancel: true, showStop: false, animation: "pulse" },
   error:        { color: "#fbbf24", icon: "x-icon", showLabel: true, showCancel: false, showStop: false, animation: "glow" },
   canceled:     { color: "#fbbf24", icon: "x-icon", showLabel: true, showCancel: false, showStop: false, animation: "glow" },
+  canceling:    { color: "#f59e0b", icon: "x-icon", showLabel: true, showCancel: false, showStop: false, animation: "none" },
 };
 
 export class HudWindow {
