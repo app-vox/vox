@@ -18,7 +18,6 @@ import {
   AlertLinesIcon,
 } from "../../../shared/icons";
 import { WarningBadge } from "../ui/WarningBadge";
-import { NewDot } from "../ui/NewDot";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
 import { useDevOverrideValue, useDevOverridesActive } from "../../hooks/use-dev-override";
 import styles from "./Sidebar.module.scss";
@@ -80,15 +79,12 @@ const CATEGORY_DEFS: NavCategoryDef[] = [
 
 const SIDEBAR_COLLAPSED_KEY = "vox:sidebar-collapsed";
 
-const VISITED_DICTIONARY_KEY = "vox:visited-dictionary";
-
 export function Sidebar() {
   const t = useT();
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true");
   const [logoSrc, setLogoSrc] = useState("");
   const [iconSrc, setIconSrc] = useState("");
   const [updateState, setUpdateState] = useState<UpdateState | null>(null);
-  const [visitedDictionary, setVisitedDictionary] = useState(() => localStorage.getItem(VISITED_DICTIONARY_KEY) === "true");
   const activeTab = useConfigStore((s) => s.activeTab);
   const setActiveTab = useConfigStore((s) => s.setActiveTab);
   const realSetupComplete = useConfigStore((s) => s.setupComplete);
@@ -136,11 +132,6 @@ export function Sidebar() {
     ? useDevOverrideValue("hideDevVisuals", undefined)
     : undefined;
 
-  const devVisitedDictionary = import.meta.env.DEV
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    ? useDevOverrideValue("visitedDictionary", undefined)
-    : undefined;
-
   const permissionStatus = {
     ...realPermissionStatus,
     ...(devMicOverride !== undefined ? { microphone: devMicOverride } : {}),
@@ -148,12 +139,8 @@ export function Sidebar() {
   };
 
   const handleTabClick = useCallback((id: string) => {
-    if (id === "dictionary" && !visitedDictionary) {
-      setVisitedDictionary(true);
-      localStorage.setItem(VISITED_DICTIONARY_KEY, "true");
-    }
     setActiveTab(id);
-  }, [setActiveTab, visitedDictionary]);
+  }, [setActiveTab]);
 
   const itemLabels: Record<string, string> = {
     general: t("tabs.general"),
@@ -203,9 +190,6 @@ export function Sidebar() {
     return permissionStatus?.accessibility !== true || permissionStatus?.microphone !== "granted";
   };
 
-  const effectiveVisitedDictionary = devVisitedDictionary ?? visitedDictionary;
-  const showDictionaryDot = !effectiveVisitedDictionary && setupComplete;
-
   const hasWarning = (item: NavItemDef) =>
     (item.requiresModel === true && !setupComplete)
     || (item.requiresPermissions === true && needsPermissions())
@@ -230,7 +214,6 @@ export function Sidebar() {
       {!collapsed && (
         <span className={styles.label}>
           {item.label}
-          {item.id === "dictionary" && showDictionaryDot && <NewDot />}
           <WarningBadge show={
             (item.requiresModel === true && !setupComplete)
             || (item.requiresPermissions === true && needsPermissions())
