@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { useT } from "../../i18n-context";
-import styles from "./PermissionRow.module.scss";
+import styles from "./PermissionRequest.module.scss";
 import btn from "../shared/buttons.module.scss";
 
-interface PermissionRowProps {
+interface PermissionRequestProps {
   icon: ReactNode;
   name: string;
   description: string;
@@ -12,10 +12,10 @@ interface PermissionRowProps {
   buttonText?: string;
   onRequest?: () => void;
   requesting?: boolean;
-  setupRequired?: boolean;
+  className?: string;
 }
 
-export function PermissionRow({
+export function PermissionRequest({
   icon,
   name,
   description,
@@ -24,12 +24,12 @@ export function PermissionRow({
   buttonText,
   onRequest,
   requesting,
-  setupRequired = false,
-}: PermissionRowProps) {
+  className,
+}: PermissionRequestProps) {
   const t = useT();
 
   return (
-    <div className={styles.row}>
+    <div className={`${styles.row} ${className ?? ""}`}>
       <div className={styles.info}>
         {icon}
         <div>
@@ -38,15 +38,22 @@ export function PermissionRow({
         </div>
       </div>
       <div className={styles.action}>
-        {setupRequired ? (
-          <span className={`${styles.badge} ${styles.setupBadge}`}>{t("permissions.setupRequired")}</span>
-        ) : granted ? (
-          <span className={`${styles.badge} ${styles.granted}`}>{t("permissions.granted")}</span>
+        {granted ? (
+          <span className={`${styles.badge} ${styles.granted}`}>
+            {t("permissions.granted")}
+          </span>
         ) : (
           <>
-            <span className={`${styles.badge} ${styles.missing}`}>
-              {statusText || t("permissions.notGranted")}
-            </span>
+            {statusText && (
+              <span className={`${styles.badge} ${styles.missing}`}>
+                {statusText}
+              </span>
+            )}
+            {!statusText && (
+              <span className={`${styles.badge} ${styles.missing}`}>
+                {t("permissions.notGranted")}
+              </span>
+            )}
             {buttonText && onRequest && (
               <button
                 onClick={onRequest}

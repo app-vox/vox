@@ -1,21 +1,19 @@
-import { useState, useEffect } from "react";
 import { useConfigStore } from "../../stores/config-store";
-import { usePermissions } from "../../hooks/use-permissions";
+import { usePermissionRequest } from "../../hooks/use-permission-request";
+import { useTranscriptionTest } from "../../hooks/use-transcription-test";
 import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useT } from "../../i18n-context";
-import { PermissionRow } from "./PermissionRow";
-import { PipelineTest } from "./PipelineTest";
+import { PermissionRequest } from "../ui/PermissionRequest";
+import { TranscriptionTest } from "../ui/TranscriptionTest";
 import { MicIcon, LockIcon, ShieldIcon } from "../../../shared/icons";
 import card from "../shared/card.module.scss";
 
 export function PermissionsPanel() {
   const t = useT();
-  const activeTab = useConfigStore((s) => s.activeTab);
   const realSetupComplete = useConfigStore((s) => s.setupComplete);
-  const { status: realStatus, keychainStatus, refresh, requestMicrophone, requestAccessibility } = usePermissions();
-  const [requestingMic, setRequestingMic] = useState(false);
+  const perm = usePermissionRequest();
+  const transcriptionTest = useTranscriptionTest(5);
 
-  // Dev overrides (gated — tree-shaken in production)
   const setupComplete = import.meta.env.DEV
     // eslint-disable-next-line react-hooks/rules-of-hooks
     ? useDevOverrideValue("setupComplete", realSetupComplete)
@@ -31,49 +29,25 @@ export function PermissionsPanel() {
     ? useDevOverrideValue("accessibilityPermission", undefined)
     : undefined;
 
-  const status = {
-    ...realStatus,
-    ...(devMicOverride !== undefined ? { microphone: devMicOverride } : {}),
-    ...(devAccOverride !== undefined ? { accessibility: devAccOverride } : {}),
-  };
+  const micGranted = devMicOverride !== undefined
+    ? devMicOverride === "granted"
+    : perm.microphone.granted;
+  const accGranted = devAccOverride !== undefined
+    ? !!devAccOverride
+    : perm.accessibility.granted;
 
-  useEffect(() => {
-    if (activeTab === "permissions") refresh();
-  }, [activeTab, refresh]);
-
-  useEffect(() => {
-    const handleFocus = () => {
-      if (activeTab === "permissions") refresh();
-    };
-    window.addEventListener("focus", handleFocus);
-    return () => window.removeEventListener("focus", handleFocus);
-  }, [activeTab, refresh]);
-
-  const handleMicRequest = async () => {
-    setRequestingMic(true);
-    await requestMicrophone();
-    setRequestingMic(false);
-  };
-
-  const handleOpenKeychain = () => {
-    window.voxApi.shell.openExternal("x-apple.systempreferences:com.apple.preference.security?Privacy");
-  };
-
-  const micGranted = status?.microphone === "granted";
-  const accGranted = !!status?.accessibility;
-
-  const keychainGranted = keychainStatus?.available ?? false;
-  const keychainDescription = !keychainStatus
+  const keychainDescription = !perm.keychain.status
     ? t("permissions.keychainDesc")
-    : keychainStatus.available
-      ? keychainStatus.encryptedCount > 0
-        ? t("permissions.keychainProtectedDesc", { count: String(keychainStatus.encryptedCount) })
+    : perm.keychain.status.available
+      ? perm.keychain.status.encryptedCount > 0
+        ? t("permissions.keychainProtectedDesc", { count: String(perm.keychain.status.encryptedCount) })
         : t("permissions.keychainAvailableDesc")
       : t("permissions.keychainUnprotectedDesc");
-  const keychainStatusText = !keychainStatus
+
+  const keychainStatusText = !perm.keychain.status
     ? undefined
-    : keychainStatus.available
-      ? keychainStatus.encryptedCount > 0
+    : perm.keychain.status.available
+      ? perm.keychain.status.encryptedCount > 0
         ? t("permissions.keychainProtected")
         : t("permissions.keychainAvailable")
       : t("permissions.keychainUnprotected");
@@ -86,40 +60,52 @@ export function PermissionsPanel() {
           <p className={card.description}>{t("permissions.description")}</p>
         </div>
         <div className={card.body}>
-          <PermissionRow
+          <PermissionRequest
             icon={<MicIcon width={18} height={18} />}
             name={t("permissions.microphone")}
             description={t("permissions.microphoneDesc")}
             granted={micGranted}
-            statusText={status?.microphone === "denied" ? t("permissions.denied") : undefined}
+            statusText={!micGranted && !setupComplete ? t("permissions.setupRequired") : undefined}
             buttonText={t("permissions.grantAccess")}
-            onRequest={handleMicRequest}
-            requesting={requestingMic}
-            setupRequired={!setupComplete}
+            onRequest={perm.microphone.request}
+            requesting={perm.microphone.requesting}
           />
-          <PermissionRow
+          <PermissionRequest
             icon={<LockIcon width={18} height={18} />}
             name={t("permissions.accessibility")}
             description={t("permissions.accessibilityDesc")}
             granted={accGranted}
+            statusText={!accGranted && !setupComplete ? t("permissions.setupRequired") : undefined}
             buttonText={t("permissions.openSettings")}
-            onRequest={requestAccessibility}
-            setupRequired={!setupComplete}
+            onRequest={perm.accessibility.request}
           />
-          <PermissionRow
+          <PermissionRequest
             icon={<ShieldIcon width={18} height={18} />}
             name={t("permissions.keychain")}
             description={keychainDescription}
-            granted={keychainGranted}
+            granted={perm.keychain.granted}
             statusText={keychainStatusText}
-            buttonText={keychainStatus?.available === false ? t("permissions.keychainOpenKeychain") : undefined}
-            onRequest={keychainStatus?.available === false ? handleOpenKeychain : undefined}
+            buttonText={perm.keychain.status?.available === false ? t("permissions.keychainOpenKeychain") : undefined}
+            onRequest={perm.keychain.status?.available === false ? perm.keychain.openSettings : undefined}
           />
         </div>
       </div>
 
       <div className={card.card}>
-        <PipelineTest />
+        <div className={card.header}>
+          <h2>{t("permissions.pipeline.title")}</h2>
+          <p className={card.description}>{t("permissions.pipeline.description")}</p>
+        </div>
+        <div className={card.body}>
+          <TranscriptionTest
+            testing={transcriptionTest.testing}
+            result={transcriptionTest.result}
+            error={transcriptionTest.error}
+            onTest={transcriptionTest.run}
+            buttonText={t("permissions.pipeline.testButton")}
+            showLlmResult={true}
+          />
+        </div>
       </div>
     </>
   );

@@ -220,3 +220,15 @@
     border-color: var(--color-border);
   }
 }
+
+.recommendedBadge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: var(--spacing-2);
+  padding: var(--spacing-0-75) var(--spacing-2);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-success);
+  background: var(--color-success-bg-light);
+  border-radius: var(--radius-full);
+}

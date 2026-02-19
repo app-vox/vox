@@ -1,16 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import type { ModelInfo } from "../../../preload/index";
 import { useT } from "../../i18n-context";
 import { TrashIcon, XIcon } from "../../../shared/icons";
-import styles from "./ModelRow.module.scss";
-
-interface ModelRowProps {
-  model: ModelInfo;
-  selected: boolean;
-  onSelect: (size: string) => void;
-  onDelete?: () => void;
-  downloadDisabled?: boolean;
-}
+import type { ModelInfo } from "../../../preload/index";
+import styles from "./ModelSelector.module.scss";
+import btn from "../shared/buttons.module.scss";
 
 function formatBytes(bytes: number): string {
   if (bytes < 1_000_000) return `${(bytes / 1_000).toFixed(0)} KB`;
@@ -18,32 +11,64 @@ function formatBytes(bytes: number): string {
   return `${(bytes / 1_000_000_000).toFixed(1)} GB`;
 }
 
-export function ModelRow({ model, selected, onSelect, onDelete, downloadDisabled }: ModelRowProps) {
+interface ModelSelectorProps {
+  models: ModelInfo[];
+  selectedSize: string;
+  downloading: string | null;
+  progress: { downloaded: number; total: number };
+  onSelect: (size: string) => void;
+  onDownload: (size: string) => void;
+  onCancel: () => void;
+  onDelete: (size: string) => void;
+  downloadDisabled?: boolean;
+  recommendedSize?: string;
+  className?: string;
+}
+
+export function ModelSelector({
+  models, selectedSize, downloading, progress, onSelect, onDownload, onCancel, onDelete, downloadDisabled, recommendedSize, className,
+}: ModelSelectorProps) {
+  return (
+    <div className={className}>
+      {models.map((model) => (
+        <ModelSelectorRow
+          key={model.size}
+          model={model}
+          selected={selectedSize === model.size}
+          isDownloading={downloading === model.size}
+          progress={downloading === model.size ? progress : { downloaded: 0, total: 0 }}
+          isRecommended={model.size === recommendedSize}
+          onSelect={() => onSelect(model.size)}
+          onDownload={() => onDownload(model.size)}
+          onCancel={onCancel}
+          onDelete={() => onDelete(model.size)}
+          downloadDisabled={downloadDisabled}
+        />
+      ))}
+    </div>
+  );
+}
+
+interface ModelSelectorRowProps {
+  model: ModelInfo;
+  selected: boolean;
+  isDownloading: boolean;
+  progress: { downloaded: number; total: number };
+  isRecommended: boolean;
+  onSelect: () => void;
+  onDownload: () => void;
+  onCancel: () => void;
+  onDelete: () => void;
+  downloadDisabled?: boolean;
+}
+
+function ModelSelectorRow({
+  model, selected, isDownloading, progress, isRecommended, onSelect, onDownload, onCancel, onDelete, downloadDisabled,
+}: ModelSelectorRowProps) {
   const t = useT();
-  const [downloading, setDownloading] = useState(false);
-  const [downloaded, setDownloaded] = useState(model.downloaded);
-  const [progress, setProgress] = useState({ downloaded: 0, total: 0 });
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const confirmTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const confirmBtnRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    setDownloaded(model.downloaded);
-  }, [model.downloaded]);
-
-  useEffect(() => {
-    const handler = (p: { size: string; downloaded: number; total: number }) => {
-      if (p.size === model.size) {
-        if (p.total > 0 && p.downloaded < p.total) {
-          setDownloading(true);
-          setDownloaded(false);
-        }
-        setProgress({ downloaded: p.downloaded, total: p.total });
-      }
-    };
-    const cleanup = window.voxApi.models.onDownloadProgress(handler);
-    return cleanup;
-  }, [model.size]);
 
   useEffect(() => {
     return () => {
@@ -63,32 +88,11 @@ export function ModelRow({ model, selected, onSelect, onDelete, downloadDisabled
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [confirmingDelete]);
 
-  const handleDownload = async () => {
-    setDownloading(true);
-    setProgress({ downloaded: 0, total: model.info.sizeBytes });
-    try {
-      await window.voxApi.models.download(model.size);
-      setDownloaded(true);
-    } catch {
-      // Download was cancelled or failed
-    } finally {
-      setDownloading(false);
-      setProgress({ downloaded: 0, total: 0 });
-    }
-  };
-
-  const handleCancel = async () => {
-    await window.voxApi.models.cancelDownload(model.size);
-  };
-
   const handleDeleteClick = () => {
     if (confirmingDelete) {
       if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
       setConfirmingDelete(false);
-      window.voxApi.models.delete(model.size).then(() => {
-        setDownloaded(false);
-        onDelete?.();
-      });
+      onDelete();
     } else {
       setConfirmingDelete(true);
       confirmTimerRef.current = setTimeout(() => setConfirmingDelete(false), 3000);
@@ -102,20 +106,20 @@ export function ModelRow({ model, selected, onSelect, onDelete, downloadDisabled
   return (
     <div className={styles.row}>
       <label>
-        <input
-          type="radio"
-          name="whisper-model"
-          value={model.size}
-          checked={selected}
-          disabled={!downloaded}
-          onChange={() => onSelect(model.size)}
-        />
+        <input type="radio" name="model-selector" value={model.size} checked={selected} onChange={onSelect} disabled={!model.downloaded && !isDownloading} />
         <span className={styles.nameBlock}>
-          <span className={styles.name}>{t("whisper.model." + model.size + ".label")} <span className={styles.desc}>{t("whisper.model." + model.size + ".description")}</span></span>
+          <span className={styles.name}>
+            {t("whisper.model." + model.size + ".label")}
+            {isRecommended && (
+              <span className={styles.recommendedBadge}>{t("onboarding.model.recommended")}</span>
+            )}
+            {" "}
+            <span className={styles.desc}>{t("whisper.model." + model.size + ".description")}</span>
+          </span>
           <span className={styles.technicalName}>{model.size}</span>
         </span>
       </label>
-      {downloading ? (
+      {isDownloading ? (
         <div className={styles.progress}>
           {/* eslint-disable i18next/no-literal-string */}
           <div className={styles.progressInfo}>
@@ -129,16 +133,12 @@ export function ModelRow({ model, selected, onSelect, onDelete, downloadDisabled
             <div className={styles.progressBar}>
               <div className={styles.progressFill} style={{ width: `${percent}%` }} />
             </div>
-            <button
-              onClick={handleCancel}
-              className={styles.cancelBtn}
-              title={t("model.cancelDownload")}
-            >
+            <button onClick={onCancel} className={styles.cancelBtn} title={t("model.cancelDownload")}>
               <XIcon width={14} height={14} />
             </button>
           </div>
         </div>
-      ) : downloaded ? (
+      ) : model.downloaded ? (
         <div className={styles.actions}>
           <span className={styles.downloaded}>{t("model.downloaded")}</span>
           {confirmingDelete ? (
@@ -146,21 +146,13 @@ export function ModelRow({ model, selected, onSelect, onDelete, downloadDisabled
               {t("model.confirmDelete")}
             </button>
           ) : (
-            <button
-              onClick={handleDeleteClick}
-              className={styles.deleteBtn}
-              title={t("model.deleteModel")}
-            >
+            <button onClick={handleDeleteClick} className={styles.deleteBtn} title={t("model.deleteModel")}>
               <TrashIcon width={14} height={14} />
             </button>
           )}
         </div>
       ) : (
-        <button
-          onClick={handleDownload}
-          disabled={downloadDisabled}
-          className={styles.downloadBtn}
-        >
+        <button onClick={onDownload} disabled={downloadDisabled} className={`${btn.btn} ${btn.secondary} ${btn.sm}`}>
           {t("model.download")}
         </button>
       )}

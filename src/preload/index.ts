@@ -1,10 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
 
-export interface AudioRecording {
-  audioBuffer: number[];
-  sampleRate: number;
-}
-
 export interface ModelInfo {
   size: string;
   info: { description: string; sizeBytes: number; label: string };
@@ -66,10 +61,11 @@ export interface VoxAPI {
     test(config: import("../shared/config").VoxConfig): Promise<{ ok: boolean; error?: string }>;
   };
   whisper: {
-    test(recording: AudioRecording): Promise<string>;
+    test(durationSec: number): Promise<string>;
   };
   pipeline: {
-    testTranscribe(recording: AudioRecording): Promise<TranscribeResult>;
+    testTranscribe(durationSec: number): Promise<TranscribeResult>;
+    onResult(callback: (text: string) => void): () => void;
   };
   permissions: {
     status(): Promise<PermissionsStatus>;
@@ -188,10 +184,15 @@ const voxApi: VoxAPI = {
     test: (config) => ipcRenderer.invoke("llm:test", config),
   },
   whisper: {
-    test: (recording) => ipcRenderer.invoke("whisper:test", recording),
+    test: (durationSec) => ipcRenderer.invoke("whisper:test", durationSec),
   },
   pipeline: {
-    testTranscribe: (recording) => ipcRenderer.invoke("test:transcribe", recording),
+    testTranscribe: (durationSec) => ipcRenderer.invoke("test:transcribe", durationSec),
+    onResult: (callback) => {
+      const handler = (_event: Electron.IpcRendererEvent, text: string) => callback(text);
+      ipcRenderer.on("pipeline:result", handler);
+      return () => ipcRenderer.removeListener("pipeline:result", handler);
+    },
   },
   permissions: {
     status: () => ipcRenderer.invoke("permissions:status"),
