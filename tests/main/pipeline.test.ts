@@ -276,7 +276,6 @@ describe("Pipeline", () => {
     pipeline.confirmCancel();
 
     expect(pipeline.isCanceling()).toBe(false);
-    expect(recorder.cancel).toHaveBeenCalled();
   });
 
   it("should track llm_enhancement_failed when LLM errors", async () => {

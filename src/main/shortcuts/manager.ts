@@ -235,6 +235,8 @@ export class ShortcutManager {
     const state = this.stateMachine.getState();
     if (state === "hold" || state === "toggle" || state === "processing") {
       slog.info("Graceful cancel requested");
+      this.micActiveAt = 0;
+      this.recordingGeneration++;
       const pipeline = this.deps.getPipeline();
       const { stage } = pipeline.gracefulCancel();
       slog.info("Pipeline paused at stage: %s", stage);

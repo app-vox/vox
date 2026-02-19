@@ -236,11 +236,6 @@ export class Pipeline {
     this.heldTranscription = null;
     this.currentStage = null;
     this.canceled = true;
-    try {
-      this.deps.recorder.cancel?.();
-    } catch (err) {
-      slog.error("Error canceling recorder", err);
-    }
   }
 
   isCanceling(): boolean {

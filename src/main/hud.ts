@@ -372,7 +372,7 @@ function buildHudHtml(): string {
   /* Undo bar (below widget during graceful cancel) */
   .undo-bar {
     display: flex; align-items: center; gap: 0;
-    margin-top: 4px;
+    margin-top: 3px;
     opacity: 0; pointer-events: none;
     transition: opacity 0.2s ease;
     flex-shrink: 0;
@@ -386,7 +386,7 @@ function buildHudHtml(): string {
   }
   .undo-bar.visible { opacity: 1; pointer-events: auto; }
   .undo-bar .countdown-track {
-    width: 40px; height: 2px;
+    width: 64px; height: 2px;
     background: rgba(255,255,255,0.08);
     border-radius: 1px;
     overflow: hidden;
