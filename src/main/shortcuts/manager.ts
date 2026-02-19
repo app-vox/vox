@@ -240,6 +240,10 @@ export class ShortcutManager {
     }
   }
 
+  undoCancel(): void {
+    slog.info("Undo cancel — not yet implemented");
+  }
+
   /** Cancel current operation silently and immediately start a new recording. */
   private restartRecording(mode: "hold" | "toggle" = "toggle"): void {
     slog.info("Restart requested (mode=%s) — aborting current pipeline and starting new recording", mode);
@@ -405,6 +409,10 @@ export class ShortcutManager {
 
     ipcMain.handle("indicator:cancel-recording", () => {
       this.cancelRecording();
+    });
+
+    ipcMain.handle("indicator:undo-cancel", () => {
+      this.undoCancel();
     });
 
     ipcMain.handle("hud:start-recording", () => {
