@@ -1,3 +1,10 @@
+// GA4 Event Tracking
+const trackEvent = (eventName, params = {}) => {
+    if (typeof gtag === 'function') {
+        gtag('event', eventName, params);
+    }
+};
+
 // OS and Architecture Detection
 const detectOS = () => {
     const userAgent = window.navigator.userAgent.toLowerCase();
@@ -45,6 +52,11 @@ const updateDownloadButton = () => {
     const downloadText = document.getElementById('download-text');
     const platformNote = document.getElementById('platform-note');
     const { os } = detectOS();
+
+    // Track download button clicks
+    downloadBtn.addEventListener('click', () => {
+        trackEvent('download_click', { platform: os });
+    });
 
     // Enable download for any macOS
     if (os !== 'macos') {
@@ -101,6 +113,7 @@ const initLanguageSwitcher = () => {
     menuButtons.forEach(button => {
         button.addEventListener('click', () => {
             const lang = button.getAttribute('data-lang');
+            trackEvent('language_switch', { language: lang });
             window.i18n.setLanguage(lang);
             menu.classList.remove('active');
 
@@ -147,6 +160,7 @@ themeToggle.addEventListener('click', () => {
     const currentTheme = html.getAttribute('data-theme');
     const newTheme = currentTheme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
+    trackEvent('theme_toggle', { theme: newTheme });
 });
 
 // Listen for system theme changes
@@ -310,7 +324,28 @@ document.addEventListener('DOMContentLoaded', () => {
         cardObserver.observe(showcaseGrid);
     }
 
-    // 5. Typing animation synced with 10s CSS cycle
+    // 5. GA event tracking for outbound links
+    const githubStars = document.getElementById('github-stars');
+    if (githubStars) {
+        githubStars.addEventListener('click', () => {
+            trackEvent('github_click', { location: 'header_stars' });
+        });
+    }
+
+    const starBtn = document.querySelector('.btn-secondary[href*="github.com/app-vox/vox"]');
+    if (starBtn) {
+        starBtn.addEventListener('click', () => {
+            trackEvent('github_click', { location: 'hero_star_button' });
+        });
+    }
+
+    document.querySelectorAll('.footer-nav a').forEach(link => {
+        link.addEventListener('click', () => {
+            trackEvent('footer_link_click', { label: link.textContent.trim() });
+        });
+    });
+
+    // 6. Typing animation synced with 10s CSS cycle
     const animateTypingLoop = () => {
         const inputField = document.querySelector('.demo-input-field');
         const typedText = document.querySelector('.typed-text');
