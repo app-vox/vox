@@ -1,5 +1,9 @@
 // GA4 Event Tracking
+const GA_DEBUG = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 const trackEvent = (eventName, params = {}) => {
+    if (GA_DEBUG) {
+        console.log(`[GA] ${eventName}`, params);
+    }
     if (typeof gtag === 'function') {
         gtag('event', eventName, params);
     }
