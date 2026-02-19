@@ -12,7 +12,7 @@ const WIN_HEIGHT = 100;
 const DOCK_MARGIN = 24;
 const MIN_SCALE = 0.55;
 
-export type HudState = "idle" | "initializing" | "listening" | "transcribing" | "enhancing" | "error" | "canceled" | "canceling";
+export type HudState = "idle" | "initializing" | "listening" | "transcribing" | "enhancing" | "error" | "canceled";
 
 
 function getLogoDataUrl(): string {
@@ -369,39 +369,54 @@ function buildHudHtml(): string {
   .circle-cancel svg { width: 10px; height: 10px; }
   .circle-cancel.visible { opacity: 1; pointer-events: auto; }
 
-  /* Undo bar (below widget during canceling) */
+  /* Undo bar (below widget during graceful cancel) */
   .undo-bar {
-    display: flex; align-items: center; gap: 6px;
-    margin-top: 6px;
+    display: flex; align-items: center; gap: 0;
+    margin-top: 4px;
     opacity: 0; pointer-events: none;
     transition: opacity 0.2s ease;
     flex-shrink: 0;
+    background: rgba(25, 25, 25, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 3px 3px 3px 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2);
   }
   .undo-bar.visible { opacity: 1; pointer-events: auto; }
   .undo-bar .countdown-track {
-    width: 60px; height: 3px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 2px;
+    width: 40px; height: 2px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 1px;
     overflow: hidden;
+    flex-shrink: 0;
   }
   .undo-bar .countdown-fill {
     height: 100%; width: 100%;
-    background: #f59e0b;
-    border-radius: 2px;
+    background: rgba(251, 191, 36, 0.7);
+    border-radius: 1px;
   }
   .undo-bar .undo-btn {
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 4px;
-    color: rgba(255,255,255,0.9);
-    font-size: 10px; font-weight: 600;
-    padding: 1px 6px;
+    display: flex; align-items: center; gap: 3px;
+    background: rgba(255,255,255,0.08);
+    border: none;
+    border-radius: 7px;
+    color: rgba(255,255,255,0.85);
+    font-size: 10px; font-weight: 500;
+    padding: 2px 6px 2px 5px;
+    margin-left: 6px;
     cursor: pointer;
-    transition: background 0.15s ease;
-    line-height: 1.4;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    transition: background 0.15s ease, color 0.15s ease;
+    line-height: 1;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+    letter-spacing: 0.1px;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
-  .undo-bar .undo-btn:hover { background: rgba(255,255,255,0.22); }
+  .undo-bar .undo-btn:hover { background: rgba(255,255,255,0.16); color: white; }
+  .undo-bar .undo-btn:active { transform: scale(0.95); }
+  .undo-bar .undo-btn svg { flex-shrink: 0; }
 </style></head>
 <body>
 <div class="scale-wrapper" id="scale-wrapper">
@@ -445,7 +460,7 @@ function buildHudHtml(): string {
   </div>
   <div class="undo-bar" id="undo-bar">
     <div class="countdown-track"><div class="countdown-fill" id="countdown-fill"></div></div>
-    <button class="undo-btn" id="undo-btn" onclick="event.stopPropagation(); window.electronAPI?.undoCancelRecording()">Undo</button>
+    <button class="undo-btn" id="undo-btn" onclick="event.stopPropagation(); window.electronAPI?.undoCancelRecording()"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M2 2l4 4M6 2l-4 4" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></svg><span id="undo-label">Undo</span></button>
   </div>
 </div>
 <script>
@@ -468,7 +483,7 @@ var recentDragEnd = false;
 /* Keep ignoreMouseEvents(true, {forward:true}) by default so transparent
    areas are fully click-through. Only disable ignore when the cursor
    actually enters an interactive element (widget, hover-btn, pill-cancel, circle-cancel). */
-var interactiveEls = document.querySelectorAll('.widget, .hover-btn, .pill-cancel, .pill-stop, .circle-cancel');
+var interactiveEls = document.querySelectorAll('.widget, .hover-btn, .pill-cancel, .pill-stop, .circle-cancel, .undo-bar, .undo-btn');
 var ignoreDisabled = false;
 interactiveEls.forEach(function(el) {
   el.addEventListener('mouseenter', function() {
@@ -484,7 +499,7 @@ interactiveEls.forEach(function(el) {
 /* Safety net: any click on the window body that didn't land on an interactive
    element should re-enable click-through immediately. */
 document.addEventListener('click', function(e) {
-  if (!e.target.closest('.widget, .hover-btn, .pill-cancel, .pill-stop, .circle-cancel')) {
+  if (!e.target.closest('.widget, .hover-btn, .pill-cancel, .pill-stop, .circle-cancel, .undo-bar, .undo-btn')) {
     if (ignoreDisabled) {
       ignoreDisabled = false;
       window.electronAPI?.setIgnoreMouseEvents(true);
@@ -494,7 +509,7 @@ document.addEventListener('click', function(e) {
 
 /* ---- Drag handling ---- */
 widget.addEventListener('mousedown', function(e) {
-  if (currentState === 'canceling') return;
+  if (document.getElementById('undo-bar').classList.contains('visible')) return;
   if (e.target.closest('.hover-btn') || e.target.closest('.pill-cancel') || e.target.closest('.pill-stop')) return;
   isDragging = false;
   wasDragged = false;
@@ -669,12 +684,8 @@ function setState(newState, cfg) {
   currentState = newState;
   clearHoverActions();
 
-  // Countdown: start on canceling, stop on any other state
-  if (newState === 'canceling') {
-    startCountdown(3000);
-  } else {
-    stopCountdown();
-  }
+  // Hide undo bar on any state change (main process controls showing it)
+  stopCountdown();
 
   var isIdle = newState === 'idle';
   var isPill = !isIdle;
@@ -800,7 +811,6 @@ const INDICATOR_KEYS: Record<string, string> = {
   enhancing: "indicator.enhancing",
   error: "indicator.nothingHeard",
   canceled: "indicator.canceled",
-  canceling: "indicator.canceling",
 };
 
 const PILL_MODES: Record<string, Omit<PillModeConfig, "labelText">> = {
@@ -810,7 +820,6 @@ const PILL_MODES: Record<string, Omit<PillModeConfig, "labelText">> = {
   enhancing:    { color: "#44aaff", icon: "dot", showLabel: true, showCancel: true, showStop: false, animation: "pulse" },
   error:        { color: "#fbbf24", icon: "x-icon", showLabel: true, showCancel: false, showStop: false, animation: "glow" },
   canceled:     { color: "#fbbf24", icon: "x-icon", showLabel: true, showCancel: false, showStop: false, animation: "glow" },
-  canceling:    { color: "#f59e0b", icon: "x-icon", showLabel: true, showCancel: false, showStop: false, animation: "none" },
 };
 
 export class HudWindow {
@@ -925,7 +934,7 @@ export class HudWindow {
     this.currentState = "idle";
   }
 
-  setState(state: HudState, customLabel?: string): void {
+  setState(state: HudState, customLabel?: string, suppressFlash = false): void {
     this.clearFlashTimer();
     this.clearHideTimer();
     this.currentState = state;
@@ -944,7 +953,7 @@ export class HudWindow {
       this.execSetScale(1.0);
     }
 
-    if (state === "error" || state === "canceled") {
+    if ((state === "error" || state === "canceled") && !suppressFlash) {
       const delay = state === "error" ? 3000 : 1500;
       const ft = setTimeout(() => {
         this.flashTimer = null;
@@ -998,6 +1007,16 @@ export class HudWindow {
 
   showCanceled(): void {
     this.setState("canceled");
+  }
+
+  showUndoBar(durationMs = 3000): void {
+    const undoLabel = t("indicator.undo");
+    this.execJs(`document.getElementById('undo-label').textContent = ${JSON.stringify(undoLabel)}`);
+    this.execJs(`startCountdown(${durationMs})`);
+  }
+
+  hideUndoBar(): void {
+    this.execJs(`stopCountdown()`);
   }
 
   isVisible(): boolean {
