@@ -1,5 +1,4 @@
 import { useState, useCallback } from "react";
-import { recordAudio } from "../utils/record-audio";
 import type { TranscribeResult } from "../../preload/index";
 
 export function useTranscriptionTest(defaultDuration = 3) {
@@ -12,9 +11,10 @@ export function useTranscriptionTest(defaultDuration = 3) {
     setResult(null);
     setError(null);
     try {
-      const recording = await recordAudio(duration ?? defaultDuration);
-      const transcribeResult = await window.voxApi.pipeline.testTranscribe(recording);
-      if (transcribeResult.rawText) {
+      const secs = typeof duration === "number" ? duration : defaultDuration;
+      const text = await window.voxApi.whisper.test(secs);
+      if (text) {
+        const transcribeResult: TranscribeResult = { rawText: text, correctedText: null, llmError: null };
         setResult(transcribeResult);
         return transcribeResult;
       } else {

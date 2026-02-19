@@ -1,6 +1,7 @@
 import { useT } from "../../../i18n-context";
 import { useOnboardingStore } from "../use-onboarding-store";
 import { usePermissionRequest } from "../../../hooks/use-permission-request";
+import { useDevOverrideValue } from "../../../hooks/use-dev-override";
 import { useConfigStore } from "../../../stores/config-store";
 import { PermissionRequest } from "../../ui/PermissionRequest";
 import { MicIcon, LockIcon } from "../../../../shared/icons";
@@ -12,6 +13,23 @@ export function PermissionsStep() {
   const next = useOnboardingStore((s) => s.next);
   const config = useConfigStore((s) => s.config);
   const perm = usePermissionRequest();
+
+  const devMicOverride = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("microphonePermission", undefined)
+    : undefined;
+
+  const devAccOverride = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("accessibilityPermission", undefined)
+    : undefined;
+
+  const micGranted = devMicOverride !== undefined
+    ? devMicOverride === "granted"
+    : perm.microphone.granted;
+  const accGranted = devAccOverride !== undefined
+    ? !!devAccOverride
+    : perm.accessibility.granted;
 
   const holdShortcut = config?.shortcuts.hold || "Alt+Space";
 
@@ -29,7 +47,7 @@ export function PermissionsStep() {
           icon={<MicIcon width={20} height={20} />}
           name={t("onboarding.permissions.microphoneLabel")}
           description={t("onboarding.permissions.microphoneDesc")}
-          granted={perm.microphone.granted}
+          granted={micGranted}
           buttonText={t("onboarding.permissions.grantAccess")}
           onRequest={perm.microphone.request}
           requesting={perm.microphone.requesting}
@@ -38,7 +56,7 @@ export function PermissionsStep() {
           icon={<LockIcon width={20} height={20} />}
           name={t("onboarding.permissions.accessibilityLabel")}
           description={t("onboarding.permissions.accessibilityDesc", { shortcut: holdShortcut })}
-          granted={perm.accessibility.granted}
+          granted={accGranted}
           buttonText={t("onboarding.permissions.openSettings")}
           onRequest={perm.accessibility.request}
         />
@@ -49,7 +67,7 @@ export function PermissionsStep() {
       <button
         className={`${btn.btn} ${btn.primary} ${styles.ctaButton}`}
         onClick={next}
-        disabled={!perm.microphone.granted || !perm.accessibility.granted}
+        disabled={!micGranted || !accGranted}
       >
         {t("onboarding.navigation.continue")}
       </button>

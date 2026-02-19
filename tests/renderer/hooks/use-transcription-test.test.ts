@@ -4,10 +4,6 @@ import { renderHook, act, cleanup } from "@testing-library/react";
 import { installVoxApiMock, resetStores } from "../helpers/setup";
 import type { VoxAPI } from "../../../src/preload/index";
 
-vi.mock("../../../src/renderer/utils/record-audio", () => ({
-  recordAudio: vi.fn().mockResolvedValue({ audioBuffer: [0], sampleRate: 16000 }),
-}));
-
 let mockApi: VoxAPI;
 
 beforeEach(() => {
@@ -31,11 +27,7 @@ describe("useTranscriptionTest", () => {
   });
 
   it("should run test and set result on success", async () => {
-    vi.mocked(mockApi.pipeline.testTranscribe).mockResolvedValue({
-      rawText: "hello world",
-      correctedText: "Hello, world!",
-      llmError: null,
-    });
+    vi.mocked(mockApi.whisper.test).mockResolvedValue("hello world");
     const { useTranscriptionTest } = await import(
       "../../../src/renderer/hooks/use-transcription-test"
     );
@@ -43,12 +35,12 @@ describe("useTranscriptionTest", () => {
     await act(async () => { await result.current.run(); });
     expect(result.current.testing).toBe(false);
     expect(result.current.result?.rawText).toBe("hello world");
-    expect(result.current.result?.correctedText).toBe("Hello, world!");
+    expect(result.current.result?.correctedText).toBeNull();
     expect(result.current.error).toBeNull();
   });
 
   it("should set error on failure", async () => {
-    vi.mocked(mockApi.pipeline.testTranscribe).mockRejectedValue(new Error("Model not loaded"));
+    vi.mocked(mockApi.whisper.test).mockRejectedValue(new Error("Model not loaded"));
     const { useTranscriptionTest } = await import(
       "../../../src/renderer/hooks/use-transcription-test"
     );
@@ -60,11 +52,7 @@ describe("useTranscriptionTest", () => {
   });
 
   it("should set error for empty transcription", async () => {
-    vi.mocked(mockApi.pipeline.testTranscribe).mockResolvedValue({
-      rawText: "",
-      correctedText: null,
-      llmError: null,
-    });
+    vi.mocked(mockApi.whisper.test).mockResolvedValue("");
     const { useTranscriptionTest } = await import(
       "../../../src/renderer/hooks/use-transcription-test"
     );
@@ -74,27 +62,18 @@ describe("useTranscriptionTest", () => {
     expect(result.current.result).toBeNull();
   });
 
-  it("should accept custom duration", async () => {
-    const { recordAudio } = await import("../../../src/renderer/utils/record-audio");
-    vi.mocked(mockApi.pipeline.testTranscribe).mockResolvedValue({
-      rawText: "test",
-      correctedText: null,
-      llmError: null,
-    });
+  it("should pass custom duration to whisper.test", async () => {
+    vi.mocked(mockApi.whisper.test).mockResolvedValue("test");
     const { useTranscriptionTest } = await import(
       "../../../src/renderer/hooks/use-transcription-test"
     );
     const { result } = renderHook(() => useTranscriptionTest(5));
     await act(async () => { await result.current.run(); });
-    expect(recordAudio).toHaveBeenCalledWith(5);
+    expect(mockApi.whisper.test).toHaveBeenCalledWith(5);
   });
 
   it("should reset state", async () => {
-    vi.mocked(mockApi.pipeline.testTranscribe).mockResolvedValue({
-      rawText: "hello",
-      correctedText: null,
-      llmError: null,
-    });
+    vi.mocked(mockApi.whisper.test).mockResolvedValue("hello");
     const { useTranscriptionTest } = await import(
       "../../../src/renderer/hooks/use-transcription-test"
     );

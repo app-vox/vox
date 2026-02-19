@@ -49,15 +49,15 @@ export function WhisperPanel() {
       <div className={card.body}>
         <OfflineBanner />
         <ModelSelector
-          models={modelManager.models}
-          selectedSize={modelManager.selectedSize}
+          models={setupComplete === false ? modelManager.models.map((m) => ({ ...m, downloaded: false })) : modelManager.models}
+          selectedSize={setupComplete === false ? "" : modelManager.selectedSize}
           downloading={modelManager.downloading}
           progress={modelManager.progress}
           onSelect={handleSelect}
           onDownload={modelManager.download}
           onCancel={modelManager.cancelDownload}
           onDelete={modelManager.deleteModel}
-          downloadDisabled={!online}
+          downloadDisabled={!online || setupComplete === false}
         />
 
         <div className={form.testSection}>
