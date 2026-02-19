@@ -3,7 +3,7 @@ export interface ShortcutCallbacks {
   onStop: () => void;
 }
 
-type RecordingState = "idle" | "hold" | "toggle" | "processing";
+type RecordingState = "idle" | "hold" | "toggle" | "processing" | "canceling";
 
 export class ShortcutStateMachine {
   private state: RecordingState = "idle";
@@ -15,7 +15,7 @@ export class ShortcutStateMachine {
 
   /** Called when the hold shortcut key is pressed down. */
   handleHoldKeyDown(): void {
-    if (this.state === "processing") return;
+    if (this.state === "processing" || this.state === "canceling") return;
 
     if (this.state === "idle") {
       this.state = "hold";
@@ -25,6 +25,7 @@ export class ShortcutStateMachine {
 
   /** Called when the hold shortcut key is released. */
   handleHoldKeyUp(): void {
+    if (this.state === "canceling") return;
     if (this.state === "hold") {
       this.state = "idle";
       this.callbacks.onStop();
@@ -32,7 +33,7 @@ export class ShortcutStateMachine {
   }
 
   handleTogglePress(): void {
-    if (this.state === "processing") return;
+    if (this.state === "processing" || this.state === "canceling") return;
 
     if (this.state === "idle") {
       this.state = "toggle";
@@ -51,6 +52,11 @@ export class ShortcutStateMachine {
   /** Enter processing state — ignores all shortcut input until setIdle() is called. */
   setProcessing(): void {
     this.state = "processing";
+  }
+
+  /** Enter canceling state — ignores all shortcut input until setIdle() or undone. */
+  setCanceling(): void {
+    this.state = "canceling";
   }
 
   /** Return to idle after processing completes. */
