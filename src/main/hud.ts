@@ -1079,7 +1079,7 @@ export class HudWindow {
   }
 
   private positionWindow(): void {
-    if (!this.window) return;
+    if (!this.window || this.window.isDestroyed()) return;
     const display = this.targetDisplayId !== null
       ? screen.getAllDisplays().find(d => d.id === this.targetDisplayId) ?? screen.getPrimaryDisplay()
       : screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
