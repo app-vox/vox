@@ -351,6 +351,20 @@ export class ShortcutManager {
     this.updateTrayState();
   }
 
+  private pauseCancelTimer(): void {
+    if (this.cancelTimer) {
+      clearTimeout(this.cancelTimer);
+      this.cancelTimer = null;
+    }
+  }
+
+  private resumeCancelTimer(remainMs: number): void {
+    if (this.stateMachine.getState() !== RecordingState.Canceling) return;
+    this.cancelTimer = setTimeout(() => {
+      this.confirmCancel();
+    }, remainMs);
+  }
+
   /** Cancel current operation silently and immediately start a new recording. */
   private restartRecording(mode: "hold" | "toggle" = "toggle"): void {
     slog.info("Restart requested (mode=%s) — aborting current pipeline and starting new recording", mode);
@@ -534,6 +548,14 @@ export class ShortcutManager {
 
     ipcMain.handle("indicator:undo-cancel", () => {
       this.undoCancel();
+    });
+
+    ipcMain.handle("indicator:pause-cancel", () => {
+      this.pauseCancelTimer();
+    });
+
+    ipcMain.handle("indicator:resume-cancel", (_event, remainMs: number) => {
+      this.resumeCancelTimer(remainMs);
     });
 
     ipcMain.handle("hud:start-recording", () => {

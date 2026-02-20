@@ -372,7 +372,7 @@ function buildHudHtml(): string {
   /* Undo bar (below widget during graceful cancel) */
   .undo-bar {
     display: flex; align-items: center; gap: 0;
-    margin-top: 0;
+    margin-top: -1px;
     opacity: 0; pointer-events: none;
     transition: opacity 0.2s ease;
     flex-shrink: 0;
@@ -758,23 +758,56 @@ function setAudioLevels(levels) {
     bar.style.height = h + 'px';
   });
 }
+var countdownTotalMs = 0;
+var countdownPaused = false;
+
 function startCountdown(durationMs) {
   var bar = document.getElementById('undo-bar');
   var fill = document.getElementById('countdown-fill');
+  countdownTotalMs = durationMs;
+  countdownPaused = false;
   bar.classList.add('visible');
   fill.style.transition = 'none';
   fill.style.width = '100%';
-  fill.offsetWidth; // force reflow
+  fill.offsetWidth;
   fill.style.transition = 'width ' + (durationMs / 1000) + 's linear';
   fill.style.width = '0%';
+}
+function pauseCountdown() {
+  if (countdownPaused) return;
+  countdownPaused = true;
+  var fill = document.getElementById('countdown-fill');
+  var current = parseFloat(getComputedStyle(fill).width);
+  var track = parseFloat(getComputedStyle(fill.parentElement).width);
+  var pct = track > 0 ? (current / track) * 100 : 0;
+  fill.style.transition = 'none';
+  fill.style.width = pct + '%';
+  window.electronAPI?.pauseCancelTimer();
+}
+function resumeCountdown() {
+  if (!countdownPaused) return;
+  countdownPaused = false;
+  var fill = document.getElementById('countdown-fill');
+  var current = parseFloat(getComputedStyle(fill).width);
+  var track = parseFloat(getComputedStyle(fill.parentElement).width);
+  var pct = track > 0 ? current / track : 0;
+  var remainMs = pct * countdownTotalMs;
+  fill.offsetWidth;
+  fill.style.transition = 'width ' + (remainMs / 1000) + 's linear';
+  fill.style.width = '0%';
+  window.electronAPI?.resumeCancelTimer(remainMs);
 }
 function stopCountdown() {
   var bar = document.getElementById('undo-bar');
   var fill = document.getElementById('countdown-fill');
+  countdownPaused = false;
   fill.style.transition = 'none';
   fill.style.width = '0%';
   bar.classList.remove('visible');
 }
+
+document.getElementById('undo-bar').addEventListener('mouseenter', function() { pauseCountdown(); });
+document.getElementById('undo-bar').addEventListener('mouseleave', function() { resumeCountdown(); });
 
 function setPerformanceFlags(reduceAnimations, reduceEffects) {
   var id = 'perf-overrides';
