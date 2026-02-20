@@ -32,6 +32,17 @@ Supported providers: `openai`, `anthropic`, `deepseek`, `glm`, `litellm`, `bedro
 
 The `whisper.modelPath` is only needed for full pipeline tests with audio files. For LLM-only correction tests, it can be empty.
 
+## Test modes
+
+The tests run in one of two modes depending on your configuration:
+
+| Mode | What runs | When |
+|------|-----------|------|
+| **Full pipeline** (default) | Audio file → Whisper STT → LLM correction | `whisper.modelPath` points to a valid model file |
+| **LLM-only** (fallback) | `spokenText` → LLM correction | `whisper.modelPath` is empty or missing |
+
+Full pipeline mode exercises the entire transcription chain, including how well Whisper handles the audio. LLM-only mode isolates the LLM correction stage using the scenario's `spokenText` as a simulated Whisper output.
+
 ## Running
 
 ```bash

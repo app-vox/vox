@@ -4,6 +4,9 @@ export default defineConfig({
   test: {
     include: ["tests/pipeline/**/*.test.ts"],
     testTimeout: 60_000,
-    setupFiles: ["tests/helpers/mock-native-addons.ts"],
+    setupFiles: [
+      "tests/helpers/mock-native-addons.ts",
+      "tests/pipeline/helpers/mock-electron.ts",
+    ],
   },
 });
