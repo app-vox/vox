@@ -57,7 +57,7 @@ export function WhisperPanel() {
           onDownload={modelManager.download}
           onCancel={modelManager.cancelDownload}
           onDelete={modelManager.deleteModel}
-          downloadDisabled={!online || setupComplete === false}
+          downloadDisabled={!online}
         />
 
         <div className={form.testSection}>
