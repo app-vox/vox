@@ -8,7 +8,7 @@ const CIRCLE_SIZE = 42;
 const PILL_WIDTH = 200;
 const PILL_HEIGHT = 32;
 const WIN_WIDTH = 320;
-const WIN_HEIGHT = 100;
+const WIN_HEIGHT = 120;
 const DOCK_MARGIN = 24;
 const MIN_SCALE = 0.55;
 
@@ -372,7 +372,7 @@ function buildHudHtml(): string {
   /* Undo bar (below widget during graceful cancel) */
   .undo-bar {
     display: flex; align-items: center; gap: 0;
-    margin-top: 3px;
+    margin-top: 2px;
     opacity: 0; pointer-events: none;
     transition: opacity 0.2s ease;
     flex-shrink: 0;
@@ -491,7 +491,7 @@ interactiveEls.forEach(function(el) {
     window.electronAPI?.setIgnoreMouseEvents(false);
   });
   el.addEventListener('mouseleave', function() {
-    if (currentState !== 'idle') return;
+    if (currentState !== 'idle' && currentState !== 'transcribing' && currentState !== 'enhancing') return;
     ignoreDisabled = false;
     window.electronAPI?.setIgnoreMouseEvents(true);
   });
@@ -558,6 +558,10 @@ widget.addEventListener('click', function(e) {
   }
   if (!isCircle && currentState === 'listening') {
     window.electronAPI?.hudStopRecording();
+  }
+  if (!isCircle && currentState === 'canceled' && document.getElementById('undo-bar').classList.contains('visible')) {
+    window.electronAPI?.cancelRecording();
+    return;
   }
   if (!isCircle && (currentState === 'error' || currentState === 'canceled')) {
     window.electronAPI?.hudDismiss();
@@ -724,9 +728,13 @@ function setState(newState, cfg) {
     }
   }
 
-  if (isPill) {
+  var interactivePill = isPill && newState !== 'transcribing' && newState !== 'enhancing';
+  if (interactivePill) {
     ignoreDisabled = true;
     window.electronAPI?.setIgnoreMouseEvents(false);
+  } else if (isPill) {
+    ignoreDisabled = false;
+    window.electronAPI?.setIgnoreMouseEvents(true);
   } else if (isIdle && !isMouseOver) {
     ignoreDisabled = false;
     window.electronAPI?.setIgnoreMouseEvents(true);

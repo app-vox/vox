@@ -233,6 +233,10 @@ export class ShortcutManager {
 
   cancelRecording(): void {
     const state = this.stateMachine.getState();
+    if (state === "canceling") {
+      this.confirmCancel();
+      return;
+    }
     if (state === "hold" || state === "toggle" || state === "processing") {
       slog.info("Graceful cancel requested");
       this.micActiveAt = 0;
