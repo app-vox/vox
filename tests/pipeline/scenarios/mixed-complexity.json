@@ -1,0 +1,111 @@
+[
+  {
+    "id": "mixed-complexity-001",
+    "description": "Fillers + false start + speech recognition error: a project update with scattered fillers, an abandoned sentence start, and a homophone error (their/there)",
+    "spokenText": "um so the project is we actually um we finished the backend work last week and uh the front end team is pushing there changes today so I think we're on track for the release",
+    "audioFile": "mixed-complexity/001.wav",
+    "expectedOutput": "We finished the backend work last week, and the front end team is pushing their changes today, so I think we're on track for the release.",
+    "minSimilarity": 0.75,
+    "assertions": [
+      { "type": "must_not_contain", "value": "um" },
+      { "type": "must_not_contain", "value": "uh" },
+      { "type": "must_not_contain", "value": "the project is we actually" },
+      { "type": "must_contain", "value": "finished the backend work" },
+      { "type": "must_contain", "value": "their changes" },
+      { "type": "must_not_contain", "value": "there changes" },
+      { "type": "must_contain", "value": "on track for the release" }
+    ]
+  },
+  {
+    "id": "mixed-complexity-002",
+    "description": "Self-correction + number formatting: speaker dictates a date, corrects it mid-sentence, and includes a dollar amount that should be properly formatted",
+    "spokenText": "the invoice was sent on march fifteenth no wait march seventeenth and the total amount is twelve thousand five hundred dollars which is due within thirty days",
+    "audioFile": "mixed-complexity/002.wav",
+    "expectedOutput": "The invoice was sent on March 17th, and the total amount is $12,500, which is due within 30 days.",
+    "minSimilarity": 0.70,
+    "assertions": [
+      { "type": "must_not_contain", "value": "no wait" },
+      { "type": "must_not_contain", "value": "fifteenth" },
+      { "type": "must_contain", "value": "March" },
+      { "type": "must_contain", "value": "17" },
+      { "type": "must_contain", "value": "12" },
+      { "type": "must_contain", "value": "500" }
+    ]
+  },
+  {
+    "id": "mixed-complexity-003",
+    "description": "Dense disfluencies in realistic meeting speech: heavy fillers, incomplete thoughts, restarts, and hedging language across multiple sentences",
+    "spokenText": "so um I think the the thing is uh we need to like figure out the timeline because uh you know Sarah was saying that we we might not have enough um bandwidth and honestly I I kind of agree with her so maybe we should uh push the deadline back a week or something",
+    "audioFile": "mixed-complexity/003.wav",
+    "expectedOutput": "I think we need to figure out the timeline because Sarah was saying that we might not have enough bandwidth, and honestly I kind of agree with her. So maybe we should push the deadline back a week or something.",
+    "minSimilarity": 0.75,
+    "assertions": [
+      { "type": "must_not_contain", "value": "um" },
+      { "type": "must_not_contain", "value": "uh" },
+      { "type": "must_not_contain", "value": "the the" },
+      { "type": "must_not_contain", "value": "we we" },
+      { "type": "must_not_contain", "value": "I I" },
+      { "type": "must_contain", "value": "figure out the timeline" },
+      { "type": "must_contain", "value": "Sarah" },
+      { "type": "must_contain", "value": "bandwidth" },
+      { "type": "must_contain", "value": "push the deadline back" }
+    ]
+  },
+  {
+    "id": "mixed-complexity-004",
+    "description": "Technical content with jargon + fillers + self-correction: speaker discusses a software architecture decision with natural disfluencies and one mid-sentence correction",
+    "spokenText": "um so the API gateway is uh rate limiting our requests and I think we should switch to a synchronous, sorry, asynchronous processing model using a message queue like uh rabbit mq or kafka to handle the throughput because right now we're dropping like twenty percent of events",
+    "audioFile": "mixed-complexity/004.wav",
+    "expectedOutput": "The API gateway is rate limiting our requests, and I think we should switch to an asynchronous processing model using a message queue like RabbitMQ or Kafka to handle the throughput, because right now we're dropping like 20% of events.",
+    "minSimilarity": 0.75,
+    "assertions": [
+      { "type": "must_not_contain", "value": "um" },
+      { "type": "must_not_contain", "value": "uh" },
+      { "type": "must_not_contain", "value": "sorry" },
+      { "type": "must_not_contain", "value": "synchronous," },
+      { "type": "must_contain", "value": "asynchronous" },
+      { "type": "must_contain", "value": "rate limiting" },
+      { "type": "must_contain", "value": "message queue" },
+      { "type": "must_contain", "value": "RabbitMQ" },
+      { "type": "must_contain", "value": "Kafka" }
+    ]
+  },
+  {
+    "id": "mixed-complexity-005",
+    "description": "Emotional speech with exclamations + profanity + fillers: frustrated speaker venting about a production incident with strong language and filler words",
+    "spokenText": "oh my god um the damn deployment broke production again are you serious like we just fixed this shit last night and uh nobody even bothered to run the tests what the hell is going on with this team",
+    "audioFile": "mixed-complexity/005.wav",
+    "expectedOutput": "Oh my god, the damn deployment broke production again. Are you serious? We just fixed this shit last night, and nobody even bothered to run the tests. What the hell is going on with this team?",
+    "minSimilarity": 0.80,
+    "assertions": [
+      { "type": "must_not_contain", "value": "um" },
+      { "type": "must_not_contain", "value": "uh" },
+      { "type": "must_contain", "value": "damn" },
+      { "type": "must_contain", "value": "shit" },
+      { "type": "must_contain", "value": "hell" },
+      { "type": "must_not_contain", "value": "d***" },
+      { "type": "must_not_contain", "value": "s***" },
+      { "type": "must_contain", "value": "broke production" },
+      { "type": "must_contain", "value": "run the tests" }
+    ]
+  },
+  {
+    "id": "mixed-complexity-006",
+    "description": "Long dictation with multiple sentences, mixed punctuation needs, and a self-correction: someone dictating an email naturally with pauses and one correction marker",
+    "spokenText": "hi david um I wanted to follow up on our conversation from yesterday regarding the partnership proposal I think we should move forward with option a actually I mean option b since it gives us more flexibility on the revenue share and also I'd like to schedule a call with your legal team sometime next week to go over the contract details please let me know what times work best for you thanks",
+    "audioFile": "mixed-complexity/006.wav",
+    "expectedOutput": "Hi David, I wanted to follow up on our conversation from yesterday regarding the partnership proposal. I think we should move forward with option B since it gives us more flexibility on the revenue share. Also, I'd like to schedule a call with your legal team sometime next week to go over the contract details. Please let me know what times work best for you. Thanks.",
+    "minSimilarity": 0.75,
+    "assertions": [
+      { "type": "must_not_contain", "value": "um" },
+      { "type": "must_not_contain", "value": "actually I mean" },
+      { "type": "must_not_contain", "value": "option a" },
+      { "type": "must_not_contain", "value": "option A" },
+      { "type": "must_contain", "value": "David" },
+      { "type": "must_contain", "value": "option B" },
+      { "type": "must_contain", "value": "revenue share" },
+      { "type": "must_contain", "value": "legal team" },
+      { "type": "must_contain", "value": "contract details" }
+    ]
+  }
+]

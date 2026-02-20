@@ -1,0 +1,108 @@
+[
+  {
+    "id": "number-date-formatting-001",
+    "description": "Full date spoken out — day, month, and year as words should be converted to standard numeric date format",
+    "spokenText": "the deadline is January fifteenth twenty twenty-six",
+    "audioFile": "number-date-formatting/001.wav",
+    "expectedOutput": "The deadline is January 15, 2026.",
+    "minSimilarity": 0.85,
+    "assertions": [
+      { "type": "must_contain", "value": "January 15" },
+      { "type": "must_contain", "value": "2026" },
+      { "type": "must_not_contain", "value": "fifteenth" },
+      { "type": "must_not_contain", "value": "twenty twenty" },
+      { "type": "must_end_with", "value": "." }
+    ]
+  },
+  {
+    "id": "number-date-formatting-002",
+    "description": "Time spoken out — hour and minutes as words should be converted to standard time format with AM/PM",
+    "spokenText": "the meeting starts at five thirty PM",
+    "audioFile": "number-date-formatting/002.wav",
+    "expectedOutput": "The meeting starts at 5:30 PM.",
+    "minSimilarity": 0.85,
+    "assertions": [
+      { "type": "must_contain", "value": "5:30 PM" },
+      { "type": "must_not_contain", "value": "five thirty" },
+      { "type": "must_contain", "value": "meeting starts" },
+      { "type": "must_end_with", "value": "." }
+    ]
+  },
+  {
+    "id": "number-date-formatting-003",
+    "description": "Currency — spoken dollar amount with magnitude words should be converted to standard currency notation",
+    "spokenText": "the project budget is three hundred thousand dollars",
+    "audioFile": "number-date-formatting/003.wav",
+    "expectedOutput": "The project budget is $300,000.",
+    "minSimilarity": 0.85,
+    "assertions": [
+      { "type": "must_contain", "value": "$300,000" },
+      { "type": "must_not_contain", "value": "three hundred" },
+      { "type": "must_not_contain", "value": "thousand dollars" },
+      { "type": "must_contain", "value": "project budget" },
+      { "type": "must_end_with", "value": "." }
+    ]
+  },
+  {
+    "id": "number-date-formatting-004",
+    "description": "Small casual numbers — values one through ten in conversational speech should stay as words, not digits",
+    "spokenText": "I have two cats and three dogs",
+    "audioFile": "number-date-formatting/004.wav",
+    "expectedOutput": "I have two cats and three dogs.",
+    "minSimilarity": 0.90,
+    "assertions": [
+      { "type": "must_contain", "value": "two cats" },
+      { "type": "must_contain", "value": "three dogs" },
+      { "type": "must_not_contain", "value": "2 cats" },
+      { "type": "must_not_contain", "value": "3 dogs" },
+      { "type": "must_end_with", "value": "." }
+    ]
+  },
+  {
+    "id": "number-date-formatting-005",
+    "description": "Large number — multi-word number above ten should be converted to digits with proper comma separators",
+    "spokenText": "the company has fourteen thousand five hundred employees",
+    "audioFile": "number-date-formatting/005.wav",
+    "expectedOutput": "The company has 14,500 employees.",
+    "minSimilarity": 0.85,
+    "assertions": [
+      { "type": "must_contain", "value": "14,500" },
+      { "type": "must_not_contain", "value": "fourteen thousand" },
+      { "type": "must_not_contain", "value": "five hundred" },
+      { "type": "must_contain", "value": "employees" },
+      { "type": "must_end_with", "value": "." }
+    ]
+  },
+  {
+    "id": "number-date-formatting-006",
+    "description": "Phone number — individually spoken digits should be grouped into a standard phone number format based on context",
+    "spokenText": "call me at five five five one two three four five six seven",
+    "audioFile": "number-date-formatting/006.wav",
+    "expectedOutput": "Call me at 555-123-4567.",
+    "minSimilarity": 0.85,
+    "assertions": [
+      { "type": "must_match_regex", "value": "\\d{3}[\\-.]\\d{3}[\\-.]\\d{4}" },
+      { "type": "must_contain", "value": "555" },
+      { "type": "must_contain", "value": "4567" },
+      { "type": "must_not_contain", "value": "five five five" },
+      { "type": "must_contain", "value": "Call me" }
+    ]
+  },
+  {
+    "id": "number-date-formatting-007",
+    "description": "Mixed numbers and dates in a passage — a sentence containing a date, a time, and a currency amount should all be formatted correctly",
+    "spokenText": "the invoice dated March third twenty twenty-six is due by two PM and the total is nine thousand two hundred fifty dollars",
+    "audioFile": "number-date-formatting/007.wav",
+    "expectedOutput": "The invoice dated March 3, 2026 is due by 2 PM, and the total is $9,250.",
+    "minSimilarity": 0.85,
+    "assertions": [
+      { "type": "must_contain", "value": "March 3" },
+      { "type": "must_contain", "value": "2026" },
+      { "type": "must_contain", "value": "2 PM" },
+      { "type": "must_contain", "value": "$9,250" },
+      { "type": "must_not_contain", "value": "third" },
+      { "type": "must_not_contain", "value": "nine thousand" },
+      { "type": "must_end_with", "value": "." }
+    ]
+  }
+]

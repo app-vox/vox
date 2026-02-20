@@ -1,0 +1,84 @@
+[
+  {
+    "id": "false-starts-001",
+    "description": "Simple word repetition — a single repeated word at the start should be collapsed into one occurrence",
+    "spokenText": "i i think we should proceed with the current plan",
+    "audioFile": "false-starts/001.wav",
+    "expectedOutput": "I think we should proceed with the current plan.",
+    "minSimilarity": 0.90,
+    "assertions": [
+      { "type": "must_contain", "value": "I think we should proceed" },
+      { "type": "must_not_contain", "value": "I I" },
+      { "type": "must_contain", "value": "current plan" }
+    ]
+  },
+  {
+    "id": "false-starts-002",
+    "description": "Phrase repetition — a repeated clause separated by a comma should be deduplicated into a single occurrence",
+    "spokenText": "i was i was thinking about the project and how we can improve it",
+    "audioFile": "false-starts/002.wav",
+    "expectedOutput": "I was thinking about the project and how we can improve it.",
+    "minSimilarity": 0.90,
+    "assertions": [
+      { "type": "must_contain", "value": "I was thinking about the project" },
+      { "type": "must_contain", "value": "improve it" },
+      { "type": "must_not_contain", "value": "I was I was" },
+      { "type": "must_not_contain", "value": "I was, I was" }
+    ]
+  },
+  {
+    "id": "false-starts-003",
+    "description": "Abandoned sentence start — the speaker begins one thought, abandons it mid-way, and starts a completely different sentence",
+    "spokenText": "we should probably go with the maybe let me check the budget first before we decide",
+    "audioFile": "false-starts/003.wav",
+    "expectedOutput": "Let me check the budget first before we decide.",
+    "minSimilarity": 0.80,
+    "assertions": [
+      { "type": "must_contain", "value": "check the budget" },
+      { "type": "must_contain", "value": "before we decide" },
+      { "type": "must_not_contain", "value": "we should probably go with the" }
+    ]
+  },
+  {
+    "id": "false-starts-004",
+    "description": "Multiple false starts — the speaker tries three times before completing the thought successfully",
+    "spokenText": "the meeting is can we the meeting should be rescheduled to next wednesday",
+    "audioFile": "false-starts/004.wav",
+    "expectedOutput": "The meeting should be rescheduled to next Wednesday.",
+    "minSimilarity": 0.85,
+    "assertions": [
+      { "type": "must_contain", "value": "meeting should be rescheduled" },
+      { "type": "must_contain", "value": "next Wednesday" },
+      { "type": "must_not_contain", "value": "the meeting is can we" }
+    ]
+  },
+  {
+    "id": "false-starts-005",
+    "description": "Triple word stutter — the same word repeated three times in a row should be collapsed to a single occurrence",
+    "spokenText": "the the the problem is we don't have enough time to finish everything",
+    "audioFile": "false-starts/005.wav",
+    "expectedOutput": "The problem is we don't have enough time to finish everything.",
+    "minSimilarity": 0.90,
+    "assertions": [
+      { "type": "must_contain", "value": "The problem is" },
+      { "type": "must_contain", "value": "enough time to finish everything" },
+      { "type": "must_not_contain", "value": "the the" }
+    ]
+  },
+  {
+    "id": "false-starts-006",
+    "description": "False start interleaved with fillers — stuttering and repeated phrases mixed with filler words should all be cleaned up",
+    "spokenText": "um i was i was uh thinking that we should uh probably revisit the design",
+    "audioFile": "false-starts/006.wav",
+    "expectedOutput": "I was thinking that we should probably revisit the design.",
+    "minSimilarity": 0.85,
+    "assertions": [
+      { "type": "must_contain", "value": "I was thinking" },
+      { "type": "must_contain", "value": "revisit the design" },
+      { "type": "must_not_contain", "value": "um" },
+      { "type": "must_not_contain", "value": "uh" },
+      { "type": "must_not_contain", "value": "I was I was" },
+      { "type": "must_not_contain", "value": "I was, I was" }
+    ]
+  }
+]

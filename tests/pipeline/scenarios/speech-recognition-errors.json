@@ -1,0 +1,102 @@
+[
+  {
+    "id": "speech-recognition-errors-001",
+    "description": "Fixes their/there/they're confusion when context makes the correct form obvious",
+    "spokenText": "there going to the store and their going to be late because they forgot there keys over they're",
+    "audioFile": "speech-recognition-errors/001.wav",
+    "expectedOutput": "They're going to the store and they're going to be late because they forgot their keys over there.",
+    "minSimilarity": 0.85,
+    "assertions": [
+      { "type": "must_contain", "value": "They're going to the store" },
+      { "type": "must_contain", "value": "their keys" },
+      { "type": "must_contain", "value": "over there" },
+      { "type": "must_not_contain", "value": "there going" }
+    ]
+  },
+  {
+    "id": "speech-recognition-errors-002",
+    "description": "Fixes your/you're confusion based on grammatical context",
+    "spokenText": "your going to love this new feature and I think your the best person to review it before its release",
+    "audioFile": "speech-recognition-errors/002.wav",
+    "expectedOutput": "You're going to love this new feature and I think you're the best person to review it before its release.",
+    "minSimilarity": 0.85,
+    "assertions": [
+      { "type": "must_contain", "value": "You're going to love" },
+      { "type": "must_contain", "value": "you're the best" },
+      { "type": "must_contain", "value": "its release" },
+      { "type": "must_not_contain", "value": "your going" },
+      { "type": "must_not_contain", "value": "your the" }
+    ]
+  },
+  {
+    "id": "speech-recognition-errors-003",
+    "description": "Fixes its/it's confusion distinguishing possessive from contraction",
+    "spokenText": "its been a long day and the dog lost it's collar but its okay because its not the first time",
+    "audioFile": "speech-recognition-errors/003.wav",
+    "expectedOutput": "It's been a long day and the dog lost its collar but it's okay because it's not the first time.",
+    "minSimilarity": 0.85,
+    "assertions": [
+      { "type": "must_contain", "value": "It's been a long day" },
+      { "type": "must_contain", "value": "lost its collar" },
+      { "type": "must_contain", "value": "it's okay" },
+      { "type": "must_not_contain", "value": "its been" }
+    ]
+  },
+  {
+    "id": "speech-recognition-errors-004",
+    "description": "Corrects technical terms commonly misspelled by speech recognition engines",
+    "spokenText": "we need to update the java script code and fix the type script compiler errors in the web pack config",
+    "audioFile": "speech-recognition-errors/004.wav",
+    "expectedOutput": "We need to update the JavaScript code and fix the TypeScript compiler errors in the Webpack config.",
+    "minSimilarity": 0.85,
+    "assertions": [
+      { "type": "must_contain", "value": "JavaScript" },
+      { "type": "must_contain", "value": "TypeScript" },
+      { "type": "must_contain", "value": "Webpack" },
+      { "type": "must_not_contain", "value": "java script" },
+      { "type": "must_not_contain", "value": "java Script" },
+      { "type": "must_not_contain", "value": "type script" },
+      { "type": "must_not_contain", "value": "web pack" }
+    ]
+  },
+  {
+    "id": "speech-recognition-errors-005",
+    "description": "Resolves homophones when surrounding context makes the intended word clear",
+    "spokenText": "I don't know weather we should proceed and witch option is better for the team going forward",
+    "audioFile": "speech-recognition-errors/005.wav",
+    "expectedOutput": "I don't know whether we should proceed and which option is better for the team going forward.",
+    "minSimilarity": 0.85,
+    "assertions": [
+      { "type": "must_contain", "value": "whether we should" },
+      { "type": "must_contain", "value": "which option" },
+      { "type": "must_not_contain", "value": "weather" },
+      { "type": "must_not_contain", "value": "witch" }
+    ]
+  },
+  {
+    "id": "speech-recognition-errors-006",
+    "description": "Recovers proper nouns mistranscribed as common words when context makes the person clear",
+    "spokenText": "the report from kneel son shows that ratings dropped and we need to schedule a call with kneel son next week",
+    "audioFile": "speech-recognition-errors/006.wav",
+    "expectedOutput": "The report from Nielsen shows that ratings dropped and we need to schedule a call with Nielsen next week.",
+    "minSimilarity": 0.85,
+    "assertions": [
+      { "type": "must_contain", "value": "Nielsen" },
+      { "type": "must_not_contain", "value": "kneel son" },
+      { "type": "must_not_contain", "value": "kneel" }
+    ]
+  },
+  {
+    "id": "speech-recognition-errors-007",
+    "description": "Preserves ambiguous or uncommon words as-is per rules 12-14 when the correct replacement is uncertain",
+    "spokenText": "the caulk in the bathroom needs to be replaced and I bought some at the store yesterday",
+    "audioFile": "speech-recognition-errors/007.wav",
+    "expectedOutput": "The caulk in the bathroom needs to be replaced and I bought some at the store yesterday.",
+    "minSimilarity": 0.70,
+    "assertions": [
+      { "type": "must_contain", "value": "caulk" },
+      { "type": "must_contain", "value": "bathroom" },
+      { "type": "must_contain", "value": "store" }
+    ]
+  }
+]

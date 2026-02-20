@@ -1,0 +1,110 @@
+[
+  {
+    "id": "content-preservation-001",
+    "description": "Profanity must NOT be censored. The speaker uses strong language naturally and the output must preserve it verbatim.",
+    "spokenText": "what the fuck is wrong with this damn build it keeps breaking every single time I push and honestly I'm so fucking tired of it",
+    "audioFile": "content-preservation/001.wav",
+    "expectedOutput": "What the fuck is wrong with this damn build? It keeps breaking every single time I push, and honestly I'm so fucking tired of it.",
+    "minSimilarity": 0.95,
+    "assertions": [
+      { "type": "must_contain", "value": "fuck" },
+      { "type": "must_contain", "value": "damn" },
+      { "type": "must_contain", "value": "fucking tired" },
+      { "type": "must_not_contain", "value": "f***" },
+      { "type": "must_not_contain", "value": "d***" },
+      { "type": "must_not_contain", "value": "f**k" },
+      { "type": "must_not_contain", "value": "darn" }
+    ]
+  },
+  {
+    "id": "content-preservation-002",
+    "description": "Slang and informal language must NOT be elevated to formal register. Contractions like gonna, wanna, ain't must be kept as spoken.",
+    "spokenText": "I'm gonna wanna check that later cuz it ain't working right and y'all should prolly know about it",
+    "audioFile": "content-preservation/002.wav",
+    "expectedOutput": "I'm gonna wanna check that later cuz it ain't working right, and y'all should prolly know about it.",
+    "minSimilarity": 0.92,
+    "assertions": [
+      { "type": "must_contain", "value": "gonna" },
+      { "type": "must_contain", "value": "wanna" },
+      { "type": "must_contain", "value": "ain't" },
+      { "type": "must_contain", "value": "y'all" },
+      { "type": "must_contain", "value": "prolly" },
+      { "type": "must_contain", "value": "cuz" },
+      { "type": "must_not_contain", "value": "going to" },
+      { "type": "must_not_contain", "value": "want to" },
+      { "type": "must_not_contain", "value": "is not" },
+      { "type": "must_not_contain", "value": "probably" },
+      { "type": "must_not_contain", "value": "because" }
+    ]
+  },
+  {
+    "id": "content-preservation-003",
+    "description": "Unusual but correct word choice must NOT be simplified. The speaker deliberately uses a less common word and the LLM must not replace it with a simpler synonym.",
+    "spokenText": "we need to ameliorate the onboarding flow because new users find it rather recondite and that obfuscates the core value proposition",
+    "audioFile": "content-preservation/003.wav",
+    "expectedOutput": "We need to ameliorate the onboarding flow because new users find it rather recondite, and that obfuscates the core value proposition.",
+    "minSimilarity": 0.93,
+    "assertions": [
+      { "type": "must_contain", "value": "ameliorate" },
+      { "type": "must_contain", "value": "recondite" },
+      { "type": "must_contain", "value": "obfuscates" },
+      { "type": "must_not_contain", "value": "improve" },
+      { "type": "must_not_contain", "value": "confusing" },
+      { "type": "must_not_contain", "value": "hides" },
+      { "type": "must_not_contain", "value": "obscures" }
+    ]
+  },
+  {
+    "id": "content-preservation-004",
+    "description": "Unclear or unusual word that could be a proper noun or specialized term must be kept as-is. The LLM must not guess or replace it.",
+    "spokenText": "the results from the Kesselman analysis showed that the Bryntirion dataset outperformed everything else by a significant margin",
+    "audioFile": "content-preservation/004.wav",
+    "expectedOutput": "The results from the Kesselman analysis showed that the Bryntirion dataset outperformed everything else by a significant margin.",
+    "minSimilarity": 0.95,
+    "assertions": [
+      { "type": "must_contain", "value": "Kesselman" },
+      { "type": "must_contain", "value": "Bryntirion" },
+      { "type": "must_not_contain", "value": "Casselman" },
+      { "type": "must_not_contain", "value": "Princeton" },
+      { "type": "must_not_contain", "value": "Burlington" }
+    ]
+  },
+  {
+    "id": "content-preservation-005",
+    "description": "Technical jargon must NOT be simplified. Dense specialized terminology from software engineering and medicine must remain intact.",
+    "spokenText": "the idempotent endpoint uses a CRDT-based reconciliation strategy with vector clocks and the hematologic panel showed thrombocytopenia with concurrent leukocytosis",
+    "audioFile": "content-preservation/005.wav",
+    "expectedOutput": "The idempotent endpoint uses a CRDT-based reconciliation strategy with vector clocks, and the hematologic panel showed thrombocytopenia with concurrent leukocytosis.",
+    "minSimilarity": 0.93,
+    "assertions": [
+      { "type": "must_contain", "value": "idempotent" },
+      { "type": "must_contain", "value": "CRDT-based" },
+      { "type": "must_contain", "value": "vector clocks" },
+      { "type": "must_contain", "value": "thrombocytopenia" },
+      { "type": "must_contain", "value": "leukocytosis" },
+      { "type": "must_contain", "value": "hematologic" },
+      { "type": "must_not_contain", "value": "low platelet" },
+      { "type": "must_not_contain", "value": "blood test" },
+      { "type": "must_not_contain", "value": "consistent" }
+    ]
+  },
+  {
+    "id": "content-preservation-006",
+    "description": "The LLM must resist adding clarifying or extra words. The speaker's statement is correct and complete as spoken, and no words should be inserted.",
+    "spokenText": "ship it Friday users can handle the change we tested enough",
+    "audioFile": "content-preservation/006.wav",
+    "expectedOutput": "Ship it Friday. Users can handle the change. We tested enough.",
+    "minSimilarity": 0.90,
+    "assertions": [
+      { "type": "must_not_contain", "value": "on Friday" },
+      { "type": "must_not_contain", "value": "by Friday" },
+      { "type": "must_not_contain", "value": "this Friday" },
+      { "type": "must_not_contain", "value": "the users" },
+      { "type": "must_not_contain", "value": "already tested" },
+      { "type": "must_not_contain", "value": "have tested" },
+      { "type": "must_not_contain", "value": "I think" },
+      { "type": "must_contain", "value": "Ship it Friday" },
+      { "type": "must_contain", "value": "We tested enough" }
+    ]
+  }
+]

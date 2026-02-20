@@ -1,0 +1,79 @@
+[
+  {
+    "id": "punctuation-detection-001",
+    "description": "Simple declarative sentence without punctuation should receive a period at the end",
+    "spokenText": "the report is ready and has been sent to the client",
+    "audioFile": "punctuation-detection/001.wav",
+    "expectedOutput": "The report is ready and has been sent to the client.",
+    "minSimilarity": 0.90,
+    "assertions": [
+      { "type": "must_end_with", "value": "." },
+      { "type": "must_contain", "value": "report is ready" },
+      { "type": "must_contain", "value": "sent to the client" }
+    ]
+  },
+  {
+    "id": "punctuation-detection-002",
+    "description": "Direct question without punctuation should receive a question mark at the end",
+    "spokenText": "what time does the meeting start",
+    "audioFile": "punctuation-detection/002.wav",
+    "expectedOutput": "What time does the meeting start?",
+    "minSimilarity": 0.90,
+    "assertions": [
+      { "type": "must_end_with", "value": "?" },
+      { "type": "must_contain", "value": "meeting start" }
+    ]
+  },
+  {
+    "id": "punctuation-detection-003",
+    "description": "Exclamatory sentence expressing strong emotion should receive an exclamation mark",
+    "spokenText": "i cant believe we actually won the contract",
+    "audioFile": "punctuation-detection/003.wav",
+    "expectedOutput": "I can't believe we actually won the contract!",
+    "minSimilarity": 0.90,
+    "assertions": [
+      { "type": "must_end_with", "value": "!" },
+      { "type": "must_contain", "value": "won the contract" }
+    ]
+  },
+  {
+    "id": "punctuation-detection-004",
+    "description": "Ambiguous intonation — 'you're coming tomorrow' could be a question or a statement depending on context, so both are acceptable",
+    "spokenText": "youre coming tomorrow",
+    "audioFile": "punctuation-detection/004.wav",
+    "expectedOutput": "You're coming tomorrow?",
+    "minSimilarity": 0.75,
+    "assertions": [
+      { "type": "must_contain", "value": "coming tomorrow" },
+      { "type": "must_match_regex", "value": "[.?]$" }
+    ]
+  },
+  {
+    "id": "punctuation-detection-005",
+    "description": "Rhetorical question — technically a question form but may also be treated as an exclamation, both are valid",
+    "spokenText": "who would have thought we would get this far",
+    "audioFile": "punctuation-detection/005.wav",
+    "expectedOutput": "Who would have thought we would get this far?",
+    "minSimilarity": 0.80,
+    "assertions": [
+      { "type": "must_contain", "value": "would have thought" },
+      { "type": "must_match_regex", "value": "[?!]$" }
+    ]
+  },
+  {
+    "id": "punctuation-detection-006",
+    "description": "Multi-sentence passage with mixed punctuation — a statement, a question, and an exclamation should each receive appropriate end marks",
+    "spokenText": "the deployment finished at noon did anyone check the logs the error rate dropped to zero thats incredible",
+    "audioFile": "punctuation-detection/006.wav",
+    "expectedOutput": "The deployment finished at noon. Did anyone check the logs? The error rate dropped to zero, that's incredible!",
+    "minSimilarity": 0.80,
+    "assertions": [
+      { "type": "must_contain", "value": "deployment finished" },
+      { "type": "must_match_regex", "value": "\\." },
+      { "type": "must_match_regex", "value": "\\?" },
+      { "type": "must_match_regex", "value": "!" },
+      { "type": "must_contain", "value": "check the logs" },
+      { "type": "must_contain", "value": "error rate dropped" }
+    ]
+  }
+]
