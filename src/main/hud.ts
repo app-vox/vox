@@ -1005,7 +1005,8 @@ export class HudWindow {
         this.currentState = "idle";
         if (this.contentReady && this.window && !this.window.isDestroyed()) {
           if (!this.alwaysShow) {
-            // Hide directly without morphing back to the idle circle
+            // Reset renderer state before hiding so re-enable shows idle circle
+            this.execSetState("idle");
             this.window.hide();
           } else {
             this.execSetState("idle");
@@ -1020,6 +1021,7 @@ export class HudWindow {
     }
 
     if (state === "idle" && !this.alwaysShow) {
+      if (this.contentReady) this.execSetState("idle");
       this.window.hide();
       return;
     }
