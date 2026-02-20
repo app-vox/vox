@@ -372,7 +372,7 @@ function buildHudHtml(): string {
   /* Undo bar (below widget during graceful cancel) */
   .undo-bar {
     display: flex; align-items: center; gap: 0;
-    margin-top: 2px;
+    margin-top: 0;
     opacity: 0; pointer-events: none;
     transition: opacity 0.2s ease;
     flex-shrink: 0;

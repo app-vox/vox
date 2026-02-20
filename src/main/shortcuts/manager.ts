@@ -339,7 +339,7 @@ export class ShortcutManager {
 
     this.hud.hideUndoBar();
     this.stateMachine.setIdle();
-    this.hud.setState("canceled");
+    this.hud.setState("idle");
     this.updateTrayState();
   }
 
