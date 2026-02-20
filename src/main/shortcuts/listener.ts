@@ -3,10 +3,16 @@ export interface ShortcutCallbacks {
   onStop: () => void;
 }
 
-type RecordingState = "idle" | "hold" | "toggle" | "processing";
+export enum RecordingState {
+  Idle = "idle",
+  Hold = "hold",
+  Toggle = "toggle",
+  Processing = "processing",
+  Canceling = "canceling",
+}
 
 export class ShortcutStateMachine {
-  private state: RecordingState = "idle";
+  private state = RecordingState.Idle;
   private readonly callbacks: ShortcutCallbacks;
 
   constructor(callbacks: ShortcutCallbacks) {
@@ -15,47 +21,50 @@ export class ShortcutStateMachine {
 
   /** Called when the hold shortcut key is pressed down. */
   handleHoldKeyDown(): void {
-    if (this.state === "processing") return;
+    if (this.state === RecordingState.Processing || this.state === RecordingState.Canceling) return;
 
-    if (this.state === "idle") {
-      this.state = "hold";
+    if (this.state === RecordingState.Idle) {
+      this.state = RecordingState.Hold;
       this.callbacks.onStart();
     }
   }
 
   /** Called when the hold shortcut key is released. */
   handleHoldKeyUp(): void {
-    if (this.state === "hold") {
-      this.state = "idle";
+    if (this.state === RecordingState.Canceling) return;
+    if (this.state === RecordingState.Hold) {
+      this.state = RecordingState.Idle;
       this.callbacks.onStop();
     }
   }
 
   handleTogglePress(): void {
-    if (this.state === "processing") return;
+    if (this.state === RecordingState.Processing || this.state === RecordingState.Canceling) return;
 
-    if (this.state === "idle") {
-      this.state = "toggle";
+    if (this.state === RecordingState.Idle) {
+      this.state = RecordingState.Toggle;
       this.callbacks.onStart();
-    } else if (this.state === "toggle") {
-      this.state = "idle";
+    } else if (this.state === RecordingState.Toggle) {
+      this.state = RecordingState.Idle;
       this.callbacks.onStop();
-    } else if (this.state === "hold") {
-      // On macOS packaged apps, Alt+Shift+Space can also trigger Alt+Space,
-      // entering hold mode before toggle fires. Promote to toggle mode so
-      // the recording continues until the user explicitly stops it.
-      this.state = "toggle";
+    } else if (this.state === RecordingState.Hold) {
+      this.state = RecordingState.Toggle;
     }
   }
 
   /** Enter processing state — ignores all shortcut input until setIdle() is called. */
   setProcessing(): void {
-    this.state = "processing";
+    this.state = RecordingState.Processing;
+  }
+
+  /** Enter canceling state — ignores all shortcut input until setIdle() or undone. */
+  setCanceling(): void {
+    this.state = RecordingState.Canceling;
   }
 
   /** Return to idle after processing completes. */
   setIdle(): void {
-    this.state = "idle";
+    this.state = RecordingState.Idle;
   }
 
   getState(): RecordingState {

@@ -221,6 +221,8 @@
   "indicator.enhancing": "İyileştiriliyor...",
   "indicator.nothingHeard": "Bir şey duyulmadı",
   "indicator.canceled": "İptal edildi",
+  "indicator.canceling": "İptal ediliyor...",
+  "indicator.undo": "Geri al",
   "dialog.accessibilityTitle": "Erişilebilirlik İzni Gerekli",
   "dialog.accessibilityMessage": "Vox'un klavye kısayollarını kullanabilmesi için Erişilebilirlik izni gereklidir",
   "dialog.accessibilityDetail": "Vox, ses kaydını etkinleştirmek için global klavye kısayolları (Alt+Space gibi) kullanır.\n\nBu özelliği etkinleştirmek için:\n\n1. Aşağıdaki \"Sistem Ayarlarını Aç\" düğmesine tıklayın\n2. Erişilebilirlik listesinde \"Electron\" veya \"Vox\" öğesini bulup etkinleştirin\n3. Vox'u yeniden başlatın\n\nBu izin olmadan Vox'u menü çubuğundan kullanmaya devam edebilirsiniz, ancak klavye kısayolları çalışmayacaktır.",

@@ -221,6 +221,8 @@
   "indicator.enhancing": "Amélioration...",
   "indicator.nothingHeard": "Rien entendu",
   "indicator.canceled": "Annulé",
+  "indicator.canceling": "Annulation...",
+  "indicator.undo": "Annuler",
   "dialog.accessibilityTitle": "Autorisation d'accessibilité requise",
   "dialog.accessibilityMessage": "Vox a besoin de l'autorisation d'accessibilité pour utiliser les raccourcis clavier",
   "dialog.accessibilityDetail": "Vox utilise des raccourcis clavier globaux (comme Alt+Space) pour activer l'enregistrement vocal.\n\nPour activer cette fonctionnalité :\n\n1. Cliquez sur « Ouvrir les réglages système » ci-dessous\n2. Trouvez et activez « Electron » ou « Vox » dans la liste d'accessibilité\n3. Redémarrez Vox\n\nSans cette autorisation, vous pouvez toujours utiliser Vox depuis la barre de menus, mais les raccourcis clavier ne fonctionneront pas.",

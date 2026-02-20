@@ -221,6 +221,8 @@
   "indicator.enhancing": "Verbessere...",
   "indicator.nothingHeard": "Nichts gehört",
   "indicator.canceled": "Abgebrochen",
+  "indicator.canceling": "Abbrechen...",
+  "indicator.undo": "Rückgängig",
   "dialog.accessibilityTitle": "Berechtigung für Bedienungshilfen erforderlich",
   "dialog.accessibilityMessage": "Vox benötigt die Berechtigung für Bedienungshilfen, um Tastenkombinationen zu verwenden",
   "dialog.accessibilityDetail": "Vox verwendet globale Tastenkombinationen (wie Alt+Space), um die Sprachaufnahme zu aktivieren.\n\nUm diese Funktion zu aktivieren:\n\n1. Klicken Sie unten auf „Systemeinstellungen öffnen“\n2. Suchen und aktivieren Sie „Electron“ oder „Vox“ in der Liste der Bedienungshilfen\n3. Starten Sie Vox neu\n\nOhne diese Berechtigung können Sie Vox weiterhin über die Menüleiste verwenden, aber Tastenkombinationen funktionieren nicht.",

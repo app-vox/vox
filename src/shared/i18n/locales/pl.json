@@ -221,6 +221,8 @@
   "indicator.enhancing": "Ulepszanie...",
   "indicator.nothingHeard": "Nic nie usłyszano",
   "indicator.canceled": "Anulowano",
+  "indicator.canceling": "Anulowanie...",
+  "indicator.undo": "Cofnij",
   "dialog.accessibilityTitle": "Wymagane uprawnienie dostępności",
   "dialog.accessibilityMessage": "Vox potrzebuje uprawnienia dostępności, aby używać skrótów klawiszowych",
   "dialog.accessibilityDetail": "Vox używa globalnych skrótów klawiszowych (np. Alt+Spacja) do aktywacji nagrywania głosu.\n\nAby włączyć tę funkcję:\n\n1. Kliknij \"Otwórz Ustawienia systemowe\" poniżej\n2. Znajdź i włącz \"Electron\" lub \"Vox\" na liście Dostępność\n3. Uruchom ponownie Vox\n\nBez tego uprawnienia nadal możesz używać Vox z paska menu, ale skróty klawiszowe nie będą działać.",

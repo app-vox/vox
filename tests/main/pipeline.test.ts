@@ -199,6 +199,85 @@ describe("Pipeline", () => {
     expect(events).not.toContain("llm_enhancement_started");
   });
 
+  it("should enter canceling state via gracefulCancel", async () => {
+    const onStage = vi.fn();
+    const pipeline = new Pipeline({
+      recorder: {
+        start: vi.fn(),
+        stop: vi.fn().mockResolvedValue({
+          audioBuffer: new Float32Array([0.1, 0.2]),
+          sampleRate: 16000,
+        }),
+        cancel: vi.fn(),
+      },
+      transcribe: mockTranscribe,
+      llmProvider: mockProvider,
+      modelPath: "/models/ggml-small.bin",
+      onStage,
+    });
+
+    await pipeline.startRecording();
+    const cancelResult = pipeline.gracefulCancel();
+
+    expect(cancelResult.stage).toBe("listening");
+    expect(pipeline.isCanceling()).toBe(true);
+  });
+
+  it("should resume pipeline from listening when undo is called", async () => {
+    const onComplete = vi.fn();
+    const recorder = {
+      start: vi.fn(),
+      stop: vi.fn().mockResolvedValue({
+        audioBuffer: new Float32Array([0.1, 0.2]),
+        sampleRate: 16000,
+      }),
+      cancel: vi.fn(),
+    };
+
+    const pipeline = new Pipeline({
+      recorder,
+      transcribe: mockTranscribe,
+      llmProvider: mockProvider,
+      modelPath: "/models/ggml-small.bin",
+      onComplete,
+    });
+
+    await pipeline.startRecording();
+    pipeline.gracefulCancel();
+
+    // Wait for the recorder.stop() in gracefulCancel to resolve
+    await vi.waitFor(() => expect(recorder.stop).toHaveBeenCalled());
+
+    const result = await pipeline.undoCancel();
+
+    expect(result).toBe("corrected text");
+    expect(onComplete).toHaveBeenCalled();
+  });
+
+  it("should fully discard when confirmCancel is called", async () => {
+    const recorder = {
+      start: vi.fn(),
+      stop: vi.fn().mockResolvedValue({
+        audioBuffer: new Float32Array([0.1, 0.2]),
+        sampleRate: 16000,
+      }),
+      cancel: vi.fn(),
+    };
+
+    const pipeline = new Pipeline({
+      recorder,
+      transcribe: mockTranscribe,
+      llmProvider: mockProvider,
+      modelPath: "/models/ggml-small.bin",
+    });
+
+    await pipeline.startRecording();
+    pipeline.gracefulCancel();
+    pipeline.confirmCancel();
+
+    expect(pipeline.isCanceling()).toBe(false);
+  });
+
   it("should track llm_enhancement_failed when LLM errors", async () => {
     const failingProvider: LlmProvider = {
       correct: vi.fn().mockRejectedValue(new Error("LLM unavailable")),

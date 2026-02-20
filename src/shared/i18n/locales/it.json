@@ -221,6 +221,8 @@
   "indicator.enhancing": "Miglioramento...",
   "indicator.nothingHeard": "Nulla rilevato",
   "indicator.canceled": "Annullato",
+  "indicator.canceling": "Annullamento...",
+  "indicator.undo": "Annulla",
   "dialog.accessibilityTitle": "Permesso di accessibilità necessario",
   "dialog.accessibilityMessage": "Vox necessita del permesso di accessibilità per usare le scorciatoie da tastiera",
   "dialog.accessibilityDetail": "Vox usa scorciatoie da tastiera globali (come Alt+Space) per attivare la registrazione vocale.\n\nPer abilitare questa funzione:\n\n1. Fai clic su \"Apri impostazioni di sistema\" qui sotto\n2. Trova e abilita \"Electron\" o \"Vox\" nell'elenco Accessibilità\n3. Riavvia Vox\n\nSenza questo permesso, puoi comunque usare Vox dalla barra dei menu, ma le scorciatoie da tastiera non funzioneranno.",

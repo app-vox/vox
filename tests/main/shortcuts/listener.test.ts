@@ -141,4 +141,54 @@ describe("ShortcutStateMachine", () => {
     expect(onStop).not.toHaveBeenCalled();
     expect(sm.getState()).toBe("processing");
   });
+
+  it("should transition to canceling from hold", () => {
+    const sm = new ShortcutStateMachine({ onStart: vi.fn(), onStop: vi.fn() });
+    sm.handleHoldKeyDown();
+    expect(sm.getState()).toBe("hold");
+
+    sm.setCanceling();
+    expect(sm.getState()).toBe("canceling");
+  });
+
+  it("should transition to canceling from toggle", () => {
+    const sm = new ShortcutStateMachine({ onStart: vi.fn(), onStop: vi.fn() });
+    sm.handleTogglePress();
+    expect(sm.getState()).toBe("toggle");
+
+    sm.setCanceling();
+    expect(sm.getState()).toBe("canceling");
+  });
+
+  it("should transition to canceling from processing", () => {
+    const sm = new ShortcutStateMachine({ onStart: vi.fn(), onStop: vi.fn() });
+    sm.setProcessing();
+    sm.setCanceling();
+    expect(sm.getState()).toBe("canceling");
+  });
+
+  it("should ignore hold/toggle input while canceling", () => {
+    const onStart = vi.fn();
+    const onStop = vi.fn();
+    const sm = new ShortcutStateMachine({ onStart, onStop });
+    sm.handleHoldKeyDown();
+    onStart.mockClear();
+
+    sm.setCanceling();
+    sm.handleHoldKeyDown();
+    sm.handleTogglePress();
+    sm.handleHoldKeyUp();
+
+    expect(onStart).not.toHaveBeenCalled();
+    expect(onStop).not.toHaveBeenCalled();
+    expect(sm.getState()).toBe("canceling");
+  });
+
+  it("should transition from canceling to idle via setIdle", () => {
+    const sm = new ShortcutStateMachine({ onStart: vi.fn(), onStop: vi.fn() });
+    sm.handleHoldKeyDown();
+    sm.setCanceling();
+    sm.setIdle();
+    expect(sm.getState()).toBe("idle");
+  });
 });

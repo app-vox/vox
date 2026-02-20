@@ -4,7 +4,7 @@ import log from "electron-log/main";
 import { type ConfigManager } from "../config/manager";
 import { pasteText, isAccessibilityGranted } from "../input/paster";
 import { type Pipeline, CanceledError, NoModelError } from "../pipeline";
-import { ShortcutStateMachine } from "./listener";
+import { ShortcutStateMachine, RecordingState } from "./listener";
 import { HudWindow } from "../hud";
 import { setTrayListeningState, updateTrayConfig } from "../tray";
 import { t } from "../../shared/i18n";
@@ -95,6 +95,8 @@ export class ShortcutManager {
   private isInitializing = true;
   private recordingGeneration = 0;
   private micActiveAt = 0;
+  private cancelTimer: ReturnType<typeof setTimeout> | null = null;
+  private canceledAtStage: string | null = null;
   private static readonly MIN_RECORDING_MS = 400;
 
   constructor(deps: ShortcutManagerDeps) {
@@ -125,8 +127,11 @@ export class ShortcutManager {
     uIOhook.on("keydown", (e) => {
       if (e.keycode === UiohookKey.Escape && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
         const state = this.stateMachine.getState();
-        if (state === "hold" || state === "toggle" || state === "processing") {
-          slog.info("Escape pressed, canceling operation");
+        if (state === RecordingState.Canceling) {
+          slog.info("Second ESC pressed during grace period — immediate cancel");
+          this.confirmCancel();
+        } else if (state === RecordingState.Hold || state === RecordingState.Toggle || state === RecordingState.Processing) {
+          slog.info("Escape pressed, starting graceful cancel");
           this.cancelRecording();
         } else {
           this.dismissHud();
@@ -203,7 +208,13 @@ export class ShortcutManager {
       slog.debug("Cannot trigger toggle during initialization");
       return;
     }
-    if (this.stateMachine.getState() === "processing") {
+    if (this.stateMachine.getState() === RecordingState.Canceling) {
+      this.silentAbortCancel();
+      this.stateMachine.handleTogglePress();
+      setTimeout(() => this.updateTrayState(), 100);
+      return;
+    }
+    if (this.stateMachine.getState() === RecordingState.Processing) {
       this.restartRecording();
       return;
     }
@@ -215,7 +226,7 @@ export class ShortcutManager {
   /** Stop recording and process (complete listening) */
   stopAndProcess(): void {
     const state = this.stateMachine.getState();
-    if (state === "hold" || state === "toggle") {
+    if (state === RecordingState.Hold || state === RecordingState.Toggle) {
       slog.info("Stop & process requested from tray");
       this.stateMachine.handleTogglePress(); // Toggle off = stop and process
     }
@@ -223,21 +234,135 @@ export class ShortcutManager {
 
   cancelRecording(): void {
     const state = this.stateMachine.getState();
-    if (state === "hold" || state === "toggle" || state === "processing") {
-      slog.info("Cancel requested");
+    if (state === RecordingState.Canceling) {
+      this.confirmCancel();
+      return;
+    }
+    if (state === RecordingState.Hold || state === RecordingState.Toggle || state === RecordingState.Processing) {
+      slog.info("Graceful cancel requested");
       this.micActiveAt = 0;
       this.recordingGeneration++;
       const pipeline = this.deps.getPipeline();
-      pipeline.cancel().catch((err) => {
-        slog.error("Error during cancel", err);
-      });
+      const { stage } = pipeline.gracefulCancel();
+      slog.info("Pipeline paused at stage: %s", stage);
+      this.canceledAtStage = stage;
+      this.deps.analytics?.track("graceful_cancel_started", { stage });
+
+      this.stateMachine.setCanceling();
+      this.hud.setState("canceled", undefined, true);
+      this.hud.showUndoBar(3000);
+
+      this.cancelTimer = setTimeout(() => {
+        this.confirmCancel();
+      }, 3000);
+
+      this.updateTrayState();
+    }
+  }
+
+  undoCancel(): void {
+    if (this.stateMachine.getState() !== RecordingState.Canceling) return;
+
+    slog.info("Undo cancel requested — resuming pipeline");
+    this.deps.analytics?.track("graceful_cancel_undone", { stage: this.canceledAtStage });
+    this.canceledAtStage = null;
+    if (this.cancelTimer) {
+      clearTimeout(this.cancelTimer);
+      this.cancelTimer = null;
+    }
+
+    const pipeline = this.deps.getPipeline();
+    this.stateMachine.setProcessing();
+    this.recordingGeneration++;
+    const gen = this.recordingGeneration;
+
+    this.hud.hideUndoBar();
+    this.hud.setState("transcribing");
+    this.updateTrayState();
+
+    pipeline.undoCancel().then((text) => {
+      if (gen !== this.recordingGeneration) {
+        slog.info("Stale undo result — discarding");
+        return;
+      }
+
+      const trimmedText = text.trim();
+      if (!trimmedText) {
+        slog.info("No valid text after undo, showing error");
+        const config = this.deps.configManager.load();
+        const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
+        this.playCue(errorCueType);
+        this.stateMachine.setIdle();
+        this.hud.setState("error");
+      } else {
+        slog.info("Undo succeeded, pasting text");
+        pasteText(trimmedText);
+        this.deps.analytics?.track("paste_completed", { method: "undo-cancel" });
+        this.stateMachine.setIdle();
+        this.hud.setState("idle");
+      }
+      this.updateTrayState();
+    }).catch((err: unknown) => {
+      if (gen !== this.recordingGeneration) return;
+      slog.error("Undo pipeline failed", err);
       const config = this.deps.configManager.load();
       const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
       this.playCue(errorCueType);
       this.stateMachine.setIdle();
-      this.hud.setState("canceled");
+      this.hud.setState("error");
       this.updateTrayState();
+    });
+  }
+
+  private silentAbortCancel(): void {
+    if (this.cancelTimer) {
+      clearTimeout(this.cancelTimer);
+      this.cancelTimer = null;
     }
+    this.micActiveAt = 0;
+    this.recordingGeneration++;
+    const pipeline = this.deps.getPipeline();
+    pipeline.confirmCancel();
+    this.hud.hideUndoBar();
+    this.canceledAtStage = null;
+    this.stateMachine.setIdle();
+    slog.info("Silent abort cancel — starting new recording");
+  }
+
+  private confirmCancel(): void {
+    if (this.stateMachine.getState() !== RecordingState.Canceling) return;
+
+    slog.info("Cancel confirmed — discarding");
+    this.deps.analytics?.track("graceful_cancel_confirmed", { stage: this.canceledAtStage });
+    this.cancelTimer = null;
+    this.canceledAtStage = null;
+    this.micActiveAt = 0;
+    this.recordingGeneration++;
+    const pipeline = this.deps.getPipeline();
+    pipeline.confirmCancel();
+
+    const config = this.deps.configManager.load();
+    const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
+    this.playCue(errorCueType);
+
+    this.hud.hideUndoBar();
+    this.stateMachine.setIdle();
+    this.hud.setState("idle");
+    this.updateTrayState();
+  }
+
+  private pauseCancelTimer(): void {
+    if (this.cancelTimer) {
+      clearTimeout(this.cancelTimer);
+      this.cancelTimer = null;
+    }
+  }
+
+  private resumeCancelTimer(remainMs: number): void {
+    if (this.stateMachine.getState() !== RecordingState.Canceling) return;
+    this.cancelTimer = setTimeout(() => {
+      this.confirmCancel();
+    }, remainMs);
   }
 
   /** Cancel current operation silently and immediately start a new recording. */
@@ -254,7 +379,7 @@ export class ShortcutManager {
       slog.error("Error during restart cancel", err);
     });
     this.stateMachine.setIdle();
-    if (mode === "hold") {
+    if (mode === RecordingState.Hold) {
       this.stateMachine.handleHoldKeyDown();
     } else {
       this.stateMachine.handleTogglePress();
@@ -273,7 +398,7 @@ export class ShortcutManager {
   /** Get current recording state (for UI updates) */
   isRecording(): boolean {
     const state = this.stateMachine.getState();
-    return state === "hold" || state === "toggle" || state === "processing";
+    return state === RecordingState.Hold || state === RecordingState.Toggle || state === RecordingState.Processing || state === RecordingState.Canceling;
   }
 
   updateHud(): void {
@@ -296,6 +421,10 @@ export class ShortcutManager {
   }
 
   stop(): void {
+    if (this.cancelTimer) {
+      clearTimeout(this.cancelTimer);
+      this.cancelTimer = null;
+    }
     if (this.watchdogTimer) clearInterval(this.watchdogTimer);
     this.stopDisplayChangeListener();
     this.hud.hide();
@@ -358,7 +487,12 @@ export class ShortcutManager {
         slog.debug("Ignoring hold shortcut during initialization");
         return;
       }
-      if (this.stateMachine.getState() === "processing") {
+      if (this.stateMachine.getState() === RecordingState.Canceling) {
+        this.silentAbortCancel();
+        this.stateMachine.handleHoldKeyDown();
+        return;
+      }
+      if (this.stateMachine.getState() === RecordingState.Processing) {
         this.restartRecording("hold");
         return;
       }
@@ -370,7 +504,12 @@ export class ShortcutManager {
         slog.debug("Ignoring toggle shortcut during initialization");
         return;
       }
-      if (this.stateMachine.getState() === "processing") {
+      if (this.stateMachine.getState() === RecordingState.Canceling) {
+        this.silentAbortCancel();
+        this.stateMachine.handleTogglePress();
+        return;
+      }
+      if (this.stateMachine.getState() === RecordingState.Processing) {
         this.restartRecording();
         return;
       }
@@ -407,8 +546,23 @@ export class ShortcutManager {
       this.cancelRecording();
     });
 
+    ipcMain.handle("indicator:undo-cancel", () => {
+      this.undoCancel();
+    });
+
+    ipcMain.handle("indicator:pause-cancel", () => {
+      this.pauseCancelTimer();
+    });
+
+    ipcMain.handle("indicator:resume-cancel", (_event, remainMs: number) => {
+      this.resumeCancelTimer(remainMs);
+    });
+
     ipcMain.handle("hud:start-recording", () => {
-      if (this.stateMachine.getState() === "processing") {
+      if (this.stateMachine.getState() === RecordingState.Canceling) {
+        this.silentAbortCancel();
+        this.stateMachine.handleTogglePress();
+      } else if (this.stateMachine.getState() === RecordingState.Processing) {
         this.restartRecording();
       } else if (!this.isRecording()) {
         this.triggerToggle();
