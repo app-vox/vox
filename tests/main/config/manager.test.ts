@@ -311,6 +311,49 @@ describe("ConfigManager", () => {
     expect(loaded.speechLanguages).toEqual(["pt", "en"]);
   });
 
+  describe("loadLlmForProvider", () => {
+    it("should return defaults when no config file exists", () => {
+      const llm = manager.loadLlmForProvider("openai");
+      expect(llm).toEqual({ provider: "openai", openaiApiKey: "", openaiModel: "gpt-4o", openaiEndpoint: "https://api.openai.com" });
+    });
+
+    it("should restore previously saved credentials for a different provider", () => {
+      const config = createDefaultConfig();
+      config.llm = { provider: "openai", openaiApiKey: "sk-test", openaiModel: "gpt-4-turbo", openaiEndpoint: "https://api.openai.com" };
+      manager.save(config);
+
+      config.llm = { provider: "foundry", endpoint: "https://foundry.com", apiKey: "f-key", model: "gpt-4o" };
+      manager.save(config);
+
+      const llm = manager.loadLlmForProvider("openai");
+      expect(llm).toEqual({ provider: "openai", openaiApiKey: "sk-test", openaiModel: "gpt-4-turbo", openaiEndpoint: "https://api.openai.com" });
+    });
+
+    it("should return current provider config correctly", () => {
+      const config = createDefaultConfig();
+      config.llm = { provider: "bedrock", region: "eu-west-1", profile: "prod", accessKeyId: "AKIA", secretAccessKey: "secret", modelId: "claude-v2" };
+      manager.save(config);
+
+      const llm = manager.loadLlmForProvider("bedrock");
+      expect(llm).toEqual({ provider: "bedrock", region: "eu-west-1", profile: "prod", accessKeyId: "AKIA", secretAccessKey: "secret", modelId: "claude-v2" });
+    });
+
+    it("should decrypt sensitive fields", () => {
+      const config = createDefaultConfig();
+      config.llm = { provider: "anthropic", anthropicApiKey: "sk-ant-test", anthropicModel: "claude-sonnet-4-20250514" };
+      manager.save(config);
+
+      config.llm = { provider: "foundry", endpoint: "", apiKey: "", model: "gpt-4o" };
+      manager.save(config);
+
+      const llm = manager.loadLlmForProvider("anthropic");
+      expect(llm.provider).toBe("anthropic");
+      if (llm.provider === "anthropic") {
+        expect(llm.anthropicApiKey).toBe("sk-ant-test");
+      }
+    });
+  });
+
   it("should preserve credentials from other providers on save (round-trip)", () => {
     const foundryConfig = createDefaultConfig();
     foundryConfig.llm = { provider: "foundry", endpoint: "https://foundry.com", apiKey: "foundry-key", model: "gpt-4o" };

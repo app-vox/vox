@@ -9,7 +9,7 @@ import { AudioRecorder } from "./audio/recorder";
 import { transcribe } from "./audio/whisper";
 import { createLlmProvider } from "./llm/factory";
 import { computeLlmConfigHash } from "../shared/llm-config-hash";
-import { type VoxConfig, type WhisperModelSize } from "../shared/config";
+import { type VoxConfig, type LlmProviderType, type WhisperModelSize } from "../shared/config";
 import { getResourcePath } from "./resources";
 import { SetupChecker } from "./setup/checker";
 import { checkForUpdates, getUpdateState, quitAndInstall } from "./updater";
@@ -36,6 +36,10 @@ export function registerIpcHandlers(
 
   ipcMain.handle("config:load", () => {
     return configManager.load();
+  });
+
+  ipcMain.handle("config:load-llm-for-provider", (_event, provider: LlmProviderType) => {
+    return configManager.loadLlmForProvider(provider);
   });
 
   ipcMain.handle("config:save", (_event, config: VoxConfig) => {

@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { app } from "electron";
-import { type VoxConfig, type LlmConfigFlat, type WidgetPosition, createDefaultConfig, createDefaultLlmFlat, narrowLlmConfig } from "../../shared/config";
+import { type VoxConfig, type LlmConfig, type LlmConfigFlat, type LlmProviderType, type WidgetPosition, createDefaultConfig, createDefaultLlmFlat, narrowLlmConfig } from "../../shared/config";
 import { resolveWhisperLanguage } from "../../shared/constants";
 import { ENCRYPTED_PREFIX } from "./secrets";
 
@@ -128,6 +128,27 @@ export class ConfigManager {
     const toWrite = structuredClone({ ...config, llm: toWriteFlat });
 
     fs.writeFileSync(this.configPath, JSON.stringify(toWrite, null, 2), "utf-8");
+  }
+
+  loadLlmForProvider(provider: LlmProviderType): LlmConfig {
+    const defaultsFlat = createDefaultLlmFlat();
+    if (!fs.existsSync(this.configPath)) {
+      return narrowLlmConfig({ ...defaultsFlat, provider });
+    }
+    try {
+      const raw = fs.readFileSync(this.configPath, "utf-8");
+      const saved = JSON.parse(raw);
+      const llmFlat: LlmConfigFlat = { ...defaultsFlat, ...saved.llm, provider };
+      for (const field of SENSITIVE_FIELDS) {
+        const value = (llmFlat as Record<string, unknown>)[field];
+        if (typeof value === "string" && value) {
+          (llmFlat as Record<string, string>)[field] = this.secrets.decrypt(value);
+        }
+      }
+      return narrowLlmConfig(llmFlat);
+    } catch {
+      return narrowLlmConfig({ ...defaultsFlat, provider });
+    }
   }
 
   countEncryptedSecrets(): number {
