@@ -535,10 +535,11 @@ export function GeneralPanel() {
         </button>
         {!displayCollapsed && (
           <div className={card.body}>
-            <label className={styles.checkboxRow}>
+            <label className={`${styles.checkboxRow} ${!setupComplete ? styles.disabled : ""}`}>
               <input
                 type="checkbox"
                 checked={config.showHud}
+                disabled={!setupComplete}
                 onChange={async () => {
                   const newShowHud = !config.showHud;
                   updateConfig({
@@ -555,11 +556,11 @@ export function GeneralPanel() {
               </div>
             </label>
 
-            <label className={`${styles.checkboxRow} ${!config.showHud ? styles.disabled : ""}`}>
+            <label className={`${styles.checkboxRow} ${!config.showHud || !setupComplete ? styles.disabled : ""}`}>
               <input
                 type="checkbox"
                 checked={config.hudShowOnHover}
-                disabled={!config.showHud}
+                disabled={!config.showHud || !setupComplete}
                 onChange={async () => {
                   updateConfig({ hudShowOnHover: !config.hudShowOnHover });
                   await saveConfig(false);
@@ -572,11 +573,11 @@ export function GeneralPanel() {
               </div>
             </label>
 
-            <label className={`${styles.checkboxRow} ${!config.showHud ? styles.disabled : ""}`}>
+            <label className={`${styles.checkboxRow} ${!config.showHud || !setupComplete ? styles.disabled : ""}`}>
               <input
                 type="checkbox"
                 checked={config.showHudActions}
-                disabled={!config.showHud}
+                disabled={!config.showHud || !setupComplete}
                 onChange={async () => {
                   updateConfig({ showHudActions: !config.showHudActions });
                   await saveConfig(false);
