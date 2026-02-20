@@ -1,10 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterAll } from "vitest";
 import { readFileSync, readdirSync, existsSync } from "fs";
 import { join } from "path";
 import type { Scenario } from "./scenarios/types";
 import { loadPipelineTestConfig } from "./helpers/config";
 import { normalizedSimilarity } from "./helpers/scoring";
 import { runAssertions } from "./helpers/assertions";
+import type { AssertionResult } from "./helpers/assertions";
 import { runLlmCorrection, runFullPipeline } from "./helpers/pipeline-runner";
 import { readWav } from "./helpers/wav-reader";
 
@@ -14,6 +15,18 @@ const AUDIO_DIR = join(__dirname, "audio");
 const config = loadPipelineTestConfig();
 const whisperAvailable =
   !!config?.whisper?.modelPath && existsSync(config.whisper.modelPath);
+
+interface FailureRecord {
+  id: string;
+  expected: string;
+  actual: string;
+  rawSTT?: string;
+  similarity: number;
+  minSimilarity: number;
+  failedAssertions: string[];
+}
+
+const failures: FailureRecord[] = [];
 
 function loadAllScenarios(): { file: string; scenarios: Scenario[] }[] {
   const files = readdirSync(SCENARIOS_DIR).filter((f) => f.endsWith(".json"));
@@ -37,6 +50,36 @@ describe.skipIf(!config)("pipeline integration tests", () => {
     );
   }
 
+  afterAll(() => {
+    if (failures.length === 0) return;
+
+    const lines: string[] = [
+      "",
+      "┌──────────────────────────────────────────────────────────",
+      `│  FAILURE SUMMARY — ${failures.length} failed scenario(s)`,
+      "└──────────────────────────────────────────────────────────",
+    ];
+
+    for (const f of failures) {
+      lines.push("");
+      lines.push(`  ✗ ${f.id}`);
+      if (f.rawSTT !== undefined) {
+        lines.push(`    Raw STT:    ${f.rawSTT}`);
+      }
+      lines.push(`    Expected:   ${f.expected}`);
+      lines.push(`    Actual:     ${f.actual}`);
+      lines.push(
+        `    Similarity: ${(f.similarity * 100).toFixed(1)}% (min: ${(f.minSimilarity * 100).toFixed(1)}%)`,
+      );
+      for (const msg of f.failedAssertions) {
+        lines.push(`    ✗ ${msg}`);
+      }
+    }
+
+    lines.push("");
+    console.log(lines.join("\n"));
+  });
+
   for (const { file, scenarios } of scenarioGroups) {
     const category = file.replace(".json", "");
 
@@ -53,7 +96,6 @@ describe.skipIf(!config)("pipeline integration tests", () => {
             let result;
 
             if (whisperAvailable) {
-              // Default: full pipeline (audio → Whisper STT → LLM correction)
               const audioPath = join(AUDIO_DIR, scenario.audioFile);
               if (!existsSync(audioPath)) {
                 throw new Error(
@@ -69,7 +111,6 @@ describe.skipIf(!config)("pipeline integration tests", () => {
                 runnerOptions,
               );
             } else {
-              // Fallback: LLM-only (spokenText → LLM correction)
               result = await runLlmCorrection(
                 scenario.spokenText,
                 config!,
@@ -77,38 +118,41 @@ describe.skipIf(!config)("pipeline integration tests", () => {
               );
             }
 
-            console.log(`\n--- ${scenario.id} ---`);
-            console.log(`  Mode:     ${mode}`);
-            if (whisperAvailable) {
-              console.log(`  Raw STT:  ${result.rawTranscription}`);
-            }
-            console.log(`  Input:    ${scenario.spokenText}`);
-            console.log(`  Expected: ${scenario.expectedOutput}`);
-            console.log(`  Actual:   ${result.correctedText}`);
-
             const similarity = normalizedSimilarity(
               result.correctedText,
               scenario.expectedOutput,
             );
-            console.log(
-              `  Similarity: ${(similarity * 100).toFixed(1)}% (min: ${(scenario.minSimilarity * 100).toFixed(1)}%)`,
-            );
-
-            expect(
-              similarity,
-              `Similarity ${(similarity * 100).toFixed(1)}% is below minimum ${(scenario.minSimilarity * 100).toFixed(1)}% for ${scenario.id}`,
-            ).toBeGreaterThanOrEqual(scenario.minSimilarity);
 
             const assertionResults = runAssertions(
               result.correctedText,
               scenario.assertions,
             );
 
-            for (const ar of assertionResults) {
-              console.log(
-                `  [${ar.passed ? "PASS" : "FAIL"}] ${ar.message}`,
-              );
+            const failedAssertions = assertionResults
+              .filter((ar) => !ar.passed)
+              .map((ar) => ar.message);
+
+            const similarityFailed =
+              similarity < scenario.minSimilarity;
+
+            if (similarityFailed || failedAssertions.length > 0) {
+              failures.push({
+                id: scenario.id,
+                expected: scenario.expectedOutput,
+                actual: result.correctedText,
+                rawSTT: whisperAvailable
+                  ? result.rawTranscription
+                  : undefined,
+                similarity,
+                minSimilarity: scenario.minSimilarity,
+                failedAssertions,
+              });
             }
+
+            expect(
+              similarity,
+              `Similarity ${(similarity * 100).toFixed(1)}% is below minimum ${(scenario.minSimilarity * 100).toFixed(1)}% for ${scenario.id}`,
+            ).toBeGreaterThanOrEqual(scenario.minSimilarity);
 
             for (const ar of assertionResults) {
               expect(ar.passed, ar.message).toBe(true);
