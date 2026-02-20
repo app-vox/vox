@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import type { ModelInfo } from "../../../preload/index";
 import { useT } from "../../i18n-context";
-import { TrashIcon, XIcon } from "../../../shared/icons";
+import { TrashIcon, XIcon, AlertTriangleIcon } from "../../../shared/icons";
 import styles from "./ModelRow.module.scss";
 
 interface ModelRowProps {
@@ -24,6 +24,7 @@ export function ModelRow({ model, selected, onSelect, onDelete, downloadDisabled
   const [downloaded, setDownloaded] = useState(model.downloaded);
   const [progress, setProgress] = useState({ downloaded: 0, total: 0 });
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const confirmTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const confirmBtnRef = useRef<HTMLButtonElement>(null);
 
@@ -37,6 +38,7 @@ export function ModelRow({ model, selected, onSelect, onDelete, downloadDisabled
         if (p.total > 0 && p.downloaded < p.total) {
           setDownloading(true);
           setDownloaded(false);
+          setError(null);
         }
         setProgress({ downloaded: p.downloaded, total: p.total });
       }
@@ -66,11 +68,22 @@ export function ModelRow({ model, selected, onSelect, onDelete, downloadDisabled
   const handleDownload = async () => {
     setDownloading(true);
     setProgress({ downloaded: 0, total: model.info.sizeBytes });
+    setError(null);
     try {
       await window.voxApi.models.download(model.size);
       setDownloaded(true);
-    } catch {
-      // Download was cancelled or failed
+    } catch (err) {
+      // Check if error is cancellation or actual failure
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      if (errorMessage.includes("cancelled") || errorMessage.includes("cancel")) {
+        // Download was cancelled by user - no error message needed
+        setError(null);
+      } else {
+        // Download failed - show user-friendly error
+        setError(t("model.downloadFailed"));
+        // Auto-clear error after 15 seconds
+        setTimeout(() => setError(null), 15000);
+      }
     } finally {
       setDownloading(false);
       setProgress({ downloaded: 0, total: 0 });
@@ -163,6 +176,19 @@ export function ModelRow({ model, selected, onSelect, onDelete, downloadDisabled
         >
           {t("model.download")}
         </button>
+      )}
+      {error && (
+        <div className={styles.error}>
+          <AlertTriangleIcon width={16} height={16} className={styles.errorIcon} />
+          <span className={styles.errorText}>{error}</span>
+          <button
+            className={styles.errorCloseBtn}
+            onClick={() => setError(null)}
+            aria-label="Close error message"
+          >
+            <XIcon width={14} height={14} />
+          </button>
+        </div>
       )}
     </div>
   );
