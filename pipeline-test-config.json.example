@@ -1,0 +1,11 @@
+{
+  "llm": {
+    "provider": "openai",
+    "apiKey": "sk-your-api-key-here",
+    "model": "gpt-4o-mini",
+    "baseUrl": "https://api.openai.com/v1"
+  },
+  "whisper": {
+    "modelPath": "/path/to/ggml-base.bin"
+  }
+}

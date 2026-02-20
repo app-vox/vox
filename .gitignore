@@ -29,3 +29,6 @@ docs/plans/
 
 # Coverage reports
 coverage/
+
+# Pipeline test config (contains API keys)
+pipeline-test-config.json
