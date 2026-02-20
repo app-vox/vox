@@ -96,6 +96,7 @@ export class ShortcutManager {
   private recordingGeneration = 0;
   private micActiveAt = 0;
   private cancelTimer: ReturnType<typeof setTimeout> | null = null;
+  private canceledAtStage: string | null = null;
   private static readonly MIN_RECORDING_MS = 400;
 
   constructor(deps: ShortcutManagerDeps) {
@@ -244,6 +245,8 @@ export class ShortcutManager {
       const pipeline = this.deps.getPipeline();
       const { stage } = pipeline.gracefulCancel();
       slog.info("Pipeline paused at stage: %s", stage);
+      this.canceledAtStage = stage;
+      this.deps.analytics?.track("graceful_cancel_started", { stage });
 
       this.stateMachine.setCanceling();
       this.hud.setState("canceled", undefined, true);
@@ -261,6 +264,8 @@ export class ShortcutManager {
     if (this.stateMachine.getState() !== "canceling") return;
 
     slog.info("Undo cancel requested — resuming pipeline");
+    this.deps.analytics?.track("graceful_cancel_undone", { stage: this.canceledAtStage });
+    this.canceledAtStage = null;
     if (this.cancelTimer) {
       clearTimeout(this.cancelTimer);
       this.cancelTimer = null;
@@ -319,6 +324,7 @@ export class ShortcutManager {
     const pipeline = this.deps.getPipeline();
     pipeline.confirmCancel();
     this.hud.hideUndoBar();
+    this.canceledAtStage = null;
     this.stateMachine.setIdle();
     slog.info("Silent abort cancel — starting new recording");
   }
@@ -327,7 +333,9 @@ export class ShortcutManager {
     if (this.stateMachine.getState() !== "canceling") return;
 
     slog.info("Cancel confirmed — discarding");
+    this.deps.analytics?.track("graceful_cancel_confirmed", { stage: this.canceledAtStage });
     this.cancelTimer = null;
+    this.canceledAtStage = null;
     this.micActiveAt = 0;
     this.recordingGeneration++;
     const pipeline = this.deps.getPipeline();
