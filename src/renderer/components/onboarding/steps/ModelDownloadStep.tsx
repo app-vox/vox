@@ -45,7 +45,7 @@ export function ModelDownloadStep() {
         onDownload={modelManager.download}
         onCancel={modelManager.cancelDownload}
         onDelete={modelManager.deleteModel}
-        downloadDisabled={!online || setupComplete === false}
+        downloadDisabled={!online}
         recommendedSize="small"
         className={styles.modelList}
       />
