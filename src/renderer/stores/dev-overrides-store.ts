@@ -14,7 +14,6 @@ export interface DevOverrides {
   llmConnectionTested?: boolean;
   analyticsDevEnabled?: boolean;
   hideDevVisuals?: boolean;
-  visitedDictionary?: boolean;
   visitedShortcuts?: boolean;
   reduceAnimations?: boolean;
   reduceVisualEffects?: boolean;
