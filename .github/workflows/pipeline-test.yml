@@ -1,0 +1,38 @@
+name: Pipeline Tests
+
+on:
+  push:
+    paths:
+      - 'src/shared/constants.ts'
+      - 'tests/pipeline/**'
+  workflow_dispatch:
+
+jobs:
+  pipeline-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Write pipeline test config
+        run: |
+          cat > pipeline-test-config.json << HEREDOC
+          {
+            "llm": {
+              "provider": "${{ vars.PIPELINE_TEST_LLM_PROVIDER }}",
+              "apiKey": "${{ secrets.PIPELINE_TEST_LLM_API_KEY }}",
+              "model": "${{ vars.PIPELINE_TEST_LLM_MODEL }}",
+              "baseUrl": "${{ vars.PIPELINE_TEST_LLM_BASE_URL }}"
+            },
+            "whisper": {
+              "modelPath": ""
+            }
+          }
+          HEREDOC
+      - name: Run pipeline tests
+        run: npm run test:pipeline
+        env:
+          VOX_PIPELINE_TEST_CONFIG: ./pipeline-test-config.json
