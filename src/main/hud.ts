@@ -372,7 +372,7 @@ function buildHudHtml(): string {
   /* Undo bar (below widget during graceful cancel) */
   .undo-bar {
     display: flex; align-items: center; gap: 0;
-    margin-top: -1px;
+    margin-top: -2px;
     opacity: 0; pointer-events: none;
     transition: opacity 0.2s ease;
     flex-shrink: 0;
@@ -386,7 +386,7 @@ function buildHudHtml(): string {
   }
   .undo-bar.visible { opacity: 1; pointer-events: auto; }
   .undo-bar .countdown-track {
-    width: 64px; height: 2px;
+    width: 88px; height: 3px;
     background: rgba(255,255,255,0.08);
     border-radius: 1px;
     overflow: hidden;
@@ -760,12 +760,14 @@ function setAudioLevels(levels) {
 }
 var countdownTotalMs = 0;
 var countdownPaused = false;
+var countdownStartedAt = 0;
 
 function startCountdown(durationMs) {
   var bar = document.getElementById('undo-bar');
   var fill = document.getElementById('countdown-fill');
   countdownTotalMs = durationMs;
   countdownPaused = false;
+  countdownStartedAt = Date.now();
   bar.classList.add('visible');
   fill.style.transition = 'none';
   fill.style.width = '100%';
@@ -775,6 +777,7 @@ function startCountdown(durationMs) {
 }
 function pauseCountdown() {
   if (countdownPaused) return;
+  if (Date.now() - countdownStartedAt < 200) return;
   countdownPaused = true;
   var fill = document.getElementById('countdown-fill');
   var current = parseFloat(getComputedStyle(fill).width);
@@ -791,7 +794,7 @@ function resumeCountdown() {
   var current = parseFloat(getComputedStyle(fill).width);
   var track = parseFloat(getComputedStyle(fill.parentElement).width);
   var pct = track > 0 ? current / track : 0;
-  var remainMs = pct * countdownTotalMs;
+  var remainMs = Math.max(pct * countdownTotalMs, 300);
   fill.offsetWidth;
   fill.style.transition = 'width ' + (remainMs / 1000) + 's linear';
   fill.style.width = '0%';
@@ -801,6 +804,7 @@ function stopCountdown() {
   var bar = document.getElementById('undo-bar');
   var fill = document.getElementById('countdown-fill');
   countdownPaused = false;
+  countdownStartedAt = 0;
   fill.style.transition = 'none';
   fill.style.width = '0%';
   bar.classList.remove('visible');
