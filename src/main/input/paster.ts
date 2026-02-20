@@ -19,6 +19,7 @@ let CFRelease!: (ref: Pointer) => void;
 let AXIsProcessTrusted!: () => boolean;
 
 function initCGEvent(): void {
+  if (process.env.VITEST) return;
   if (initialized) return;
   initialized = true;
 

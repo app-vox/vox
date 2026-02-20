@@ -6,7 +6,10 @@ export default defineConfig({
     environmentMatchGlobs: [
       ["tests/renderer/**", "jsdom"],
     ],
-    setupFiles: ["tests/renderer/helpers/env-setup.ts"],
+    setupFiles: [
+      "tests/helpers/mock-native-addons.ts",
+      "tests/renderer/helpers/env-setup.ts",
+    ],
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "lcov"],

@@ -5,14 +5,6 @@ vi.mock("electron", () => ({
   Notification: class { show() {} },
 }));
 
-// Mock koffi to simulate CGEvent API — all functions are no-ops that return
-// non-null values so the null-check in simulatePaste() passes.
-vi.mock("koffi", () => ({
-  load: vi.fn().mockReturnValue({
-    func: vi.fn().mockReturnValue(vi.fn().mockReturnValue({})),
-  }),
-}));
-
 import { pasteText } from "../../../src/main/input/paster";
 import { clipboard } from "electron";
 
@@ -21,7 +13,7 @@ describe("pasteText", () => {
     vi.mocked(clipboard.writeText).mockClear();
   });
 
-  it("should copy text to clipboard and simulate paste", () => {
+  it("should copy text to clipboard", () => {
     pasteText("Hello, world!");
     expect(clipboard.writeText).toHaveBeenCalledWith("Hello, world!");
   });
@@ -31,9 +23,7 @@ describe("pasteText", () => {
     expect(clipboard.writeText).not.toHaveBeenCalled();
   });
 
-  it("should not throw if paste simulation fails", () => {
-    // The koffi mock is set up to not throw, so this tests the general
-    // error handling path. A real failure would come from CGEvent returning null.
+  it("should not throw when CGEvent is unavailable", () => {
     expect(() => pasteText("Some text")).not.toThrow();
     expect(clipboard.writeText).toHaveBeenCalledWith("Some text");
   });
