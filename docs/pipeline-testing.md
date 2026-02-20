@@ -87,6 +87,22 @@ A test passes when **both** conditions are met:
 | mixed-complexity | 6 | Multiple issues combined in realistic passages |
 | dictionary-terms | 6 | Custom dictionary terms corrected to exact spelling |
 
+## Audio files
+
+Each scenario has a corresponding WAV file under `tests/pipeline/audio/`. These are generated via macOS TTS from the `spokenText` field and serve as baseline input for the Whisper stage.
+
+To regenerate all audio files (skips existing ones):
+
+```bash
+./scripts/generate-pipeline-audio.sh
+```
+
+Environment variables:
+- `VOX_TTS_VOICE` — macOS voice name (default: `Samantha`)
+- `VOX_TTS_RATE` — speech rate in words per minute (default: `180`)
+
+TTS-generated audio is a starting point. For more realistic testing, replace individual WAVs with human recordings — the pipeline runner uses the same files regardless of how they were created.
+
 ## CI
 
 The GitHub Actions workflow (`.github/workflows/pipeline-test.yml`) runs pipeline tests automatically when `src/shared/constants.ts` or `tests/pipeline/**` change. It can also be triggered manually via `workflow_dispatch`.
