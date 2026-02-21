@@ -15,6 +15,7 @@ let CGEventSourceCreate!: (stateId: number) => Pointer | null;
 let CGEventCreateKeyboardEvent!: (source: Pointer, keyCode: number, keyDown: boolean) => Pointer;
 let CGEventSetFlags!: (event: Pointer, flags: number) => void;
 let CGEventPost!: (tap: number, event: Pointer) => void;
+let CGEventKeyboardSetUnicodeString!: (event: Pointer, length: number, str: Buffer) => void;
 let CFRelease!: (ref: Pointer) => void;
 let AXIsProcessTrusted!: () => boolean;
 
@@ -33,6 +34,9 @@ function initCGEvent(): void {
   CGEventCreateKeyboardEvent = cg.func("CGEventCreateKeyboardEvent", "void *", ["void *", "uint16", "bool"]);
   CGEventSetFlags = cg.func("CGEventSetFlags", "void", ["void *", "uint64"]);
   CGEventPost = cg.func("CGEventPost", "void", ["uint32", "void *"]);
+  CGEventKeyboardSetUnicodeString = cg.func(
+    "CGEventKeyboardSetUnicodeString", "void", ["void *", "uint32", "void *"]
+  );
   CFRelease = cf.func("CFRelease", "void", ["void *"]);
   AXIsProcessTrusted = appServices.func("AXIsProcessTrusted", "bool", []);
 }
@@ -71,25 +75,71 @@ function simulatePaste(): void {
   CFRelease(src);
 }
 
-export function pasteText(text: string): void {
+const UNICODE_CHUNK_SIZE = 20;
+
+function typeText(text: string): void {
+  initCGEvent();
+
+  const src = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
+  if (!src) throw new Error("CGEventSourceCreate returned null");
+
+  try {
+    for (let i = 0; i < text.length; i += UNICODE_CHUNK_SIZE) {
+      const chunk = text.slice(i, i + UNICODE_CHUNK_SIZE);
+      const buf = Buffer.from(chunk, "utf16le");
+
+      const keyDown = CGEventCreateKeyboardEvent(src, 0, true);
+      CGEventKeyboardSetUnicodeString(keyDown, chunk.length, buf);
+      CGEventPost(kCGHIDEventTap, keyDown);
+
+      const keyUp = CGEventCreateKeyboardEvent(src, 0, false);
+      CGEventPost(kCGHIDEventTap, keyUp);
+
+      CFRelease(keyUp);
+      CFRelease(keyDown);
+
+      if (i + UNICODE_CHUNK_SIZE < text.length) {
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 10);
+      }
+    }
+  } finally {
+    CFRelease(src);
+  }
+}
+
+export function pasteText(text: string, copyToClipboard = true): void {
   if (!text) return;
 
-  clipboard.writeText(text);
+  if (copyToClipboard) {
+    clipboard.writeText(text);
 
-  if (isAccessibilityGranted()) {
-    try {
-      simulatePaste();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
+    if (isAccessibilityGranted()) {
+      try {
+        simulatePaste();
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        new Notification({
+          title: "Vox",
+          body: t("notification.pasteFailed", { error: msg.slice(0, 120) }),
+        }).show();
+      }
+    } else {
       new Notification({
         title: "Vox",
-        body: t("notification.pasteFailed", { error: msg.slice(0, 120) }),
+        body: t("notification.copiedToClipboard", { text: text.slice(0, 100) }),
       }).show();
     }
   } else {
-    new Notification({
-      title: "Vox",
-      body: t("notification.copiedToClipboard", { text: text.slice(0, 100) }),
-    }).show();
+    if (isAccessibilityGranted()) {
+      try {
+        typeText(text);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        new Notification({
+          title: "Vox",
+          body: t("notification.pasteFailed", { error: msg.slice(0, 120) }),
+        }).show();
+      }
+    }
   }
 }
