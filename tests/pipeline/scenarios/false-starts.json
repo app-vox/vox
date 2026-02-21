@@ -74,7 +74,7 @@
     "minSimilarity": 0.85,
     "assertions": [
       { "type": "must_contain", "value": "I was thinking" },
-      { "type": "must_contain", "value": "revisit the design" },
+      { "type": "must_match_regex", "value": "re-?visit the design" },
       { "type": "must_not_contain", "value": "um" },
       { "type": "must_not_contain", "value": "uh" },
       { "type": "must_not_contain", "value": "I was I was" },

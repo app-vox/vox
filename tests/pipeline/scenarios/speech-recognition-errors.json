@@ -21,8 +21,8 @@
     "expectedOutput": "You're going to love this new feature and I think you're the best person to review it before its release.",
     "minSimilarity": 0.85,
     "assertions": [
-      { "type": "must_contain", "value": "You're going to love" },
-      { "type": "must_contain", "value": "you're the best" },
+      { "type": "must_match_regex", "value": "(You're|You are) going to love" },
+      { "type": "must_match_regex", "value": "(you're|you are) the best" },
       { "type": "must_contain", "value": "its release" },
       { "type": "must_not_contain", "value": "your going" },
       { "type": "must_not_contain", "value": "your the" }

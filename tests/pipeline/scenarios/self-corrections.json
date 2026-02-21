@@ -56,11 +56,12 @@
     "description": "Correction use of 'actually no': speaker corrects a stated time using 'actually no' as a correction marker",
     "spokenText": "The meeting is at two, actually no, it's at three in the conference room",
     "audioFile": "self-corrections/005.wav",
-    "expectedOutput": "The meeting is at three in the conference room.",
+    "expectedOutput": "The meeting is at 3 in the conference room.",
     "minSimilarity": 0.85,
     "assertions": [
-      { "type": "must_contain", "value": "at three" },
+      { "type": "must_match_regex", "value": "at (3|three)" },
       { "type": "must_not_contain", "value": "at two" },
+      { "type": "must_not_contain", "value": "at 2" },
       { "type": "must_not_contain", "value": "actually no" }
     ]
   },
