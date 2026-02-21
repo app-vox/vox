@@ -7,7 +7,7 @@ import type { WidgetPosition } from "../shared/config";
 const CIRCLE_SIZE = 42;
 const PILL_WIDTH = 360;
 const PILL_HEIGHT = 32;
-const WIN_WIDTH = 320;
+const WIN_WIDTH = PILL_WIDTH + 40;
 const WIN_HEIGHT = 120;
 const DOCK_MARGIN = 24;
 const MIN_SCALE = 0.55;
@@ -268,7 +268,7 @@ function buildHudHtml(): string {
     flex-shrink: 0;
   }
   .x-icon { flex-shrink: 0; }
-  #pill-label { flex-shrink: 0; }
+  #pill-label { flex-shrink: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   #pill-label.clickable {
     cursor: pointer;
     text-decoration: underline;
