@@ -79,6 +79,8 @@
   "whisper.downloadPrompt": "Başlamak için aşağıdan bir model indirin",
   "whisper.testButton": "Yerel Modeli Test Et",
   "whisper.testHint": "5 saniye ses kaydeder ve seçili yerel modelle yazıya döker. Yerel modeller tamamen cihazınızda çalışır ve sesinizin bilgisayarınızdan asla çıkmamasını sağlayarak maksimum gizlilik sunar.",
+  "whisper.lowercaseStart": "Küçük harfle başla",
+  "whisper.lowercaseStartHint": "Yazıya dökülen metniniz her zaman küçük harfle başlayacaktır.",
   "whisper.recording": "5 saniye kaydediliyor...",
   "whisper.transcribing": "Yazıya dökülüyor...",
   "whisper.noSpeech": "(konuşma algılanmadı)",

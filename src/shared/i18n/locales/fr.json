@@ -79,6 +79,8 @@
   "whisper.downloadPrompt": "Veuillez télécharger un modèle ci-dessous pour commencer",
   "whisper.testButton": "Tester le modèle local",
   "whisper.testHint": "Enregistre 5 secondes d'audio et le transcrit en utilisant le modèle local sélectionné. Les modèles locaux fonctionnent entièrement sur votre appareil, garantissant que votre audio ne quitte jamais votre ordinateur pour une confidentialité maximale.",
+  "whisper.lowercaseStart": "Commencer en minuscule",
+  "whisper.lowercaseStartHint": "Votre texte transcrit commencera toujours par une lettre minuscule.",
   "whisper.recording": "Enregistrement pendant 5 secondes...",
   "whisper.transcribing": "Transcription...",
   "whisper.noSpeech": "(aucune parole détectée)",

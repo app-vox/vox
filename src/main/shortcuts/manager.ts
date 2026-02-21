@@ -768,6 +768,7 @@ export class ShortcutManager {
   private onRecordingStart(): void {
     const pipeline = this.deps.getPipeline();
     this.recordingGeneration++;
+    this.lastUnpastedText = null;
     const gen = this.recordingGeneration;
     slog.info("Recording requested (gen=%d) — showing initializing HUD", gen);
     this.hud.setState("initializing");
@@ -874,7 +875,8 @@ export class ShortcutManager {
       } else {
         slog.info("Valid text received, proceeding with paste");
         await new Promise((r) => setTimeout(r, 200));
-        const pasted = pasteText(trimmedText, config.copyToClipboard);
+        const pasteConfig = this.deps.configManager.load();
+        const pasted = pasteText(trimmedText, pasteConfig.copyToClipboard, { lowercaseStart: pasteConfig.lowercaseStart });
 
         if (!pasted && config.onboardingCompleted) {
           slog.info("Text not inserted — showing HUD warning");

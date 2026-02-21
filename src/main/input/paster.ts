@@ -208,7 +208,7 @@ export function pasteText(text: string, copyToClipboard = true): boolean {
     }
     return true;
   } else {
-    if (isAccessibilityGranted() && hasActiveTextField()) {
+    if (isAccessibilityGranted()) {
       try {
         typeText(text);
         return true;

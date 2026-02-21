@@ -74,7 +74,8 @@ function setupPipeline(): void {
     },
     onComplete: (result) => {
       try {
-        const finalText = applyCase(result.text, config.lowercaseStart);
+        const latestConfig = configManager.load();
+        const finalText = applyCase(result.text, latestConfig.lowercaseStart);
         historyManager.add({
           ...result,
           text: finalText,
