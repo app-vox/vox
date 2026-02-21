@@ -103,7 +103,11 @@ function reloadConfig(): void {
     : config.language;
   setLanguage(lang);
 
-  setupPipeline();
+  const busy = shortcutManager?.isRecording() ?? false;
+
+  if (!busy) {
+    setupPipeline();
+  }
   shortcutManager?.registerShortcutKeys();
   shortcutManager?.updateHud();
   updateTrayConfig(config);
