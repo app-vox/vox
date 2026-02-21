@@ -134,6 +134,7 @@ export function registerIpcHandlers(
       config.llmConnectionTested = true;
       config.llmConfigHash = computeLlmConfigHash(config);
       configManager.save(config);
+      onConfigChange?.();
 
       return { ok: true };
     } catch (err: unknown) {
