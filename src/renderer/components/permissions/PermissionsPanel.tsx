@@ -115,7 +115,6 @@ export function PermissionsPanel() {
             />
             <div>
               <div className={styles.checkboxLabel}>{t("permissions.copyToClipboard")}</div>
-              <div className={styles.checkboxDesc}>{t("permissions.copyToClipboardDesc")}</div>
             </div>
           </label>
         </div>

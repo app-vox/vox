@@ -301,6 +301,7 @@ export class ShortcutManager {
 
         if (!config.copyToClipboard && !isAccessibilityGranted()) {
           slog.info("No clipboard + no accessibility — showing HUD warning");
+          this.stateMachine.setIdle();
           this.hud.showWarning();
         } else {
           this.deps.analytics?.track("paste_completed", { method: "undo-cancel" });
@@ -396,7 +397,7 @@ export class ShortcutManager {
 
   dismissHud(): void {
     const hudState = this.hud.getState();
-    if (hudState === "error" || hudState === "canceled") {
+    if (hudState === "error" || hudState === "canceled" || hudState === "warning") {
       slog.info("Dismissing HUD state: %s", hudState);
       this.hud.setState("idle");
     }
