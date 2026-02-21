@@ -189,6 +189,7 @@ app.whenReady().then(async () => {
     getPipeline: () => pipeline!,
     analytics,
     openSettings: (tab) => openHome(reloadConfig, tab),
+    hasModel: () => new SetupChecker(modelManager).hasAnyModel(),
   });
   shortcutManager.start();
 

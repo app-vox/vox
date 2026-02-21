@@ -81,6 +81,7 @@ export interface ShortcutManagerDeps {
   getPipeline: () => Pipeline;
   analytics?: { track(event: string, properties?: Record<string, unknown>): void };
   openSettings?: (tab?: string) => void;
+  hasModel: () => boolean;
 }
 
 export class ShortcutManager {
@@ -567,6 +568,10 @@ export class ShortcutManager {
     });
 
     ipcMain.handle("hud:start-recording", () => {
+      if (!this.deps.hasModel()) {
+        this.hud.showError(3000, t("notification.setupRequired.indicator"));
+        return;
+      }
       if (this.stateMachine.getState() === RecordingState.Canceling) {
         this.silentAbortCancel();
         this.stateMachine.handleTogglePress();
