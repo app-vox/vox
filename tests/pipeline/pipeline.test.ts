@@ -39,12 +39,12 @@ describe.skipIf(!config)("pipeline integration tests", () => {
   const scenarioGroups = loadAllScenarios();
   const mode = whisperAvailable ? "full pipeline" : "LLM-only";
 
-  console.log(`\nPipeline test mode: ${mode}`);
+  console.warn(`\nPipeline test mode: ${mode}`);
   if (!whisperAvailable) {
-    console.log(
+    console.warn(
       "  Whisper model not configured — using spokenText as input (LLM-only mode).",
     );
-    console.log(
+    console.warn(
       "  Set whisper.modelPath in your config to enable full pipeline tests.\n",
     );
   }
@@ -76,7 +76,7 @@ describe.skipIf(!config)("pipeline integration tests", () => {
     }
 
     lines.push("");
-    console.log(lines.join("\n"));
+    console.warn(lines.join("\n"));
   });
 
   for (const { file, scenarios } of scenarioGroups) {
