@@ -1,3 +1,14 @@
+// PostHog Event Tracking
+const ANALYTICS_DEBUG = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+const trackEvent = (eventName, params = {}) => {
+    if (ANALYTICS_DEBUG) {
+        console.log(`[PostHog] ${eventName}`, params);
+    }
+    if (typeof posthog !== 'undefined' && posthog.capture) {
+        posthog.capture(eventName, params);
+    }
+};
+
 // OS and Architecture Detection
 const detectOS = () => {
     const userAgent = window.navigator.userAgent.toLowerCase();
@@ -45,6 +56,11 @@ const updateDownloadButton = () => {
     const downloadText = document.getElementById('download-text');
     const platformNote = document.getElementById('platform-note');
     const { os } = detectOS();
+
+    // Track download button clicks
+    downloadBtn.addEventListener('click', () => {
+        trackEvent('download_click', { platform: os });
+    });
 
     // Enable download for any macOS
     if (os !== 'macos') {
@@ -101,6 +117,7 @@ const initLanguageSwitcher = () => {
     menuButtons.forEach(button => {
         button.addEventListener('click', () => {
             const lang = button.getAttribute('data-lang');
+            trackEvent('language_switch', { language: lang });
             window.i18n.setLanguage(lang);
             menu.classList.remove('active');
 
@@ -147,6 +164,7 @@ themeToggle.addEventListener('click', () => {
     const currentTheme = html.getAttribute('data-theme');
     const newTheme = currentTheme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
+    trackEvent('theme_toggle', { theme: newTheme });
 });
 
 // Listen for system theme changes
@@ -389,6 +407,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (demoContainer) {
         demoObserver.observe(demoContainer);
     }
+
+    // 6. Event tracking for outbound links
+    const githubStars = document.getElementById('github-stars');
+    if (githubStars) {
+        githubStars.addEventListener('click', () => {
+            trackEvent('github_click', { location: 'header_stars' });
+        });
+    }
+
+    const starBtn = document.querySelector('.btn-secondary[href*="github.com/app-vox/vox"]');
+    if (starBtn) {
+        starBtn.addEventListener('click', () => {
+            trackEvent('github_click', { location: 'hero_star_button' });
+        });
+    }
+
+    document.querySelectorAll('.footer-nav a').forEach(link => {
+        link.addEventListener('click', () => {
+            trackEvent('footer_link_click', { label: link.textContent.trim() });
+        });
+    });
 });
 
 // Smooth scroll for anchor links
