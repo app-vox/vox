@@ -64,12 +64,26 @@ export type LlmConfig =
   | AnthropicLlmConfig
   | CustomLlmConfig;
 
+/** Per-provider storage for OpenAI-compatible providers that share the same runtime fields. */
+export interface PerProviderOpenAIFields {
+  deepseekApiKey: string;
+  deepseekModel: string;
+  deepseekEndpoint: string;
+  glmApiKey: string;
+  glmModel: string;
+  glmEndpoint: string;
+  litellmApiKey: string;
+  litellmModel: string;
+  litellmEndpoint: string;
+}
+
 /** Flat intersection of all variants — used ONLY at the persistence boundary. */
 export type LlmConfigFlat = Omit<FoundryLlmConfig, "provider"> &
   Omit<BedrockLlmConfig, "provider"> &
   Omit<OpenAICompatibleLlmConfig, "provider"> &
   Omit<AnthropicLlmConfig, "provider"> &
-  Omit<CustomLlmConfig, "provider"> & { provider: LlmProviderType };
+  Omit<CustomLlmConfig, "provider"> &
+  PerProviderOpenAIFields & { provider: LlmProviderType };
 
 export interface WhisperConfig {
   model: WhisperModelSize | "";
@@ -166,6 +180,15 @@ export function createDefaultLlmFlat(): LlmConfigFlat {
     openaiApiKey: "",
     openaiModel: "gpt-4o",
     openaiEndpoint: "https://api.openai.com",
+    deepseekApiKey: "",
+    deepseekModel: "deepseek-chat",
+    deepseekEndpoint: "https://api.deepseek.com",
+    glmApiKey: "",
+    glmModel: "glm-4",
+    glmEndpoint: "https://open.bigmodel.cn/api/paas/v4",
+    litellmApiKey: "",
+    litellmModel: "gpt-4o",
+    litellmEndpoint: "http://localhost:4000",
     anthropicApiKey: "",
     anthropicModel: "claude-sonnet-4-20250514",
     customEndpoint: "",
@@ -188,14 +211,32 @@ export function narrowLlmConfig(flat: LlmConfigFlat): LlmConfig {
         modelId: flat.modelId,
       };
     case "openai":
-    case "deepseek":
-    case "glm":
-    case "litellm":
       return {
-        provider: flat.provider,
+        provider: "openai",
         openaiApiKey: flat.openaiApiKey,
         openaiModel: flat.openaiModel,
         openaiEndpoint: flat.openaiEndpoint,
+      };
+    case "deepseek":
+      return {
+        provider: "deepseek",
+        openaiApiKey: flat.deepseekApiKey,
+        openaiModel: flat.deepseekModel,
+        openaiEndpoint: flat.deepseekEndpoint,
+      };
+    case "glm":
+      return {
+        provider: "glm",
+        openaiApiKey: flat.glmApiKey,
+        openaiModel: flat.glmModel,
+        openaiEndpoint: flat.glmEndpoint,
+      };
+    case "litellm":
+      return {
+        provider: "litellm",
+        openaiApiKey: flat.litellmApiKey,
+        openaiModel: flat.litellmModel,
+        openaiEndpoint: flat.litellmEndpoint,
       };
     case "anthropic":
       return {
@@ -220,5 +261,39 @@ export function narrowLlmConfig(flat: LlmConfigFlat): LlmConfig {
         apiKey: flat.apiKey,
         model: flat.model,
       };
+  }
+}
+
+/**
+ * Maps a runtime LlmConfig back to flat keys for persistence.
+ * OpenAI-compatible providers store their values in provider-specific fields
+ * (e.g. deepseekApiKey, glmEndpoint) so switching providers doesn't overwrite
+ * each other's saved configuration.
+ */
+export function spreadLlmToFlat(llm: LlmConfig): Partial<LlmConfigFlat> {
+  switch (llm.provider) {
+    case "deepseek":
+      return {
+        provider: "deepseek",
+        deepseekApiKey: llm.openaiApiKey,
+        deepseekModel: llm.openaiModel,
+        deepseekEndpoint: llm.openaiEndpoint,
+      };
+    case "glm":
+      return {
+        provider: "glm",
+        glmApiKey: llm.openaiApiKey,
+        glmModel: llm.openaiModel,
+        glmEndpoint: llm.openaiEndpoint,
+      };
+    case "litellm":
+      return {
+        provider: "litellm",
+        litellmApiKey: llm.openaiApiKey,
+        litellmModel: llm.openaiModel,
+        litellmEndpoint: llm.openaiEndpoint,
+      };
+    default:
+      return { ...llm };
   }
 }

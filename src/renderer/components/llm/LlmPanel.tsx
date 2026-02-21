@@ -130,7 +130,7 @@ export function LlmPanel() {
   const handleProviderChange = async (provider: LlmProviderType) => {
     if (provider === config.llm.provider) return;
     const newLlm = await window.voxApi.config.loadLlmForProvider(provider);
-    updateConfig({ llm: newLlm });
+    updateConfig({ llm: newLlm, llmConnectionTested: false, llmConfigHash: "" });
     saveConfig(true);
   };
 

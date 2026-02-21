@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createDefaultConfig, createDefaultLlmFlat, narrowLlmConfig } from "../../src/shared/config";
+import { createDefaultConfig, createDefaultLlmFlat, narrowLlmConfig, spreadLlmToFlat } from "../../src/shared/config";
 
 describe("VoxConfig", () => {
   it("should create a default config with foundry provider shape", () => {
@@ -67,6 +67,12 @@ describe("createDefaultLlmFlat", () => {
     expect(flat.modelId).toBe("anthropic.claude-3-5-sonnet-20241022-v2:0");
     expect(flat.openaiModel).toBe("gpt-4o");
     expect(flat.openaiEndpoint).toBe("https://api.openai.com");
+    expect(flat.deepseekModel).toBe("deepseek-chat");
+    expect(flat.deepseekEndpoint).toBe("https://api.deepseek.com");
+    expect(flat.glmModel).toBe("glm-4");
+    expect(flat.glmEndpoint).toBe("https://open.bigmodel.cn/api/paas/v4");
+    expect(flat.litellmModel).toBe("gpt-4o");
+    expect(flat.litellmEndpoint).toBe("http://localhost:4000");
     expect(flat.anthropicModel).toBe("claude-sonnet-4-20250514");
     expect(flat.customTokenSendAs).toBe("header");
   });
@@ -131,14 +137,159 @@ describe("narrowLlmConfig", () => {
     });
   });
 
-  it("should narrow litellm as OpenAI-compatible variant", () => {
-    const flat = { ...createDefaultLlmFlat(), provider: "litellm" as const };
+  it("should narrow deepseek using per-provider fields", () => {
+    const flat = {
+      ...createDefaultLlmFlat(),
+      provider: "deepseek" as const,
+      deepseekApiKey: "sk-ds",
+      deepseekModel: "deepseek-chat",
+      deepseekEndpoint: "https://api.deepseek.com",
+    };
+    const narrowed = narrowLlmConfig(flat);
+    expect(narrowed).toEqual({
+      provider: "deepseek",
+      openaiApiKey: "sk-ds",
+      openaiModel: "deepseek-chat",
+      openaiEndpoint: "https://api.deepseek.com",
+    });
+  });
+
+  it("should narrow glm using per-provider fields", () => {
+    const flat = {
+      ...createDefaultLlmFlat(),
+      provider: "glm" as const,
+      glmApiKey: "glm-key",
+      glmModel: "glm-4",
+      glmEndpoint: "https://open.bigmodel.cn/api/paas/v4",
+    };
+    const narrowed = narrowLlmConfig(flat);
+    expect(narrowed).toEqual({
+      provider: "glm",
+      openaiApiKey: "glm-key",
+      openaiModel: "glm-4",
+      openaiEndpoint: "https://open.bigmodel.cn/api/paas/v4",
+    });
+  });
+
+  it("should narrow litellm using per-provider fields", () => {
+    const flat = {
+      ...createDefaultLlmFlat(),
+      provider: "litellm" as const,
+      litellmApiKey: "lt-key",
+      litellmModel: "gpt-4o",
+      litellmEndpoint: "http://localhost:4000",
+    };
     const narrowed = narrowLlmConfig(flat);
     expect(narrowed).toEqual({
       provider: "litellm",
-      openaiApiKey: "",
+      openaiApiKey: "lt-key",
+      openaiModel: "gpt-4o",
+      openaiEndpoint: "http://localhost:4000",
+    });
+  });
+
+  it("should keep openai and deepseek values independent", () => {
+    const flat = {
+      ...createDefaultLlmFlat(),
+      provider: "openai" as const,
+      openaiApiKey: "sk-openai",
       openaiModel: "gpt-4o",
       openaiEndpoint: "https://api.openai.com",
+      deepseekApiKey: "sk-deepseek",
+      deepseekModel: "deepseek-chat",
+      deepseekEndpoint: "https://api.deepseek.com",
+    };
+    const openaiNarrowed = narrowLlmConfig(flat);
+    expect(openaiNarrowed).toEqual({
+      provider: "openai",
+      openaiApiKey: "sk-openai",
+      openaiModel: "gpt-4o",
+      openaiEndpoint: "https://api.openai.com",
+    });
+
+    const deepseekNarrowed = narrowLlmConfig({ ...flat, provider: "deepseek" });
+    expect(deepseekNarrowed).toEqual({
+      provider: "deepseek",
+      openaiApiKey: "sk-deepseek",
+      openaiModel: "deepseek-chat",
+      openaiEndpoint: "https://api.deepseek.com",
+    });
+  });
+});
+
+describe("spreadLlmToFlat", () => {
+  it("should map openai provider to shared openai fields", () => {
+    const result = spreadLlmToFlat({
+      provider: "openai",
+      openaiApiKey: "sk-openai",
+      openaiModel: "gpt-4o",
+      openaiEndpoint: "https://api.openai.com",
+    });
+    expect(result).toEqual({
+      provider: "openai",
+      openaiApiKey: "sk-openai",
+      openaiModel: "gpt-4o",
+      openaiEndpoint: "https://api.openai.com",
+    });
+  });
+
+  it("should map deepseek provider to deepseek-specific fields", () => {
+    const result = spreadLlmToFlat({
+      provider: "deepseek",
+      openaiApiKey: "sk-ds",
+      openaiModel: "deepseek-chat",
+      openaiEndpoint: "https://api.deepseek.com",
+    });
+    expect(result).toEqual({
+      provider: "deepseek",
+      deepseekApiKey: "sk-ds",
+      deepseekModel: "deepseek-chat",
+      deepseekEndpoint: "https://api.deepseek.com",
+    });
+  });
+
+  it("should map glm provider to glm-specific fields", () => {
+    const result = spreadLlmToFlat({
+      provider: "glm",
+      openaiApiKey: "glm-key",
+      openaiModel: "glm-4",
+      openaiEndpoint: "https://open.bigmodel.cn/api/paas/v4",
+    });
+    expect(result).toEqual({
+      provider: "glm",
+      glmApiKey: "glm-key",
+      glmModel: "glm-4",
+      glmEndpoint: "https://open.bigmodel.cn/api/paas/v4",
+    });
+  });
+
+  it("should map litellm provider to litellm-specific fields", () => {
+    const result = spreadLlmToFlat({
+      provider: "litellm",
+      openaiApiKey: "lt-key",
+      openaiModel: "gpt-4o",
+      openaiEndpoint: "http://localhost:4000",
+    });
+    expect(result).toEqual({
+      provider: "litellm",
+      litellmApiKey: "lt-key",
+      litellmModel: "gpt-4o",
+      litellmEndpoint: "http://localhost:4000",
+    });
+  });
+
+  it("should pass through foundry fields unchanged", () => {
+    const result = spreadLlmToFlat({
+      provider: "foundry",
+      endpoint: "https://foundry.example.com",
+      apiKey: "f-key",
+      model: "gpt-4o",
+    });
+    expect(result).toEqual({
+      provider: "foundry",
+      endpoint: "https://foundry.example.com",
+      apiKey: "f-key",
+      model: "gpt-4o",
     });
   });
 });
