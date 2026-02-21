@@ -356,14 +356,17 @@ function buildHudHtml(): string {
 
   /* Cancel button (below widget during idle+listening transition) */
   .circle-cancel {
+    position: absolute;
+    top: ${CIRCLE_SIZE + 6}px; left: 50%;
+    margin-left: -11px;
     width: 22px; height: 22px; border-radius: 50%;
     background: rgba(50, 50, 50, 0.95);
     border: 1px solid rgba(255,255,255,0.12);
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer; flex-shrink: 0;
+    cursor: pointer;
     transition: background 0.15s ease, opacity 0.15s ease;
     opacity: 0; pointer-events: none;
-    margin-top: 6px;
+    z-index: 10;
   }
   .circle-cancel:hover { background: #ff4444; border-color: rgba(239,68,68,0.5); }
   .circle-cancel svg { width: 10px; height: 10px; }
@@ -372,7 +375,7 @@ function buildHudHtml(): string {
   /* Undo bar (below widget during graceful cancel) */
   .undo-bar {
     display: flex; align-items: center; gap: 0;
-    margin-top: -2px;
+    margin-top: 6px;
     opacity: 0; pointer-events: none;
     transition: opacity 0.2s ease;
     flex-shrink: 0;
@@ -381,12 +384,12 @@ function buildHudHtml(): string {
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 10px;
-    padding: 3px 3px 3px 8px;
+    padding: 4px 4px 4px 10px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2);
   }
   .undo-bar.visible { opacity: 1; pointer-events: auto; }
   .undo-bar .countdown-track {
-    width: 88px; height: 3px;
+    width: 96px; height: 3px;
     background: rgba(255,255,255,0.08);
     border-radius: 1px;
     overflow: hidden;
@@ -403,8 +406,8 @@ function buildHudHtml(): string {
     border: none;
     border-radius: 7px;
     color: rgba(255,255,255,0.85);
-    font-size: 10px; font-weight: 500;
-    padding: 2px 6px 2px 5px;
+    font-size: 11px; font-weight: 500;
+    padding: 3px 7px 3px 6px;
     margin-left: 6px;
     cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease;
