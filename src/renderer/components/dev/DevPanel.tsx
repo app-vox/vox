@@ -377,7 +377,7 @@ export function DevPanel() {
     },
     {
       title: "Permissions",
-      overrideFields: ["microphonePermission", "accessibilityPermission"],
+      overrideFields: ["microphonePermission", "accessibilityPermission", "copyToClipboard"],
       rows: [
         {
           label: "Microphone",
@@ -399,6 +399,16 @@ export function DevPanel() {
             <>
               <span className={styles.realValue}>{boolDot(permStatus?.accessibility === true)}</span>
               {ov && <OverrideBool field="accessibilityPermission" {...ovProps} />}
+            </>
+          ),
+        },
+        {
+          label: "Copy to Clipboard",
+          overrideField: "copyToClipboard",
+          render: () => (
+            <>
+              <span className={styles.realValue}>{boolDot(config?.copyToClipboard)}</span>
+              {ov && <OverrideBool field="copyToClipboard" {...ovProps} />}
             </>
           ),
         },

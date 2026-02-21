@@ -8,6 +8,7 @@ export interface DevOverrides {
   updateDownloadProgress?: number;
   microphonePermission?: "granted" | "denied" | "not-determined";
   accessibilityPermission?: boolean;
+  copyToClipboard?: boolean;
   setupComplete?: boolean;
   online?: boolean;
   llmEnhancementEnabled?: boolean;
