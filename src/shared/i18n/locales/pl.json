@@ -445,5 +445,7 @@
   "menu.showHud": "Pokaż HUD",
   "menu.hideHud": "Ukryj HUD",
   "menu.checkForUpdates": "Sprawdź aktualizacje…",
-  "menu.visitOnboarding": "Uruchom samouczek"
+  "menu.visitOnboarding": "Uruchom samouczek",
+  "menu.window": "Okno",
+  "menu.bringAllToFront": "Przenieś wszystko na wierzch"
 }

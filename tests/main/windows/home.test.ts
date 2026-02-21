@@ -2,34 +2,45 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const {
   eventHandlers,
+  webContentsEventHandlers,
   appEventHandlers,
   mockHide,
   mockShow,
   mockFocus,
   mockIsDestroyed,
   mockIsMinimized,
-  mockWebContents,
+  mockWebContentsSend,
 } = vi.hoisted(() => {
   // Ensure isMac evaluates to true when home.ts loads, even on Linux CI
   Object.defineProperty(process, "platform", { value: "darwin", writable: true });
 
   const eventHandlers: Record<string, (...args: unknown[]) => void> = {};
+  const webContentsEventHandlers: Record<string, (...args: unknown[]) => void> = {};
   const appEventHandlers: Record<string, (...args: unknown[]) => void> = {};
   return {
     eventHandlers,
+    webContentsEventHandlers,
     appEventHandlers,
     mockHide: vi.fn(),
     mockShow: vi.fn(),
     mockFocus: vi.fn(),
     mockIsDestroyed: vi.fn().mockReturnValue(false),
     mockIsMinimized: vi.fn().mockReturnValue(false),
-    mockWebContents: { send: vi.fn(), on: vi.fn(), once: vi.fn() },
+    mockWebContentsSend: vi.fn(),
   };
 });
 
 vi.mock("electron", () => {
   class MockBrowserWindow {
-    webContents = mockWebContents;
+    webContents = {
+      send: mockWebContentsSend,
+      on: vi.fn((event: string, handler: (...args: unknown[]) => void) => {
+        webContentsEventHandlers[event] = handler;
+      }),
+      once: vi.fn((event: string, handler: (...args: unknown[]) => void) => {
+        webContentsEventHandlers[event] = handler;
+      }),
+    };
     on(event: string, handler: (...args: unknown[]) => void) { eventHandlers[event] = handler; }
     hide = mockHide;
     show = mockShow;
@@ -80,7 +91,9 @@ describe("home window macOS close behavior", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
     Object.keys(eventHandlers).forEach((k) => delete eventHandlers[k]);
+    Object.keys(webContentsEventHandlers).forEach((k) => delete webContentsEventHandlers[k]);
     // Mark any leftover window as destroyed so openHome creates a fresh one
     mockIsDestroyed.mockReturnValue(true);
     mockIsMinimized.mockReturnValue(false);
@@ -102,19 +115,63 @@ describe("home window macOS close behavior", () => {
     expect(mockHide).toHaveBeenCalled();
   });
 
-  it("allows actual close when app is quitting", () => {
+  it("does not hide on blur during grace period after show", () => {
     openHome(onClosed);
+    mockIsDestroyed.mockReturnValue(false);
+    mockHide.mockClear();
 
-    const beforeQuitHandler = appEventHandlers["before-quit"];
-    expect(beforeQuitHandler).toBeDefined();
-    beforeQuitHandler();
+    const showHandler = eventHandlers["show"];
+    const blurHandler = eventHandlers["blur"];
+    expect(showHandler).toBeDefined();
+    expect(blurHandler).toBeDefined();
 
-    const closeHandler = eventHandlers["close"];
-    const event = { preventDefault: vi.fn() };
-    closeHandler(event);
-
-    expect(event.preventDefault).not.toHaveBeenCalled();
+    showHandler();
+    blurHandler();
     expect(mockHide).not.toHaveBeenCalled();
+  });
+
+  it("hides on blur after grace period expires", () => {
+    openHome(onClosed);
+    mockIsDestroyed.mockReturnValue(false);
+    mockHide.mockClear();
+
+    const showHandler = eventHandlers["show"];
+    const blurHandler = eventHandlers["blur"];
+
+    showHandler();
+    vi.advanceTimersByTime(400);
+    blurHandler();
+    expect(mockHide).toHaveBeenCalledTimes(1);
+  });
+
+  it("resets grace period on each show", () => {
+    openHome(onClosed);
+    mockIsDestroyed.mockReturnValue(false);
+    mockHide.mockClear();
+
+    const showHandler = eventHandlers["show"];
+    const hideHandler = eventHandlers["hide"];
+    const blurHandler = eventHandlers["blur"];
+
+    showHandler();
+    vi.advanceTimersByTime(400);
+    blurHandler();
+    expect(mockHide).toHaveBeenCalledTimes(1);
+    mockHide.mockClear();
+
+    hideHandler();
+    showHandler();
+    blurHandler();
+    expect(mockHide).not.toHaveBeenCalled();
+  });
+
+  it("sends navigate-tab after did-finish-load when initialTab is set", () => {
+    openHome(onClosed, "transcriptions");
+    const loadHandler = webContentsEventHandlers["did-finish-load"];
+    expect(loadHandler).toBeDefined();
+    loadHandler();
+
+    expect(mockWebContentsSend).toHaveBeenCalledWith("navigate-tab", "transcriptions");
   });
 
   it("re-shows hidden window on subsequent openHome call", () => {
@@ -128,5 +185,22 @@ describe("home window macOS close behavior", () => {
 
     expect(mockShow).toHaveBeenCalled();
     expect(mockFocus).toHaveBeenCalled();
+  });
+
+  // This test must be last: it sets forceQuit=true which is module-level
+  // state that cannot be reset between tests.
+  it("allows actual close when app is quitting", () => {
+    openHome(onClosed);
+
+    const beforeQuitHandler = appEventHandlers["before-quit"];
+    expect(beforeQuitHandler).toBeDefined();
+    beforeQuitHandler();
+
+    const closeHandler = eventHandlers["close"];
+    const event = { preventDefault: vi.fn() };
+    closeHandler(event);
+
+    expect(event.preventDefault).not.toHaveBeenCalled();
+    expect(mockHide).not.toHaveBeenCalled();
   });
 });

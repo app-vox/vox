@@ -445,5 +445,7 @@
   "menu.showHud": "Afficher le HUD",
   "menu.hideHud": "Masquer le HUD",
   "menu.checkForUpdates": "Rechercher les mises à jour…",
-  "menu.visitOnboarding": "Découvrir l'accueil"
+  "menu.visitOnboarding": "Découvrir l'accueil",
+  "menu.window": "Fenêtre",
+  "menu.bringAllToFront": "Tout mettre au premier plan"
 }

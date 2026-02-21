@@ -445,5 +445,7 @@
   "menu.showHud": "HUD'u Göster",
   "menu.hideHud": "HUD'u Gizle",
   "menu.checkForUpdates": "Güncellemeleri Kontrol Et…",
-  "menu.visitOnboarding": "Karşılama Turunu Başlat"
+  "menu.visitOnboarding": "Karşılama Turunu Başlat",
+  "menu.window": "Pencere",
+  "menu.bringAllToFront": "Tümünü Öne Getir"
 }

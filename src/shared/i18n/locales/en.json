@@ -445,5 +445,7 @@
   "menu.showHud": "Show HUD",
   "menu.hideHud": "Hide HUD",
   "menu.checkForUpdates": "Check for Updates…",
-  "menu.visitOnboarding": "Visit Onboarding"
+  "menu.visitOnboarding": "Visit Onboarding",
+  "menu.window": "Window",
+  "menu.bringAllToFront": "Bring All to Front"
 }

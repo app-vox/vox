@@ -445,5 +445,7 @@
   "menu.showHud": "Показать HUD",
   "menu.hideHud": "Скрыть HUD",
   "menu.checkForUpdates": "Проверить обновления…",
-  "menu.visitOnboarding": "Начать вводный тур"
+  "menu.visitOnboarding": "Начать вводный тур",
+  "menu.window": "Окно",
+  "menu.bringAllToFront": "Все окна — на передний план"
 }

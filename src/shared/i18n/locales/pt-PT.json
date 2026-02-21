@@ -445,5 +445,7 @@
   "menu.showHud": "Mostrar HUD",
   "menu.hideHud": "Ocultar HUD",
   "menu.checkForUpdates": "Verificar Atualizações…",
-  "menu.visitOnboarding": "Iniciar Tour de Boas-vindas"
+  "menu.visitOnboarding": "Iniciar Tour de Boas-vindas",
+  "menu.window": "Janela",
+  "menu.bringAllToFront": "Trazer Todas para a Frente"
 }

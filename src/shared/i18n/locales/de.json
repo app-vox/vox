@@ -445,5 +445,7 @@
   "menu.showHud": "HUD anzeigen",
   "menu.hideHud": "HUD ausblenden",
   "menu.checkForUpdates": "Nach Updates suchen…",
-  "menu.visitOnboarding": "Einführung starten"
+  "menu.visitOnboarding": "Einführung starten",
+  "menu.window": "Fenster",
+  "menu.bringAllToFront": "Alle nach vorne bringen"
 }
