@@ -271,11 +271,13 @@ function buildHudHtml(): string {
   #pill-label { flex-shrink: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   #pill-label.clickable {
     cursor: pointer;
+  }
+  #pill-label u {
     text-decoration: underline;
     text-decoration-color: rgba(255,255,255,0.4);
     text-underline-offset: 2px;
   }
-  #pill-label.clickable:hover {
+  #pill-label:hover u {
     text-decoration-color: rgba(255,255,255,0.8);
   }
   .pill-cancel {
@@ -684,19 +686,52 @@ function setPillMode(cfg) {
 
   var label = document.getElementById('pill-label');
   if (cfg.showLabel && cfg.labelText) {
-    label.textContent = cfg.labelText;
+    if (cfg.labelText.indexOf('<u>') !== -1) {
+      label.innerHTML = cfg.labelText;
+    } else {
+      label.textContent = cfg.labelText;
+    }
     label.classList.remove('hidden');
-    requestAnimationFrame(function() {
-      var needed = pillContent.scrollWidth + 24;
-      widget.style.minWidth = Math.min(Math.max(needed, 140), ${PILL_WIDTH}) + 'px';
-    });
   } else {
+    label.textContent = '';
     label.classList.add('hidden');
-    widget.style.minWidth = '';
   }
 
   var cb = document.getElementById('pill-cancel');
   cb.style.display = cfg.showCancel ? 'flex' : 'none';
+}
+
+/* ---- Auto-size pill for error/warning states ---- */
+function autoSizePill() {
+  requestAnimationFrame(function() {
+    // Temporarily expand widget so pill-content (position:absolute) can measure freely
+    var prevMin = widget.style.minWidth;
+    var prevMax = widget.style.maxWidth;
+    widget.style.minWidth = ${PILL_WIDTH} + 'px';
+    widget.style.maxWidth = ${PILL_WIDTH} + 'px';
+    requestAnimationFrame(function() {
+      var needed = pillContent.scrollWidth + 24;
+      widget.style.maxWidth = '';
+      widget.style.minWidth = Math.min(Math.max(needed, 140), ${PILL_WIDTH}) + 'px';
+    });
+  });
+}
+
+/* ---- Hover-pause for error/warning flash timer ---- */
+var flashHoverActive = false;
+function onFlashHoverEnter() { window.electronAPI?.pauseFlashTimer(); }
+function onFlashHoverLeave() { window.electronAPI?.resumeFlashTimer(); }
+function startFlashHoverTracking() {
+  if (flashHoverActive) return;
+  flashHoverActive = true;
+  widget.addEventListener('mouseenter', onFlashHoverEnter);
+  widget.addEventListener('mouseleave', onFlashHoverLeave);
+}
+function stopFlashHoverTracking() {
+  if (!flashHoverActive) return;
+  flashHoverActive = false;
+  widget.removeEventListener('mouseenter', onFlashHoverEnter);
+  widget.removeEventListener('mouseleave', onFlashHoverLeave);
 }
 
 /* ---- Main state setter (called from main process) ---- */
@@ -759,19 +794,27 @@ function setState(newState, cfg) {
   }
 
   // Warning state: click pill to open transcriptions
+  var pillLabel = document.getElementById('pill-label');
   if (newState === 'warning') {
     widget.onclick = function(e) {
       e.stopPropagation();
       window.electronAPI?.hudOpenTranscriptions();
     };
     widget.style.cursor = 'pointer';
-    var lbl = document.getElementById('pill-label');
-    if (lbl) lbl.classList.add('clickable');
+    if (pillLabel) pillLabel.classList.add('clickable');
   } else {
     widget.onclick = null;
     widget.style.cursor = '';
-    var lbl2 = document.getElementById('pill-label');
-    if (lbl2) lbl2.classList.remove('clickable');
+    if (pillLabel) pillLabel.classList.remove('clickable');
+  }
+
+  // Auto-size pill width and hover-pause only for error/warning states
+  if (newState === 'error' || newState === 'warning') {
+    autoSizePill();
+    startFlashHoverTracking();
+  } else {
+    widget.style.minWidth = '';
+    stopFlashHoverTracking();
   }
 
   var circleCancel = document.getElementById('circle-cancel');
@@ -919,6 +962,10 @@ export class HudWindow {
   private hideTimer: ReturnType<typeof setTimeout> | null = null;
   private reduceAnimations = false;
   private reduceVisualEffects = false;
+  private flashStartedAt = 0;
+  private flashDurationMs = 0;
+  private flashPausedAt: number | null = null;
+  private flashRemainingMs = 0;
 
   show(alwaysShow: boolean, showOnHover: boolean, position: WidgetPosition = "bottom-center"): void {
     const positionChanged = this.position !== position;
@@ -1036,12 +1083,15 @@ export class HudWindow {
 
     if ((state === "error" || state === "canceled" || state === "warning") && !suppressFlash) {
       const delay = state === "warning" ? 5000 : state === "error" ? 3000 : 1500;
+      this.flashStartedAt = Date.now();
+      this.flashDurationMs = delay;
+      this.flashRemainingMs = delay;
+      this.flashPausedAt = null;
       const ft = setTimeout(() => {
         this.flashTimer = null;
         this.currentState = "idle";
         if (this.contentReady && this.window && !this.window.isDestroyed()) {
           if (!this.alwaysShow) {
-            // Reset renderer state before hiding so re-enable shows idle circle
             this.execSetState("idle");
             this.window.hide();
           } else {
@@ -1094,6 +1144,41 @@ export class HudWindow {
 
   showWarning(customText?: string): void {
     this.setState("warning", customText);
+  }
+
+  pauseFlashTimer(): void {
+    if (!this.flashTimer) return;
+    clearTimeout(this.flashTimer);
+    this.flashTimer = null;
+    const elapsed = Date.now() - this.flashStartedAt;
+    this.flashRemainingMs = Math.max(this.flashDurationMs - elapsed, 300);
+    this.flashPausedAt = Date.now();
+  }
+
+  resumeFlashTimer(): void {
+    if (!this.flashPausedAt || this.flashRemainingMs <= 0) return;
+    const remain = this.flashRemainingMs;
+    this.flashPausedAt = null;
+    this.flashStartedAt = Date.now();
+    this.flashDurationMs = remain;
+    this.flashRemainingMs = remain;
+    const ft = setTimeout(() => {
+      this.flashTimer = null;
+      this.currentState = "idle";
+      if (this.contentReady && this.window && !this.window.isDestroyed()) {
+        if (!this.alwaysShow) {
+          this.execSetState("idle");
+          this.window.hide();
+        } else {
+          this.execSetState("idle");
+          if (this.showOnHover) {
+            this.startHoverTracking();
+          }
+        }
+      }
+    }, remain);
+    ft.unref();
+    this.flashTimer = ft;
   }
 
   showUndoBar(durationMs = 3000): void {

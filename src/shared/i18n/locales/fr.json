@@ -247,7 +247,7 @@
   "notification.recordingFailed": "Échec de l'enregistrement : {error}",
   "notification.pasteFailed": "Échec du collage automatique : {error}. Le texte est dans votre presse-papiers.",
   "notification.copiedToClipboard": "{text}...Copié — appuyez sur Cmd+V pour coller.",
-  "notification.insertFailed": "Impossible d'insérer le texte — appuyez pour voir les transcriptions",
+  "notification.insertFailed": "Impossible d'insérer le texte — appuyez pour voir les <u>transcriptions</u>",
   "hud.startRecording": "Démarrer l'enregistrement",
   "hud.stopRecording": "Arrêter l'enregistrement",
   "hud.cancelRecording": "Annuler l'enregistrement",

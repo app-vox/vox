@@ -247,7 +247,7 @@
   "notification.recordingFailed": "Aufnahme fehlgeschlagen: {error}",
   "notification.pasteFailed": "Automatisches Einfügen fehlgeschlagen: {error}. Der Text befindet sich in Ihrer Zwischenablage.",
   "notification.copiedToClipboard": "{text}...Kopiert — drücken Sie Cmd+V zum Einfügen.",
-  "notification.insertFailed": "Text konnte nicht eingefügt werden — tippen, um Transkriptionen anzuzeigen",
+  "notification.insertFailed": "Text konnte nicht eingefügt werden — tippen, um <u>Transkriptionen</u> anzuzeigen",
   "hud.startRecording": "Aufnahme starten",
   "hud.stopRecording": "Aufnahme stoppen",
   "hud.cancelRecording": "Aufnahme abbrechen",

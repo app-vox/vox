@@ -644,6 +644,14 @@ export class ShortcutManager {
       this.dismissHud();
     });
 
+    ipcMain.handle("hud:pause-flash", () => {
+      this.hud.pauseFlashTimer();
+    });
+
+    ipcMain.handle("hud:resume-flash", () => {
+      this.hud.resumeFlashTimer();
+    });
+
   }
 
   private startAccessibilityWatchdog(): void {

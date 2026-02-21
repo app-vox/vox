@@ -247,7 +247,7 @@
   "notification.recordingFailed": "Falha na gravação: {error}",
   "notification.pasteFailed": "Falha ao colar automaticamente: {error}. O texto está na sua área de transferência.",
   "notification.copiedToClipboard": "{text}...Copiado — prima Cmd+V para colar.",
-  "notification.insertFailed": "Não foi possível inserir o texto — toque para ver transcrições",
+  "notification.insertFailed": "Não foi possível inserir o texto — toque para ver <u>transcrições</u>",
   "hud.startRecording": "Iniciar gravação",
   "hud.stopRecording": "Parar gravação",
   "hud.cancelRecording": "Cancelar gravação",

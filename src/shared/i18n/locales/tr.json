@@ -247,7 +247,7 @@
   "notification.recordingFailed": "Kayıt başarısız: {error}",
   "notification.pasteFailed": "Otomatik yapıştırma başarısız: {error}. Metin panonuzda.",
   "notification.copiedToClipboard": "{text}...Kopyalandı — yapıştırmak için Cmd+V'ye basın.",
-  "notification.insertFailed": "Metin eklenemedi — transkripsiyonları görmek için dokunun",
+  "notification.insertFailed": "Metin eklenemedi — <u>transkripsiyonları</u> görmek için dokunun",
   "hud.startRecording": "Kaydı başlat",
   "hud.stopRecording": "Kaydı durdur",
   "hud.cancelRecording": "Kaydı iptal et",
