@@ -302,6 +302,8 @@ export class ShortcutManager {
 
         if (!pasted) {
           slog.info("Text not inserted — showing HUD warning");
+          const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
+          this.playCue(errorCueType);
           this.stateMachine.setIdle();
           this.hud.showWarning();
         } else {
@@ -419,6 +421,7 @@ export class ShortcutManager {
     this.hud.show(config.showHud, config.hudShowOnHover, config.hudPosition);
     this.hud.setShowActions(config.showHudActions);
     this.hud.setPerformanceFlags(config.reduceAnimations, config.reduceVisualEffects);
+    this.hud.setModelAvailable(this.deps.hasModel(), t("notification.setupRequired.indicator"));
   }
 
   getHud(): HudWindow {
@@ -496,6 +499,10 @@ export class ShortcutManager {
         slog.debug("Ignoring hold shortcut during initialization");
         return;
       }
+      if (!this.deps.hasModel()) {
+        this.hud.showError(3000, t("notification.setupRequired.indicator"));
+        return;
+      }
       if (this.stateMachine.getState() === RecordingState.Canceling) {
         this.silentAbortCancel();
         this.stateMachine.handleHoldKeyDown();
@@ -511,6 +518,10 @@ export class ShortcutManager {
     const toggleOk = globalShortcut.register(config.shortcuts.toggle, () => {
       if (this.isInitializing) {
         slog.debug("Ignoring toggle shortcut during initialization");
+        return;
+      }
+      if (!this.deps.hasModel()) {
+        this.hud.showError(3000, t("notification.setupRequired.indicator"));
         return;
       }
       if (this.stateMachine.getState() === RecordingState.Canceling) {
@@ -787,6 +798,9 @@ export class ShortcutManager {
       pipeline.cancel().catch((err) => {
         slog.error("Error during short-recording cancel", err);
       });
+      const config = this.deps.configManager.load();
+      const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
+      this.playCue(errorCueType);
       this.stateMachine.setIdle();
       this.hud.setState("canceled");
       this.updateTrayState();
@@ -829,6 +843,8 @@ export class ShortcutManager {
 
         if (!pasted) {
           slog.info("Text not inserted — showing HUD warning");
+          const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
+          this.playCue(errorCueType);
           hudEndState = "warning";
         } else {
           this.deps.analytics?.track("paste_completed", { method: "auto-paste" });

@@ -217,6 +217,8 @@ function buildHudHtml(): string {
   .v-logo img { width: 18px; height: 18px; object-fit: contain; }
   .mic-icon svg { width: 16px; height: 16px; }
   .mic-icon.off { filter: blur(3px); transform: scale(1.1); }
+  .no-model-icon svg { width: 16px; height: 16px; }
+  .no-model-icon.off { filter: blur(3px); transform: scale(0.85); }
 
   /* ---- PILL MODE CONTENT ---- */
   .pill-content {
@@ -439,6 +441,7 @@ function buildHudHtml(): string {
     <div class="circle-content" id="circle-content">
       <div class="icon v-logo" id="v-logo"><img src="${logoDataUrl}" alt="Vox" draggable="false" /></div>
       <div class="icon mic-icon off" id="mic-icon"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></div>
+      <div class="icon no-model-icon off" id="no-model-icon"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(251,191,36,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
     </div>
 
     <!-- Pill mode content -->
@@ -481,6 +484,7 @@ function buildHudHtml(): string {
 var currentState = 'idle';
 var alwaysShow = true;
 var showActions = true;
+var modelAvailable = true;
 var hoverActionsTimer = null;
 var isMouseOver = false;
 var isDragging = false;
@@ -567,6 +571,10 @@ widget.addEventListener('click', function(e) {
   var isCircle = !widget.classList.contains('pill');
   if (isCircle) {
     if (currentState !== 'idle') return;
+    if (!modelAvailable) {
+      window.electronAPI?.hudOpenSettings();
+      return;
+    }
     clearHoverActions();
     window.electronAPI?.hudStartRecording();
   }
@@ -582,17 +590,34 @@ widget.addEventListener('click', function(e) {
   }
 });
 
-/* ---- Logo <-> mic crossfade on hover (idle circle only) ---- */
+/* ---- Logo <-> mic/x crossfade on hover (idle circle only) ---- */
+function updateIdleIcons(hover) {
+  var vLogo = document.getElementById('v-logo');
+  var micIcon = document.getElementById('mic-icon');
+  var noModelIcon = document.getElementById('no-model-icon');
+  if (hover) {
+    vLogo.classList.add('off');
+    if (modelAvailable) {
+      micIcon.classList.remove('off');
+      noModelIcon.classList.add('off');
+    } else {
+      micIcon.classList.add('off');
+      noModelIcon.classList.remove('off');
+    }
+  } else {
+    vLogo.classList.remove('off');
+    micIcon.classList.add('off');
+    noModelIcon.classList.add('off');
+  }
+}
 widget.addEventListener('mouseenter', function() {
   if (currentState === 'idle' && !widget.classList.contains('pill')) {
-    document.getElementById('v-logo').classList.add('off');
-    document.getElementById('mic-icon').classList.remove('off');
+    updateIdleIcons(true);
   }
 });
 widget.addEventListener('mouseleave', function() {
   if (currentState === 'idle' && !widget.classList.contains('pill')) {
-    document.getElementById('v-logo').classList.remove('off');
-    document.getElementById('mic-icon').classList.add('off');
+    updateIdleIcons(false);
   }
 });
 
@@ -605,8 +630,7 @@ document.body.addEventListener('mouseleave', function() {
   isMouseOver = false;
   clearHoverActions();
   if (currentState === 'idle' && !widget.classList.contains('pill')) {
-    document.getElementById('v-logo').classList.remove('off');
-    document.getElementById('mic-icon').classList.add('off');
+    updateIdleIcons(false);
   }
 });
 
@@ -703,18 +727,31 @@ function setPillMode(cfg) {
 
 /* ---- Auto-size pill for error/warning states ---- */
 function autoSizePill() {
+  var label = document.getElementById('pill-label');
+  if (!label || label.classList.contains('hidden')) return;
+  // Measure text width off-screen to avoid overflow:hidden constraint
+  var measure = document.createElement('span');
+  measure.style.cssText = 'position:fixed;top:-9999px;left:-9999px;white-space:nowrap;font-family:-apple-system,BlinkMacSystemFont,SF Pro Display,sans-serif;font-size:12px;font-weight:500;letter-spacing:0.1px;visibility:hidden;';
+  measure.innerHTML = label.innerHTML || label.textContent;
+  document.body.appendChild(measure);
   requestAnimationFrame(function() {
-    // Temporarily expand widget so pill-content (position:absolute) can measure freely
-    var prevMin = widget.style.minWidth;
-    var prevMax = widget.style.maxWidth;
-    widget.style.minWidth = ${PILL_WIDTH} + 'px';
-    widget.style.maxWidth = ${PILL_WIDTH} + 'px';
-    requestAnimationFrame(function() {
-      var needed = pillContent.scrollWidth + 24;
-      widget.style.maxWidth = '';
-      widget.style.minWidth = Math.min(Math.max(needed, 140), ${PILL_WIDTH}) + 'px';
-    });
+    var textWidth = measure.offsetWidth;
+    measure.remove();
+    // padding(24) + icon+gap(~26) + buffer(14)
+    var needed = textWidth + 64;
+    widget.style.minWidth = Math.min(Math.max(needed, 140), ${PILL_WIDTH}) + 'px';
   });
+}
+
+/* ---- No-model state for idle circle ---- */
+function setModelAvailable(available) {
+  modelAvailable = available;
+  if (currentState === 'idle' && !widget.classList.contains('pill')) {
+    if (isMouseOver) {
+      updateIdleIcons(true);
+    }
+    widget.setAttribute('title', available ? '' : (widget.getAttribute('data-no-model-msg') || ''));
+  }
 }
 
 /* ---- Hover-pause for error/warning flash timer ---- */
@@ -756,12 +793,10 @@ function setState(newState, cfg) {
       widget.style.minWidth = '';
       circleContent.classList.remove('off');
       if (isMouseOver && alwaysShow) {
-        document.getElementById('v-logo').classList.add('off');
-        document.getElementById('mic-icon').classList.remove('off');
+        updateIdleIcons(true);
         if (showActions) startHoverActionsTimer();
       } else {
-        document.getElementById('v-logo').classList.remove('off');
-        document.getElementById('mic-icon').classList.add('off');
+        updateIdleIcons(false);
       }
     }, 150);
   } else {
@@ -772,12 +807,10 @@ function setState(newState, cfg) {
     if (isPill && cfg.mode) setPillMode(cfg.mode);
 
     if (isIdle && isMouseOver && alwaysShow) {
-      document.getElementById('v-logo').classList.add('off');
-      document.getElementById('mic-icon').classList.remove('off');
+      updateIdleIcons(true);
       if (showActions) startHoverActionsTimer();
     } else if (isIdle) {
-      document.getElementById('v-logo').classList.remove('off');
-      document.getElementById('mic-icon').classList.add('off');
+      updateIdleIcons(false);
     }
   }
 
@@ -1332,6 +1365,7 @@ export class HudWindow {
     this.execJs(
       `document.getElementById('v-logo').classList.remove('off');` +
       `document.getElementById('mic-icon').classList.add('off');` +
+      `document.getElementById('no-model-icon').classList.add('off');` +
       `setBlur(0)`
     );
   }
@@ -1404,6 +1438,13 @@ export class HudWindow {
 
   setShowActions(show: boolean): void {
     this.execJs(`setShowActions(${show})`);
+  }
+
+  setModelAvailable(available: boolean, noModelMsg?: string): void {
+    if (noModelMsg) {
+      this.execJs(`document.getElementById('widget').setAttribute('data-no-model-msg', ${JSON.stringify(noModelMsg)})`);
+    }
+    this.execJs(`setModelAvailable(${available})`);
   }
 
   setPerformanceFlags(reduceAnimations: boolean, reduceVisualEffects: boolean): void {
