@@ -94,7 +94,7 @@
     "spokenText": "ship it Friday users can handle the change we tested enough",
     "audioFile": "content-preservation/006.wav",
     "expectedOutput": "Ship it Friday. Users can handle the change. We tested enough.",
-    "minSimilarity": 0.90,
+    "minSimilarity": 0.9,
     "assertions": [
       { "type": "must_not_contain", "value": "on Friday" },
       { "type": "must_not_contain", "value": "by Friday" },

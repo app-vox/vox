@@ -92,7 +92,7 @@
     "spokenText": "the caulk in the bathroom needs to be replaced and I bought some at the store yesterday",
     "audioFile": "speech-recognition-errors/007.wav",
     "expectedOutput": "The caulk in the bathroom needs to be replaced and I bought some at the store yesterday.",
-    "minSimilarity": 0.70,
+    "minSimilarity": 0.7,
     "assertions": [
       { "type": "must_contain", "value": "caulk" },
       { "type": "must_contain", "value": "bathroom" },

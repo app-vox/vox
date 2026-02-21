@@ -72,7 +72,7 @@
     "spokenText": "first run cube cuddle to check the cooper net ease pods then verify that et see dee is reachable and finally use helm to deploy the updated charts",
     "audioFile": "dictionary-terms/005.wav",
     "expectedOutput": "First run kubectl to check the Kubernetes pods, then verify that etcd is reachable, and finally use Helm to deploy the updated charts.",
-    "minSimilarity": 0.80,
+    "minSimilarity": 0.8,
     "assertions": [
       { "type": "must_contain", "value": "kubectl" },
       { "type": "must_contain", "value": "Kubernetes" },
@@ -91,7 +91,7 @@
     "spokenText": "so um we need to update the terra form I mean the terra form config for a w s no wait for a w s production and make sure the terra form plan looks clean",
     "audioFile": "dictionary-terms/006.wav",
     "expectedOutput": "We need to update the Terraform config for AWS production and make sure the Terraform plan looks clean.",
-    "minSimilarity": 0.80,
+    "minSimilarity": 0.8,
     "assertions": [
       { "type": "must_contain", "value": "Terraform" },
       { "type": "must_contain", "value": "AWS" },

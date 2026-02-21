@@ -31,7 +31,7 @@
     "spokenText": "Let's schedule the demo for next Monday, scratch that, let's do it on Wednesday afternoon instead",
     "audioFile": "self-corrections/003.wav",
     "expectedOutput": "Let's do it on Wednesday afternoon instead.",
-    "minSimilarity": 0.80,
+    "minSimilarity": 0.8,
     "assertions": [
       { "type": "must_contain", "value": "Wednesday afternoon" },
       { "type": "must_not_contain", "value": "next Monday" },

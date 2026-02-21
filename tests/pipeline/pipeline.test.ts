@@ -5,7 +5,6 @@ import type { Scenario } from "./scenarios/types";
 import { loadPipelineTestConfig } from "./helpers/config";
 import { normalizedSimilarity } from "./helpers/scoring";
 import { runAssertions } from "./helpers/assertions";
-import type { AssertionResult } from "./helpers/assertions";
 import { runLlmCorrection, runFullPipeline } from "./helpers/pipeline-runner";
 import { readWav } from "./helpers/wav-reader";
 

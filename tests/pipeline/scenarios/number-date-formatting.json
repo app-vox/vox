@@ -49,7 +49,7 @@
     "spokenText": "I have two cats and three dogs",
     "audioFile": "number-date-formatting/004.wav",
     "expectedOutput": "I have two cats and three dogs.",
-    "minSimilarity": 0.90,
+    "minSimilarity": 0.9,
     "assertions": [
       { "type": "must_contain", "value": "two cats" },
       { "type": "must_contain", "value": "three dogs" },

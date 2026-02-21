@@ -22,7 +22,7 @@
     "spokenText": "the invoice was sent on march fifteenth no wait march seventeenth and the total amount is twelve thousand five hundred dollars which is due within thirty days",
     "audioFile": "mixed-complexity/002.wav",
     "expectedOutput": "The invoice was sent on March 17th, and the total amount is $12,500, which is due within 30 days.",
-    "minSimilarity": 0.70,
+    "minSimilarity": 0.7,
     "assertions": [
       { "type": "must_not_contain", "value": "no wait" },
       { "type": "must_not_contain", "value": "fifteenth" },
@@ -76,7 +76,7 @@
     "spokenText": "oh my god um the damn deployment broke production again are you serious like we just fixed this shit last night and uh nobody even bothered to run the tests what the hell is going on with this team",
     "audioFile": "mixed-complexity/005.wav",
     "expectedOutput": "Oh my god, the damn deployment broke production again. Are you serious? We just fixed this shit last night, and nobody even bothered to run the tests. What the hell is going on with this team?",
-    "minSimilarity": 0.80,
+    "minSimilarity": 0.8,
     "assertions": [
       { "type": "must_not_contain", "value": "um" },
       { "type": "must_not_contain", "value": "uh" },

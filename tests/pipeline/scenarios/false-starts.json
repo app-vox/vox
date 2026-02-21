@@ -5,7 +5,7 @@
     "spokenText": "i i think we should proceed with the current plan",
     "audioFile": "false-starts/001.wav",
     "expectedOutput": "I think we should proceed with the current plan.",
-    "minSimilarity": 0.90,
+    "minSimilarity": 0.9,
     "assertions": [
       { "type": "must_contain", "value": "I think we should proceed" },
       { "type": "must_not_contain", "value": "I I" },
@@ -18,7 +18,7 @@
     "spokenText": "i was i was thinking about the project and how we can improve it",
     "audioFile": "false-starts/002.wav",
     "expectedOutput": "I was thinking about the project and how we can improve it.",
-    "minSimilarity": 0.90,
+    "minSimilarity": 0.9,
     "assertions": [
       { "type": "must_contain", "value": "I was thinking about the project" },
       { "type": "must_contain", "value": "improve it" },
@@ -32,7 +32,7 @@
     "spokenText": "we should probably go with the maybe let me check the budget first before we decide",
     "audioFile": "false-starts/003.wav",
     "expectedOutput": "Let me check the budget first before we decide.",
-    "minSimilarity": 0.80,
+    "minSimilarity": 0.8,
     "assertions": [
       { "type": "must_contain", "value": "check the budget" },
       { "type": "must_contain", "value": "before we decide" },
@@ -58,7 +58,7 @@
     "spokenText": "the the the problem is we don't have enough time to finish everything",
     "audioFile": "false-starts/005.wav",
     "expectedOutput": "The problem is we don't have enough time to finish everything.",
-    "minSimilarity": 0.90,
+    "minSimilarity": 0.9,
     "assertions": [
       { "type": "must_contain", "value": "The problem is" },
       { "type": "must_contain", "value": "enough time to finish everything" },

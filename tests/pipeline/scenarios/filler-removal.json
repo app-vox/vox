@@ -5,7 +5,7 @@
     "spokenText": "um so i was thinking about the project uh and i think we should start tomorrow",
     "audioFile": "filler-removal/001.wav",
     "expectedOutput": "So I was thinking about the project, and I think we should start tomorrow.",
-    "minSimilarity": 0.90,
+    "minSimilarity": 0.9,
     "assertions": [
       { "type": "must_not_contain", "value": "um" },
       { "type": "must_not_contain", "value": "uh" },
@@ -19,7 +19,7 @@
     "spokenText": "the main takeaway is um like you know uh that we need better testing",
     "audioFile": "filler-removal/002.wav",
     "expectedOutput": "The main takeaway is that we need better testing.",
-    "minSimilarity": 0.90,
+    "minSimilarity": 0.9,
     "assertions": [
       { "type": "must_not_contain", "value": "um" },
       { "type": "must_not_contain", "value": "uh" },
@@ -77,7 +77,7 @@
     "spokenText": "um so the first thing we need to do is uh review the pull requests you know and then like after that hmm we should probably um run the full test suite ah and finally uh we can deploy to staging you know if everything passes",
     "audioFile": "filler-removal/006.wav",
     "expectedOutput": "So the first thing we need to do is review the pull requests, and then after that we should probably run the full test suite. And finally, we can deploy to staging if everything passes.",
-    "minSimilarity": 0.80,
+    "minSimilarity": 0.8,
     "assertions": [
       { "type": "must_not_contain", "value": "um" },
       { "type": "must_not_contain", "value": "uh" },

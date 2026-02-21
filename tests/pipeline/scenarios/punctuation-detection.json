@@ -5,7 +5,7 @@
     "spokenText": "the report is ready and has been sent to the client",
     "audioFile": "punctuation-detection/001.wav",
     "expectedOutput": "The report is ready and has been sent to the client.",
-    "minSimilarity": 0.90,
+    "minSimilarity": 0.9,
     "assertions": [
       { "type": "must_end_with", "value": "." },
       { "type": "must_contain", "value": "report is ready" },
@@ -18,7 +18,7 @@
     "spokenText": "what time does the meeting start",
     "audioFile": "punctuation-detection/002.wav",
     "expectedOutput": "What time does the meeting start?",
-    "minSimilarity": 0.90,
+    "minSimilarity": 0.9,
     "assertions": [
       { "type": "must_end_with", "value": "?" },
       { "type": "must_contain", "value": "meeting start" }
@@ -30,7 +30,7 @@
     "spokenText": "i cant believe we actually won the contract",
     "audioFile": "punctuation-detection/003.wav",
     "expectedOutput": "I can't believe we actually won the contract!",
-    "minSimilarity": 0.90,
+    "minSimilarity": 0.9,
     "assertions": [
       { "type": "must_end_with", "value": "!" },
       { "type": "must_contain", "value": "won the contract" }
@@ -54,7 +54,7 @@
     "spokenText": "who would have thought we would get this far",
     "audioFile": "punctuation-detection/005.wav",
     "expectedOutput": "Who would have thought we would get this far?",
-    "minSimilarity": 0.80,
+    "minSimilarity": 0.8,
     "assertions": [
       { "type": "must_contain", "value": "would have thought" },
       { "type": "must_match_regex", "value": "[?!]$" }
@@ -66,7 +66,7 @@
     "spokenText": "the deployment finished at noon did anyone check the logs the error rate dropped to zero thats incredible",
     "audioFile": "punctuation-detection/006.wav",
     "expectedOutput": "The deployment finished at noon. Did anyone check the logs? The error rate dropped to zero, that's incredible!",
-    "minSimilarity": 0.80,
+    "minSimilarity": 0.8,
     "assertions": [
       { "type": "must_contain", "value": "deployment finished" },
       { "type": "must_match_regex", "value": "\\." },

@@ -3,9 +3,12 @@ name: Pipeline Tests
 on:
   push:
     paths:
-      - 'src/shared/constants.ts'
-      - 'tests/pipeline/**'
+      - "src/shared/constants.ts"
+      - "tests/pipeline/**"
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   pipeline-test:
