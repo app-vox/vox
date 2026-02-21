@@ -18,6 +18,12 @@ let CGEventPost!: (tap: number, event: Pointer) => void;
 let CGEventKeyboardSetUnicodeString!: (event: Pointer, length: number, str: Buffer) => void;
 let CFRelease!: (ref: Pointer) => void;
 let AXIsProcessTrusted!: () => boolean;
+let AXUIElementCreateSystemWide!: () => Pointer | null;
+let AXUIElementCopyAttributeValue!: (element: Pointer, attribute: Pointer, value: Pointer) => number;
+let CFStringCreateWithCString!: (alloc: null, str: string, encoding: number) => Pointer | null;
+let CFGetTypeID!: (ref: Pointer) => number;
+let CFStringGetTypeID!: () => number;
+let CFStringGetCString!: (str: Pointer, buf: Buffer, bufSize: number, encoding: number) => boolean;
 
 function initCGEvent(): void {
   if (process.env.VITEST) return;
@@ -39,12 +45,90 @@ function initCGEvent(): void {
   );
   CFRelease = cf.func("CFRelease", "void", ["void *"]);
   AXIsProcessTrusted = appServices.func("AXIsProcessTrusted", "bool", []);
+  AXUIElementCreateSystemWide = appServices.func("AXUIElementCreateSystemWide", "void *", []);
+  AXUIElementCopyAttributeValue = appServices.func("AXUIElementCopyAttributeValue", "int32", ["void *", "void *", "void **"]);
+  CFStringCreateWithCString = cf.func("CFStringCreateWithCString", "void *", ["void *", "string", "uint32"]);
+  CFGetTypeID = cf.func("CFGetTypeID", "uint64", ["void *"]);
+  CFStringGetTypeID = cf.func("CFStringGetTypeID", "uint64", []);
+  CFStringGetCString = cf.func("CFStringGetCString", "bool", ["void *", "void *", "int64", "uint32"]);
 }
 
 export function isAccessibilityGranted(): boolean {
   try {
     initCGEvent();
     return AXIsProcessTrusted();
+  } catch {
+    return false;
+  }
+}
+
+const kCFStringEncodingUTF8 = 0x08000100;
+const kAXErrorSuccess = 0;
+
+const TEXT_INPUT_ROLES = new Set([
+  "AXTextField",
+  "AXTextArea",
+  "AXComboBox",
+  "AXSearchField",
+  "AXWebArea",
+]);
+
+export function hasActiveTextField(): boolean {
+  try {
+    initCGEvent();
+    if (!AXIsProcessTrusted()) return false;
+
+    const systemWide = AXUIElementCreateSystemWide();
+    if (!systemWide) return false;
+
+    try {
+      const koffi = require("koffi");
+      const valueBuf = Buffer.alloc(8);
+      const focusedAttr = CFStringCreateWithCString(null, "AXFocusedUIElement", kCFStringEncodingUTF8);
+      if (!focusedAttr) return false;
+
+      try {
+        const err = AXUIElementCopyAttributeValue(systemWide, focusedAttr, valueBuf);
+        if (err !== kAXErrorSuccess) return false;
+
+        const focused = koffi.decode(valueBuf, "void *");
+        if (!focused) return false;
+
+        try {
+          const roleAttr = CFStringCreateWithCString(null, "AXRole", kCFStringEncodingUTF8);
+          if (!roleAttr) return false;
+
+          try {
+            const roleBuf = Buffer.alloc(8);
+            const roleErr = AXUIElementCopyAttributeValue(focused, roleAttr, roleBuf);
+            if (roleErr !== kAXErrorSuccess) return false;
+
+            const roleRef = koffi.decode(roleBuf, "void *");
+            if (!roleRef) return false;
+
+            try {
+              if (CFGetTypeID(roleRef) !== CFStringGetTypeID()) return false;
+
+              const strBuf = Buffer.alloc(256);
+              if (!CFStringGetCString(roleRef, strBuf, 256, kCFStringEncodingUTF8)) return false;
+
+              const role = strBuf.toString("utf8").split("\0")[0];
+              return TEXT_INPUT_ROLES.has(role);
+            } finally {
+              CFRelease(roleRef);
+            }
+          } finally {
+            CFRelease(roleAttr);
+          }
+        } finally {
+          CFRelease(focused);
+        }
+      } finally {
+        CFRelease(focusedAttr);
+      }
+    } finally {
+      CFRelease(systemWide);
+    }
   } catch {
     return false;
   }
@@ -107,8 +191,8 @@ function typeText(text: string): void {
   }
 }
 
-export function pasteText(text: string, copyToClipboard = true): void {
-  if (!text) return;
+export function pasteText(text: string, copyToClipboard = true): boolean {
+  if (!text) return false;
 
   if (copyToClipboard) {
     clipboard.writeText(text);
@@ -129,17 +213,21 @@ export function pasteText(text: string, copyToClipboard = true): void {
         body: t("notification.copiedToClipboard", { text: text.slice(0, 100) }),
       }).show();
     }
+    return true;
   } else {
-    if (isAccessibilityGranted()) {
+    if (isAccessibilityGranted() && hasActiveTextField()) {
       try {
         typeText(text);
+        return true;
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         new Notification({
           title: "Vox",
           body: t("notification.pasteFailed", { error: msg.slice(0, 120) }),
         }).show();
+        return false;
       }
     }
+    return false;
   }
 }

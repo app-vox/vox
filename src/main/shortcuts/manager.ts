@@ -297,10 +297,10 @@ export class ShortcutManager {
       } else {
         slog.info("Undo succeeded, pasting text");
         const config = this.deps.configManager.load();
-        pasteText(trimmedText, config.copyToClipboard);
+        const pasted = pasteText(trimmedText, config.copyToClipboard);
 
-        if (!config.copyToClipboard && !isAccessibilityGranted()) {
-          slog.info("No clipboard + no accessibility — showing HUD warning");
+        if (!pasted) {
+          slog.info("Text not inserted — showing HUD warning");
           this.stateMachine.setIdle();
           this.hud.showWarning();
         } else {
@@ -812,10 +812,10 @@ export class ShortcutManager {
       } else {
         slog.info("Valid text received, proceeding with paste");
         await new Promise((r) => setTimeout(r, 200));
-        pasteText(trimmedText, config.copyToClipboard);
+        const pasted = pasteText(trimmedText, config.copyToClipboard);
 
-        if (!config.copyToClipboard && !isAccessibilityGranted()) {
-          slog.info("No clipboard + no accessibility — showing HUD warning");
+        if (!pasted) {
+          slog.info("Text not inserted — showing HUD warning");
           hudEndState = "warning";
         } else {
           this.deps.analytics?.track("paste_completed", { method: "auto-paste" });

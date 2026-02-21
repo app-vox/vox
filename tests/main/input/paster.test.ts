@@ -14,13 +14,15 @@ describe("pasteText", () => {
   });
 
   it("should copy text to clipboard when copyToClipboard is true", () => {
-    pasteText("Hello, world!", true);
+    const result = pasteText("Hello, world!", true);
     expect(clipboard.writeText).toHaveBeenCalledWith("Hello, world!");
+    expect(result).toBe(true);
   });
 
   it("should not paste empty text", () => {
-    pasteText("", true);
+    const result = pasteText("", true);
     expect(clipboard.writeText).not.toHaveBeenCalled();
+    expect(result).toBe(false);
   });
 
   it("should not throw when CGEvent is unavailable", () => {
@@ -29,8 +31,9 @@ describe("pasteText", () => {
   });
 
   it("should not write to clipboard when copyToClipboard is false", () => {
-    pasteText("Hello", false);
+    const result = pasteText("Hello", false);
     expect(clipboard.writeText).not.toHaveBeenCalled();
+    expect(result).toBe(false);
   });
 
   it("should not throw when CGEvent is unavailable and copyToClipboard is false", () => {
