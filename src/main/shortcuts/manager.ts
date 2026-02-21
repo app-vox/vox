@@ -298,9 +298,15 @@ export class ShortcutManager {
         slog.info("Undo succeeded, pasting text");
         const config = this.deps.configManager.load();
         pasteText(trimmedText, config.copyToClipboard);
-        this.deps.analytics?.track("paste_completed", { method: "undo-cancel" });
-        this.stateMachine.setIdle();
-        this.hud.setState("idle");
+
+        if (!config.copyToClipboard && !isAccessibilityGranted()) {
+          slog.info("No clipboard + no accessibility — showing HUD warning");
+          this.hud.showWarning();
+        } else {
+          this.deps.analytics?.track("paste_completed", { method: "undo-cancel" });
+          this.stateMachine.setIdle();
+          this.hud.setState("idle");
+        }
       }
       this.updateTrayState();
     }).catch((err: unknown) => {
@@ -784,7 +790,7 @@ export class ShortcutManager {
     const stopCueType = (config.recordingStopAudioCue ?? "pop") as AudioCueType;
     this.playCue(stopCueType);
 
-    let hudEndState: "idle" | "error" | "canceled" = "idle";
+    let hudEndState: "idle" | "error" | "canceled" | "warning" = "idle";
     try {
       const text = await pipeline.stopAndProcess();
 
@@ -806,7 +812,13 @@ export class ShortcutManager {
         slog.info("Valid text received, proceeding with paste");
         await new Promise((r) => setTimeout(r, 200));
         pasteText(trimmedText, config.copyToClipboard);
-        this.deps.analytics?.track("paste_completed", { method: "auto-paste" });
+
+        if (!config.copyToClipboard && !isAccessibilityGranted()) {
+          slog.info("No clipboard + no accessibility — showing HUD warning");
+          hudEndState = "warning";
+        } else {
+          this.deps.analytics?.track("paste_completed", { method: "auto-paste" });
+        }
       }
     } catch (err: unknown) {
       // If generation changed, a restart/cancel already handled state — bail out
