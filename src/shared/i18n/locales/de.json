@@ -189,6 +189,7 @@
   "permissions.keychainAvailableDesc": "Bereit, Ihre Geheimnisse zu schützen, wenn Sie API-Schlüssel hinzufügen",
   "permissions.keychainUnprotectedDesc": "Verschlüsselung nicht verfügbar — Geheimnisse werden im Klartext gespeichert. Überprüfen Sie die Schlüsselbund-Einstellungen.",
   "permissions.keychainOpenKeychain": "Schlüsselbund öffnen",
+  "permissions.copyToClipboardDesc": "Wenn aktiviert, ersetzt der transkribierte Text den Inhalt der Zwischenablage. Wenn deaktiviert, wird der Text direkt in das aktive Feld eingefügt und Ihre Zwischenablage bleibt erhalten. Wenn kein Textfeld aktiv ist, ist der Text im Transkriptionsverlauf verfügbar.",
   "permissions.pipeline.title": "Berechtigungstest",
   "permissions.pipeline.description": "Nehmen Sie eine kurze Audioprobe auf, um zu überprüfen, ob die Mikrofon- und Barrierefreiheits-Berechtigungen korrekt funktionieren.",
   "permissions.pipeline.testButton": "5s-Test aufnehmen",

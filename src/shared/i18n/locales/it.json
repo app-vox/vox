@@ -189,6 +189,7 @@
   "permissions.keychainAvailableDesc": "Pronto a proteggere i tuoi segreti quando aggiungerai chiavi API",
   "permissions.keychainUnprotectedDesc": "Crittografia non disponibile — i segreti sono salvati in chiaro. Controlla le impostazioni del Portachiavi di sistema.",
   "permissions.keychainOpenKeychain": "Apri Portachiavi",
+  "permissions.copyToClipboardDesc": "Quando attivato, il testo trascritto sostituisce il contenuto degli appunti. Quando disattivato, il testo viene inserito direttamente nel campo attivo e gli appunti vengono preservati. Se nessun campo di testo è attivo, il testo sarà disponibile nella cronologia delle trascrizioni.",
   "permissions.pipeline.title": "Test dei permessi",
   "permissions.pipeline.description": "Registra un breve campione audio per verificare che i permessi del microfono e dell'accessibilità funzionino correttamente.",
   "permissions.pipeline.testButton": "Registra test di 5s",

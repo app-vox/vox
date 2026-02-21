@@ -192,6 +192,7 @@
   "permissions.keychainAvailableDesc": "Ready to protect your secrets when you add API keys",
   "permissions.keychainUnprotectedDesc": "Encryption unavailable — secrets are stored in plaintext. Check your system Keychain settings.",
   "permissions.keychainOpenKeychain": "Open Keychain",
+  "permissions.copyToClipboardDesc": "When enabled, transcribed text replaces your clipboard content. When disabled, text is inserted directly into the active field and your clipboard is preserved. If no text field is active, the text will be available in your transcription history.",
   "permissions.pipeline.title": "Permissions Test",
   "permissions.pipeline.description": "Record a short audio sample to verify that microphone and accessibility permissions are working correctly.",
   "permissions.pipeline.testButton": "Record 5s Test",

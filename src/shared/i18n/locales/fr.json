@@ -189,6 +189,7 @@
   "permissions.keychainAvailableDesc": "Prêt à protéger vos secrets lorsque vous ajouterez des clés API",
   "permissions.keychainUnprotectedDesc": "Chiffrement indisponible — les secrets sont stockés en clair. Vérifiez les paramètres du Trousseau système.",
   "permissions.keychainOpenKeychain": "Ouvrir le Trousseau",
+  "permissions.copyToClipboardDesc": "Lorsqu'activé, le texte transcrit remplace le contenu du presse-papiers. Lorsque désactivé, le texte est inséré directement dans le champ actif et votre presse-papiers est préservé. Si aucun champ de texte n'est actif, le texte sera disponible dans l'historique des transcriptions.",
   "permissions.pipeline.title": "Test des permissions",
   "permissions.pipeline.description": "Enregistrez un court échantillon audio pour vérifier que les permissions du microphone et d'accessibilité fonctionnent correctement.",
   "permissions.pipeline.testButton": "Enregistrer un test de 5s",

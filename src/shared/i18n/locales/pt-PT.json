@@ -189,6 +189,7 @@
   "permissions.keychainAvailableDesc": "Pronto para proteger os seus segredos quando adicionar chaves de API",
   "permissions.keychainUnprotectedDesc": "Encriptação indisponível — segredos guardados em texto simples. Verifique as definições do Porta-chaves do sistema.",
   "permissions.keychainOpenKeychain": "Abrir Porta-chaves",
+  "permissions.copyToClipboardDesc": "Quando ativado, o texto transcrito substitui o conteúdo da área de transferência. Quando desativado, o texto é inserido diretamente no campo ativo e a sua área de transferência é preservada. Se nenhum campo de texto estiver ativo, o texto ficará disponível no histórico de transcrições.",
   "permissions.pipeline.title": "Teste de Permissões",
   "permissions.pipeline.description": "Grave uma amostra curta de áudio para verificar se as permissões de microfone e acessibilidade estão a funcionar corretamente.",
   "permissions.pipeline.testButton": "Gravar Teste de 5s",
