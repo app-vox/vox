@@ -5,14 +5,14 @@ import { t } from "../shared/i18n";
 import type { WidgetPosition } from "../shared/config";
 
 const CIRCLE_SIZE = 42;
-const PILL_WIDTH = 200;
+const PILL_WIDTH = 360;
 const PILL_HEIGHT = 32;
 const WIN_WIDTH = 320;
 const WIN_HEIGHT = 120;
 const DOCK_MARGIN = 24;
 const MIN_SCALE = 0.55;
 
-export type HudState = "idle" | "initializing" | "listening" | "transcribing" | "enhancing" | "error" | "canceled";
+export type HudState = "idle" | "initializing" | "listening" | "transcribing" | "enhancing" | "error" | "canceled" | "warning";
 
 
 function getLogoDataUrl(): string {
@@ -269,6 +269,15 @@ function buildHudHtml(): string {
   }
   .x-icon { flex-shrink: 0; }
   #pill-label { flex-shrink: 0; }
+  #pill-label.clickable {
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: rgba(255,255,255,0.4);
+    text-underline-offset: 2px;
+  }
+  #pill-label.clickable:hover {
+    text-decoration-color: rgba(255,255,255,0.8);
+  }
   .pill-cancel {
     pointer-events: auto;
     display: flex;
@@ -743,6 +752,22 @@ function setState(newState, cfg) {
     window.electronAPI?.setIgnoreMouseEvents(true);
   }
 
+  // Warning state: click pill to open transcriptions
+  if (newState === 'warning') {
+    widget.onclick = function(e) {
+      e.stopPropagation();
+      window.electronAPI?.hudOpenTranscriptions();
+    };
+    widget.style.cursor = 'pointer';
+    var lbl = document.getElementById('pill-label');
+    if (lbl) lbl.classList.add('clickable');
+  } else {
+    widget.onclick = null;
+    widget.style.cursor = '';
+    var lbl2 = document.getElementById('pill-label');
+    if (lbl2) lbl2.classList.remove('clickable');
+  }
+
   var circleCancel = document.getElementById('circle-cancel');
   circleCancel.classList.toggle('visible', false);
 
@@ -859,6 +884,7 @@ const INDICATOR_KEYS: Record<string, string> = {
   enhancing: "indicator.enhancing",
   error: "indicator.nothingHeard",
   canceled: "indicator.canceled",
+  warning: "notification.insertFailed",
 };
 
 const PILL_MODES: Record<string, Omit<PillModeConfig, "labelText">> = {
@@ -868,6 +894,7 @@ const PILL_MODES: Record<string, Omit<PillModeConfig, "labelText">> = {
   enhancing:    { color: "#44aaff", icon: "dot", showLabel: true, showCancel: true, showStop: false, animation: "pulse" },
   error:        { color: "#fbbf24", icon: "x-icon", showLabel: true, showCancel: false, showStop: false, animation: "glow" },
   canceled:     { color: "#fbbf24", icon: "x-icon", showLabel: true, showCancel: false, showStop: false, animation: "glow" },
+  warning:      { color: "#fbbf24", icon: "x-icon", showLabel: true, showCancel: false, showStop: false, animation: "glow" },
 };
 
 export class HudWindow {
@@ -1001,8 +1028,8 @@ export class HudWindow {
       this.execSetScale(1.0);
     }
 
-    if ((state === "error" || state === "canceled") && !suppressFlash) {
-      const delay = state === "error" ? 3000 : 1500;
+    if ((state === "error" || state === "canceled" || state === "warning") && !suppressFlash) {
+      const delay = state === "warning" ? 5000 : state === "error" ? 3000 : 1500;
       const ft = setTimeout(() => {
         this.flashTimer = null;
         this.currentState = "idle";
@@ -1057,6 +1084,10 @@ export class HudWindow {
 
   showCanceled(): void {
     this.setState("canceled");
+  }
+
+  showWarning(customText?: string): void {
+    this.setState("warning", customText);
   }
 
   showUndoBar(durationMs = 3000): void {
