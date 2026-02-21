@@ -7,7 +7,8 @@ import type { WidgetPosition } from "../shared/config";
 const CIRCLE_SIZE = 42;
 const PILL_WIDTH = 360;
 const PILL_HEIGHT = 32;
-const WIN_WIDTH = PILL_WIDTH + 40;
+const MAX_PILL_WIDTH = 480;
+const WIN_WIDTH = MAX_PILL_WIDTH + 40;
 const WIN_HEIGHT = 120;
 const DOCK_MARGIN = 24;
 const MIN_SCALE = 0.55;
@@ -695,7 +696,7 @@ function autoSizePill() {
     var textWidth = measure.offsetWidth;
     measure.remove();
     var needed = textWidth + 64;
-    widget.style.minWidth = Math.min(Math.max(needed, 140), ${PILL_WIDTH}) + 'px';
+    widget.style.minWidth = Math.min(Math.max(needed, 140), ${MAX_PILL_WIDTH}) + 'px';
   });
 }
 
