@@ -175,6 +175,39 @@ function simulatePaste(): void {
   CFRelease(src);
 }
 
+const CLIPBOARD_RESTORE_DELAY_MS = 400;
+
+function injectViaClipboard(text: string): void {
+  const prev = {
+    text: clipboard.readText(),
+    html: clipboard.readHTML(),
+    rtf: clipboard.readRTF(),
+  };
+
+  clipboard.writeText(text);
+  simulatePaste();
+
+  setTimeout(() => {
+    if (prev.html || prev.rtf) {
+      clipboard.write({ text: prev.text, html: prev.html, rtf: prev.rtf });
+    } else if (prev.text) {
+      clipboard.writeText(prev.text);
+    } else {
+      clipboard.clear();
+    }
+  }, CLIPBOARD_RESTORE_DELAY_MS);
+}
+
+export interface PasteOptions {
+  lowercaseStart?: boolean;
+}
+
+export function applyCase(text: string, lowercaseStart: boolean): string {
+  if (!text) return text;
+  if (lowercaseStart) return text[0].toLowerCase() + text.slice(1);
+  return text;
+}
+
 const UNICODE_CHUNK_SIZE = 20;
 
 function typeText(text: string): void {
@@ -231,19 +264,27 @@ export function pasteText(text: string, copyToClipboard = true): boolean {
     }
     return true;
   } else {
-    if (isAccessibilityGranted() && hasActiveTextField()) {
+    if (!isAccessibilityGranted()) return false;
+
+    if (hasActiveTextField()) {
       try {
         typeText(text);
         return true;
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        new Notification({
-          title: "Vox",
-          body: t("notification.pasteFailed", { error: msg.slice(0, 120) }),
-        }).show();
-        return false;
+      } catch {
+        // CGEvent unicode injection failed — fall through to clipboard fallback
       }
     }
-    return false;
+
+    try {
+      injectViaClipboard(text);
+      return true;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      new Notification({
+        title: "Vox",
+        body: t("notification.pasteFailed", { error: msg.slice(0, 120) }),
+      }).show();
+      return false;
+    }
   }
 }
