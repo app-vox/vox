@@ -419,7 +419,7 @@ export class ShortcutManager {
 
   private hasModel(): boolean {
     if (this.devModelOverride !== null) return this.devModelOverride;
-    return this.hasModel();
+    return this.deps.hasModel();
   }
 
   setDevModelOverride(hasModel: boolean | null): void {
@@ -436,7 +436,6 @@ export class ShortcutManager {
     this.hud.show(config.showHud, config.hudShowOnHover, config.hudPosition);
     this.hud.setShowActions(config.showHudActions);
     this.hud.setPerformanceFlags(config.reduceAnimations, config.reduceVisualEffects);
-    this.hud.setModelAvailable(this.hasModel(), t("notification.setupRequired.indicator"));
   }
 
   getHud(): HudWindow {

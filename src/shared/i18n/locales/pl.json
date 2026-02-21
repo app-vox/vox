@@ -247,7 +247,7 @@
   "notification.recordingFailed": "Nagrywanie nie powiodło się: {error}",
   "notification.pasteFailed": "Automatyczne wklejanie nie powiodło się: {error}. Tekst jest w schowku.",
   "notification.copiedToClipboard": "{text}...Skopiowano — naciśnij Cmd+V, aby wkleić.",
-  "notification.insertFailed": "Nie znaleziono aktywnego pola — dotknij, aby zobaczyć <u>transkrypcje</u>",
+  "notification.insertFailed": "Nie znaleziono aktywnego pola — dotknij tutaj lub przejdź do transkrypcji",
   "hud.startRecording": "Rozpocznij nagrywanie",
   "hud.stopRecording": "Zatrzymaj nagrywanie",
   "hud.cancelRecording": "Anuluj nagrywanie",

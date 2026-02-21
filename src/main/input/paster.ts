@@ -1,13 +1,11 @@
 import { clipboard, Notification } from "electron";
 import { t } from "../../shared/i18n";
 
-// CoreGraphics constants
 const kCGEventSourceStateHIDSystemState = 1;
 const kCGEventFlagMaskCommand = 0x100000;
 const kCGHIDEventTap = 0;
 const kVirtualKeyV = 9;
 
-// Opaque native pointer returned by koffi FFI calls
 type Pointer = NonNullable<unknown>;
 
 let initialized = false;
@@ -134,10 +132,6 @@ export function hasActiveTextField(): boolean {
   }
 }
 
-/**
- * Simulate Cmd+V using CoreGraphics CGEvent API called in-process via FFI.
- * Requires accessibility permission — events are silently dropped without it.
- */
 function simulatePaste(): void {
   initCGEvent();
 
@@ -148,7 +142,6 @@ function simulatePaste(): void {
   CGEventSetFlags(keyDown, kCGEventFlagMaskCommand);
   CGEventPost(kCGHIDEventTap, keyDown);
 
-  // Synchronous 50ms delay between key-down and key-up
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50);
 
   const keyUp = CGEventCreateKeyboardEvent(src, kVirtualKeyV, false);

@@ -247,7 +247,7 @@
   "notification.recordingFailed": "Error en la grabación: {error}",
   "notification.pasteFailed": "Error al pegar automáticamente: {error}. El texto está en su portapapeles.",
   "notification.copiedToClipboard": "{text}...Copiado — presione Cmd+V para pegar.",
-  "notification.insertFailed": "No se encontró un campo activo — toca para ver <u>transcripciones</u>",
+  "notification.insertFailed": "No se encontró un campo activo — toca aquí o ve a transcripciones",
   "hud.startRecording": "Iniciar grabación",
   "hud.stopRecording": "Detener grabación",
   "hud.cancelRecording": "Cancelar grabación",
