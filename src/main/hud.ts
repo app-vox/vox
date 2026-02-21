@@ -824,6 +824,7 @@ function setState(newState, cfg) {
   var pillLabel = document.getElementById('pill-label');
   if (newState === 'warning') {
     widget.onclick = function(e) {
+      if (wasDragged) { wasDragged = false; return; }
       e.stopPropagation();
       window.electronAPI?.hudOpenTranscriptions();
     };

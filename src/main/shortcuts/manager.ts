@@ -867,7 +867,7 @@ export class ShortcutManager {
         await new Promise((r) => setTimeout(r, 200));
         const pasted = pasteText(trimmedText, config.copyToClipboard);
 
-        if (!pasted) {
+        if (!pasted && config.onboardingCompleted) {
           slog.info("Text not inserted — showing HUD warning");
           const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
           this.playCue(errorCueType);
@@ -875,7 +875,7 @@ export class ShortcutManager {
           hudEndState = "warning";
         } else {
           this.lastUnpastedText = null;
-          this.deps.analytics?.track("paste_completed", { method: "auto-paste" });
+          this.deps.analytics?.track("paste_completed", { method: !pasted ? "onboarding" : "auto-paste" });
         }
       }
     } catch (err: unknown) {

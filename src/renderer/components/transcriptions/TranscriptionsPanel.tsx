@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useTranscriptionsStore } from "../../stores/transcriptions-store";
+import { useConfigStore } from "../../stores/config-store";
 import { useT } from "../../i18n-context";
 import type { TranscriptionEntry } from "../../../shared/types";
 import {
@@ -78,6 +79,7 @@ function CopyButton({ text, t }: { text: string; t: (key: string) => string }) {
 
 export function TranscriptionsPanel() {
   const t = useT();
+  const copyToClipboard = useConfigStore((s) => s.config?.copyToClipboard);
   const entries = useTranscriptionsStore((s) => s.entries);
   const total = useTranscriptionsStore((s) => s.total);
   const page = useTranscriptionsStore((s) => s.page);
@@ -145,10 +147,12 @@ export function TranscriptionsPanel() {
             {total > 0 ? (total === 1 ? t("history.oneStored") : t("history.countStored", { count: total })) : t("history.emptyState")}
           </p>
         </div>
-        <div className={card.infoBanner}>
-          <InfoCircleIcon width={14} height={14} />
-          <span>{t("history.clipboardHint")}</span>
-        </div>
+        {copyToClipboard && (
+          <div className={card.infoBanner}>
+            <InfoCircleIcon width={14} height={14} />
+            <span>{t("history.clipboardHint")}</span>
+          </div>
+        )}
         <div className={card.body}>
           <div className={styles.searchContainer}>
             <SearchIcon className={styles.searchIcon} width={16} height={16} />
