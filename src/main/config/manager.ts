@@ -106,6 +106,7 @@ export class ConfigManager {
           targetDisplayId: saved.targetDisplayId ?? defaults.targetDisplayId,
           reduceAnimations: saved.reduceAnimations ?? defaults.reduceAnimations,
           reduceVisualEffects: saved.reduceVisualEffects ?? defaults.reduceVisualEffects,
+          copyToClipboard: saved.copyToClipboard ?? defaults.copyToClipboard,
           onboardingCompleted: saved.onboardingCompleted ?? true,
         };
       } catch {

@@ -296,7 +296,8 @@ export class ShortcutManager {
         this.hud.setState("error");
       } else {
         slog.info("Undo succeeded, pasting text");
-        pasteText(trimmedText);
+        const config = this.deps.configManager.load();
+        pasteText(trimmedText, config.copyToClipboard);
         this.deps.analytics?.track("paste_completed", { method: "undo-cancel" });
         this.stateMachine.setIdle();
         this.hud.setState("idle");
@@ -804,7 +805,7 @@ export class ShortcutManager {
       } else {
         slog.info("Valid text received, proceeding with paste");
         await new Promise((r) => setTimeout(r, 200));
-        pasteText(trimmedText);
+        pasteText(trimmedText, config.copyToClipboard);
         this.deps.analytics?.track("paste_completed", { method: "auto-paste" });
       }
     } catch (err: unknown) {
