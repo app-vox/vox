@@ -71,6 +71,52 @@ const TEXT_INPUT_ROLES = new Set([
   "AXWebArea",
 ]);
 
+function matchesTextInputRole(koffi: typeof import("koffi"), element: Pointer): boolean {
+  const roleAttr = CFStringCreateWithCString(null, "AXRole", kCFStringEncodingUTF8);
+  if (!roleAttr) return false;
+
+  try {
+    const roleBuf = Buffer.alloc(8);
+    const roleErr = AXUIElementCopyAttributeValue(element, roleAttr, roleBuf);
+    if (roleErr !== kAXErrorSuccess) return false;
+
+    const roleRef = koffi.decode(roleBuf, "void *");
+    if (!roleRef) return false;
+
+    try {
+      if (CFGetTypeID(roleRef) !== CFStringGetTypeID()) return false;
+
+      const strBuf = Buffer.alloc(256);
+      if (!CFStringGetCString(roleRef, strBuf, 256, kCFStringEncodingUTF8)) return false;
+
+      const role = strBuf.toString("utf8").split("\0")[0];
+      return TEXT_INPUT_ROLES.has(role);
+    } finally {
+      CFRelease(roleRef);
+    }
+  } finally {
+    CFRelease(roleAttr);
+  }
+}
+
+function hasSelectedTextRange(koffi: typeof import("koffi"), element: Pointer): boolean {
+  const attr = CFStringCreateWithCString(null, "AXSelectedTextRange", kCFStringEncodingUTF8);
+  if (!attr) return false;
+
+  try {
+    const valBuf = Buffer.alloc(8);
+    const err = AXUIElementCopyAttributeValue(element, attr, valBuf);
+    if (err !== kAXErrorSuccess) return false;
+
+    const ref = koffi.decode(valBuf, "void *");
+    if (!ref) return false;
+    CFRelease(ref);
+    return true;
+  } finally {
+    CFRelease(attr);
+  }
+}
+
 export function hasActiveTextField(): boolean {
   try {
     initCGEvent();
@@ -93,31 +139,8 @@ export function hasActiveTextField(): boolean {
         if (!focused) return false;
 
         try {
-          const roleAttr = CFStringCreateWithCString(null, "AXRole", kCFStringEncodingUTF8);
-          if (!roleAttr) return false;
-
-          try {
-            const roleBuf = Buffer.alloc(8);
-            const roleErr = AXUIElementCopyAttributeValue(focused, roleAttr, roleBuf);
-            if (roleErr !== kAXErrorSuccess) return false;
-
-            const roleRef = koffi.decode(roleBuf, "void *");
-            if (!roleRef) return false;
-
-            try {
-              if (CFGetTypeID(roleRef) !== CFStringGetTypeID()) return false;
-
-              const strBuf = Buffer.alloc(256);
-              if (!CFStringGetCString(roleRef, strBuf, 256, kCFStringEncodingUTF8)) return false;
-
-              const role = strBuf.toString("utf8").split("\0")[0];
-              return TEXT_INPUT_ROLES.has(role);
-            } finally {
-              CFRelease(roleRef);
-            }
-          } finally {
-            CFRelease(roleAttr);
-          }
+          if (matchesTextInputRole(koffi, focused)) return true;
+          return hasSelectedTextRange(koffi, focused);
         } finally {
           CFRelease(focused);
         }
