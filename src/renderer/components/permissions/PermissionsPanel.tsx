@@ -1,16 +1,22 @@
 import { useConfigStore } from "../../stores/config-store";
 import { usePermissionRequest } from "../../hooks/use-permission-request";
 import { useTranscriptionTest } from "../../hooks/use-transcription-test";
+import { useSaveToast } from "../../hooks/use-save-toast";
 import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useT } from "../../i18n-context";
 import { PermissionRequest } from "../ui/PermissionRequest";
 import { TranscriptionTest } from "../ui/TranscriptionTest";
 import { MicIcon, LockIcon, ShieldIcon } from "../../../shared/icons";
 import card from "../shared/card.module.scss";
+import styles from "../general/GeneralPanel.module.scss";
 
 export function PermissionsPanel() {
   const t = useT();
+  const config = useConfigStore((s) => s.config);
+  const updateConfig = useConfigStore((s) => s.updateConfig);
+  const saveConfig = useConfigStore((s) => s.saveConfig);
   const realSetupComplete = useConfigStore((s) => s.setupComplete);
+  const triggerToast = useSaveToast((s) => s.trigger);
   const perm = usePermissionRequest();
   const transcriptionTest = useTranscriptionTest(5);
 
@@ -88,6 +94,30 @@ export function PermissionsPanel() {
             buttonText={perm.keychain.status?.available === false ? t("permissions.keychainOpenKeychain") : undefined}
             onRequest={perm.keychain.status?.available === false ? perm.keychain.openSettings : undefined}
           />
+        </div>
+      </div>
+
+      <div className={card.card}>
+        <div className={card.header}>
+          <h2>{t("permissions.copyToClipboard")}</h2>
+          <p className={card.description}>{t("permissions.copyToClipboardDesc")}</p>
+        </div>
+        <div className={card.body}>
+          <label className={styles.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={config?.copyToClipboard ?? false}
+              onChange={async () => {
+                updateConfig({ copyToClipboard: !config?.copyToClipboard });
+                await saveConfig(false);
+                triggerToast();
+              }}
+            />
+            <div>
+              <div className={styles.checkboxLabel}>{t("permissions.copyToClipboard")}</div>
+              <div className={styles.checkboxDesc}>{t("permissions.copyToClipboardDesc")}</div>
+            </div>
+          </label>
         </div>
       </div>
 
