@@ -247,7 +247,7 @@
   "notification.recordingFailed": "Ошибка записи: {error}",
   "notification.pasteFailed": "Ошибка автовставки: {error}. Текст скопирован в буфер обмена.",
   "notification.copiedToClipboard": "{text}...Скопировано — нажмите Cmd+V для вставки.",
-  "notification.insertFailed": "Не удалось вставить текст — нажмите для просмотра <u>транскрипций</u>",
+  "notification.insertFailed": "Активное поле не найдено — нажмите для просмотра <u>транскрипций</u>",
   "hud.startRecording": "Начать запись",
   "hud.stopRecording": "Остановить запись",
   "hud.cancelRecording": "Отменить запись",

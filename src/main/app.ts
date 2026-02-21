@@ -208,6 +208,10 @@ app.whenReady().then(async () => {
     return enabled;
   });
 
+  ipcMain.handle("dev:set-model-override", (_event, hasModel: boolean | null) => {
+    shortcutManager?.setDevModelOverride(hasModel);
+  });
+
   ipcMain.handle("dev:test-error", () => {
     analytics.captureError(new Error("Test error from Dev Panel"), { scope: "devPanel" }, { force: true });
   });

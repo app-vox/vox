@@ -312,6 +312,16 @@ export function DevPanel() {
     void window.voxApi.dev.setAnalyticsEnabled(analyticsOverride === true);
   }, [analyticsOverride]);
 
+  // Sync "no local model" override to the main process (affects HUD + shortcuts)
+  const setupCompleteOverride = ov ? overrides.setupComplete : undefined;
+  useEffect(() => {
+    if (setupCompleteOverride === false) {
+      void window.voxApi.dev.setModelOverride(false);
+    } else {
+      void window.voxApi.dev.setModelOverride(null);
+    }
+  }, [setupCompleteOverride]);
+
   const isPresetActive = (preset: Partial<DevOverrides>) =>
     ov && Object.entries(preset).every(([key, value]) =>
       overrides[key as keyof DevOverrides] === value,

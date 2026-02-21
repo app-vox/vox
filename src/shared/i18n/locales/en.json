@@ -250,7 +250,7 @@
   "notification.recordingFailed": "Recording failed: {error}",
   "notification.pasteFailed": "Auto-paste failed: {error}. Text is on your clipboard.",
   "notification.copiedToClipboard": "{text}...Copied — press Cmd+V to paste.",
-  "notification.insertFailed": "Could not insert text — tap to see <u>transcriptions</u>",
+  "notification.insertFailed": "No active field found — tap to see <u>transcriptions</u>",
   "hud.startRecording": "Start recording",
   "hud.stopRecording": "Stop recording",
   "hud.cancelRecording": "Cancel recording",

@@ -98,6 +98,7 @@ export class ShortcutManager {
   private micActiveAt = 0;
   private cancelTimer: ReturnType<typeof setTimeout> | null = null;
   private canceledAtStage: string | null = null;
+  private devModelOverride: boolean | null = null;
   private static readonly MIN_RECORDING_MS = 400;
 
   constructor(deps: ShortcutManagerDeps) {
@@ -248,6 +249,10 @@ export class ShortcutManager {
       slog.info("Pipeline paused at stage: %s", stage);
       this.canceledAtStage = stage;
       this.deps.analytics?.track("graceful_cancel_started", { stage });
+
+      const config = this.deps.configManager.load();
+      const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
+      this.playCue(errorCueType);
 
       this.stateMachine.setCanceling();
       this.hud.setState("canceled", undefined, true);
@@ -412,6 +417,16 @@ export class ShortcutManager {
     return state === RecordingState.Hold || state === RecordingState.Toggle || state === RecordingState.Processing || state === RecordingState.Canceling;
   }
 
+  private hasModel(): boolean {
+    if (this.devModelOverride !== null) return this.devModelOverride;
+    return this.hasModel();
+  }
+
+  setDevModelOverride(hasModel: boolean | null): void {
+    this.devModelOverride = hasModel;
+    this.updateHud();
+  }
+
   updateHud(): void {
     const config = this.deps.configManager.load();
     this.hud.setTargetDisplay(config.targetDisplayId);
@@ -421,7 +436,7 @@ export class ShortcutManager {
     this.hud.show(config.showHud, config.hudShowOnHover, config.hudPosition);
     this.hud.setShowActions(config.showHudActions);
     this.hud.setPerformanceFlags(config.reduceAnimations, config.reduceVisualEffects);
-    this.hud.setModelAvailable(this.deps.hasModel(), t("notification.setupRequired.indicator"));
+    this.hud.setModelAvailable(this.hasModel(), t("notification.setupRequired.indicator"));
   }
 
   getHud(): HudWindow {
@@ -499,7 +514,7 @@ export class ShortcutManager {
         slog.debug("Ignoring hold shortcut during initialization");
         return;
       }
-      if (!this.deps.hasModel()) {
+      if (!this.hasModel()) {
         this.hud.showError(3000, t("notification.setupRequired.indicator"));
         return;
       }
@@ -520,7 +535,7 @@ export class ShortcutManager {
         slog.debug("Ignoring toggle shortcut during initialization");
         return;
       }
-      if (!this.deps.hasModel()) {
+      if (!this.hasModel()) {
         this.hud.showError(3000, t("notification.setupRequired.indicator"));
         return;
       }
@@ -579,7 +594,7 @@ export class ShortcutManager {
     });
 
     ipcMain.handle("hud:start-recording", () => {
-      if (!this.deps.hasModel()) {
+      if (!this.hasModel()) {
         this.hud.showError(3000, t("notification.setupRequired.indicator"));
         return;
       }
