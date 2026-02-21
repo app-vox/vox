@@ -289,6 +289,29 @@ function buildHudHtml(): string {
     margin-left: 2px;
   }
   .pill-cancel:hover { background: rgba(255,255,255,0.2); color: white; }
+  .pill-copy {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border: none;
+    background: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.85);
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-left: 4px;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .pill-copy:hover { background: rgba(255,255,255,0.25); color: white; }
+  .pill-copy:active { transform: scale(0.95); }
+  .pill-copy.hidden { display: none; }
+  .pill-copy svg { flex-shrink: 0; }
   .pill-stop {
     pointer-events: auto;
     display: flex;
@@ -446,6 +469,10 @@ function buildHudHtml(): string {
         <path id="x-path" d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
       <span class="hidden" id="pill-label"></span>
+      <button class="pill-copy hidden" id="pill-copy" onclick="event.stopPropagation(); window.electronAPI?.hudCopyLatest()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span id="copy-label"></span>
+      </button>
       <button class="pill-cancel" id="pill-cancel" style="display:none" onclick="event.stopPropagation(); window.electronAPI?.cancelRecording()">
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M8 2L2 8M2 2L8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       </button>
@@ -486,7 +513,7 @@ var circleContent = document.getElementById('circle-content');
 var pillContent = document.getElementById('pill-content');
 var recentDragEnd = false;
 
-var interactiveEls = document.querySelectorAll('.widget, .hover-btn, .pill-cancel, .pill-stop, .circle-cancel, .undo-bar, .undo-btn');
+var interactiveEls = document.querySelectorAll('.widget, .hover-btn, .pill-cancel, .pill-copy, .pill-stop, .circle-cancel, .undo-bar, .undo-btn');
 var ignoreDisabled = false;
 interactiveEls.forEach(function(el) {
   el.addEventListener('mouseenter', function() {
@@ -500,7 +527,7 @@ interactiveEls.forEach(function(el) {
   });
 });
 document.addEventListener('click', function(e) {
-  if (!e.target.closest('.widget, .hover-btn, .pill-cancel, .pill-stop, .circle-cancel, .undo-bar, .undo-btn')) {
+  if (!e.target.closest('.widget, .hover-btn, .pill-cancel, .pill-copy, .pill-stop, .circle-cancel, .undo-bar, .undo-btn')) {
     if (ignoreDisabled) {
       ignoreDisabled = false;
       window.electronAPI?.setIgnoreMouseEvents(true);
@@ -511,7 +538,7 @@ document.addEventListener('click', function(e) {
 /* ---- Drag handling ---- */
 widget.addEventListener('mousedown', function(e) {
   if (document.getElementById('undo-bar').classList.contains('visible')) return;
-  if (e.target.closest('.hover-btn') || e.target.closest('.pill-cancel') || e.target.closest('.pill-stop')) return;
+  if (e.target.closest('.hover-btn') || e.target.closest('.pill-cancel') || e.target.closest('.pill-copy') || e.target.closest('.pill-stop')) return;
   isDragging = false;
   wasDragged = false;
   dragStartX = e.screenX;
@@ -549,7 +576,7 @@ widget.addEventListener('mousedown', function(e) {
 
 /* ---- Click handling ---- */
 widget.addEventListener('click', function(e) {
-  if (e.target.closest('.hover-btn') || e.target.closest('.pill-cancel') || e.target.closest('.pill-stop')) return;
+  if (e.target.closest('.hover-btn') || e.target.closest('.pill-cancel') || e.target.closest('.pill-copy') || e.target.closest('.pill-stop')) return;
   if (wasDragged) { wasDragged = false; return; }
   var isCircle = !widget.classList.contains('pill');
   if (isCircle) {
@@ -682,9 +709,16 @@ function setPillMode(cfg) {
 
   var cb = document.getElementById('pill-cancel');
   cb.style.display = cfg.showCancel ? 'flex' : 'none';
+
+  var copyBtn = document.getElementById('pill-copy');
+  if (cfg.showCopy && cfg.copyText) {
+    document.getElementById('copy-label').textContent = cfg.copyText;
+    copyBtn.classList.remove('hidden');
+  } else {
+    copyBtn.classList.add('hidden');
+  }
 }
 
-/* ---- Auto-size pill for error/warning states ---- */
 function autoSizePill() {
   var label = document.getElementById('pill-label');
   if (!label || label.classList.contains('hidden')) return;
@@ -692,10 +726,23 @@ function autoSizePill() {
   measure.style.cssText = 'position:fixed;top:-9999px;left:-9999px;white-space:nowrap;font-family:-apple-system,BlinkMacSystemFont,SF Pro Display,sans-serif;font-size:12px;font-weight:500;letter-spacing:0.1px;visibility:hidden;';
   measure.textContent = label.textContent;
   document.body.appendChild(measure);
+  var copyBtn = document.getElementById('pill-copy');
+  var copyMeasure = null;
+  if (copyBtn && !copyBtn.classList.contains('hidden')) {
+    copyMeasure = document.createElement('span');
+    copyMeasure.style.cssText = measure.style.cssText + 'font-size:11px;';
+    copyMeasure.textContent = document.getElementById('copy-label').textContent;
+    document.body.appendChild(copyMeasure);
+  }
   requestAnimationFrame(function() {
     var textWidth = measure.offsetWidth;
     measure.remove();
-    var needed = textWidth + 64;
+    var copyWidth = 0;
+    if (copyMeasure) {
+      copyWidth = copyMeasure.offsetWidth + 30;
+      copyMeasure.remove();
+    }
+    var needed = textWidth + copyWidth + 64;
     widget.style.minWidth = Math.min(Math.max(needed, 140), ${MAX_PILL_WIDTH}) + 'px';
   });
 }
@@ -900,6 +947,8 @@ interface PillModeConfig {
   showLabel: boolean;
   showCancel: boolean;
   showStop: boolean;
+  showCopy?: boolean;
+  copyText?: string;
   animation: "none" | "pulse" | "glow";
   labelText: string;
   barColor?: string;
@@ -1238,6 +1287,9 @@ export class HudWindow {
       const base = PILL_MODES[state] || PILL_MODES.initializing;
       const labelText = customLabel ?? t(INDICATOR_KEYS[state] || "indicator.transcribing");
       mode = { ...base, labelText };
+      if (state === "warning") {
+        mode = { ...mode, showCopy: true, copyText: t("notification.copyLatest") };
+      }
       if (this.reduceAnimations && state === "listening") {
         mode = { ...mode, icon: "dot", showLabel: true, animation: "none" };
       }

@@ -1,4 +1,4 @@
-import { BrowserWindow, globalShortcut, ipcMain, Notification, screen } from "electron";
+import { BrowserWindow, clipboard, globalShortcut, ipcMain, Notification, screen } from "electron";
 import { uIOhook, UiohookKey } from "uiohook-napi";
 import log from "electron-log/main";
 import { type ConfigManager } from "../config/manager";
@@ -99,6 +99,7 @@ export class ShortcutManager {
   private cancelTimer: ReturnType<typeof setTimeout> | null = null;
   private canceledAtStage: string | null = null;
   private devModelOverride: boolean | null = null;
+  private lastUnpastedText: string | null = null;
   private static readonly MIN_RECORDING_MS = 400;
 
   constructor(deps: ShortcutManagerDeps) {
@@ -309,9 +310,11 @@ export class ShortcutManager {
           slog.info("Text not inserted — showing HUD warning");
           const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
           this.playCue(errorCueType);
+          this.lastUnpastedText = trimmedText;
           this.stateMachine.setIdle();
           this.hud.showWarning();
         } else {
+          this.lastUnpastedText = null;
           this.deps.analytics?.track("paste_completed", { method: "undo-cancel" });
           this.stateMachine.setIdle();
           this.hud.setState("idle");
@@ -619,6 +622,15 @@ export class ShortcutManager {
       this.deps.openSettings?.("transcriptions");
     });
 
+    ipcMain.handle("hud:copy-latest", () => {
+      if (!this.lastUnpastedText) return false;
+      clipboard.writeText(this.lastUnpastedText);
+      this.deps.analytics?.track("paste_completed", { method: "copy-latest" });
+      this.lastUnpastedText = null;
+      this.hud.setState("idle");
+      return true;
+    });
+
     ipcMain.handle("hud:disable", () => {
       const config = this.deps.configManager.load();
       config.showHud = false;
@@ -859,8 +871,10 @@ export class ShortcutManager {
           slog.info("Text not inserted — showing HUD warning");
           const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
           this.playCue(errorCueType);
+          this.lastUnpastedText = trimmedText;
           hudEndState = "warning";
         } else {
+          this.lastUnpastedText = null;
           this.deps.analytics?.track("paste_completed", { method: "auto-paste" });
         }
       }

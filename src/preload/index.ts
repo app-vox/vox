@@ -289,6 +289,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   hudDrag: (dx: number, dy: number) => ipcRenderer.invoke("hud:drag", dx, dy),
   hudDragEnd: () => ipcRenderer.invoke("hud:drag-end"),
   setIgnoreMouseEvents: (ignore: boolean) => ipcRenderer.invoke("hud:set-ignore-mouse", ignore),
+  hudCopyLatest: () => ipcRenderer.invoke("hud:copy-latest"),
   hudDismiss: () => ipcRenderer.invoke("hud:dismiss"),
   pauseFlashTimer: () => ipcRenderer.invoke("hud:pause-flash"),
   resumeFlashTimer: () => ipcRenderer.invoke("hud:resume-flash"),
