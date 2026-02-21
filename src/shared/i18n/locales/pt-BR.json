@@ -11,8 +11,8 @@
   "general.theme.light": "Claro",
   "general.theme.dark": "Escuro",
   "general.theme.system": "Sistema",
-    "general.languages.title": "Idiomas",
-    "general.languages.description": "Idioma de exibição do app e idiomas preferidos de fala para transcrição.",
+  "general.languages.title": "Idiomas",
+  "general.languages.description": "Idioma de exibição do app e idiomas preferidos de fala para transcrição.",
   "general.language.title": "Idioma do Sistema",
   "general.language.description": "Escolha o idioma de exibição da interface do aplicativo.",
   "general.language.system": "Padrão do Sistema",
@@ -445,5 +445,7 @@
   "menu.showHud": "Mostrar HUD",
   "menu.hideHud": "Ocultar HUD",
   "menu.checkForUpdates": "Verificar Atualizações…",
-  "menu.visitOnboarding": "Iniciar Tour de Boas-vindas"
+  "menu.visitOnboarding": "Iniciar Tour de Boas-vindas",
+  "menu.window": "Janela",
+  "menu.bringAllToFront": "Trazer Todas para Frente"
 }

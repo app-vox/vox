@@ -11,8 +11,8 @@
   "general.theme.light": "Jasny",
   "general.theme.dark": "Ciemny",
   "general.theme.system": "Systemowy",
-    "general.languages.title": "Języki",
-    "general.languages.description": "Język wyświetlania aplikacji i preferowane języki mowy do transkrypcji.",
+  "general.languages.title": "Języki",
+  "general.languages.description": "Język wyświetlania aplikacji i preferowane języki mowy do transkrypcji.",
   "general.language.title": "Język systemu",
   "general.language.description": "Wybierz język wyświetlania interfejsu aplikacji.",
   "general.language.system": "Domyślny systemowy",
@@ -445,5 +445,7 @@
   "menu.showHud": "Pokaż HUD",
   "menu.hideHud": "Ukryj HUD",
   "menu.checkForUpdates": "Sprawdź aktualizacje…",
-  "menu.visitOnboarding": "Uruchom samouczek"
+  "menu.visitOnboarding": "Uruchom samouczek",
+  "menu.window": "Okno",
+  "menu.bringAllToFront": "Przenieś wszystko na wierzch"
 }
