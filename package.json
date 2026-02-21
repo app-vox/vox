@@ -18,6 +18,7 @@
     "lint:css:fix": "stylelint \"src/**/*.{css,scss}\" --fix",
     "check:tokens": "./scripts/check-css-tokens.sh",
     "test": "vitest run",
+    "test:pipeline": "vitest run --config vitest.pipeline.config.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "dist": "electron-vite build && electron-builder",
