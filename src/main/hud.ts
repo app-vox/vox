@@ -686,8 +686,13 @@ function setPillMode(cfg) {
   if (cfg.showLabel && cfg.labelText) {
     label.textContent = cfg.labelText;
     label.classList.remove('hidden');
+    requestAnimationFrame(function() {
+      var needed = pillContent.scrollWidth + 24;
+      widget.style.minWidth = Math.min(Math.max(needed, 140), ${PILL_WIDTH}) + 'px';
+    });
   } else {
     label.classList.add('hidden');
+    widget.style.minWidth = '';
   }
 
   var cb = document.getElementById('pill-cancel');
@@ -713,6 +718,7 @@ function setState(newState, cfg) {
     setTimeout(function() {
       if (currentState !== 'idle') return;
       widget.className = 'widget';
+      widget.style.minWidth = '';
       circleContent.classList.remove('off');
       if (isMouseOver && alwaysShow) {
         document.getElementById('v-logo').classList.add('off');
