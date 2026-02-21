@@ -14,7 +14,7 @@ import { setupTray, setTrayModelState, updateTrayConfig, updateTrayMenu, getTray
 import { initAutoUpdater } from "./updater";
 import { openHome, setAppMenuCallbacks, refreshAppMenu } from "./windows/home";
 import { registerIpcHandlers } from "./ipc";
-import { isAccessibilityGranted } from "./input/paster";
+import { isAccessibilityGranted, applyCase } from "./input/paster";
 import { SetupChecker } from "./setup/checker";
 import { HistoryManager } from "./history/manager";
 import { type AudioCueType } from "../shared/config";
@@ -74,9 +74,11 @@ function setupPipeline(): void {
     },
     onComplete: (result) => {
       try {
+        const finalText = applyCase(result.text, config.lowercaseStart);
         historyManager.add({
           ...result,
-          wordCount: result.text.split(/\s+/).filter(Boolean).length,
+          text: finalText,
+          wordCount: finalText.split(/\s+/).filter(Boolean).length,
           whisperModel: config.whisper.model || "unknown",
           llmEnhanced: config.enableLlmEnhancement,
           llmProvider: config.enableLlmEnhancement ? config.llm.provider : undefined,
@@ -84,7 +86,7 @@ function setupPipeline(): void {
         });
         for (const win of BrowserWindow.getAllWindows()) {
           win.webContents.send("history:entry-added");
-          win.webContents.send("pipeline:result", result.text);
+          win.webContents.send("pipeline:result", finalText);
         }
       } catch (err) {
         slog.error("Failed to save transcription to history", err);
