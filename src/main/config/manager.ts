@@ -1,9 +1,33 @@
 import * as fs from "fs";
 import * as path from "path";
 import { app } from "electron";
-import { type VoxConfig, type LlmConfig, type LlmConfigFlat, type LlmProviderType, type WidgetPosition, createDefaultConfig, createDefaultLlmFlat, narrowLlmConfig } from "../../shared/config";
+import { type VoxConfig, type LlmConfig, type LlmConfigFlat, type LlmProviderType, type WidgetPosition, createDefaultConfig, createDefaultLlmFlat, narrowLlmConfig, spreadLlmToFlat } from "../../shared/config";
 import { resolveWhisperLanguage } from "../../shared/constants";
 import { ENCRYPTED_PREFIX } from "./secrets";
+
+/**
+ * One-time migration: if per-provider fields (e.g. deepseekApiKey) are absent
+ * in the saved JSON but the shared openai* fields have values, copy them over
+ * so existing configs are preserved after the per-provider split.
+ */
+export function migrateSharedOpenAIFields(flat: LlmConfigFlat, savedLlm: Record<string, unknown>): void {
+  const migrations: { provider: string; key: "deepseek" | "glm" | "litellm" }[] = [
+    { provider: "deepseek", key: "deepseek" },
+    { provider: "glm", key: "glm" },
+    { provider: "litellm", key: "litellm" },
+  ];
+  for (const { provider, key } of migrations) {
+    const keyField = `${key}ApiKey` as keyof LlmConfigFlat;
+    const modelField = `${key}Model` as keyof LlmConfigFlat;
+    const endpointField = `${key}Endpoint` as keyof LlmConfigFlat;
+    const hasPerProvider = keyField in savedLlm || modelField in savedLlm || endpointField in savedLlm;
+    if (!hasPerProvider && flat.provider === provider) {
+      if (flat.openaiApiKey) (flat as unknown as Record<string, string>)[keyField] = flat.openaiApiKey;
+      if (flat.openaiModel) (flat as unknown as Record<string, string>)[modelField] = flat.openaiModel;
+      if (flat.openaiEndpoint) (flat as unknown as Record<string, string>)[endpointField] = flat.openaiEndpoint;
+    }
+  }
+}
 
 export function migrateHudPosition(raw: string | undefined): WidgetPosition {
   if (!raw) return "bottom-center";
@@ -21,7 +45,7 @@ export interface SecretStore {
   decrypt(cipherText: string): string;
 }
 
-export const SENSITIVE_FIELDS: (keyof LlmConfigFlat)[] = ["apiKey", "secretAccessKey", "accessKeyId", "openaiApiKey", "anthropicApiKey", "customToken"];
+export const SENSITIVE_FIELDS: (keyof LlmConfigFlat)[] = ["apiKey", "secretAccessKey", "accessKeyId", "openaiApiKey", "deepseekApiKey", "glmApiKey", "litellmApiKey", "anthropicApiKey", "customToken"];
 
 export class ConfigManager {
   private readonly configPath: string;
@@ -48,11 +72,13 @@ export class ConfigManager {
         const llmFlat: LlmConfigFlat = { ...defaultsFlat, ...saved.llm };
 
         for (const field of SENSITIVE_FIELDS) {
-          const value = (llmFlat as Record<string, unknown>)[field];
+          const value = (llmFlat as unknown as Record<string, unknown>)[field];
           if (typeof value === "string" && value) {
-            (llmFlat as Record<string, string>)[field] = this.secrets.decrypt(value);
+            (llmFlat as unknown as Record<string, string>)[field] = this.secrets.decrypt(value);
           }
         }
+
+        migrateSharedOpenAIFields(llmFlat, saved.llm);
 
         config = {
           llm: narrowLlmConfig(llmFlat),
@@ -106,22 +132,22 @@ export class ConfigManager {
         if (raw.llm) {
           existingLlmFlat = { ...existingLlmFlat, ...raw.llm };
           for (const field of SENSITIVE_FIELDS) {
-            const value = (existingLlmFlat as Record<string, unknown>)[field];
+            const value = (existingLlmFlat as unknown as Record<string, unknown>)[field];
             if (typeof value === "string" && value) {
-              (existingLlmFlat as Record<string, string>)[field] = this.secrets.decrypt(value);
+              (existingLlmFlat as unknown as Record<string, string>)[field] = this.secrets.decrypt(value);
             }
           }
         }
       } catch { /* use defaults */ }
     }
 
-    const llmFlat: LlmConfigFlat = { ...existingLlmFlat, ...config.llm };
+    const llmFlat: LlmConfigFlat = { ...existingLlmFlat, ...spreadLlmToFlat(config.llm) };
 
     const toWriteFlat = { ...llmFlat };
     for (const field of SENSITIVE_FIELDS) {
-      const value = (toWriteFlat as Record<string, unknown>)[field];
+      const value = (toWriteFlat as unknown as Record<string, unknown>)[field];
       if (typeof value === "string" && value) {
-        (toWriteFlat as Record<string, string>)[field] = this.secrets.encrypt(value);
+        (toWriteFlat as unknown as Record<string, string>)[field] = this.secrets.encrypt(value);
       }
     }
 
@@ -140,9 +166,9 @@ export class ConfigManager {
       const saved = JSON.parse(raw);
       const llmFlat: LlmConfigFlat = { ...defaultsFlat, ...saved.llm, provider };
       for (const field of SENSITIVE_FIELDS) {
-        const value = (llmFlat as Record<string, unknown>)[field];
+        const value = (llmFlat as unknown as Record<string, unknown>)[field];
         if (typeof value === "string" && value) {
-          (llmFlat as Record<string, string>)[field] = this.secrets.decrypt(value);
+          (llmFlat as unknown as Record<string, string>)[field] = this.secrets.decrypt(value);
         }
       }
       return narrowLlmConfig(llmFlat);
