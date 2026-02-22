@@ -1,6 +1,6 @@
-export function applyCase(text: string, lowercaseStart: boolean): string {
+export function applyCase(text: string, lowercaseStart: boolean, forceCapitalize = false): string {
   if (!text) return text;
-  if (lowercaseStart) return text[0].toLowerCase() + text.slice(1);
+  if (lowercaseStart && !forceCapitalize) return text[0].toLowerCase() + text.slice(1);
   return text;
 }
 

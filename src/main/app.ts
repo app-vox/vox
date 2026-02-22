@@ -16,7 +16,7 @@ import { initAutoUpdater } from "./updater";
 import { isUpdating } from "./update-state";
 import { openHome, setAppMenuCallbacks, refreshAppMenu, suppressBlur, setHideOnBlur } from "./windows/home";
 import { registerIpcHandlers } from "./ipc";
-import { isAccessibilityGranted, applyCase, stripTrailingPeriod } from "./input/paster";
+import { paster, permissions, applyCase, stripTrailingPeriod } from "./platform";
 import { SetupChecker } from "./setup/checker";
 import { HistoryManager } from "./history/manager";
 import { type AudioCueType } from "../shared/config";
@@ -292,7 +292,7 @@ app.whenReady().then(async () => {
   );
   await cleanupOrphanedAudioFiles(validIds);
 
-  const hasAccessibility = isAccessibilityGranted();
+  const hasAccessibility = paster.isAccessibilityGranted();
   if (!hasAccessibility && initialConfig.onboardingCompleted) {
     const response = await dialog.showMessageBox({
       type: "warning",
@@ -305,7 +305,7 @@ app.whenReady().then(async () => {
     });
 
     if (response.response === 0) {
-      shell.openExternal("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility");
+      permissions.openAccessibilitySettings();
       slog.info("Opening Accessibility settings");
     } else {
       slog.info("User chose to continue without Accessibility permission");

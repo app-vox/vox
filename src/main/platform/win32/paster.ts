@@ -117,7 +117,8 @@ export function hasActiveTextField(): boolean {
 export function pasteText(text: string, copyToClipboard = true, options?: PasteOptions): boolean {
   if (!text) return false;
 
-  const finalText = applyCase(stripTrailingPeriod(text), options?.lowercaseStart ?? false);
+  const stripped = (options?.finishWithPeriod ?? true) ? text : stripTrailingPeriod(text);
+  const finalText = applyCase(stripped, options?.lowercaseStart ?? false, options?.shiftCapitalize ?? false);
 
   if (copyToClipboard) {
     clipboard.writeText(finalText);

@@ -2,7 +2,7 @@ import { BrowserWindow, clipboard, globalShortcut, ipcMain, Notification, screen
 import { uIOhook, UiohookKey } from "uiohook-napi";
 import log from "electron-log/main";
 import { type ConfigManager } from "../config/manager";
-import { pasteText, isAccessibilityGranted } from "../input/paster";
+import { paster } from "../platform";
 import { type Pipeline, CanceledError, NoModelError } from "../pipeline";
 import { ShortcutStateMachine, RecordingState } from "./listener";
 import { DoubleTapDetector } from "./double-tap";
@@ -233,7 +233,7 @@ export class ShortcutManager {
     });
 
     // Check accessibility permission before starting uIOhook
-    const hasAccessibility = isAccessibilityGranted();
+    const hasAccessibility = paster.isAccessibilityGranted();
     if (!hasAccessibility) {
       slog.warn("Accessibility permission not granted — keyboard shortcuts will not work");
       new Notification({
@@ -279,7 +279,7 @@ export class ShortcutManager {
       return;
     }
 
-    this.accessibilityWasGranted = isAccessibilityGranted();
+    this.accessibilityWasGranted = paster.isAccessibilityGranted();
     this.startAccessibilityWatchdog();
 
     // Allow shortcuts after a brief initialization period
@@ -398,7 +398,7 @@ export class ShortcutManager {
       } else {
         slog.info("Undo succeeded, pasting text");
         const config = this.deps.configManager.load();
-        const pasted = pasteText(trimmedText, config.copyToClipboard, { finishWithPeriod: config.finishWithPeriod });
+        const pasted = paster.pasteText(trimmedText, config.copyToClipboard, { finishWithPeriod: config.finishWithPeriod });
 
         if (!pasted) {
           slog.info("Text not inserted — showing HUD warning");
@@ -911,7 +911,7 @@ export class ShortcutManager {
 
   private startAccessibilityWatchdog(): void {
     const timer = setInterval(() => {
-      const granted = isAccessibilityGranted();
+      const granted = paster.isAccessibilityGranted();
 
       if (this.accessibilityWasGranted && !granted) {
         slog.warn("Accessibility permission revoked — stopping keyboard hook");
@@ -1102,7 +1102,7 @@ export class ShortcutManager {
         this.updateTrayState();
         const pasteConfig = this.deps.configManager.load();
         const forceCapitalize = this.isShiftHeld && this.shiftAlone && pasteConfig.shiftCapitalize && pasteConfig.lowercaseStart;
-        const pasted = pasteText(trimmedText, pasteConfig.copyToClipboard, { lowercaseStart: pasteConfig.lowercaseStart, shiftCapitalize: forceCapitalize, finishWithPeriod: pasteConfig.finishWithPeriod });
+        const pasted = paster.pasteText(trimmedText, pasteConfig.copyToClipboard, { lowercaseStart: pasteConfig.lowercaseStart, shiftCapitalize: forceCapitalize, finishWithPeriod: pasteConfig.finishWithPeriod });
 
         if (!pasted && config.onboardingCompleted) {
           slog.info("Text not inserted — showing HUD warning");

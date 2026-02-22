@@ -1,5 +1,7 @@
 export interface PasteOptions {
   lowercaseStart?: boolean;
+  shiftCapitalize?: boolean;
+  finishWithPeriod?: boolean;
 }
 
 export interface PasterModule {
