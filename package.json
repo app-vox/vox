@@ -1,7 +1,7 @@
 {
   "name": "vox",
   "version": "0.16.0",
-  "description": "Open-source macOS voice-to-text with local Whisper transcription and LLM correction",
+  "description": "Open-source voice-to-text with local Whisper transcription and LLM correction",
   "main": "out/main/index.js",
   "engines": {
     "node": "25.*.*",
@@ -92,6 +92,18 @@
         "NSMicrophoneUsageDescription": "Vox needs microphone access to record your voice for transcription.",
         "NSAccessibilityUsageDescription": "Vox needs accessibility access to paste transcribed text automatically."
       }
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
     },
     "dmg": {
       "title": "Vox",
