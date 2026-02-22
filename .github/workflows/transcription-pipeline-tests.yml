@@ -1,4 +1,4 @@
-name: Pipeline Tests
+name: Transcription Pipeline Tests
 
 on:
   push:
