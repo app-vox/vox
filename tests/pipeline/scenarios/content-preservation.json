@@ -1,0 +1,106 @@
+[
+  {
+    "id": "content-preservation-001",
+    "description": "Profanity must NOT be censored. The speaker uses strong language naturally and the output must preserve it verbatim.",
+    "spokenText": "what the fuck is wrong with this damn build it keeps breaking every single time I push and honestly I'm so fucking tired of it",
+    "audioFile": "content-preservation/001.wav",
+    "expectedOutput": "What the fuck is wrong with this damn build? It keeps breaking every single time I push, and honestly I'm so fucking tired of it.",
+    "minSimilarity": 0.95,
+    "assertions": [
+      { "type": "must_contain", "value": "fuck" },
+      { "type": "must_contain", "value": "damn" },
+      { "type": "must_contain", "value": "fucking tired" },
+      { "type": "must_not_contain", "value": "f***" },
+      { "type": "must_not_contain", "value": "d***" },
+      { "type": "must_not_contain", "value": "f**k" },
+      { "type": "must_not_contain", "value": "darn" }
+    ]
+  },
+  {
+    "id": "content-preservation-002",
+    "description": "Slang and informal language must NOT be elevated to formal register. Whisper may normalize some slang, but the LLM must preserve what it receives without further formalization.",
+    "spokenText": "I'm gonna wanna check that later cuz it ain't working right and y'all should prolly know about it",
+    "audioFile": "content-preservation/002.wav",
+    "expectedOutput": "I'm gonna want to check that later because it ain't working right, and y'all should probably know about it.",
+    "minSimilarity": 0.85,
+    "assertions": [
+      { "type": "must_contain", "value": "gonna" },
+      { "type": "must_contain", "value": "ain't" },
+      { "type": "must_not_contain", "value": "going to" },
+      { "type": "must_not_contain", "value": "is not" }
+    ]
+  },
+  {
+    "id": "content-preservation-003",
+    "description": "Unusual but correct word choice must NOT be simplified. The speaker deliberately uses a less common word and the LLM must not replace it with a simpler synonym.",
+    "spokenText": "we need to ameliorate the onboarding flow because new users find it rather recondite and that obfuscates the core value proposition",
+    "audioFile": "content-preservation/003.wav",
+    "expectedOutput": "We need to ameliorate the onboarding flow because new users find it rather recondite, and that obfuscates the core value proposition.",
+    "minSimilarity": 0.93,
+    "assertions": [
+      { "type": "must_contain", "value": "ameliorate" },
+      { "type": "must_contain", "value": "recondite" },
+      { "type": "must_contain", "value": "obfuscates" },
+      { "type": "must_not_contain", "value": "improve" },
+      { "type": "must_not_contain", "value": "confusing" },
+      { "type": "must_not_contain", "value": "hides" },
+      { "type": "must_not_contain", "value": "obscures" }
+    ]
+  },
+  {
+    "id": "content-preservation-004",
+    "description": "Unusual proper nouns provided via dictionary must be corrected to their exact spelling even when Whisper mishears them.",
+    "spokenText": "the results from the Kesselman analysis showed that the Bryntirion dataset outperformed everything else by a significant margin",
+    "audioFile": "content-preservation/004.wav",
+    "expectedOutput": "The results from the Kesselman analysis showed that the Bryntirion dataset outperformed everything else by a significant margin.",
+    "minSimilarity": 0.95,
+    "dictionary": ["Kesselman", "Bryntirion"],
+    "assertions": [
+      { "type": "must_contain", "value": "Kesselman" },
+      { "type": "must_contain", "value": "Bryntirion" },
+      { "type": "must_not_contain", "value": "Casselman" },
+      { "type": "must_not_contain", "value": "Castleman" },
+      { "type": "must_not_contain", "value": "Princeton" },
+      { "type": "must_not_contain", "value": "Burlington" },
+      { "type": "must_not_contain", "value": "Brinterion" }
+    ]
+  },
+  {
+    "id": "content-preservation-005",
+    "description": "Technical jargon must NOT be simplified. Dense specialized terminology from software engineering and medicine must remain intact.",
+    "spokenText": "the idempotent endpoint uses a CRDT-based reconciliation strategy with vector clocks and the hematologic panel showed thrombocytopenia with concurrent leukocytosis",
+    "audioFile": "content-preservation/005.wav",
+    "expectedOutput": "The idempotent endpoint uses a CRDT-based reconciliation strategy with vector clocks, and the hematologic panel showed thrombocytopenia with concurrent leukocytosis.",
+    "minSimilarity": 0.93,
+    "assertions": [
+      { "type": "must_contain", "value": "idempotent" },
+      { "type": "must_contain", "value": "CRDT-based" },
+      { "type": "must_contain", "value": "vector clocks" },
+      { "type": "must_contain", "value": "thrombocytopenia" },
+      { "type": "must_match_regex", "value": "leu[ck]ocytosis" },
+      { "type": "must_contain", "value": "hematologic" },
+      { "type": "must_not_contain", "value": "low platelet" },
+      { "type": "must_not_contain", "value": "blood test" },
+      { "type": "must_not_contain", "value": "consistent" }
+    ]
+  },
+  {
+    "id": "content-preservation-006",
+    "description": "The LLM must resist adding clarifying or extra words. The speaker's terse statements are correct and complete as spoken.",
+    "spokenText": "merge it now tests pass deploy tonight",
+    "audioFile": "content-preservation/006.wav",
+    "expectedOutput": "Merge it now. Tests pass. Deploy tonight.",
+    "minSimilarity": 0.85,
+    "assertions": [
+      { "type": "must_match_regex", "value": "[Mm]erge it now" },
+      { "type": "must_match_regex", "value": "[Tt]ests pass" },
+      { "type": "must_match_regex", "value": "[Dd]eploy tonight" },
+      { "type": "must_not_contain", "value": "Let's merge" },
+      { "type": "must_not_contain", "value": "We should" },
+      { "type": "must_not_contain", "value": "The tests" },
+      { "type": "must_not_contain", "value": "All tests" },
+      { "type": "must_not_contain", "value": "We deploy" },
+      { "type": "must_not_contain", "value": "Let's deploy" }
+    ]
+  }
+]

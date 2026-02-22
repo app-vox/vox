@@ -1,0 +1,116 @@
+[
+  {
+    "id": "contextual-repair-001",
+    "description": "Wrong punctuation breaking semantics — Whisper inserted a question mark and capitalized the next word, splitting a continuous phrase into two fragments",
+    "spokenText": "do we log? Going that",
+    "audioFile": "contextual-repair/001.wav",
+    "expectedOutput": "Do we log doing that?",
+    "minSimilarity": 0.9,
+    "assertions": [
+      {
+        "type": "must_contain",
+        "value": "log doing that"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "log?"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "Going"
+      },
+      {
+        "type": "must_end_with",
+        "value": "?"
+      }
+    ]
+  },
+  {
+    "id": "contextual-repair-002",
+    "description": "Wrong word boundaries — Whisper split compound and prefixed words into separate tokens, producing grammatically odd spacing",
+    "spokenText": "the data base needs to be up dated",
+    "audioFile": "contextual-repair/002.wav",
+    "expectedOutput": "The database needs to be updated.",
+    "minSimilarity": 0.9,
+    "assertions": [
+      {
+        "type": "must_contain",
+        "value": "database"
+      },
+      {
+        "type": "must_contain",
+        "value": "updated"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "data base"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "up dated"
+      }
+    ]
+  },
+  {
+    "id": "contextual-repair-003",
+    "description": "Missing preposition breaking meaning — Whisper dropped the small word 'to' between 'forward' and 'meeting', making the phrase semantically incomplete",
+    "spokenText": "I'm looking forward meeting you",
+    "audioFile": "contextual-repair/003.wav",
+    "expectedOutput": "I'm looking forward to meeting you.",
+    "minSimilarity": 0.9,
+    "assertions": [
+      {
+        "type": "must_contain",
+        "value": "forward to meeting"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "forward meeting"
+      }
+    ]
+  },
+  {
+    "id": "contextual-repair-004",
+    "description": "Word incorrectly split into two — Whisper broke 'understand' into 'under stand', producing a nonsensical two-word sequence",
+    "spokenText": "we need to under stand the requirements before we proceed",
+    "audioFile": "contextual-repair/004.wav",
+    "expectedOutput": "We need to understand the requirements before we proceed.",
+    "minSimilarity": 0.9,
+    "assertions": [
+      {
+        "type": "must_contain",
+        "value": "understand the requirements"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "under stand"
+      }
+    ]
+  },
+  {
+    "id": "contextual-repair-005",
+    "description": "Two words incorrectly merged — Whisper fused 'go to' into 'goto' and dropped the apostrophe from 'let's'",
+    "spokenText": "lets goto the meeting room",
+    "audioFile": "contextual-repair/005.wav",
+    "expectedOutput": "Let's go to the meeting room.",
+    "minSimilarity": 0.9,
+    "assertions": [
+      {
+        "type": "must_contain",
+        "value": "go to the meeting room"
+      },
+      {
+        "type": "must_contain",
+        "value": "Let's"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "goto"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "lets "
+      }
+    ]
+  }
+]

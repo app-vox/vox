@@ -1,0 +1,150 @@
+[
+  {
+    "id": "self-corrections-001",
+    "description": "Simple 'no wait' correction: speaker starts with one destination, corrects mid-sentence with 'no wait'",
+    "spokenText": "I went to the store, no wait, the market to buy some fresh vegetables",
+    "audioFile": "self-corrections/001.wav",
+    "expectedOutput": "I went to the market to buy some fresh vegetables.",
+    "minSimilarity": 0.9,
+    "assertions": [
+      {
+        "type": "must_contain",
+        "value": "the market"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "the store"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "no wait"
+      }
+    ]
+  },
+  {
+    "id": "self-corrections-002",
+    "description": "Mid-sentence correction with 'I meant': speaker corrects a specific detail using 'I meant'",
+    "spokenText": "The report is due on Tuesday, I meant Thursday, so we still have time to review it",
+    "audioFile": "self-corrections/002.wav",
+    "expectedOutput": "The report is due on Thursday, so we still have time to review it.",
+    "minSimilarity": 0.9,
+    "assertions": [
+      {
+        "type": "must_contain",
+        "value": "Thursday"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "Tuesday"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "I meant"
+      }
+    ]
+  },
+  {
+    "id": "self-corrections-003",
+    "description": "Full clause replacement with 'scratch that': speaker discards a complete clause and replaces it",
+    "spokenText": "Let's schedule the demo for next Monday, scratch that, let's do it on Wednesday afternoon instead",
+    "audioFile": "self-corrections/003.wav",
+    "expectedOutput": "Let's do it on Wednesday afternoon instead.",
+    "minSimilarity": 0.9,
+    "assertions": [
+      {
+        "type": "must_contain",
+        "value": "Wednesday afternoon"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "next Monday"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "scratch that"
+      }
+    ]
+  },
+  {
+    "id": "self-corrections-004",
+    "description": "Emphasis use of 'actually' (NOT a correction): the word 'actually' is used for rhetorical emphasis and must be preserved",
+    "spokenText": "Actually, I think this approach is better because it simplifies the whole workflow",
+    "audioFile": "self-corrections/004.wav",
+    "expectedOutput": "Actually, I think this approach is better because it simplifies the whole workflow.",
+    "minSimilarity": 0.95,
+    "assertions": [
+      {
+        "type": "must_contain",
+        "value": "Actually"
+      },
+      {
+        "type": "must_contain",
+        "value": "this approach is better"
+      },
+      {
+        "type": "must_contain",
+        "value": "simplifies the whole workflow"
+      }
+    ]
+  },
+  {
+    "id": "self-corrections-005",
+    "description": "Correction use of 'actually no': speaker corrects a stated time using 'actually no' as a correction marker",
+    "spokenText": "The meeting is at two, actually no, it's at three in the conference room",
+    "audioFile": "self-corrections/005.wav",
+    "expectedOutput": "The meeting is at 3 in the conference room.",
+    "minSimilarity": 0.9,
+    "assertions": [
+      {
+        "type": "must_match_regex",
+        "value": "at (3|three)"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "at two"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "at 2"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "actually no"
+      }
+    ]
+  },
+  {
+    "id": "self-corrections-006",
+    "description": "Multiple self-corrections in one passage using different markers ('sorry' and 'or rather')",
+    "spokenText": "We need to send the package to Berlin, sorry, to Munich, and it should arrive by Friday, or rather, by Thursday morning at the latest",
+    "audioFile": "self-corrections/006.wav",
+    "expectedOutput": "We need to send the package to Munich, and it should arrive by Thursday morning at the latest.",
+    "minSimilarity": 0.85,
+    "assertions": [
+      {
+        "type": "must_contain",
+        "value": "Munich"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "Berlin"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "sorry"
+      },
+      {
+        "type": "must_contain",
+        "value": "Thursday morning"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "Friday"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "or rather"
+      }
+    ]
+  }
+]

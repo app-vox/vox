@@ -1,0 +1,90 @@
+[
+  {
+    "id": "spoken-punctuation-001",
+    "description": "Spoken 'period' at the end of a sentence should be converted to an actual period symbol",
+    "spokenText": "I need to finish the report by Friday period",
+    "audioFile": "spoken-punctuation/001.wav",
+    "expectedOutput": "I need to finish the report by Friday.",
+    "minSimilarity": 0.9,
+    "assertions": [
+      { "type": "must_end_with", "value": "." },
+      { "type": "must_not_contain", "value": "period" },
+      { "type": "must_contain", "value": "finish the report by Friday" }
+    ]
+  },
+  {
+    "id": "spoken-punctuation-002",
+    "description": "Spoken 'comma' between list items should be converted to actual comma symbols",
+    "spokenText": "we need apples comma oranges comma and bananas",
+    "audioFile": "spoken-punctuation/002.wav",
+    "expectedOutput": "We need apples, oranges, and bananas.",
+    "minSimilarity": 0.9,
+    "assertions": [
+      { "type": "must_contain", "value": "apples," },
+      { "type": "must_contain", "value": "oranges," },
+      { "type": "must_not_contain", "value": " comma " },
+      { "type": "must_contain", "value": "and bananas" }
+    ]
+  },
+  {
+    "id": "spoken-punctuation-003",
+    "description": "Spoken 'new line' and 'new paragraph' should be converted to actual line and paragraph breaks",
+    "spokenText": "first point new line second point new paragraph moving on to the next topic",
+    "audioFile": "spoken-punctuation/003.wav",
+    "expectedOutput": "First point\nSecond point\n\nMoving on to the next topic.",
+    "minSimilarity": 0.85,
+    "assertions": [
+      { "type": "must_contain", "value": "First point" },
+      { "type": "must_contain", "value": "Second point" },
+      { "type": "must_contain", "value": "Moving on to the next topic" },
+      { "type": "must_not_contain", "value": "new line" },
+      { "type": "must_not_contain", "value": "new paragraph" },
+      { "type": "must_match_regex", "value": "\\n" }
+    ]
+  },
+  {
+    "id": "spoken-punctuation-004",
+    "description": "Spoken 'question mark' at the end of a sentence should be converted to an actual question mark symbol",
+    "spokenText": "are you coming to the party question mark",
+    "audioFile": "spoken-punctuation/004.wav",
+    "expectedOutput": "Are you coming to the party?",
+    "minSimilarity": 0.9,
+    "assertions": [
+      { "type": "must_end_with", "value": "?" },
+      { "type": "must_not_contain", "value": "question mark" },
+      { "type": "must_contain", "value": "coming to the party" }
+    ]
+  },
+  {
+    "id": "spoken-punctuation-005",
+    "description": "The word 'period' used as a noun referring to a time span must NOT be converted to a punctuation symbol",
+    "spokenText": "the period of the Renaissance was a fascinating time in history",
+    "audioFile": "spoken-punctuation/005.wav",
+    "expectedOutput": "The period of the Renaissance was a fascinating time in history.",
+    "minSimilarity": 0.9,
+    "assertions": [
+      { "type": "must_contain", "value": "period of the Renaissance" },
+      { "type": "must_match_regex", "value": "period" },
+      { "type": "must_contain", "value": "fascinating time in history" }
+    ]
+  },
+  {
+    "id": "spoken-punctuation-006",
+    "description": "Dictated email with multiple spoken punctuation markers should have all markers converted to their corresponding symbols",
+    "spokenText": "Hi Sarah comma new paragraph thank you for sending the report period I reviewed it and have a few questions period new paragraph first comma can you clarify the budget numbers question mark second comma when is the deadline for the final version question mark new paragraph best regards comma John",
+    "audioFile": "spoken-punctuation/006.wav",
+    "expectedOutput": "Hi Sarah,\n\nThank you for sending the report. I reviewed it and have a few questions.\n\nFirst, can you clarify the budget numbers? Second, when is the deadline for the final version?\n\nBest regards,\nJohn",
+    "minSimilarity": 0.85,
+    "assertions": [
+      { "type": "must_contain", "value": "Sarah," },
+      { "type": "must_contain", "value": "the report." },
+      { "type": "must_contain", "value": "budget numbers?" },
+      { "type": "must_contain", "value": "final version?" },
+      { "type": "must_contain", "value": "Best regards," },
+      { "type": "must_not_contain", "value": " comma " },
+      { "type": "must_not_contain", "value": " period " },
+      { "type": "must_not_contain", "value": "question mark" },
+      { "type": "must_not_contain", "value": "new paragraph" }
+    ]
+  }
+]

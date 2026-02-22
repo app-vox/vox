@@ -1,5 +1,6 @@
 import { app } from "electron";
 import { execFile } from "child_process";
+import * as crypto from "crypto";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
@@ -22,10 +23,11 @@ export async function transcribe(
   dictionary: string[] = [],
   speechLanguages: string[] = []
 ): Promise<TranscriptionResult> {
-  const tempPath = path.join(os.tmpdir(), `vox-recording-${Date.now()}.wav`);
+  const tempPath = path.join(os.tmpdir(), `vox-recording-${crypto.randomUUID()}.wav`);
 
   try {
-    const wavBuffer = encodeWav(audioBuffer, sampleRate);
+    const normalized = normalizeAudio(audioBuffer);
+    const wavBuffer = encodeWav(normalized, sampleRate);
     fs.writeFileSync(tempPath, wavBuffer);
 
     const whisperArgs = buildWhisperArgs(speechLanguages);
@@ -80,6 +82,27 @@ function parseWhisperOutput(output: string): string {
     .filter(Boolean)
     .join(" ")
     .trim();
+}
+
+// Scale audio so peak amplitude reaches the target, preventing Whisper
+// hallucinations on quiet input. Skips silence-only buffers.
+const NORM_TARGET = 0.89; // ≈ -1 dB
+
+function normalizeAudio(samples: Float32Array): Float32Array {
+  let peak = 0;
+  for (let i = 0; i < samples.length; i++) {
+    const abs = Math.abs(samples[i]);
+    if (abs > peak) peak = abs;
+  }
+
+  if (peak < 1e-6 || peak >= NORM_TARGET) return samples;
+
+  const gain = NORM_TARGET / peak;
+  const out = new Float32Array(samples.length);
+  for (let i = 0; i < samples.length; i++) {
+    out[i] = samples[i] * gain;
+  }
+  return out;
 }
 
 function encodeWav(samples: Float32Array, sampleRate: number): Buffer {

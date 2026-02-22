@@ -1,0 +1,83 @@
+name: Pipeline Tests
+
+on:
+  push:
+    paths:
+      - "src/shared/constants.ts"
+      - "tests/pipeline/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  pipeline-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Cache Whisper model
+        id: cache-whisper
+        uses: actions/cache@v4
+        with:
+          path: whisper-models
+          key: whisper-model-small
+      - name: Download Whisper model
+        if: steps.cache-whisper.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p whisper-models
+          curl -L -o whisper-models/ggml-small.bin \
+            https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin
+      - name: Write pipeline test config
+        run: |
+          cat > pipeline-test-config.json << HEREDOC
+          {
+            "llm": {
+              "provider": "${{ vars.PIPELINE_TEST_LLM_PROVIDER }}",
+              "apiKey": "${{ secrets.PIPELINE_TEST_LLM_API_KEY }}",
+              "model": "${{ vars.PIPELINE_TEST_LLM_MODEL }}",
+              "baseUrl": "${{ vars.PIPELINE_TEST_LLM_BASE_URL }}"
+            },
+            "whisper": {
+              "modelPath": "${{ github.workspace }}/whisper-models/ggml-small.bin"
+            }
+          }
+          HEREDOC
+      - name: Run pipeline tests
+        run: npm run test:pipeline
+        env:
+          VOX_PIPELINE_TEST_CONFIG: ./pipeline-test-config.json
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-test-report
+          path: tests/pipeline/.results/report.html
+          if-no-files-found: ignore
+      - name: Write job summary
+        if: always()
+        run: |
+          [ -f tests/pipeline/.results/report.md ] && cat tests/pipeline/.results/report.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Comment report on PR
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          [ ! -f tests/pipeline/.results/report.md ] && exit 0
+          PR=$(gh pr list --head "${{ github.ref_name }}" --json number -q '.[0].number')
+          [ -z "$PR" ] && exit 0
+          MARKER="<!-- pipeline-test-report -->"
+          BODY="${MARKER}"$'\n'"$(cat tests/pipeline/.results/report.md)"
+          COMMENT_ID=$(gh api "repos/${{ github.repository }}/issues/${PR}/comments" \
+            --paginate --jq ".[] | select(.body | startswith(\"${MARKER}\")) | .id" | tail -1)
+          if [ -n "$COMMENT_ID" ]; then
+            gh api "repos/${{ github.repository }}/issues/comments/${COMMENT_ID}" -X PATCH -f body="$BODY"
+          else
+            gh pr comment "$PR" --body "$BODY"
+          fi
