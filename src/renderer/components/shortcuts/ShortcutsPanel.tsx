@@ -63,10 +63,12 @@ export function ShortcutsPanel() {
       <div className={card.body}>
         <div className={styles.modeSelector}>
           <p className={styles.modeLabel}>{t("shortcuts.mode")}</p>
-          <div className={styles.segmented}>
+          <div className={styles.segmented} role="radiogroup" aria-label={t("shortcuts.mode")}>
             {MODES.map((m) => (
               <button
                 key={m}
+                role="radio"
+                aria-checked={mode === m}
                 className={`${styles.segment} ${mode === m ? styles.active : ""}`}
                 onClick={() => setMode(m)}
               >
