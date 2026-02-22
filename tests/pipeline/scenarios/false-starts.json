@@ -7,9 +7,18 @@
     "expectedOutput": "I think we should proceed with the current plan.",
     "minSimilarity": 0.9,
     "assertions": [
-      { "type": "must_contain", "value": "I think we should proceed" },
-      { "type": "must_not_contain", "value": "I I" },
-      { "type": "must_contain", "value": "current plan" }
+      {
+        "type": "must_contain",
+        "value": "I think we should proceed"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "I I"
+      },
+      {
+        "type": "must_contain",
+        "value": "current plan"
+      }
     ]
   },
   {
@@ -20,10 +29,22 @@
     "expectedOutput": "I was thinking about the project and how we can improve it.",
     "minSimilarity": 0.9,
     "assertions": [
-      { "type": "must_contain", "value": "I was thinking about the project" },
-      { "type": "must_contain", "value": "improve it" },
-      { "type": "must_not_contain", "value": "I was I was" },
-      { "type": "must_not_contain", "value": "I was, I was" }
+      {
+        "type": "must_contain",
+        "value": "I was thinking about the project"
+      },
+      {
+        "type": "must_contain",
+        "value": "improve it"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "I was I was"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "I was, I was"
+      }
     ]
   },
   {
@@ -32,11 +53,20 @@
     "spokenText": "we should probably go with the maybe let me check the budget first before we decide",
     "audioFile": "false-starts/003.wav",
     "expectedOutput": "Let me check the budget first before we decide.",
-    "minSimilarity": 0.8,
+    "minSimilarity": 0.9,
     "assertions": [
-      { "type": "must_contain", "value": "check the budget" },
-      { "type": "must_contain", "value": "before we decide" },
-      { "type": "must_not_contain", "value": "we should probably go with the" }
+      {
+        "type": "must_contain",
+        "value": "check the budget"
+      },
+      {
+        "type": "must_contain",
+        "value": "before we decide"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "we should probably go with the"
+      }
     ]
   },
   {
@@ -45,11 +75,20 @@
     "spokenText": "the meeting is can we the meeting should be rescheduled to next wednesday",
     "audioFile": "false-starts/004.wav",
     "expectedOutput": "The meeting should be rescheduled to next Wednesday.",
-    "minSimilarity": 0.85,
+    "minSimilarity": 0.9,
     "assertions": [
-      { "type": "must_contain", "value": "meeting should be rescheduled" },
-      { "type": "must_contain", "value": "next Wednesday" },
-      { "type": "must_not_contain", "value": "the meeting is can we" }
+      {
+        "type": "must_contain",
+        "value": "meeting should be rescheduled"
+      },
+      {
+        "type": "must_contain",
+        "value": "next Wednesday"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "the meeting is can we"
+      }
     ]
   },
   {
@@ -60,9 +99,18 @@
     "expectedOutput": "The problem is we don't have enough time to finish everything.",
     "minSimilarity": 0.9,
     "assertions": [
-      { "type": "must_contain", "value": "The problem is" },
-      { "type": "must_contain", "value": "enough time to finish everything" },
-      { "type": "must_not_contain", "value": "the the" }
+      {
+        "type": "must_contain",
+        "value": "The problem is"
+      },
+      {
+        "type": "must_contain",
+        "value": "enough time to finish everything"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "the the"
+      }
     ]
   },
   {
@@ -71,14 +119,32 @@
     "spokenText": "um i was i was uh thinking that we should uh probably revisit the design",
     "audioFile": "false-starts/006.wav",
     "expectedOutput": "I was thinking that we should probably revisit the design.",
-    "minSimilarity": 0.85,
+    "minSimilarity": 0.9,
     "assertions": [
-      { "type": "must_contain", "value": "I was thinking" },
-      { "type": "must_match_regex", "value": "re-?visit the design" },
-      { "type": "must_not_contain", "value": "um" },
-      { "type": "must_not_contain", "value": "uh" },
-      { "type": "must_not_contain", "value": "I was I was" },
-      { "type": "must_not_contain", "value": "I was, I was" }
+      {
+        "type": "must_contain",
+        "value": "I was thinking"
+      },
+      {
+        "type": "must_match_regex",
+        "value": "re-?visit the design"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "um"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "uh"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "I was I was"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "I was, I was"
+      }
     ]
   }
 ]

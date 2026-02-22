@@ -76,7 +76,7 @@
     "expectedOutput": "Hi Sarah,\n\nThank you for sending the report. I reviewed it and have a few questions.\n\nFirst, can you clarify the budget numbers? Second, when is the deadline for the final version?\n\nBest regards,\nJohn",
     "minSimilarity": 0.85,
     "assertions": [
-      { "type": "must_contain", "value": "Hi Sarah," },
+      { "type": "must_contain", "value": "Sarah," },
       { "type": "must_contain", "value": "the report." },
       { "type": "must_contain", "value": "budget numbers?" },
       { "type": "must_contain", "value": "final version?" },

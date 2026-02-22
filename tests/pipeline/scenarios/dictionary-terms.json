@@ -2,104 +2,233 @@
   {
     "id": "dictionary-terms-001",
     "description": "Single technical term — Whisper mishears 'Kubernetes' as phonetic fragments or wrong casing, dictionary should force exact spelling",
-    "dictionary": ["Kubernetes"],
+    "dictionary": [
+      "Kubernetes"
+    ],
     "spokenText": "we need to deploy the new service to cooper net ease and make sure the cooper net ease cluster is healthy",
     "audioFile": "dictionary-terms/001.wav",
     "expectedOutput": "We need to deploy the new service to Kubernetes and make sure the Kubernetes cluster is healthy.",
-    "minSimilarity": 0.85,
+    "minSimilarity": 0.9,
     "assertions": [
-      { "type": "must_contain", "value": "Kubernetes" },
-      { "type": "must_not_contain", "value": "cooper net ease" },
-      { "type": "must_not_contain", "value": "kubernetes" },
-      { "type": "must_contain", "value": "deploy the new service" },
-      { "type": "must_contain", "value": "cluster is healthy" }
+      {
+        "type": "must_contain",
+        "value": "Kubernetes"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "cooper net ease"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "kubernetes"
+      },
+      {
+        "type": "must_contain",
+        "value": "deploy the new service"
+      },
+      {
+        "type": "must_contain",
+        "value": "cluster is healthy"
+      }
     ]
   },
   {
     "id": "dictionary-terms-002",
     "description": "Acronyms — Whisper spells out 'CI/CD' phonetically and drops the slash, dictionary should restore exact format including slash",
-    "dictionary": ["CI/CD", "DevOps"],
+    "dictionary": [
+      "CI/CD",
+      "DevOps"
+    ],
     "spokenText": "our see I see dee pipeline is broken again and the dev ops team needs to fix it before the next release",
     "audioFile": "dictionary-terms/002.wav",
     "expectedOutput": "Our CI/CD pipeline is broken again and the DevOps team needs to fix it before the next release.",
-    "minSimilarity": 0.85,
+    "minSimilarity": 0.9,
     "assertions": [
-      { "type": "must_contain", "value": "CI/CD" },
-      { "type": "must_contain", "value": "DevOps" },
-      { "type": "must_not_contain", "value": "see I see dee" },
-      { "type": "must_not_contain", "value": "CICD" },
-      { "type": "must_not_contain", "value": "dev ops" },
-      { "type": "must_contain", "value": "pipeline is broken" }
+      {
+        "type": "must_contain",
+        "value": "CI/CD"
+      },
+      {
+        "type": "must_contain",
+        "value": "DevOps"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "see I see dee"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "CICD"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "dev ops"
+      },
+      {
+        "type": "must_contain",
+        "value": "pipeline is broken"
+      }
     ]
   },
   {
     "id": "dictionary-terms-003",
     "description": "Person name with difficult spelling — Whisper phonetically approximates 'Szymanowski', dictionary should correct to exact spelling",
-    "dictionary": ["Szymanowski"],
+    "dictionary": [
+      "Szymanowski"
+    ],
     "spokenText": "please forward the report to she man off ski and make sure she man off ski reviews it by friday",
     "audioFile": "dictionary-terms/003.wav",
     "expectedOutput": "Please forward the report to Szymanowski and make sure Szymanowski reviews it by Friday.",
-    "minSimilarity": 0.85,
+    "minSimilarity": 0.9,
     "assertions": [
-      { "type": "must_contain", "value": "Szymanowski" },
-      { "type": "must_not_contain", "value": "she man off ski" },
-      { "type": "must_not_contain", "value": "Shimanowski" },
-      { "type": "must_contain", "value": "forward the report" },
-      { "type": "must_contain", "value": "reviews it by Friday" }
+      {
+        "type": "must_contain",
+        "value": "Szymanowski"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "she man off ski"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "Shimanowski"
+      },
+      {
+        "type": "must_contain",
+        "value": "forward the report"
+      },
+      {
+        "type": "must_contain",
+        "value": "reviews it by Friday"
+      }
     ]
   },
   {
     "id": "dictionary-terms-004",
     "description": "Product names — Whisper breaks 'PostgreSQL' into fragments and misspells it, dictionary should correct to exact product names",
-    "dictionary": ["PostgreSQL", "Redis"],
+    "dictionary": [
+      "PostgreSQL",
+      "Redis"
+    ],
     "spokenText": "we are migrating the database from post gres sequel to a managed instance and adding read us as the caching layer",
     "audioFile": "dictionary-terms/004.wav",
     "expectedOutput": "We are migrating the database from PostgreSQL to a managed instance and adding Redis as the caching layer.",
-    "minSimilarity": 0.85,
+    "minSimilarity": 0.9,
     "assertions": [
-      { "type": "must_contain", "value": "PostgreSQL" },
-      { "type": "must_contain", "value": "Redis" },
-      { "type": "must_not_contain", "value": "post gres sequel" },
-      { "type": "must_not_contain", "value": "Postgres Q L" },
-      { "type": "must_not_contain", "value": "read us" },
-      { "type": "must_contain", "value": "caching layer" }
+      {
+        "type": "must_contain",
+        "value": "PostgreSQL"
+      },
+      {
+        "type": "must_contain",
+        "value": "Redis"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "post gres sequel"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "Postgres Q L"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "read us"
+      },
+      {
+        "type": "must_contain",
+        "value": "caching layer"
+      }
     ]
   },
   {
     "id": "dictionary-terms-005",
     "description": "Multiple dictionary terms in one passage — several tools from the Kubernetes ecosystem are misheard and must all be corrected",
-    "dictionary": ["Kubernetes", "kubectl", "etcd", "Helm"],
+    "dictionary": [
+      "Kubernetes",
+      "kubectl",
+      "etcd",
+      "Helm"
+    ],
     "spokenText": "first run cube cuddle to check the cooper net ease pods then verify that et see dee is reachable and finally use helm to deploy the updated charts",
     "audioFile": "dictionary-terms/005.wav",
     "expectedOutput": "First run kubectl to check the Kubernetes pods, then verify that etcd is reachable, and finally use Helm to deploy the updated charts.",
-    "minSimilarity": 0.8,
+    "minSimilarity": 0.85,
     "assertions": [
-      { "type": "must_contain", "value": "kubectl" },
-      { "type": "must_contain", "value": "Kubernetes" },
-      { "type": "must_contain", "value": "etcd" },
-      { "type": "must_contain", "value": "Helm" },
-      { "type": "must_not_contain", "value": "cube cuddle" },
-      { "type": "must_not_contain", "value": "cooper net ease" },
-      { "type": "must_not_contain", "value": "et see dee" },
-      { "type": "must_contain", "value": "deploy the updated charts" }
+      {
+        "type": "must_contain",
+        "value": "kubectl"
+      },
+      {
+        "type": "must_contain",
+        "value": "Kubernetes"
+      },
+      {
+        "type": "must_contain",
+        "value": "etcd"
+      },
+      {
+        "type": "must_contain",
+        "value": "Helm"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "cube cuddle"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "cooper net ease"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "et see dee"
+      },
+      {
+        "type": "must_contain",
+        "value": "deploy the updated charts"
+      }
     ]
   },
   {
     "id": "dictionary-terms-006",
     "description": "Dictionary terms embedded in speech with fillers and self-correction — misheard terms must be corrected while fillers are removed and self-correction is resolved",
-    "dictionary": ["Terraform", "AWS"],
+    "dictionary": [
+      "Terraform",
+      "AWS"
+    ],
     "spokenText": "so um we need to update the terra form I mean the terra form config for a w s no wait for a w s production and make sure the terra form plan looks clean",
     "audioFile": "dictionary-terms/006.wav",
     "expectedOutput": "We need to update the Terraform config for AWS production and make sure the Terraform plan looks clean.",
-    "minSimilarity": 0.8,
+    "minSimilarity": 0.9,
     "assertions": [
-      { "type": "must_contain", "value": "Terraform" },
-      { "type": "must_contain", "value": "AWS" },
-      { "type": "must_not_contain", "value": "terra form" },
-      { "type": "must_not_contain", "value": "a w s" },
-      { "type": "must_not_contain", "value": "um" },
-      { "type": "must_not_contain", "value": "no wait" },
-      { "type": "must_contain", "value": "plan looks clean" }
+      {
+        "type": "must_contain",
+        "value": "Terraform"
+      },
+      {
+        "type": "must_contain",
+        "value": "AWS"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "terra form"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "a w s"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "um"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "no wait"
+      },
+      {
+        "type": "must_contain",
+        "value": "plan looks clean"
+      }
     ]
   }
 ]

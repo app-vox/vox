@@ -5,11 +5,20 @@
     "spokenText": "I went to the store, no wait, the market to buy some fresh vegetables",
     "audioFile": "self-corrections/001.wav",
     "expectedOutput": "I went to the market to buy some fresh vegetables.",
-    "minSimilarity": 0.85,
+    "minSimilarity": 0.9,
     "assertions": [
-      { "type": "must_contain", "value": "the market" },
-      { "type": "must_not_contain", "value": "the store" },
-      { "type": "must_not_contain", "value": "no wait" }
+      {
+        "type": "must_contain",
+        "value": "the market"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "the store"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "no wait"
+      }
     ]
   },
   {
@@ -18,11 +27,20 @@
     "spokenText": "The report is due on Tuesday, I meant Thursday, so we still have time to review it",
     "audioFile": "self-corrections/002.wav",
     "expectedOutput": "The report is due on Thursday, so we still have time to review it.",
-    "minSimilarity": 0.85,
+    "minSimilarity": 0.9,
     "assertions": [
-      { "type": "must_contain", "value": "Thursday" },
-      { "type": "must_not_contain", "value": "Tuesday" },
-      { "type": "must_not_contain", "value": "I meant" }
+      {
+        "type": "must_contain",
+        "value": "Thursday"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "Tuesday"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "I meant"
+      }
     ]
   },
   {
@@ -31,11 +49,20 @@
     "spokenText": "Let's schedule the demo for next Monday, scratch that, let's do it on Wednesday afternoon instead",
     "audioFile": "self-corrections/003.wav",
     "expectedOutput": "Let's do it on Wednesday afternoon instead.",
-    "minSimilarity": 0.8,
+    "minSimilarity": 0.9,
     "assertions": [
-      { "type": "must_contain", "value": "Wednesday afternoon" },
-      { "type": "must_not_contain", "value": "next Monday" },
-      { "type": "must_not_contain", "value": "scratch that" }
+      {
+        "type": "must_contain",
+        "value": "Wednesday afternoon"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "next Monday"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "scratch that"
+      }
     ]
   },
   {
@@ -46,9 +73,18 @@
     "expectedOutput": "Actually, I think this approach is better because it simplifies the whole workflow.",
     "minSimilarity": 0.95,
     "assertions": [
-      { "type": "must_contain", "value": "Actually" },
-      { "type": "must_contain", "value": "this approach is better" },
-      { "type": "must_contain", "value": "simplifies the whole workflow" }
+      {
+        "type": "must_contain",
+        "value": "Actually"
+      },
+      {
+        "type": "must_contain",
+        "value": "this approach is better"
+      },
+      {
+        "type": "must_contain",
+        "value": "simplifies the whole workflow"
+      }
     ]
   },
   {
@@ -57,12 +93,24 @@
     "spokenText": "The meeting is at two, actually no, it's at three in the conference room",
     "audioFile": "self-corrections/005.wav",
     "expectedOutput": "The meeting is at 3 in the conference room.",
-    "minSimilarity": 0.85,
+    "minSimilarity": 0.9,
     "assertions": [
-      { "type": "must_match_regex", "value": "at (3|three)" },
-      { "type": "must_not_contain", "value": "at two" },
-      { "type": "must_not_contain", "value": "at 2" },
-      { "type": "must_not_contain", "value": "actually no" }
+      {
+        "type": "must_match_regex",
+        "value": "at (3|three)"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "at two"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "at 2"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "actually no"
+      }
     ]
   },
   {
@@ -73,12 +121,30 @@
     "expectedOutput": "We need to send the package to Munich, and it should arrive by Thursday morning at the latest.",
     "minSimilarity": 0.85,
     "assertions": [
-      { "type": "must_contain", "value": "Munich" },
-      { "type": "must_not_contain", "value": "Berlin" },
-      { "type": "must_not_contain", "value": "sorry" },
-      { "type": "must_contain", "value": "Thursday morning" },
-      { "type": "must_not_contain", "value": "Friday" },
-      { "type": "must_not_contain", "value": "or rather" }
+      {
+        "type": "must_contain",
+        "value": "Munich"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "Berlin"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "sorry"
+      },
+      {
+        "type": "must_contain",
+        "value": "Thursday morning"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "Friday"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "or rather"
+      }
     ]
   }
 ]

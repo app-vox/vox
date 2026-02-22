@@ -7,10 +7,22 @@
     "expectedOutput": "So I was thinking about the project, and I think we should start tomorrow.",
     "minSimilarity": 0.9,
     "assertions": [
-      { "type": "must_not_contain", "value": "um" },
-      { "type": "must_not_contain", "value": "uh" },
-      { "type": "must_contain", "value": "thinking about the project" },
-      { "type": "must_contain", "value": "start tomorrow" }
+      {
+        "type": "must_not_contain",
+        "value": "um"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "uh"
+      },
+      {
+        "type": "must_contain",
+        "value": "thinking about the project"
+      },
+      {
+        "type": "must_contain",
+        "value": "start tomorrow"
+      }
     ]
   },
   {
@@ -21,11 +33,26 @@
     "expectedOutput": "The main takeaway is that we need better testing.",
     "minSimilarity": 0.9,
     "assertions": [
-      { "type": "must_not_contain", "value": "um" },
-      { "type": "must_not_contain", "value": "uh" },
-      { "type": "must_not_contain", "value": "you know" },
-      { "type": "must_contain", "value": "main takeaway" },
-      { "type": "must_contain", "value": "better testing" }
+      {
+        "type": "must_not_contain",
+        "value": "um"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "uh"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "you know"
+      },
+      {
+        "type": "must_contain",
+        "value": "main takeaway"
+      },
+      {
+        "type": "must_contain",
+        "value": "better testing"
+      }
     ]
   },
   {
@@ -36,10 +63,22 @@
     "expectedOutput": "So I really like the new design. It looks clean and professional.",
     "minSimilarity": 0.85,
     "assertions": [
-      { "type": "must_not_contain", "value": "um" },
-      { "type": "must_not_contain", "value": "uh" },
-      { "type": "must_contain", "value": "like the new design" },
-      { "type": "must_contain", "value": "clean and professional" }
+      {
+        "type": "must_not_contain",
+        "value": "um"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "uh"
+      },
+      {
+        "type": "must_contain",
+        "value": "like the new design"
+      },
+      {
+        "type": "must_contain",
+        "value": "clean and professional"
+      }
     ]
   },
   {
@@ -48,13 +87,28 @@
     "spokenText": "ah it feels like a fresh start you know and hmm i think we should embrace it",
     "audioFile": "filler-removal/004.wav",
     "expectedOutput": "It feels like a fresh start, and I think we should embrace it.",
-    "minSimilarity": 0.85,
+    "minSimilarity": 0.9,
     "assertions": [
-      { "type": "must_not_contain", "value": "ah" },
-      { "type": "must_not_contain", "value": "hmm" },
-      { "type": "must_not_contain", "value": "you know" },
-      { "type": "must_contain", "value": "feels like a fresh start" },
-      { "type": "must_contain", "value": "embrace it" }
+      {
+        "type": "must_not_contain",
+        "value": "ah"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "hmm"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "you know"
+      },
+      {
+        "type": "must_contain",
+        "value": "feels like a fresh start"
+      },
+      {
+        "type": "must_contain",
+        "value": "embrace it"
+      }
     ]
   },
   {
@@ -63,12 +117,24 @@
     "spokenText": "you know the deadline is next friday um but do you know if the client confirmed the meeting",
     "audioFile": "filler-removal/005.wav",
     "expectedOutput": "The deadline is next Friday, but do you know if the client confirmed the meeting?",
-    "minSimilarity": 0.85,
+    "minSimilarity": 0.9,
     "assertions": [
-      { "type": "must_not_contain", "value": "um" },
-      { "type": "must_contain", "value": "do you know" },
-      { "type": "must_contain", "value": "deadline is next Friday" },
-      { "type": "must_contain", "value": "confirmed the meeting" }
+      {
+        "type": "must_not_contain",
+        "value": "um"
+      },
+      {
+        "type": "must_contain",
+        "value": "do you know"
+      },
+      {
+        "type": "must_contain",
+        "value": "deadline is next Friday"
+      },
+      {
+        "type": "must_contain",
+        "value": "confirmed the meeting"
+      }
     ]
   },
   {
@@ -79,13 +145,34 @@
     "expectedOutput": "So the first thing we need to do is review the pull requests, and then after that we should probably run the full test suite. And finally, we can deploy to staging if everything passes.",
     "minSimilarity": 0.8,
     "assertions": [
-      { "type": "must_not_contain", "value": "um" },
-      { "type": "must_not_contain", "value": "uh" },
-      { "type": "must_not_contain", "value": "hmm" },
-      { "type": "must_not_contain", "value": "ah" },
-      { "type": "must_contain", "value": "review the pull requests" },
-      { "type": "must_contain", "value": "run the full test suite" },
-      { "type": "must_contain", "value": "deploy to staging" }
+      {
+        "type": "must_not_contain",
+        "value": "um"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "uh"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "hmm"
+      },
+      {
+        "type": "must_not_contain",
+        "value": "ah"
+      },
+      {
+        "type": "must_contain",
+        "value": "review the pull requests"
+      },
+      {
+        "type": "must_contain",
+        "value": "run the full test suite"
+      },
+      {
+        "type": "must_contain",
+        "value": "deploy to staging"
+      }
     ]
   }
 ]
