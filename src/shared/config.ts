@@ -91,7 +91,10 @@ export interface WhisperConfig {
 
 export type WhisperModelSize = "tiny" | "base" | "small" | "medium" | "large";
 
+export type ShortcutMode = "hold" | "toggle" | "both";
+
 export interface ShortcutsConfig {
+  mode: ShortcutMode;
   hold: string;
   toggle: string;
 }
@@ -139,6 +142,7 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
       model: "small",
     },
     shortcuts: {
+      mode: "toggle",
       hold: "Alt+Space",
       toggle: "Alt+Shift+Space",
     },

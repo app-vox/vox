@@ -48,9 +48,10 @@ interface ShortcutRecorderProps {
   value: string;
   otherValue: string;
   onChange: (accelerator: string) => void;
+  disabled?: boolean;
 }
 
-export function ShortcutRecorder({ label, hint, value, otherValue, onChange }: ShortcutRecorderProps) {
+export function ShortcutRecorder({ label, hint, value, otherValue, onChange, disabled }: ShortcutRecorderProps) {
   const t = useT();
   const [recording, setRecording] = useState(false);
   const [previewParts, setPreviewParts] = useState<string[]>([]);
@@ -179,6 +180,7 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange }: S
     styles.field,
     recording && styles.recording,
     conflict && styles.conflict,
+    disabled && styles.disabled,
   ].filter(Boolean).join(" ");
 
   return (
@@ -186,9 +188,10 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange }: S
       <label>{label}</label>
       <div
         ref={fieldRef}
-        onClick={() => !recording && startRecording()}
+        onClick={() => !recording && !disabled && startRecording()}
         className={fieldClasses}
-        tabIndex={0}
+        tabIndex={disabled ? -1 : 0}
+        aria-disabled={disabled}
       >
         <span>
           {displayParts.map((part, i) => (
