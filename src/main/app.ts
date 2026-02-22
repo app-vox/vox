@@ -14,7 +14,7 @@ import { setupTray, setTrayModelState, updateTrayConfig, updateTrayMenu, getTray
 import { initAutoUpdater } from "./updater";
 import { openHome, setAppMenuCallbacks, refreshAppMenu } from "./windows/home";
 import { registerIpcHandlers } from "./ipc";
-import { isAccessibilityGranted, applyCase } from "./input/paster";
+import { isAccessibilityGranted, applyCase, stripTrailingPeriod } from "./input/paster";
 import { SetupChecker } from "./setup/checker";
 import { HistoryManager } from "./history/manager";
 import { type AudioCueType } from "../shared/config";
@@ -75,7 +75,7 @@ function setupPipeline(): void {
     onComplete: (result) => {
       try {
         const latestConfig = configManager.load();
-        const finalText = applyCase(result.text, latestConfig.lowercaseStart);
+        const finalText = applyCase(stripTrailingPeriod(result.text), latestConfig.lowercaseStart);
         historyManager.add({
           ...result,
           text: finalText,

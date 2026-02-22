@@ -231,6 +231,13 @@ export function applyCase(text: string, lowercaseStart: boolean): string {
   return text;
 }
 
+export function stripTrailingPeriod(text: string): string {
+  if (!text.endsWith(".")) return text;
+  const words = text.trim().split(/\s+/);
+  if (words.length <= 3) return text.slice(0, -1);
+  return text;
+}
+
 const UNICODE_CHUNK_SIZE = 20;
 
 function typeText(text: string): void {
@@ -263,11 +270,13 @@ function typeText(text: string): void {
   }
 }
 
-export function pasteText(text: string, copyToClipboard = true): boolean {
+export function pasteText(text: string, copyToClipboard = true, options?: PasteOptions): boolean {
   if (!text) return false;
 
+  const finalText = applyCase(stripTrailingPeriod(text), options?.lowercaseStart ?? false);
+
   if (copyToClipboard) {
-    clipboard.writeText(text);
+    clipboard.writeText(finalText);
 
     if (isAccessibilityGranted()) {
       try {
@@ -282,7 +291,7 @@ export function pasteText(text: string, copyToClipboard = true): boolean {
     } else {
       new Notification({
         title: "Vox",
-        body: t("notification.copiedToClipboard", { text: text.slice(0, 100) }),
+        body: t("notification.copiedToClipboard", { text: finalText.slice(0, 100) }),
       }).show();
     }
     return true;
@@ -291,7 +300,7 @@ export function pasteText(text: string, copyToClipboard = true): boolean {
 
     if (hasActiveTextField()) {
       try {
-        typeText(text);
+        typeText(finalText);
         return true;
       } catch {
         // CGEvent failed — fall through to clipboard fallback
@@ -303,7 +312,7 @@ export function pasteText(text: string, copyToClipboard = true): boolean {
     }
 
     try {
-      injectViaClipboard(text);
+      injectViaClipboard(finalText);
       return true;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
