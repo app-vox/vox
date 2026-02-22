@@ -15,6 +15,7 @@ export function PermissionsPanel() {
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
+  const setActiveTab = useConfigStore((s) => s.setActiveTab);
   const realSetupComplete = useConfigStore((s) => s.setupComplete);
   const triggerToast = useSaveToast((s) => s.trigger);
   const perm = usePermissionRequest();
@@ -100,7 +101,22 @@ export function PermissionsPanel() {
       <div className={card.card}>
         <div className={card.header}>
           <h2>{t("permissions.copyToClipboard")}</h2>
-          <p className={card.description}>{t("permissions.copyToClipboardDesc")}</p>
+          <p className={card.description}>
+            {(() => {
+              const desc = t("permissions.copyToClipboardDesc");
+              const parts = desc.split("{link}");
+              if (parts.length < 2) return desc;
+              return (
+                <>
+                  {parts[0]}
+                  <button className={card.infoBannerLink} onClick={() => setActiveTab("transcriptions")}>
+                    {t("permissions.copyToClipboardDescLink")}
+                  </button>
+                  {parts[1]}
+                </>
+              );
+            })()}
+          </p>
         </div>
         <div className={card.body}>
           <label className={styles.checkboxRow}>
