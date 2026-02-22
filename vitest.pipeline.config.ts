@@ -10,5 +10,6 @@ export default defineConfig({
       "tests/helpers/mock-native-addons.ts",
       "tests/pipeline/helpers/mock-electron.ts",
     ],
+    reporters: ["default", "./tests/pipeline/helpers/reporter.ts"],
   },
 });

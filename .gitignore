@@ -32,3 +32,6 @@ coverage/
 
 # Pipeline test config (contains API keys)
 pipeline-test-config.json
+
+# Pipeline test results (generated)
+tests/pipeline/.results/

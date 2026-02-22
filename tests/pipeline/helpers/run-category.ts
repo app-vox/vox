@@ -7,6 +7,10 @@ import { normalizedSimilarity } from "./scoring";
 import { runAssertions } from "./assertions";
 import { runLlmCorrection, runFullPipeline } from "./pipeline-runner";
 import { readWav } from "./wav-reader";
+import {
+  writeCategoryResult,
+  type ScenarioResult,
+} from "./results-store";
 
 const SCENARIOS_DIR = join(__dirname, "..", "scenarios");
 const AUDIO_DIR = join(__dirname, "..", "audio");
@@ -16,52 +20,22 @@ const whisperAvailable =
   !!config?.whisper?.modelPath && existsSync(config.whisper.modelPath);
 const mode = whisperAvailable ? "full pipeline" : "LLM-only";
 
-interface FailureRecord {
-  id: string;
-  expected: string;
-  actual: string;
-  rawSTT?: string;
-  similarity: number;
-  minSimilarity: number;
-  failedAssertions: string[];
-}
-
 export function runCategory(category: string): void {
   const scenarioFile = join(SCENARIOS_DIR, `${category}.json`);
   const scenarios: Scenario[] = JSON.parse(
     readFileSync(scenarioFile, "utf-8"),
   );
 
-  const failures: FailureRecord[] = [];
+  const results: ScenarioResult[] = [];
 
   describe.skipIf(!config)(category, () => {
     afterAll(() => {
-      if (failures.length === 0) return;
-
-      const lines: string[] = [
-        "",
-        `┌─ ${category}: ${failures.length} failed`,
-        `└─ mode: ${mode}`,
-      ];
-
-      for (const f of failures) {
-        lines.push("");
-        lines.push(`  ✗ ${f.id}`);
-        if (f.rawSTT !== undefined) {
-          lines.push(`    Raw STT:    ${f.rawSTT}`);
-        }
-        lines.push(`    Expected:   ${f.expected}`);
-        lines.push(`    Actual:     ${f.actual}`);
-        lines.push(
-          `    Similarity: ${(f.similarity * 100).toFixed(1)}% (min: ${(f.minSimilarity * 100).toFixed(1)}%)`,
-        );
-        for (const msg of f.failedAssertions) {
-          lines.push(`    ✗ ${msg}`);
-        }
-      }
-
-      lines.push("");
-      console.log(lines.join("\n"));
+      writeCategoryResult({
+        category,
+        mode,
+        timestamp: new Date().toISOString(),
+        results,
+      });
     });
 
     for (const scenario of scenarios) {
@@ -113,20 +87,19 @@ export function runCategory(category: string): void {
             .map((ar) => ar.message);
 
           const similarityFailed = similarity < scenario.minSimilarity;
+          const passed = !similarityFailed && failedAssertions.length === 0;
 
-          if (similarityFailed || failedAssertions.length > 0) {
-            failures.push({
-              id: scenario.id,
-              expected: scenario.expectedOutput,
-              actual: result.correctedText,
-              rawSTT: whisperAvailable
-                ? result.rawTranscription
-                : undefined,
-              similarity,
-              minSimilarity: scenario.minSimilarity,
-              failedAssertions,
-            });
-          }
+          results.push({
+            id: scenario.id,
+            description: scenario.description,
+            passed,
+            expected: scenario.expectedOutput,
+            actual: result.correctedText,
+            rawSTT: whisperAvailable ? result.rawTranscription : undefined,
+            similarity,
+            minSimilarity: scenario.minSimilarity,
+            failedAssertions,
+          });
 
           expect(
             similarity,

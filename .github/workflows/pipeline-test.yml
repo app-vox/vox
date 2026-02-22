@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   pipeline-test:
@@ -52,3 +53,31 @@ jobs:
         run: npm run test:pipeline
         env:
           VOX_PIPELINE_TEST_CONFIG: ./pipeline-test-config.json
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-test-report
+          path: tests/pipeline/.results/report.html
+          if-no-files-found: ignore
+      - name: Write job summary
+        if: always()
+        run: |
+          [ -f tests/pipeline/.results/report.md ] && cat tests/pipeline/.results/report.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Comment report on PR
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          [ ! -f tests/pipeline/.results/report.md ] && exit 0
+          PR=$(gh pr list --head "${{ github.ref_name }}" --json number -q '.[0].number')
+          [ -z "$PR" ] && exit 0
+          MARKER="<!-- pipeline-test-report -->"
+          BODY="${MARKER}"$'\n'"$(cat tests/pipeline/.results/report.md)"
+          COMMENT_ID=$(gh api "repos/${{ github.repository }}/issues/${PR}/comments" \
+            --paginate --jq ".[] | select(.body | startswith(\"${MARKER}\")) | .id" | tail -1)
+          if [ -n "$COMMENT_ID" ]; then
+            gh api "repos/${{ github.repository }}/issues/comments/${COMMENT_ID}" -X PATCH -f body="$BODY"
+          else
+            gh pr comment "$PR" --body "$BODY"
+          fi
