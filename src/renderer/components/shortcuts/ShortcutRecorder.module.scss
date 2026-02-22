@@ -36,6 +36,12 @@
     animation: shortcut-shake var(--duration-shake) ease;
     border-color: var(--color-error);
   }
+
+  &.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
 }
 
 .placeholder {
