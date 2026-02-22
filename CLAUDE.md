@@ -50,6 +50,50 @@ Sections: `general.`, `whisper.`, `llm.`, `permissions.`, `shortcuts.`, `tray.`,
 
 The onboarding wizard (`src/renderer/components/onboarding/`) and the settings panels (`src/renderer/components/`) share UI components via `src/renderer/components/shared/`, `src/renderer/components/permissions/`, and `src/renderer/components/whisper/`. When modifying settings panels (WhisperPanel, PermissionsPanel, etc.), always check whether the corresponding onboarding step needs the same update — and vice versa. Shared components like `PermissionRow`, `ModelRow`, `RadioGroup`, and the `useWhisperTest` hook exist to keep both surfaces in sync.
 
+## Pull Request Labels
+
+When creating a pull request with `gh pr create`, you MUST apply labels using the `--label` flag. Derive labels from the conventional commit type in the branch name or commit messages:
+
+| Commit type | Label(s) |
+|-------------|----------|
+| `feat`      | `feature` |
+| `fix`       | `bug` |
+| `docs`      | `documentation` |
+| `chore`     | `dependencies` (if deps-related), or omit |
+| `ci`        | omit (no matching label) |
+| `test`      | `needs-testing` |
+| `refactor`  | `enhancement` |
+| `perf`      | `enhancement` |
+| `style`     | `ui/ux` |
+| `security`  | `security` |
+
+Additionally, apply **scope-based labels** when the commit scope matches:
+
+| Scope pattern | Label |
+|---------------|-------|
+| `ui`, `ux`, `design`, `css` | `ui/ux` |
+| `electron` | `electron` |
+| `openai` | `provider:openai` |
+| `deepseek` | `provider:deepseek` |
+| `anthropic` | `provider:anthropic` |
+| `litellm` | `provider:litellm` |
+| `log`, `logging` | `logging` |
+| `macos`, `mac` | `platform:macos` |
+| `windows`, `win` | `platform:windows` |
+| `linux` | `platform:linux` |
+
+**Example:**
+
+```bash
+# feat(ui): add dark mode toggle → labels: feature, ui/ux
+gh pr create --title "feat(ui): add dark mode toggle" --label "feature" --label "ui/ux" ...
+
+# fix(deepseek): handle timeout errors → labels: bug, provider:deepseek
+gh pr create --title "fix(deepseek): handle timeout errors" --label "bug" --label "provider:deepseek" ...
+```
+
+If no labels match, do not force a label — some PRs (e.g., `ci` changes) may have none.
+
 ## Validation: Run All Linters Before Completing Work
 
 Before claiming any implementation is done, you MUST run all validation commands and confirm they pass:
