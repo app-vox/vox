@@ -265,14 +265,13 @@ export function pasteText(text: string, copyToClipboard = true): boolean {
     return true;
   } else {
     if (!isAccessibilityGranted()) return false;
+    if (!hasActiveTextField()) return false;
 
-    if (hasActiveTextField()) {
-      try {
-        typeText(text);
-        return true;
-      } catch {
-        // CGEvent unicode injection failed — fall through to clipboard fallback
-      }
+    try {
+      typeText(text);
+      return true;
+    } catch {
+      // CGEvent unicode injection failed (e.g. Chromium) — try clipboard fallback
     }
 
     try {
