@@ -14,7 +14,7 @@ import { setupTray, setTrayModelState, updateTrayConfig, updateTrayMenu, getTray
 import { initAutoUpdater } from "./updater";
 import { openHome, setAppMenuCallbacks, refreshAppMenu } from "./windows/home";
 import { registerIpcHandlers } from "./ipc";
-import { isAccessibilityGranted } from "./input/paster";
+import { isAccessibilityGranted, applyCase, stripTrailingPeriod } from "./input/paster";
 import { SetupChecker } from "./setup/checker";
 import { HistoryManager } from "./history/manager";
 import { type AudioCueType } from "../shared/config";
@@ -37,9 +37,17 @@ const analytics = new AnalyticsService();
 
 let pipeline: Pipeline | null = null;
 let shortcutManager: ShortcutManager | null = null;
+let devLlmOverride: { enabled?: boolean; tested?: boolean } | null = null;
 
 function setupPipeline(): void {
   const config = configManager.load();
+  if (devLlmOverride) {
+    if (devLlmOverride.enabled !== undefined) config.enableLlmEnhancement = devLlmOverride.enabled;
+    if (devLlmOverride.tested !== undefined) {
+      config.llmConnectionTested = devLlmOverride.tested;
+      if (!devLlmOverride.tested) config.llmConfigHash = "";
+    }
+  }
   const modelPath = config.whisper.model
     ? modelManager.getModelPath(config.whisper.model)
     : "";
@@ -74,9 +82,12 @@ function setupPipeline(): void {
     },
     onComplete: (result) => {
       try {
+        const latestConfig = configManager.load();
+        const finalText = applyCase(stripTrailingPeriod(result.text), latestConfig.lowercaseStart);
         historyManager.add({
           ...result,
-          wordCount: result.text.split(/\s+/).filter(Boolean).length,
+          text: finalText,
+          wordCount: finalText.split(/\s+/).filter(Boolean).length,
           whisperModel: config.whisper.model || "unknown",
           llmEnhanced: config.enableLlmEnhancement,
           llmProvider: config.enableLlmEnhancement ? config.llm.provider : undefined,
@@ -84,7 +95,7 @@ function setupPipeline(): void {
         });
         for (const win of BrowserWindow.getAllWindows()) {
           win.webContents.send("history:entry-added");
-          win.webContents.send("pipeline:result", result.text);
+          win.webContents.send("pipeline:result", finalText);
         }
       } catch (err) {
         slog.error("Failed to save transcription to history", err);
@@ -101,7 +112,11 @@ function reloadConfig(): void {
     : config.language;
   setLanguage(lang);
 
-  setupPipeline();
+  const busy = shortcutManager?.isRecording() ?? false;
+
+  if (!busy) {
+    setupPipeline();
+  }
   shortcutManager?.registerShortcutKeys();
   shortcutManager?.updateHud();
   updateTrayConfig(config);
@@ -210,6 +225,17 @@ app.whenReady().then(async () => {
 
   ipcMain.handle("dev:set-model-override", (_event, hasModel: boolean | null) => {
     shortcutManager?.setDevModelOverride(hasModel);
+  });
+
+  ipcMain.handle("dev:set-llm-override", (_event, enabled: boolean | null, tested: boolean | null) => {
+    if (enabled === null && tested === null) {
+      devLlmOverride = null;
+    } else {
+      devLlmOverride = {};
+      if (enabled !== null) devLlmOverride.enabled = enabled;
+      if (tested !== null) devLlmOverride.tested = tested;
+    }
+    setupPipeline();
   });
 
   ipcMain.handle("dev:test-error", () => {

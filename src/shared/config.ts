@@ -123,6 +123,7 @@ export interface VoxConfig {
   reduceAnimations: boolean;
   reduceVisualEffects: boolean;
   copyToClipboard: boolean;
+  lowercaseStart: boolean;
   onboardingCompleted: boolean;
 }
 
@@ -164,6 +165,7 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     reduceAnimations: false,
     reduceVisualEffects: false,
     copyToClipboard: false,
+    lowercaseStart: false,
     onboardingCompleted: false,
   };
 }

@@ -107,6 +107,7 @@ export class ConfigManager {
           reduceAnimations: saved.reduceAnimations ?? defaults.reduceAnimations,
           reduceVisualEffects: saved.reduceVisualEffects ?? defaults.reduceVisualEffects,
           copyToClipboard: saved.copyToClipboard ?? defaults.copyToClipboard,
+          lowercaseStart: saved.lowercaseStart ?? defaults.lowercaseStart,
           onboardingCompleted: saved.onboardingCompleted ?? true,
         };
       } catch {

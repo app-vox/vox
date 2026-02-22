@@ -499,15 +499,22 @@ export class ShortcutManager {
 
   registerShortcutKeys(): void {
     const config = this.deps.configManager.load();
+    const busy = this.isRecording();
 
-    // When re-registering shortcuts (e.g., after config change or hot reload),
-    // briefly disable shortcuts to prevent spurious activations
-    this.isInitializing = true;
+    if (busy) {
+      // A recording/processing/canceling session is active.
+      // Re-register global shortcuts without disrupting the pipeline or state machine.
+      slog.info("Re-registering shortcuts while busy (state=%s) — keeping pipeline alive", this.stateMachine.getState());
+    } else {
+      // When re-registering shortcuts (e.g., after config change or hot reload),
+      // briefly disable shortcuts to prevent spurious activations
+      this.isInitializing = true;
 
-    // Cancel any ongoing recording to prevent spurious paste events during hot-reload
-    const pipeline = this.deps.getPipeline();
-    pipeline.cancel();
-    this.stateMachine.setIdle();
+      // Cancel any ongoing recording to prevent spurious paste events during hot-reload
+      const pipeline = this.deps.getPipeline();
+      pipeline.cancel();
+      this.stateMachine.setIdle();
+    }
 
     globalShortcut.unregisterAll();
 
@@ -560,11 +567,13 @@ export class ShortcutManager {
 
     slog.info("Shortcuts registered: hold=%s, toggle=%s", config.shortcuts.hold, config.shortcuts.toggle);
 
-    // Re-enable shortcuts after a longer delay to prevent spurious activations
-    setTimeout(() => {
-      this.isInitializing = false;
-      slog.info("Shortcuts re-enabled after registration");
-    }, 1500);
+    if (!busy) {
+      // Re-enable shortcuts after a longer delay to prevent spurious activations
+      setTimeout(() => {
+        this.isInitializing = false;
+        slog.info("Shortcuts re-enabled after registration");
+      }, 1500);
+    }
   }
 
   private registerIpcHandlers(): void {
@@ -759,6 +768,7 @@ export class ShortcutManager {
   private onRecordingStart(): void {
     const pipeline = this.deps.getPipeline();
     this.recordingGeneration++;
+    this.lastUnpastedText = null;
     const gen = this.recordingGeneration;
     slog.info("Recording requested (gen=%d) — showing initializing HUD", gen);
     this.hud.setState("initializing");
@@ -865,7 +875,8 @@ export class ShortcutManager {
       } else {
         slog.info("Valid text received, proceeding with paste");
         await new Promise((r) => setTimeout(r, 200));
-        const pasted = pasteText(trimmedText, config.copyToClipboard);
+        const pasteConfig = this.deps.configManager.load();
+        const pasted = pasteText(trimmedText, pasteConfig.copyToClipboard, { lowercaseStart: pasteConfig.lowercaseStart });
 
         if (!pasted && config.onboardingCompleted) {
           slog.info("Text not inserted — showing HUD warning");

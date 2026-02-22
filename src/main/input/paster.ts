@@ -22,6 +22,7 @@ let CFStringCreateWithCString!: (alloc: null, str: string, encoding: number) => 
 let CFGetTypeID!: (ref: Pointer) => number;
 let CFStringGetTypeID!: () => number;
 let CFStringGetCString!: (str: Pointer, buf: Buffer, bufSize: number, encoding: number) => boolean;
+let AXUIElementCreateApplication!: (pid: number) => Pointer | null;
 
 function initCGEvent(): void {
   if (process.env.VITEST) return;
@@ -49,6 +50,7 @@ function initCGEvent(): void {
   CFGetTypeID = cf.func("CFGetTypeID", "uint64", ["void *"]);
   CFStringGetTypeID = cf.func("CFStringGetTypeID", "uint64", []);
   CFStringGetCString = cf.func("CFStringGetCString", "bool", ["void *", "void *", "int64", "uint32"]);
+  AXUIElementCreateApplication = appServices.func("AXUIElementCreateApplication", "void *", ["int32"]);
 }
 
 export function isAccessibilityGranted(): boolean {
@@ -68,64 +70,108 @@ const TEXT_INPUT_ROLES = new Set([
   "AXTextArea",
   "AXComboBox",
   "AXSearchField",
-  "AXWebArea",
 ]);
+
+function matchesTextInputRole(koffi: typeof import("koffi"), element: Pointer): boolean {
+  const roleAttr = CFStringCreateWithCString(null, "AXRole", kCFStringEncodingUTF8);
+  if (!roleAttr) return false;
+
+  try {
+    const roleBuf = Buffer.alloc(8);
+    const roleErr = AXUIElementCopyAttributeValue(element, roleAttr, roleBuf);
+    if (roleErr !== kAXErrorSuccess) return false;
+
+    const roleRef = koffi.decode(roleBuf, "void *");
+    if (!roleRef) return false;
+
+    try {
+      if (CFGetTypeID(roleRef) !== CFStringGetTypeID()) return false;
+
+      const strBuf = Buffer.alloc(256);
+      if (!CFStringGetCString(roleRef, strBuf, 256, kCFStringEncodingUTF8)) return false;
+
+      const role = strBuf.toString("utf8").split("\0")[0];
+      return TEXT_INPUT_ROLES.has(role);
+    } finally {
+      CFRelease(roleRef);
+    }
+  } finally {
+    CFRelease(roleAttr);
+  }
+}
+
+function queryFocusedChild(koffi: typeof import("koffi"), parent: Pointer): Pointer | null {
+  const valueBuf = Buffer.alloc(8);
+  const focusedAttr = CFStringCreateWithCString(null, "AXFocusedUIElement", kCFStringEncodingUTF8);
+  if (!focusedAttr) return null;
+
+  const err = AXUIElementCopyAttributeValue(parent, focusedAttr, valueBuf);
+  CFRelease(focusedAttr);
+  if (err !== kAXErrorSuccess) return null;
+
+  return koffi.decode(valueBuf, "void *") as Pointer | null;
+}
+
+function getFrontmostPid(): number | null {
+  try {
+    const { execSync } = require("child_process");
+    const out = execSync(
+      `osascript -e 'tell application "System Events" to unix id of (first process whose frontmost is true)'`,
+      { encoding: "utf8", timeout: 500 },
+    );
+    const pid = parseInt(out.trim(), 10);
+    return Number.isFinite(pid) ? pid : null;
+  } catch {
+    return null;
+  }
+}
+
+function getFocusedElement(): { koffi: typeof import("koffi"); focused: Pointer; release: () => void } | null {
+  initCGEvent();
+  if (!AXIsProcessTrusted()) return null;
+
+  const koffi = require("koffi");
+
+  const systemWide = AXUIElementCreateSystemWide();
+  if (systemWide) {
+    const focused = queryFocusedChild(koffi, systemWide);
+    CFRelease(systemWide);
+    if (focused) return { koffi, focused, release: () => CFRelease(focused) };
+  }
+
+  const pid = getFrontmostPid();
+  if (pid == null) return null;
+
+  const appElement = AXUIElementCreateApplication(pid);
+  if (!appElement) return null;
+
+  const focused = queryFocusedChild(koffi, appElement);
+  CFRelease(appElement);
+  if (!focused) return null;
+
+  return { koffi, focused, release: () => CFRelease(focused) };
+}
+
+export function hasFocusedElement(): boolean {
+  try {
+    const el = getFocusedElement();
+    if (!el) return false;
+    el.release();
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export function hasActiveTextField(): boolean {
   try {
-    initCGEvent();
-    if (!AXIsProcessTrusted()) return false;
-
-    const systemWide = AXUIElementCreateSystemWide();
-    if (!systemWide) return false;
+    const el = getFocusedElement();
+    if (!el) return false;
 
     try {
-      const koffi = require("koffi");
-      const valueBuf = Buffer.alloc(8);
-      const focusedAttr = CFStringCreateWithCString(null, "AXFocusedUIElement", kCFStringEncodingUTF8);
-      if (!focusedAttr) return false;
-
-      try {
-        const err = AXUIElementCopyAttributeValue(systemWide, focusedAttr, valueBuf);
-        if (err !== kAXErrorSuccess) return false;
-
-        const focused = koffi.decode(valueBuf, "void *");
-        if (!focused) return false;
-
-        try {
-          const roleAttr = CFStringCreateWithCString(null, "AXRole", kCFStringEncodingUTF8);
-          if (!roleAttr) return false;
-
-          try {
-            const roleBuf = Buffer.alloc(8);
-            const roleErr = AXUIElementCopyAttributeValue(focused, roleAttr, roleBuf);
-            if (roleErr !== kAXErrorSuccess) return false;
-
-            const roleRef = koffi.decode(roleBuf, "void *");
-            if (!roleRef) return false;
-
-            try {
-              if (CFGetTypeID(roleRef) !== CFStringGetTypeID()) return false;
-
-              const strBuf = Buffer.alloc(256);
-              if (!CFStringGetCString(roleRef, strBuf, 256, kCFStringEncodingUTF8)) return false;
-
-              const role = strBuf.toString("utf8").split("\0")[0];
-              return TEXT_INPUT_ROLES.has(role);
-            } finally {
-              CFRelease(roleRef);
-            }
-          } finally {
-            CFRelease(roleAttr);
-          }
-        } finally {
-          CFRelease(focused);
-        }
-      } finally {
-        CFRelease(focusedAttr);
-      }
+      return matchesTextInputRole(el.koffi, el.focused);
     } finally {
-      CFRelease(systemWide);
+      el.release();
     }
   } catch {
     return false;
@@ -150,6 +196,46 @@ function simulatePaste(): void {
   CFRelease(keyUp);
   CFRelease(keyDown);
   CFRelease(src);
+}
+
+const CLIPBOARD_RESTORE_DELAY_MS = 400;
+
+function injectViaClipboard(text: string): void {
+  const prev = {
+    text: clipboard.readText(),
+    html: clipboard.readHTML(),
+    rtf: clipboard.readRTF(),
+  };
+
+  clipboard.writeText(text);
+  simulatePaste();
+
+  setTimeout(() => {
+    if (prev.html || prev.rtf) {
+      clipboard.write({ text: prev.text, html: prev.html, rtf: prev.rtf });
+    } else if (prev.text) {
+      clipboard.writeText(prev.text);
+    } else {
+      clipboard.clear();
+    }
+  }, CLIPBOARD_RESTORE_DELAY_MS);
+}
+
+export interface PasteOptions {
+  lowercaseStart?: boolean;
+}
+
+export function applyCase(text: string, lowercaseStart: boolean): string {
+  if (!text) return text;
+  if (lowercaseStart) return text[0].toLowerCase() + text.slice(1);
+  return text;
+}
+
+export function stripTrailingPeriod(text: string): string {
+  if (!text.endsWith(".")) return text;
+  const words = text.trim().split(/\s+/);
+  if (words.length <= 3) return text.slice(0, -1);
+  return text;
 }
 
 const UNICODE_CHUNK_SIZE = 20;
@@ -184,11 +270,13 @@ function typeText(text: string): void {
   }
 }
 
-export function pasteText(text: string, copyToClipboard = true): boolean {
+export function pasteText(text: string, copyToClipboard = true, options?: PasteOptions): boolean {
   if (!text) return false;
 
+  const finalText = applyCase(stripTrailingPeriod(text), options?.lowercaseStart ?? false);
+
   if (copyToClipboard) {
-    clipboard.writeText(text);
+    clipboard.writeText(finalText);
 
     if (isAccessibilityGranted()) {
       try {
@@ -203,24 +291,36 @@ export function pasteText(text: string, copyToClipboard = true): boolean {
     } else {
       new Notification({
         title: "Vox",
-        body: t("notification.copiedToClipboard", { text: text.slice(0, 100) }),
+        body: t("notification.copiedToClipboard", { text: finalText.slice(0, 100) }),
       }).show();
     }
     return true;
   } else {
-    if (isAccessibilityGranted() && hasActiveTextField()) {
+    if (!isAccessibilityGranted()) return false;
+
+    if (hasActiveTextField()) {
       try {
-        typeText(text);
+        typeText(finalText);
         return true;
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        new Notification({
-          title: "Vox",
-          body: t("notification.pasteFailed", { error: msg.slice(0, 120) }),
-        }).show();
-        return false;
+      } catch {
+        // CGEvent failed — fall through to clipboard fallback
       }
+    } else if (hasFocusedElement()) {
+      // Focused element exists but is NOT a text field (e.g. System Preferences,
+      // blank web page) — signal failure so the caller can show a warning.
+      return false;
     }
-    return false;
+
+    try {
+      injectViaClipboard(finalText);
+      return true;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      new Notification({
+        title: "Vox",
+        body: t("notification.pasteFailed", { error: msg.slice(0, 120) }),
+      }).show();
+      return false;
+    }
   }
 }
