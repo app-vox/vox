@@ -278,17 +278,7 @@ export function pasteText(text: string, copyToClipboard = true): boolean {
   } else {
     if (!isAccessibilityGranted()) return false;
 
-    const el = getFocusedElement();
-    if (!el) return false;
-
-    let nativeField = false;
-    try {
-      nativeField = matchesTextInputRole(el.koffi, el.focused);
-    } finally {
-      el.release();
-    }
-
-    if (nativeField) {
+    if (hasActiveTextField()) {
       try {
         typeText(text);
         return true;
