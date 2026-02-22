@@ -7,6 +7,10 @@ on:
     paths:
       - "src/shared/constants.ts"
       - "tests/pipeline/**"
+  pull_request:
+    paths:
+      - "src/shared/constants.ts"
+      - "tests/pipeline/**"
   workflow_dispatch:
 
 permissions:
