@@ -68,7 +68,6 @@ const TEXT_INPUT_ROLES = new Set([
   "AXTextArea",
   "AXComboBox",
   "AXSearchField",
-  "AXWebArea",
 ]);
 
 function matchesTextInputRole(koffi: typeof import("koffi"), element: Pointer): boolean {
