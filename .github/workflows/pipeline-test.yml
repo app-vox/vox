@@ -55,7 +55,7 @@ jobs:
           VOX_PIPELINE_TEST_CONFIG: ./pipeline-test-config.json
       - name: Upload HTML report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: pipeline-test-report
           path: tests/pipeline/.results/report.html
