@@ -37,9 +37,17 @@ const analytics = new AnalyticsService();
 
 let pipeline: Pipeline | null = null;
 let shortcutManager: ShortcutManager | null = null;
+let devLlmOverride: { enabled?: boolean; tested?: boolean } | null = null;
 
 function setupPipeline(): void {
   const config = configManager.load();
+  if (devLlmOverride) {
+    if (devLlmOverride.enabled !== undefined) config.enableLlmEnhancement = devLlmOverride.enabled;
+    if (devLlmOverride.tested !== undefined) {
+      config.llmConnectionTested = devLlmOverride.tested;
+      if (!devLlmOverride.tested) config.llmConfigHash = "";
+    }
+  }
   const modelPath = config.whisper.model
     ? modelManager.getModelPath(config.whisper.model)
     : "";
@@ -217,6 +225,17 @@ app.whenReady().then(async () => {
 
   ipcMain.handle("dev:set-model-override", (_event, hasModel: boolean | null) => {
     shortcutManager?.setDevModelOverride(hasModel);
+  });
+
+  ipcMain.handle("dev:set-llm-override", (_event, enabled: boolean | null, tested: boolean | null) => {
+    if (enabled === null && tested === null) {
+      devLlmOverride = null;
+    } else {
+      devLlmOverride = {};
+      if (enabled !== null) devLlmOverride.enabled = enabled;
+      if (tested !== null) devLlmOverride.tested = tested;
+    }
+    setupPipeline();
   });
 
   ipcMain.handle("dev:test-error", () => {

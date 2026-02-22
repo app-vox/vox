@@ -150,6 +150,7 @@ export interface VoxAPI {
     }>;
     setAnalyticsEnabled(enabled: boolean): Promise<boolean>;
     setModelOverride(hasModel: boolean | null): Promise<void>;
+    setLlmOverride(enabled: boolean | null, tested: boolean | null): Promise<void>;
     testError(): Promise<void>;
   };
   analytics: {
@@ -266,6 +267,7 @@ const voxApi: VoxAPI = {
     getSystemInfo: () => ipcRenderer.invoke("dev:get-system-info"),
     setAnalyticsEnabled: (enabled: boolean) => ipcRenderer.invoke("dev:set-analytics-enabled", enabled),
     setModelOverride: (hasModel: boolean | null) => ipcRenderer.invoke("dev:set-model-override", hasModel),
+    setLlmOverride: (enabled: boolean | null, tested: boolean | null) => ipcRenderer.invoke("dev:set-llm-override", enabled, tested),
     testError: () => ipcRenderer.invoke("dev:test-error"),
   },
   analytics: {

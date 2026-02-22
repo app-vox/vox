@@ -322,6 +322,17 @@ export function DevPanel() {
     }
   }, [setupCompleteOverride]);
 
+  // Sync LLM overrides to the main process (rebuilds pipeline with NoopProvider)
+  const llmEnabledOverride = ov ? overrides.llmEnhancementEnabled : undefined;
+  const llmTestedOverride = ov ? overrides.llmConnectionTested : undefined;
+  useEffect(() => {
+    if (llmEnabledOverride !== undefined || llmTestedOverride !== undefined) {
+      void window.voxApi.dev.setLlmOverride(llmEnabledOverride ?? null, llmTestedOverride ?? null);
+    } else {
+      void window.voxApi.dev.setLlmOverride(null, null);
+    }
+  }, [llmEnabledOverride, llmTestedOverride]);
+
   const isPresetActive = (preset: Partial<DevOverrides>) =>
     ov && Object.entries(preset).every(([key, value]) =>
       overrides[key as keyof DevOverrides] === value,
