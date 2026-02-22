@@ -100,24 +100,6 @@ function matchesTextInputRole(koffi: typeof import("koffi"), element: Pointer): 
   }
 }
 
-function hasSelectedTextRange(koffi: typeof import("koffi"), element: Pointer): boolean {
-  const attr = CFStringCreateWithCString(null, "AXSelectedTextRange", kCFStringEncodingUTF8);
-  if (!attr) return false;
-
-  try {
-    const valBuf = Buffer.alloc(8);
-    const err = AXUIElementCopyAttributeValue(element, attr, valBuf);
-    if (err !== kAXErrorSuccess) return false;
-
-    const ref = koffi.decode(valBuf, "void *");
-    if (!ref) return false;
-    CFRelease(ref);
-    return true;
-  } finally {
-    CFRelease(attr);
-  }
-}
-
 function queryFocusedChild(koffi: typeof import("koffi"), parent: Pointer): Pointer | null {
   const valueBuf = Buffer.alloc(8);
   const focusedAttr = CFStringCreateWithCString(null, "AXFocusedUIElement", kCFStringEncodingUTF8);
@@ -187,8 +169,7 @@ export function hasActiveTextField(): boolean {
     if (!el) return false;
 
     try {
-      if (matchesTextInputRole(el.koffi, el.focused)) return true;
-      return hasSelectedTextRange(el.koffi, el.focused);
+      return matchesTextInputRole(el.koffi, el.focused);
     } finally {
       el.release();
     }
