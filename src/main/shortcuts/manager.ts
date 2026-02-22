@@ -518,54 +518,63 @@ export class ShortcutManager {
 
     globalShortcut.unregisterAll();
 
-    const holdOk = globalShortcut.register(config.shortcuts.hold, () => {
-      if (this.isInitializing) {
-        slog.debug("Ignoring hold shortcut during initialization");
-        return;
-      }
-      if (!this.hasModel()) {
-        this.hud.showError(3000, t("notification.setupRequired.indicator"));
-        return;
-      }
-      if (this.stateMachine.getState() === RecordingState.Canceling) {
-        this.silentAbortCancel();
+    const mode = config.shortcuts.mode ?? "hold";
+
+    let holdOk = true;
+    let toggleOk = true;
+
+    if (mode === "hold" || mode === "both") {
+      holdOk = globalShortcut.register(config.shortcuts.hold, () => {
+        if (this.isInitializing) {
+          slog.debug("Ignoring hold shortcut during initialization");
+          return;
+        }
+        if (!this.hasModel()) {
+          this.hud.showError(3000, t("notification.setupRequired.indicator"));
+          return;
+        }
+        if (this.stateMachine.getState() === RecordingState.Canceling) {
+          this.silentAbortCancel();
+          this.stateMachine.handleHoldKeyDown();
+          return;
+        }
+        if (this.stateMachine.getState() === RecordingState.Processing) {
+          this.restartRecording("hold");
+          return;
+        }
         this.stateMachine.handleHoldKeyDown();
-        return;
-      }
-      if (this.stateMachine.getState() === RecordingState.Processing) {
-        this.restartRecording("hold");
-        return;
-      }
-      this.stateMachine.handleHoldKeyDown();
-    });
+      });
+    }
 
-    const toggleOk = globalShortcut.register(config.shortcuts.toggle, () => {
-      if (this.isInitializing) {
-        slog.debug("Ignoring toggle shortcut during initialization");
-        return;
-      }
-      if (!this.hasModel()) {
-        this.hud.showError(3000, t("notification.setupRequired.indicator"));
-        return;
-      }
-      if (this.stateMachine.getState() === RecordingState.Canceling) {
-        this.silentAbortCancel();
+    if (mode === "toggle" || mode === "both") {
+      toggleOk = globalShortcut.register(config.shortcuts.toggle, () => {
+        if (this.isInitializing) {
+          slog.debug("Ignoring toggle shortcut during initialization");
+          return;
+        }
+        if (!this.hasModel()) {
+          this.hud.showError(3000, t("notification.setupRequired.indicator"));
+          return;
+        }
+        if (this.stateMachine.getState() === RecordingState.Canceling) {
+          this.silentAbortCancel();
+          this.stateMachine.handleTogglePress();
+          return;
+        }
+        if (this.stateMachine.getState() === RecordingState.Processing) {
+          this.restartRecording();
+          return;
+        }
         this.stateMachine.handleTogglePress();
-        return;
-      }
-      if (this.stateMachine.getState() === RecordingState.Processing) {
-        this.restartRecording();
-        return;
-      }
-      this.stateMachine.handleTogglePress();
-    });
+      });
+    }
 
-    if (!holdOk) slog.warn("Failed to register hold shortcut:", config.shortcuts.hold);
-    if (!toggleOk) slog.warn("Failed to register toggle shortcut:", config.shortcuts.toggle);
+    if ((mode === "hold" || mode === "both") && !holdOk) slog.warn("Failed to register hold shortcut:", config.shortcuts.hold);
+    if ((mode === "toggle" || mode === "both") && !toggleOk) slog.warn("Failed to register toggle shortcut:", config.shortcuts.toggle);
 
-    this.holdKeyCodes = getHoldKeyCodes(config.shortcuts.hold);
+    this.holdKeyCodes = (mode === "hold" || mode === "both") ? getHoldKeyCodes(config.shortcuts.hold) : new Set();
 
-    slog.info("Shortcuts registered: hold=%s, toggle=%s", config.shortcuts.hold, config.shortcuts.toggle);
+    slog.info("Shortcuts registered: mode=%s, hold=%s, toggle=%s", mode, config.shortcuts.hold, config.shortcuts.toggle);
 
     if (!busy) {
       // Re-enable shortcuts after a longer delay to prevent spurious activations
