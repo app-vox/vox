@@ -285,6 +285,10 @@ export function pasteText(text: string, copyToClipboard = true): boolean {
       } catch {
         // CGEvent failed — fall through to clipboard fallback
       }
+    } else if (hasFocusedElement()) {
+      // Focused element exists but is NOT a text field (e.g. System Preferences,
+      // blank web page) — signal failure so the caller can show a warning.
+      return false;
     }
 
     try {
