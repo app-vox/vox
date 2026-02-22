@@ -278,16 +278,24 @@ export function pasteText(text: string, copyToClipboard = true): boolean {
   } else {
     if (!isAccessibilityGranted()) return false;
 
-    if (hasActiveTextField()) {
+    const el = getFocusedElement();
+    if (!el) return false;
+
+    let nativeField = false;
+    try {
+      nativeField = matchesTextInputRole(el.koffi, el.focused);
+    } finally {
+      el.release();
+    }
+
+    if (nativeField) {
       try {
         typeText(text);
         return true;
       } catch {
-        // CGEvent unicode injection failed (e.g. Chromium) — try clipboard fallback
+        // CGEvent failed — fall through to clipboard fallback
       }
     }
-
-    if (!hasFocusedElement()) return false;
 
     try {
       injectViaClipboard(text);
