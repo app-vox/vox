@@ -22,6 +22,7 @@ let CFStringCreateWithCString!: (alloc: null, str: string, encoding: number) => 
 let CFGetTypeID!: (ref: Pointer) => number;
 let CFStringGetTypeID!: () => number;
 let CFStringGetCString!: (str: Pointer, buf: Buffer, bufSize: number, encoding: number) => boolean;
+let AXUIElementCreateApplication!: (pid: number) => Pointer | null;
 
 function initCGEvent(): void {
   if (process.env.VITEST) return;
@@ -49,6 +50,7 @@ function initCGEvent(): void {
   CFGetTypeID = cf.func("CFGetTypeID", "uint64", ["void *"]);
   CFStringGetTypeID = cf.func("CFStringGetTypeID", "uint64", []);
   CFStringGetCString = cf.func("CFStringGetCString", "bool", ["void *", "void *", "int64", "uint32"]);
+  AXUIElementCreateApplication = appServices.func("AXUIElementCreateApplication", "void *", ["int32"]);
 }
 
 export function isAccessibilityGranted(): boolean {
@@ -116,24 +118,53 @@ function hasSelectedTextRange(koffi: typeof import("koffi"), element: Pointer): 
   }
 }
 
+function queryFocusedChild(koffi: typeof import("koffi"), parent: Pointer): Pointer | null {
+  const valueBuf = Buffer.alloc(8);
+  const focusedAttr = CFStringCreateWithCString(null, "AXFocusedUIElement", kCFStringEncodingUTF8);
+  if (!focusedAttr) return null;
+
+  const err = AXUIElementCopyAttributeValue(parent, focusedAttr, valueBuf);
+  CFRelease(focusedAttr);
+  if (err !== kAXErrorSuccess) return null;
+
+  return koffi.decode(valueBuf, "void *") as Pointer | null;
+}
+
+function getFrontmostPid(): number | null {
+  try {
+    const { execSync } = require("child_process");
+    const out = execSync(
+      `osascript -e 'tell application "System Events" to unix id of (first process whose frontmost is true)'`,
+      { encoding: "utf8", timeout: 500 },
+    );
+    const pid = parseInt(out.trim(), 10);
+    return Number.isFinite(pid) ? pid : null;
+  } catch {
+    return null;
+  }
+}
+
 function getFocusedElement(): { koffi: typeof import("koffi"); focused: Pointer; release: () => void } | null {
   initCGEvent();
   if (!AXIsProcessTrusted()) return null;
 
-  const systemWide = AXUIElementCreateSystemWide();
-  if (!systemWide) return null;
-
   const koffi = require("koffi");
-  const valueBuf = Buffer.alloc(8);
-  const focusedAttr = CFStringCreateWithCString(null, "AXFocusedUIElement", kCFStringEncodingUTF8);
-  if (!focusedAttr) { CFRelease(systemWide); return null; }
 
-  const err = AXUIElementCopyAttributeValue(systemWide, focusedAttr, valueBuf);
-  CFRelease(focusedAttr);
-  CFRelease(systemWide);
-  if (err !== kAXErrorSuccess) return null;
+  const systemWide = AXUIElementCreateSystemWide();
+  if (systemWide) {
+    const focused = queryFocusedChild(koffi, systemWide);
+    CFRelease(systemWide);
+    if (focused) return { koffi, focused, release: () => CFRelease(focused) };
+  }
 
-  const focused = koffi.decode(valueBuf, "void *");
+  const pid = getFrontmostPid();
+  if (pid == null) return null;
+
+  const appElement = AXUIElementCreateApplication(pid);
+  if (!appElement) return null;
+
+  const focused = queryFocusedChild(koffi, appElement);
+  CFRelease(appElement);
   if (!focused) return null;
 
   return { koffi, focused, release: () => CFRelease(focused) };
