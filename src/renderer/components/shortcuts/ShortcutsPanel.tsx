@@ -78,22 +78,24 @@ export function ShortcutsPanel() {
           </div>
         </div>
 
-        <ShortcutRecorder
-          label={t("shortcuts.holdMode")}
-          hint={t("shortcuts.holdHint")}
-          value={config.shortcuts.hold}
-          otherValue={config.shortcuts.toggle}
-          onChange={setHold}
-          disabled={mode === "toggle"}
-        />
-        <ShortcutRecorder
-          label={t("shortcuts.toggleMode")}
-          hint={t("shortcuts.toggleHint")}
-          value={config.shortcuts.toggle}
-          otherValue={config.shortcuts.hold}
-          onChange={setToggle}
-          disabled={mode === "hold"}
-        />
+        {(mode === "hold" || mode === "both") && (
+          <ShortcutRecorder
+            label={t("shortcuts.holdMode")}
+            hint={t("shortcuts.holdHint")}
+            value={config.shortcuts.hold}
+            otherValue={config.shortcuts.toggle}
+            onChange={setHold}
+          />
+        )}
+        {(mode === "toggle" || mode === "both") && (
+          <ShortcutRecorder
+            label={t("shortcuts.toggleMode")}
+            hint={t("shortcuts.toggleHint")}
+            value={config.shortcuts.toggle}
+            otherValue={config.shortcuts.hold}
+            onChange={setToggle}
+          />
+        )}
 
         <button
           onClick={restoreDefaults}
