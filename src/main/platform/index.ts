@@ -1,17 +1,27 @@
 import type { PasterModule, PermissionsModule } from "./types";
 
-const os = process.platform;
-
 let _paster: PasterModule | null = null;
 let _permissions: PermissionsModule | null = null;
 
 function loadPaster(): PasterModule {
-  if (!_paster) _paster = require(`./${os}/paster`);
+  if (!_paster) {
+    if (process.platform === "win32") {
+      _paster = require("./win32/paster");
+    } else {
+      _paster = require("./darwin/paster");
+    }
+  }
   return _paster!;
 }
 
 function loadPermissions(): PermissionsModule {
-  if (!_permissions) _permissions = require(`./${os}/permissions`);
+  if (!_permissions) {
+    if (process.platform === "win32") {
+      _permissions = require("./win32/permissions");
+    } else {
+      _permissions = require("./darwin/permissions");
+    }
+  }
   return _permissions!;
 }
 
