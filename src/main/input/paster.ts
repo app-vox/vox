@@ -117,38 +117,50 @@ function hasSelectedTextRange(koffi: typeof import("koffi"), element: Pointer): 
   }
 }
 
+function getFocusedElement(): { koffi: typeof import("koffi"); focused: Pointer; release: () => void } | null {
+  initCGEvent();
+  if (!AXIsProcessTrusted()) return null;
+
+  const systemWide = AXUIElementCreateSystemWide();
+  if (!systemWide) return null;
+
+  const koffi = require("koffi");
+  const valueBuf = Buffer.alloc(8);
+  const focusedAttr = CFStringCreateWithCString(null, "AXFocusedUIElement", kCFStringEncodingUTF8);
+  if (!focusedAttr) { CFRelease(systemWide); return null; }
+
+  const err = AXUIElementCopyAttributeValue(systemWide, focusedAttr, valueBuf);
+  CFRelease(focusedAttr);
+  CFRelease(systemWide);
+  if (err !== kAXErrorSuccess) return null;
+
+  const focused = koffi.decode(valueBuf, "void *");
+  if (!focused) return null;
+
+  return { koffi, focused, release: () => CFRelease(focused) };
+}
+
+export function hasFocusedElement(): boolean {
+  try {
+    const el = getFocusedElement();
+    if (!el) return false;
+    el.release();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function hasActiveTextField(): boolean {
   try {
-    initCGEvent();
-    if (!AXIsProcessTrusted()) return false;
-
-    const systemWide = AXUIElementCreateSystemWide();
-    if (!systemWide) return false;
+    const el = getFocusedElement();
+    if (!el) return false;
 
     try {
-      const koffi = require("koffi");
-      const valueBuf = Buffer.alloc(8);
-      const focusedAttr = CFStringCreateWithCString(null, "AXFocusedUIElement", kCFStringEncodingUTF8);
-      if (!focusedAttr) return false;
-
-      try {
-        const err = AXUIElementCopyAttributeValue(systemWide, focusedAttr, valueBuf);
-        if (err !== kAXErrorSuccess) return false;
-
-        const focused = koffi.decode(valueBuf, "void *");
-        if (!focused) return false;
-
-        try {
-          if (matchesTextInputRole(koffi, focused)) return true;
-          return hasSelectedTextRange(koffi, focused);
-        } finally {
-          CFRelease(focused);
-        }
-      } finally {
-        CFRelease(focusedAttr);
-      }
+      if (matchesTextInputRole(el.koffi, el.focused)) return true;
+      return hasSelectedTextRange(el.koffi, el.focused);
     } finally {
-      CFRelease(systemWide);
+      el.release();
     }
   } catch {
     return false;
@@ -265,14 +277,17 @@ export function pasteText(text: string, copyToClipboard = true): boolean {
     return true;
   } else {
     if (!isAccessibilityGranted()) return false;
-    if (!hasActiveTextField()) return false;
 
-    try {
-      typeText(text);
-      return true;
-    } catch {
-      // CGEvent unicode injection failed (e.g. Chromium) — try clipboard fallback
+    if (hasActiveTextField()) {
+      try {
+        typeText(text);
+        return true;
+      } catch {
+        // CGEvent unicode injection failed (e.g. Chromium) — try clipboard fallback
+      }
     }
+
+    if (!hasFocusedElement()) return false;
 
     try {
       injectViaClipboard(text);
