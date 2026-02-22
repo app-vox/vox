@@ -518,7 +518,7 @@ export class ShortcutManager {
 
     globalShortcut.unregisterAll();
 
-    const mode = config.shortcuts.mode ?? "hold";
+    const mode = config.shortcuts.mode ?? "toggle";
 
     let holdOk = true;
     let toggleOk = true;

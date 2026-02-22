@@ -19,20 +19,20 @@ describe("shortcuts mode migration", () => {
     fs.mkdirSync(configDir, { recursive: true });
   });
 
-  it("defaults mode to 'hold' for fresh install (no config file)", () => {
+  it("defaults mode to 'toggle' for fresh install (no config file)", () => {
     const manager = new ConfigManager(configDir, noopSecrets);
     const config = manager.load();
-    expect(config.shortcuts.mode).toBe("hold");
+    expect(config.shortcuts.mode).toBe("toggle");
   });
 
-  it("defaults mode to 'hold' when existing config has no mode field", () => {
+  it("defaults mode to 'toggle' when existing config has no mode field", () => {
     fs.writeFileSync(configPath, JSON.stringify({
       shortcuts: { hold: "Ctrl+Space", toggle: "Ctrl+Shift+Space" },
       llm: { provider: "foundry", endpoint: "", apiKey: "", model: "gpt-4o" },
     }));
     const manager = new ConfigManager(configDir, noopSecrets);
     const config = manager.load();
-    expect(config.shortcuts.mode).toBe("hold");
+    expect(config.shortcuts.mode).toBe("toggle");
     expect(config.shortcuts.hold).toBe("Ctrl+Space");
     expect(config.shortcuts.toggle).toBe("Ctrl+Shift+Space");
   });

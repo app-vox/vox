@@ -8,7 +8,7 @@ import card from "../shared/card.module.scss";
 import btn from "../shared/buttons.module.scss";
 import styles from "./ShortcutsPanel.module.scss";
 
-const MODES: ShortcutMode[] = ["hold", "toggle", "both"];
+const MODES: ShortcutMode[] = ["toggle", "hold", "both"];
 
 export function ShortcutsPanel() {
   useEffect(() => {
@@ -22,7 +22,7 @@ export function ShortcutsPanel() {
 
   if (!config) return null;
 
-  const mode = config.shortcuts.mode ?? "hold";
+  const mode = config.shortcuts.mode ?? "toggle";
 
   const setMode = async (newMode: ShortcutMode) => {
     updateConfig({ shortcuts: { ...config.shortcuts, mode: newMode } });
@@ -43,7 +43,7 @@ export function ShortcutsPanel() {
   };
 
   const restoreDefaults = async () => {
-    updateConfig({ shortcuts: { mode: "hold", hold: "Alt+Space", toggle: "Alt+Shift+Space" } });
+    updateConfig({ shortcuts: { mode: "toggle", hold: "Alt+Space", toggle: "Alt+Shift+Space" } });
     await saveConfig(false);
     triggerToast();
   };

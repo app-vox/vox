@@ -142,7 +142,7 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
       model: "small",
     },
     shortcuts: {
-      mode: "hold",
+      mode: "toggle",
       hold: "Alt+Space",
       toggle: "Alt+Shift+Space",
     },
