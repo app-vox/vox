@@ -54,6 +54,7 @@ jobs:
         env:
           VOX_PIPELINE_TEST_CONFIG: ./pipeline-test-config.json
       - name: Upload HTML report
+        id: upload-report
         if: always()
         uses: actions/upload-artifact@v6
         with:
@@ -73,7 +74,14 @@ jobs:
           PR=$(gh pr list --head "${{ github.ref_name }}" --json number -q '.[0].number')
           [ -z "$PR" ] && exit 0
           MARKER="<!-- pipeline-test-report -->"
-          BODY="${MARKER}"$'\n'"$(cat tests/pipeline/.results/report.md)"
+          ARTIFACT_ID="${{ steps.upload-report.outputs.artifact-id }}"
+          ARTIFACT_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${ARTIFACT_ID}"
+          REPORT="$(cat tests/pipeline/.results/report.md)"
+          if [ -n "$ARTIFACT_ID" ]; then
+            BODY="${MARKER}"$'\n'"${REPORT}"$'\n\n'"📄 [Download full HTML report](${ARTIFACT_URL})"
+          else
+            BODY="${MARKER}"$'\n'"${REPORT}"
+          fi
           COMMENT_ID=$(gh api "repos/${{ github.repository }}/issues/${PR}/comments" \
             --paginate --jq ".[] | select(.body | startswith(\"${MARKER}\")) | .id" | tail -1)
           if [ -n "$COMMENT_ID" ]; then
