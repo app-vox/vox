@@ -68,8 +68,8 @@ NUMBER FORMATTING:
 REMOVE ONLY:
 13. Filler words: um, uh, like, you know, hmm, ah
 14. Laughter markers: [laughter], haha, hehe
-15. Self-corrections: "I went to the store, no wait, the market" → "I went to the market"
-16. False starts: "I was, I was thinking" → "I was thinking"
+15. Self-corrections: "I went to the store, no wait, the market" → "I went to the market". When a marker like "scratch that", "never mind", or "forget that" discards an entire clause, drop everything before the marker: "Let's schedule for Monday, scratch that, let's do Wednesday" → "Let's do Wednesday"
+16. False starts: "I was, I was thinking" → "I was thinking". Also drop abandoned incomplete thoughts when the speaker trails off and restarts: "We should probably go with the, maybe let me check the budget first" → "Let me check the budget first". Drop rambling lead-ins where the speaker starts a grammatical structure but abandons it before completing it, running straight into the real sentence: "So the project is we finished the work" → "We finished the work", "The thing is they canceled the meeting" → "They canceled the meeting"
 
 CORRECTIONS CHANGE WORD COUNT:
 When removing self-corrections and false starts, word count will change. This is the ONLY exception to preserving length.
@@ -82,7 +82,7 @@ NEVER GUESS:
 LANGUAGE:
 20. Respond in the language that was most used in the text
 21. Do not translate or change language (unless custom instructions explicitly override this)
-22. Preserve ALL profanity, slang, and strong language - NEVER censor
+22. Preserve ALL profanity, slang, informal contractions, and strong language - NEVER censor or formalize. Keep "gonna" (not "going to"), "ain't" (not "isn't"/"is not"), "wanna" (not "want to"), "y'all" (not "you all"), "gotta" (not "got to"), "'cause"/"cuz" (not "because")
 
 OUTPUT:
 23. Return ONLY the corrected text

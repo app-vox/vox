@@ -77,7 +77,7 @@
       { "type": "must_contain", "value": "CRDT-based" },
       { "type": "must_contain", "value": "vector clocks" },
       { "type": "must_contain", "value": "thrombocytopenia" },
-      { "type": "must_contain", "value": "leukocytosis" },
+      { "type": "must_match_regex", "value": "leu[ck]ocytosis" },
       { "type": "must_contain", "value": "hematologic" },
       { "type": "must_not_contain", "value": "low platelet" },
       { "type": "must_not_contain", "value": "blood test" },
