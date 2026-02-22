@@ -1,43 +1,21 @@
 import type { PasterModule, PermissionsModule } from "./types";
+import * as darwinPaster from "./darwin/paster";
+import * as darwinPermissions from "./darwin/permissions";
+import * as win32Paster from "./win32/paster";
+import * as win32Permissions from "./win32/permissions";
 
-let _paster: PasterModule | null = null;
-let _permissions: PermissionsModule | null = null;
+const platformPasters: Record<string, PasterModule> = {
+  darwin: darwinPaster,
+  win32: win32Paster,
+};
 
-function loadPaster(): PasterModule {
-  if (!_paster) {
-    if (process.platform === "win32") {
-      _paster = require("./win32/paster");
-    } else {
-      _paster = require("./darwin/paster");
-    }
-  }
-  return _paster!;
-}
+const platformPermissions: Record<string, PermissionsModule> = {
+  darwin: darwinPermissions,
+  win32: win32Permissions,
+};
 
-function loadPermissions(): PermissionsModule {
-  if (!_permissions) {
-    if (process.platform === "win32") {
-      _permissions = require("./win32/permissions");
-    } else {
-      _permissions = require("./darwin/permissions");
-    }
-  }
-  return _permissions!;
-}
-
-export const paster: PasterModule = new Proxy({} as PasterModule, {
-  get(_target, prop: string) {
-    const mod = loadPaster();
-    return (mod as unknown as Record<string, unknown>)[prop];
-  },
-});
-
-export const permissions: PermissionsModule = new Proxy({} as PermissionsModule, {
-  get(_target, prop: string) {
-    const mod = loadPermissions();
-    return (mod as unknown as Record<string, unknown>)[prop];
-  },
-});
+export const paster: PasterModule = platformPasters[process.platform]!;
+export const permissions: PermissionsModule = platformPermissions[process.platform]!;
 
 export { applyCase, stripTrailingPeriod } from "./utils";
 export type { PasteOptions, PasterModule, PermissionsModule } from "./types";
