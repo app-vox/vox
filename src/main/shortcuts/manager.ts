@@ -1,4 +1,4 @@
-import { BrowserWindow, globalShortcut, ipcMain, Notification, screen } from "electron";
+import { BrowserWindow, clipboard, globalShortcut, ipcMain, Notification, screen } from "electron";
 import { uIOhook, UiohookKey } from "uiohook-napi";
 import log from "electron-log/main";
 import { type ConfigManager } from "../config/manager";
@@ -81,6 +81,7 @@ export interface ShortcutManagerDeps {
   getPipeline: () => Pipeline;
   analytics?: { track(event: string, properties?: Record<string, unknown>): void };
   openSettings?: (tab?: string) => void;
+  hasModel: () => boolean;
 }
 
 export class ShortcutManager {
@@ -97,6 +98,8 @@ export class ShortcutManager {
   private micActiveAt = 0;
   private cancelTimer: ReturnType<typeof setTimeout> | null = null;
   private canceledAtStage: string | null = null;
+  private devModelOverride: boolean | null = null;
+  private lastUnpastedText: string | null = null;
   private static readonly MIN_RECORDING_MS = 400;
 
   constructor(deps: ShortcutManagerDeps) {
@@ -248,6 +251,10 @@ export class ShortcutManager {
       this.canceledAtStage = stage;
       this.deps.analytics?.track("graceful_cancel_started", { stage });
 
+      const config = this.deps.configManager.load();
+      const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
+      this.playCue(errorCueType);
+
       this.stateMachine.setCanceling();
       this.hud.setState("canceled", undefined, true);
       this.hud.showUndoBar(3000);
@@ -296,10 +303,22 @@ export class ShortcutManager {
         this.hud.setState("error");
       } else {
         slog.info("Undo succeeded, pasting text");
-        pasteText(trimmedText);
-        this.deps.analytics?.track("paste_completed", { method: "undo-cancel" });
-        this.stateMachine.setIdle();
-        this.hud.setState("idle");
+        const config = this.deps.configManager.load();
+        const pasted = pasteText(trimmedText, config.copyToClipboard);
+
+        if (!pasted) {
+          slog.info("Text not inserted — showing HUD warning");
+          const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
+          this.playCue(errorCueType);
+          this.lastUnpastedText = trimmedText;
+          this.stateMachine.setIdle();
+          this.hud.showWarning();
+        } else {
+          this.lastUnpastedText = null;
+          this.deps.analytics?.track("paste_completed", { method: "undo-cancel" });
+          this.stateMachine.setIdle();
+          this.hud.setState("idle");
+        }
       }
       this.updateTrayState();
     }).catch((err: unknown) => {
@@ -389,7 +408,7 @@ export class ShortcutManager {
 
   dismissHud(): void {
     const hudState = this.hud.getState();
-    if (hudState === "error" || hudState === "canceled") {
+    if (hudState === "error" || hudState === "canceled" || hudState === "warning") {
       slog.info("Dismissing HUD state: %s", hudState);
       this.hud.setState("idle");
     }
@@ -399,6 +418,16 @@ export class ShortcutManager {
   isRecording(): boolean {
     const state = this.stateMachine.getState();
     return state === RecordingState.Hold || state === RecordingState.Toggle || state === RecordingState.Processing || state === RecordingState.Canceling;
+  }
+
+  private hasModel(): boolean {
+    if (this.devModelOverride !== null) return this.devModelOverride;
+    return this.deps.hasModel();
+  }
+
+  setDevModelOverride(hasModel: boolean | null): void {
+    this.devModelOverride = hasModel;
+    this.updateHud();
   }
 
   updateHud(): void {
@@ -487,6 +516,10 @@ export class ShortcutManager {
         slog.debug("Ignoring hold shortcut during initialization");
         return;
       }
+      if (!this.hasModel()) {
+        this.hud.showError(3000, t("notification.setupRequired.indicator"));
+        return;
+      }
       if (this.stateMachine.getState() === RecordingState.Canceling) {
         this.silentAbortCancel();
         this.stateMachine.handleHoldKeyDown();
@@ -502,6 +535,10 @@ export class ShortcutManager {
     const toggleOk = globalShortcut.register(config.shortcuts.toggle, () => {
       if (this.isInitializing) {
         slog.debug("Ignoring toggle shortcut during initialization");
+        return;
+      }
+      if (!this.hasModel()) {
+        this.hud.showError(3000, t("notification.setupRequired.indicator"));
         return;
       }
       if (this.stateMachine.getState() === RecordingState.Canceling) {
@@ -559,6 +596,10 @@ export class ShortcutManager {
     });
 
     ipcMain.handle("hud:start-recording", () => {
+      if (!this.hasModel()) {
+        this.hud.showError(3000, t("notification.setupRequired.indicator"));
+        return;
+      }
       if (this.stateMachine.getState() === RecordingState.Canceling) {
         this.silentAbortCancel();
         this.stateMachine.handleTogglePress();
@@ -579,6 +620,15 @@ export class ShortcutManager {
 
     ipcMain.handle("hud:open-transcriptions", () => {
       this.deps.openSettings?.("transcriptions");
+    });
+
+    ipcMain.handle("hud:copy-latest", () => {
+      if (!this.lastUnpastedText) return false;
+      clipboard.writeText(this.lastUnpastedText);
+      this.deps.analytics?.track("paste_completed", { method: "copy-latest" });
+      this.lastUnpastedText = null;
+      this.hud.setState("idle");
+      return true;
     });
 
     ipcMain.handle("hud:disable", () => {
@@ -629,6 +679,14 @@ export class ShortcutManager {
 
     ipcMain.handle("hud:dismiss", () => {
       this.dismissHud();
+    });
+
+    ipcMain.handle("hud:pause-flash", () => {
+      this.hud.pauseFlashTimer();
+    });
+
+    ipcMain.handle("hud:resume-flash", () => {
+      this.hud.resumeFlashTimer();
     });
 
   }
@@ -766,6 +824,9 @@ export class ShortcutManager {
       pipeline.cancel().catch((err) => {
         slog.error("Error during short-recording cancel", err);
       });
+      const config = this.deps.configManager.load();
+      const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
+      this.playCue(errorCueType);
       this.stateMachine.setIdle();
       this.hud.setState("canceled");
       this.updateTrayState();
@@ -783,7 +844,7 @@ export class ShortcutManager {
     const stopCueType = (config.recordingStopAudioCue ?? "pop") as AudioCueType;
     this.playCue(stopCueType);
 
-    let hudEndState: "idle" | "error" | "canceled" = "idle";
+    let hudEndState: "idle" | "error" | "canceled" | "warning" = "idle";
     try {
       const text = await pipeline.stopAndProcess();
 
@@ -804,8 +865,18 @@ export class ShortcutManager {
       } else {
         slog.info("Valid text received, proceeding with paste");
         await new Promise((r) => setTimeout(r, 200));
-        pasteText(trimmedText);
-        this.deps.analytics?.track("paste_completed", { method: "auto-paste" });
+        const pasted = pasteText(trimmedText, config.copyToClipboard);
+
+        if (!pasted && config.onboardingCompleted) {
+          slog.info("Text not inserted — showing HUD warning");
+          const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
+          this.playCue(errorCueType);
+          this.lastUnpastedText = trimmedText;
+          hudEndState = "warning";
+        } else {
+          this.lastUnpastedText = null;
+          this.deps.analytics?.track("paste_completed", { method: !pasted ? "onboarding" : "auto-paste" });
+        }
       }
     } catch (err: unknown) {
       // If generation changed, a restart/cancel already handled state — bail out

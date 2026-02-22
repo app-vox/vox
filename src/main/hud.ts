@@ -5,14 +5,15 @@ import { t } from "../shared/i18n";
 import type { WidgetPosition } from "../shared/config";
 
 const CIRCLE_SIZE = 42;
-const PILL_WIDTH = 200;
+const PILL_WIDTH = 360;
 const PILL_HEIGHT = 32;
-const WIN_WIDTH = 320;
+const MAX_PILL_WIDTH = 480;
+const WIN_WIDTH = MAX_PILL_WIDTH + 40;
 const WIN_HEIGHT = 120;
 const DOCK_MARGIN = 24;
 const MIN_SCALE = 0.55;
 
-export type HudState = "idle" | "initializing" | "listening" | "transcribing" | "enhancing" | "error" | "canceled";
+export type HudState = "idle" | "initializing" | "listening" | "transcribing" | "enhancing" | "error" | "canceled" | "warning";
 
 
 function getLogoDataUrl(): string {
@@ -268,7 +269,10 @@ function buildHudHtml(): string {
     flex-shrink: 0;
   }
   .x-icon { flex-shrink: 0; }
-  #pill-label { flex-shrink: 0; }
+  #pill-label { flex-shrink: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  #pill-label.clickable {
+    cursor: pointer;
+  }
   .pill-cancel {
     pointer-events: auto;
     display: flex;
@@ -285,6 +289,29 @@ function buildHudHtml(): string {
     margin-left: 2px;
   }
   .pill-cancel:hover { background: rgba(255,255,255,0.2); color: white; }
+  .pill-copy {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border: none;
+    background: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.85);
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-left: 4px;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .pill-copy:hover { background: rgba(255,255,255,0.25); color: white; }
+  .pill-copy:active { transform: scale(0.95); }
+  .pill-copy.hidden { display: none; }
+  .pill-copy svg { flex-shrink: 0; }
   .pill-stop {
     pointer-events: auto;
     display: flex;
@@ -442,6 +469,10 @@ function buildHudHtml(): string {
         <path id="x-path" d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
       <span class="hidden" id="pill-label"></span>
+      <button class="pill-copy hidden" id="pill-copy" onclick="event.stopPropagation(); window.electronAPI?.hudCopyLatest()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span id="copy-label"></span>
+      </button>
       <button class="pill-cancel" id="pill-cancel" style="display:none" onclick="event.stopPropagation(); window.electronAPI?.cancelRecording()">
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M8 2L2 8M2 2L8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       </button>
@@ -482,11 +513,7 @@ var circleContent = document.getElementById('circle-content');
 var pillContent = document.getElementById('pill-content');
 var recentDragEnd = false;
 
-/* ---- Click-through toggling ---- */
-/* Keep ignoreMouseEvents(true, {forward:true}) by default so transparent
-   areas are fully click-through. Only disable ignore when the cursor
-   actually enters an interactive element (widget, hover-btn, pill-cancel, circle-cancel). */
-var interactiveEls = document.querySelectorAll('.widget, .hover-btn, .pill-cancel, .pill-stop, .circle-cancel, .undo-bar, .undo-btn');
+var interactiveEls = document.querySelectorAll('.widget, .hover-btn, .pill-cancel, .pill-copy, .pill-stop, .circle-cancel, .undo-bar, .undo-btn');
 var ignoreDisabled = false;
 interactiveEls.forEach(function(el) {
   el.addEventListener('mouseenter', function() {
@@ -499,10 +526,8 @@ interactiveEls.forEach(function(el) {
     window.electronAPI?.setIgnoreMouseEvents(true);
   });
 });
-/* Safety net: any click on the window body that didn't land on an interactive
-   element should re-enable click-through immediately. */
 document.addEventListener('click', function(e) {
-  if (!e.target.closest('.widget, .hover-btn, .pill-cancel, .pill-stop, .circle-cancel, .undo-bar, .undo-btn')) {
+  if (!e.target.closest('.widget, .hover-btn, .pill-cancel, .pill-copy, .pill-stop, .circle-cancel, .undo-bar, .undo-btn')) {
     if (ignoreDisabled) {
       ignoreDisabled = false;
       window.electronAPI?.setIgnoreMouseEvents(true);
@@ -513,7 +538,7 @@ document.addEventListener('click', function(e) {
 /* ---- Drag handling ---- */
 widget.addEventListener('mousedown', function(e) {
   if (document.getElementById('undo-bar').classList.contains('visible')) return;
-  if (e.target.closest('.hover-btn') || e.target.closest('.pill-cancel') || e.target.closest('.pill-stop')) return;
+  if (e.target.closest('.hover-btn') || e.target.closest('.pill-cancel') || e.target.closest('.pill-copy') || e.target.closest('.pill-stop')) return;
   isDragging = false;
   wasDragged = false;
   dragStartX = e.screenX;
@@ -551,7 +576,7 @@ widget.addEventListener('mousedown', function(e) {
 
 /* ---- Click handling ---- */
 widget.addEventListener('click', function(e) {
-  if (e.target.closest('.hover-btn') || e.target.closest('.pill-cancel') || e.target.closest('.pill-stop')) return;
+  if (e.target.closest('.hover-btn') || e.target.closest('.pill-cancel') || e.target.closest('.pill-copy') || e.target.closest('.pill-stop')) return;
   if (wasDragged) { wasDragged = false; return; }
   var isCircle = !widget.classList.contains('pill');
   if (isCircle) {
@@ -678,11 +703,65 @@ function setPillMode(cfg) {
     label.textContent = cfg.labelText;
     label.classList.remove('hidden');
   } else {
+    label.textContent = '';
     label.classList.add('hidden');
   }
 
   var cb = document.getElementById('pill-cancel');
   cb.style.display = cfg.showCancel ? 'flex' : 'none';
+
+  var copyBtn = document.getElementById('pill-copy');
+  if (cfg.showCopy && cfg.copyText) {
+    document.getElementById('copy-label').textContent = cfg.copyText;
+    copyBtn.classList.remove('hidden');
+  } else {
+    copyBtn.classList.add('hidden');
+  }
+}
+
+function autoSizePill() {
+  var label = document.getElementById('pill-label');
+  if (!label || label.classList.contains('hidden')) return;
+  var measure = document.createElement('span');
+  measure.style.cssText = 'position:fixed;top:-9999px;left:-9999px;white-space:nowrap;font-family:-apple-system,BlinkMacSystemFont,SF Pro Display,sans-serif;font-size:12px;font-weight:500;letter-spacing:0.1px;visibility:hidden;';
+  measure.textContent = label.textContent;
+  document.body.appendChild(measure);
+  var copyBtn = document.getElementById('pill-copy');
+  var copyMeasure = null;
+  if (copyBtn && !copyBtn.classList.contains('hidden')) {
+    copyMeasure = document.createElement('span');
+    copyMeasure.style.cssText = measure.style.cssText + 'font-size:11px;';
+    copyMeasure.textContent = document.getElementById('copy-label').textContent;
+    document.body.appendChild(copyMeasure);
+  }
+  requestAnimationFrame(function() {
+    var textWidth = measure.offsetWidth;
+    measure.remove();
+    var copyWidth = 0;
+    if (copyMeasure) {
+      copyWidth = copyMeasure.offsetWidth + 30;
+      copyMeasure.remove();
+    }
+    var needed = textWidth + copyWidth + 64;
+    widget.style.minWidth = Math.min(Math.max(needed, 140), ${MAX_PILL_WIDTH}) + 'px';
+  });
+}
+
+/* ---- Hover-pause for error/warning flash timer ---- */
+var flashHoverActive = false;
+function onFlashHoverEnter() { window.electronAPI?.pauseFlashTimer(); }
+function onFlashHoverLeave() { window.electronAPI?.resumeFlashTimer(); }
+function startFlashHoverTracking() {
+  if (flashHoverActive) return;
+  flashHoverActive = true;
+  widget.addEventListener('mouseenter', onFlashHoverEnter);
+  widget.addEventListener('mouseleave', onFlashHoverLeave);
+}
+function stopFlashHoverTracking() {
+  if (!flashHoverActive) return;
+  flashHoverActive = false;
+  widget.removeEventListener('mouseenter', onFlashHoverEnter);
+  widget.removeEventListener('mouseleave', onFlashHoverLeave);
 }
 
 /* ---- Main state setter (called from main process) ---- */
@@ -690,8 +769,6 @@ function setState(newState, cfg) {
   var prevState = currentState;
   currentState = newState;
   clearHoverActions();
-
-  // Hide undo bar on any state change (main process controls showing it)
   stopCountdown();
 
   var isIdle = newState === 'idle';
@@ -699,11 +776,11 @@ function setState(newState, cfg) {
   var wasInPill = prevState !== 'idle';
 
   if (isIdle && wasInPill) {
-    // Fade out pill content first, then morph shape after a delay
     pillContent.classList.remove('on');
     setTimeout(function() {
       if (currentState !== 'idle') return;
       widget.className = 'widget';
+      widget.style.minWidth = '';
       circleContent.classList.remove('off');
       if (isMouseOver && alwaysShow) {
         document.getElementById('v-logo').classList.add('off');
@@ -741,6 +818,31 @@ function setState(newState, cfg) {
   } else if (isIdle && !isMouseOver) {
     ignoreDisabled = false;
     window.electronAPI?.setIgnoreMouseEvents(true);
+  }
+
+  // Warning state: click pill to open transcriptions
+  var pillLabel = document.getElementById('pill-label');
+  if (newState === 'warning') {
+    widget.onclick = function(e) {
+      if (wasDragged) { wasDragged = false; return; }
+      e.stopPropagation();
+      window.electronAPI?.hudOpenTranscriptions();
+    };
+    widget.style.cursor = 'pointer';
+    if (pillLabel) pillLabel.classList.add('clickable');
+  } else {
+    widget.onclick = null;
+    widget.style.cursor = '';
+    if (pillLabel) pillLabel.classList.remove('clickable');
+  }
+
+  // Auto-size pill width and hover-pause only for error/warning states
+  if (newState === 'error' || newState === 'warning') {
+    autoSizePill();
+    startFlashHoverTracking();
+  } else {
+    widget.style.minWidth = '';
+    stopFlashHoverTracking();
   }
 
   var circleCancel = document.getElementById('circle-cancel');
@@ -846,6 +948,8 @@ interface PillModeConfig {
   showLabel: boolean;
   showCancel: boolean;
   showStop: boolean;
+  showCopy?: boolean;
+  copyText?: string;
   animation: "none" | "pulse" | "glow";
   labelText: string;
   barColor?: string;
@@ -859,6 +963,7 @@ const INDICATOR_KEYS: Record<string, string> = {
   enhancing: "indicator.enhancing",
   error: "indicator.nothingHeard",
   canceled: "indicator.canceled",
+  warning: "notification.insertFailed",
 };
 
 const PILL_MODES: Record<string, Omit<PillModeConfig, "labelText">> = {
@@ -868,6 +973,7 @@ const PILL_MODES: Record<string, Omit<PillModeConfig, "labelText">> = {
   enhancing:    { color: "#44aaff", icon: "dot", showLabel: true, showCancel: true, showStop: false, animation: "pulse" },
   error:        { color: "#fbbf24", icon: "x-icon", showLabel: true, showCancel: false, showStop: false, animation: "glow" },
   canceled:     { color: "#fbbf24", icon: "x-icon", showLabel: true, showCancel: false, showStop: false, animation: "glow" },
+  warning:      { color: "#fbbf24", icon: "x-icon", showLabel: true, showCancel: false, showStop: false, animation: "glow" },
 };
 
 export class HudWindow {
@@ -886,6 +992,10 @@ export class HudWindow {
   private hideTimer: ReturnType<typeof setTimeout> | null = null;
   private reduceAnimations = false;
   private reduceVisualEffects = false;
+  private flashStartedAt = 0;
+  private flashDurationMs = 0;
+  private flashPausedAt: number | null = null;
+  private flashRemainingMs = 0;
 
   show(alwaysShow: boolean, showOnHover: boolean, position: WidgetPosition = "bottom-center"): void {
     const positionChanged = this.position !== position;
@@ -1001,14 +1111,17 @@ export class HudWindow {
       this.execSetScale(1.0);
     }
 
-    if ((state === "error" || state === "canceled") && !suppressFlash) {
-      const delay = state === "error" ? 3000 : 1500;
+    if ((state === "error" || state === "canceled" || state === "warning") && !suppressFlash) {
+      const delay = state === "warning" ? 5000 : state === "error" ? 3000 : 1500;
+      this.flashStartedAt = Date.now();
+      this.flashDurationMs = delay;
+      this.flashRemainingMs = delay;
+      this.flashPausedAt = null;
       const ft = setTimeout(() => {
         this.flashTimer = null;
         this.currentState = "idle";
         if (this.contentReady && this.window && !this.window.isDestroyed()) {
           if (!this.alwaysShow) {
-            // Reset renderer state before hiding so re-enable shows idle circle
             this.execSetState("idle");
             this.window.hide();
           } else {
@@ -1057,6 +1170,45 @@ export class HudWindow {
 
   showCanceled(): void {
     this.setState("canceled");
+  }
+
+  showWarning(customText?: string): void {
+    this.setState("warning", customText);
+  }
+
+  pauseFlashTimer(): void {
+    if (!this.flashTimer) return;
+    clearTimeout(this.flashTimer);
+    this.flashTimer = null;
+    const elapsed = Date.now() - this.flashStartedAt;
+    this.flashRemainingMs = Math.max(this.flashDurationMs - elapsed, 300);
+    this.flashPausedAt = Date.now();
+  }
+
+  resumeFlashTimer(): void {
+    if (!this.flashPausedAt || this.flashRemainingMs <= 0) return;
+    const remain = this.flashRemainingMs;
+    this.flashPausedAt = null;
+    this.flashStartedAt = Date.now();
+    this.flashDurationMs = remain;
+    this.flashRemainingMs = remain;
+    const ft = setTimeout(() => {
+      this.flashTimer = null;
+      this.currentState = "idle";
+      if (this.contentReady && this.window && !this.window.isDestroyed()) {
+        if (!this.alwaysShow) {
+          this.execSetState("idle");
+          this.window.hide();
+        } else {
+          this.execSetState("idle");
+          if (this.showOnHover) {
+            this.startHoverTracking();
+          }
+        }
+      }
+    }, remain);
+    ft.unref();
+    this.flashTimer = ft;
   }
 
   showUndoBar(durationMs = 3000): void {
@@ -1136,6 +1288,9 @@ export class HudWindow {
       const base = PILL_MODES[state] || PILL_MODES.initializing;
       const labelText = customLabel ?? t(INDICATOR_KEYS[state] || "indicator.transcribing");
       mode = { ...base, labelText };
+      if (state === "warning") {
+        mode = { ...mode, showCopy: true, copyText: t("notification.copyLatest") };
+      }
       if (this.reduceAnimations && state === "listening") {
         mode = { ...mode, icon: "dot", showLabel: true, animation: "none" };
       }
@@ -1283,6 +1438,7 @@ export class HudWindow {
   setShowActions(show: boolean): void {
     this.execJs(`setShowActions(${show})`);
   }
+
 
   setPerformanceFlags(reduceAnimations: boolean, reduceVisualEffects: boolean): void {
     this.reduceAnimations = reduceAnimations;

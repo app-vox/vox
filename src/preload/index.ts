@@ -149,6 +149,7 @@ export interface VoxAPI {
       whisperLib: string;
     }>;
     setAnalyticsEnabled(enabled: boolean): Promise<boolean>;
+    setModelOverride(hasModel: boolean | null): Promise<void>;
     testError(): Promise<void>;
   };
   analytics: {
@@ -264,6 +265,7 @@ const voxApi: VoxAPI = {
     getRuntimeState: () => ipcRenderer.invoke("dev:get-runtime-state"),
     getSystemInfo: () => ipcRenderer.invoke("dev:get-system-info"),
     setAnalyticsEnabled: (enabled: boolean) => ipcRenderer.invoke("dev:set-analytics-enabled", enabled),
+    setModelOverride: (hasModel: boolean | null) => ipcRenderer.invoke("dev:set-model-override", hasModel),
     testError: () => ipcRenderer.invoke("dev:test-error"),
   },
   analytics: {
@@ -287,5 +289,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
   hudDrag: (dx: number, dy: number) => ipcRenderer.invoke("hud:drag", dx, dy),
   hudDragEnd: () => ipcRenderer.invoke("hud:drag-end"),
   setIgnoreMouseEvents: (ignore: boolean) => ipcRenderer.invoke("hud:set-ignore-mouse", ignore),
+  hudCopyLatest: () => ipcRenderer.invoke("hud:copy-latest"),
   hudDismiss: () => ipcRenderer.invoke("hud:dismiss"),
+  pauseFlashTimer: () => ipcRenderer.invoke("hud:pause-flash"),
+  resumeFlashTimer: () => ipcRenderer.invoke("hud:resume-flash"),
 });

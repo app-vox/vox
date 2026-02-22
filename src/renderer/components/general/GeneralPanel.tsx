@@ -353,7 +353,7 @@ export function GeneralPanel() {
       )}
 
       {/* Shortcuts discovery banner */}
-      {bannersReady && setupComplete && !shortcutsBannerDismissed && !onboardingOpen && (devVisitedShortcuts === false || !config.onboardingCompleted) && (
+      {bannersReady && setupComplete && !shortcutsBannerDismissed && !onboardingOpen && !config.onboardingCompleted && (
         <div className={`${card.card} ${styles.setupBanner}`}>
           <div className={card.body}>
             <div className={styles.hudBannerContent}>

@@ -13,18 +13,30 @@ describe("pasteText", () => {
     vi.mocked(clipboard.writeText).mockClear();
   });
 
-  it("should copy text to clipboard", () => {
-    pasteText("Hello, world!");
+  it("should copy text to clipboard when copyToClipboard is true", () => {
+    const result = pasteText("Hello, world!", true);
     expect(clipboard.writeText).toHaveBeenCalledWith("Hello, world!");
+    expect(result).toBe(true);
   });
 
   it("should not paste empty text", () => {
-    pasteText("");
+    const result = pasteText("", true);
     expect(clipboard.writeText).not.toHaveBeenCalled();
+    expect(result).toBe(false);
   });
 
   it("should not throw when CGEvent is unavailable", () => {
-    expect(() => pasteText("Some text")).not.toThrow();
+    expect(() => pasteText("Some text", true)).not.toThrow();
     expect(clipboard.writeText).toHaveBeenCalledWith("Some text");
+  });
+
+  it("should not write to clipboard when copyToClipboard is false", () => {
+    const result = pasteText("Hello", false);
+    expect(clipboard.writeText).not.toHaveBeenCalled();
+    expect(result).toBe(false);
+  });
+
+  it("should not throw when CGEvent is unavailable and copyToClipboard is false", () => {
+    expect(() => pasteText("Some text", false)).not.toThrow();
   });
 });

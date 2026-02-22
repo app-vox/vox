@@ -122,6 +122,7 @@ export interface VoxConfig {
   targetDisplayId: number | null;
   reduceAnimations: boolean;
   reduceVisualEffects: boolean;
+  copyToClipboard: boolean;
   onboardingCompleted: boolean;
 }
 
@@ -162,6 +163,7 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     targetDisplayId: null,
     reduceAnimations: false,
     reduceVisualEffects: false,
+    copyToClipboard: false,
     onboardingCompleted: false,
   };
 }

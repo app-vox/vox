@@ -189,6 +189,7 @@ app.whenReady().then(async () => {
     getPipeline: () => pipeline!,
     analytics,
     openSettings: (tab) => openHome(reloadConfig, tab),
+    hasModel: () => new SetupChecker(modelManager).hasAnyModel(),
   });
   shortcutManager.start();
 
@@ -205,6 +206,10 @@ app.whenReady().then(async () => {
   ipcMain.handle("dev:set-analytics-enabled", (_event, enabled: boolean) => {
     analytics.setEnabled(enabled);
     return enabled;
+  });
+
+  ipcMain.handle("dev:set-model-override", (_event, hasModel: boolean | null) => {
+    shortcutManager?.setDevModelOverride(hasModel);
   });
 
   ipcMain.handle("dev:test-error", () => {
