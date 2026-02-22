@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeImage, nativeTheme, session, dialog, shell } from "electron";
+import { app, BrowserWindow, ipcMain, nativeImage, nativeTheme, session, dialog } from "electron";
 import * as path from "path";
 import { readFileSync } from "fs";
 import { join } from "path";
