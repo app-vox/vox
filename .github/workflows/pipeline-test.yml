@@ -13,6 +13,7 @@ permissions:
 jobs:
   pipeline-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -20,6 +21,18 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - name: Cache Whisper model
+        id: cache-whisper
+        uses: actions/cache@v4
+        with:
+          path: whisper-models
+          key: whisper-model-small
+      - name: Download Whisper model
+        if: steps.cache-whisper.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p whisper-models
+          curl -L -o whisper-models/ggml-small.bin \
+            https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin
       - name: Write pipeline test config
         run: |
           cat > pipeline-test-config.json << HEREDOC
@@ -31,7 +44,7 @@ jobs:
               "baseUrl": "${{ vars.PIPELINE_TEST_LLM_BASE_URL }}"
             },
             "whisper": {
-              "modelPath": ""
+              "modelPath": "${{ github.workspace }}/whisper-models/ggml-small.bin"
             }
           }
           HEREDOC
