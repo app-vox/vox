@@ -12,9 +12,10 @@ export interface TranscriptionResult {
 
 // In packaged builds, native binaries are copied to extraResources via
 // electron-builder. In dev, they live in the project root.
+const WHISPER_CLI = process.platform === "win32" ? "whisper-cli.exe" : "whisper-cli";
 const WHISPER_BIN = app.isPackaged
-  ? path.join(process.resourcesPath, "vendor/whisper.cpp/whisper-cli")
-  : path.join(app.getAppPath(), "vendor/whisper.cpp/whisper-cli");
+  ? path.join(process.resourcesPath, "vendor/whisper.cpp", WHISPER_CLI)
+  : path.join(app.getAppPath(), "vendor/whisper.cpp", WHISPER_CLI);
 
 export async function transcribe(
   audioBuffer: Float32Array,
