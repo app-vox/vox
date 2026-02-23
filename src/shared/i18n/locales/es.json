@@ -119,6 +119,7 @@
   "llm.providerTab": "Proveedor",
   "llm.customPromptTab": "Prompt Personalizado",
   "llm.providerLabel": "Proveedor",
+  "llm.selectProvider": "Seleccione",
   "llm.testConnection": "Probar Conexión",
   "llm.testingConnection": "Probando conexión...",
   "llm.connectionSuccessful": "Conexión exitosa",

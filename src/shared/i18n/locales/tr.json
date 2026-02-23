@@ -119,6 +119,7 @@
   "llm.providerTab": "Sağlayıcı",
   "llm.customPromptTab": "Özel Prompt",
   "llm.providerLabel": "Sağlayıcı",
+  "llm.selectProvider": "Seçiniz",
   "llm.testConnection": "Bağlantıyı Test Et",
   "llm.testingConnection": "Bağlantı test ediliyor...",
   "llm.connectionSuccessful": "Bağlantı başarılı",

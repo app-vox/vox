@@ -8,6 +8,7 @@ import { useTranscriptionsStore } from "../../stores/transcriptions-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
 import { useOnlineStatus } from "../../hooks/use-online-status";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
+import { isProviderConfigured } from "../llm/LlmPanel";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
 import { RefreshIcon, InfoCircleIcon } from "../../../shared/icons";
 import card from "../shared/card.module.scss";
@@ -288,6 +289,8 @@ export function DevPanel() {
     }
   })();
 
+  const llmConfigured = config ? isProviderConfigured(config.llm.provider, config.llm) : false;
+
   const modelName = (() => {
     if (!config) return "unknown";
     const llm = config.llm;
@@ -465,9 +468,19 @@ export function DevPanel() {
     },
     {
       title: "LLM",
-      overrideFields: ["llmEnhancementEnabled", "llmConnectionTested"],
+      overrideFields: ["llmEnhancementEnabled", "llmConnectionTested", "llmProviderConfigured"],
       rows: [
         { label: "Provider", render: () => <>{llmProvider}</> },
+        {
+          label: "Configured",
+          overrideField: "llmProviderConfigured",
+          render: () => (
+            <>
+              <span className={styles.realValue}>{boolDot(llmConfigured)}</span>
+              {ov && <OverrideBool field="llmProviderConfigured" {...ovProps} />}
+            </>
+          ),
+        },
         {
           label: "Enhancement",
           overrideField: "llmEnhancementEnabled",

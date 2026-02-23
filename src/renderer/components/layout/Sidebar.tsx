@@ -122,6 +122,11 @@ export function Sidebar() {
     ? useDevOverrideValue("llmConnectionTested", undefined)
     : undefined;
 
+  const devLlmConfigured = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("llmProviderConfigured", undefined)
+    : undefined;
+
   const devOverridesActive = import.meta.env.DEV
     // eslint-disable-next-line react-hooks/rules-of-hooks
     ? useDevOverridesActive()
@@ -178,6 +183,7 @@ export function Sidebar() {
     if (type === "speech") return setupComplete;
     if (type === "permissions") return permissionStatus?.accessibility === true && permissionStatus?.microphone === "granted";
     if (type === "ai-enhancement") {
+      if (devLlmConfigured === false) return false;
       return setupComplete
         && effectiveLlmEnhancement === true
         && effectiveLlmTested === true

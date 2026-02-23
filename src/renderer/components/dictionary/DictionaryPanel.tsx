@@ -56,6 +56,11 @@ export function DictionaryPanel() {
     ? useDevOverrideValue("llmConnectionTested", realLlmTested)
     : realLlmTested;
 
+  const devLlmConfigured = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("llmProviderConfigured", undefined)
+    : undefined;
+
   const showInfoBanner = !setupComplete || !llmEnabled;
 
   const [inputValue, setInputValue] = useState("");
@@ -70,7 +75,8 @@ export function DictionaryPanel() {
 
   if (!config) return null;
 
-  const llmReady = llmEnabled === true
+  const llmReady = devLlmConfigured !== false
+    && llmEnabled === true
     && llmTested === true
     && computeLlmConfigHash(config) === config.llmConfigHash;
 
