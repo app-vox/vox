@@ -125,10 +125,9 @@ export function getUpdateState(): UpdateState {
 export function quitAndInstall(): void {
   if (app.isPackaged) {
     autoUpdater.quitAndInstall(false, true);
+    return;
   }
 
-  // Fallback: if autoUpdater didn't quit (e.g. no real update pending, or dev mode),
-  // relaunch the app manually so the "Restart Now" button always works.
   app.relaunch();
   app.exit(0);
 }

@@ -6,7 +6,7 @@ build:
 	npm run dist
 
 build-dev:
-	npm run build && CSC_IDENTITY_AUTO_DISCOVERY=false SKIP_NOTARIZE=1 npx electron-builder --mac dir
+	npm run build && CSC_IDENTITY_AUTO_DISCOVERY=false SKIP_NOTARIZE=1 npx electron-builder --mac dir -c.mac.provisioningProfile=
 	@printf 'provider: github\nowner: app-vox\nrepo: vox\n' > out/mac-arm64/Vox.app/Contents/Resources/app-update.yml
 
 install:
