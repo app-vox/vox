@@ -77,8 +77,9 @@ export function useModelManager() {
       setSelectedSize(size);
       updateConfig({ whisper: { model: size as WhisperModelSize } });
       await saveConfig(false);
-    } catch {
+    } catch (err) {
       setDownloading(null);
+      throw err;
     }
   }, [updateConfig, saveConfig]);
 

@@ -105,6 +105,7 @@
   "model.confirmDelete": "Confirmar?",
   "model.cancelDownload": "Cancelar transferência",
   "model.deleteModel": "Eliminar modelo",
+  "model.downloadFailed": "Transferência falhada. Isto pode ser causado por problemas de rede, restrições de firewall, definições de proxy empresarial ou problemas de verificação de certificados SSL. Verifique a sua configuração de rede ou tente noutra rede.",
   "llm.title": "Melhoria com IA",
   "llm.titleSuffix": "(com LLM)",
   "llm.description": "Melhore as suas transcrições corrigindo automaticamente a gramática, removendo palavras de preenchimento e limpando o seu discurso.",

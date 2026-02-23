@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useT } from "../../i18n-context";
-import { TrashIcon, XIcon } from "../../../shared/icons";
+import { TrashIcon, XIcon, AlertTriangleIcon } from "../../../shared/icons";
 import type { ModelInfo } from "../../../preload/index";
 import styles from "./ModelSelector.module.scss";
 import btn from "../shared/buttons.module.scss";
@@ -39,7 +39,7 @@ export function ModelSelector({
           progress={downloading === model.size ? progress : { downloaded: 0, total: 0 }}
           isRecommended={model.size === recommendedSize}
           onSelect={() => onSelect(model.size)}
-          onDownload={() => onDownload(model.size)}
+          onDownload={async () => await onDownload(model.size)}
           onCancel={onCancel}
           onDelete={() => onDelete(model.size)}
           downloadDisabled={downloadDisabled}
@@ -67,12 +67,15 @@ function ModelSelectorRow({
 }: ModelSelectorRowProps) {
   const t = useT();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const confirmTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const confirmBtnRef = useRef<HTMLButtonElement>(null);
+  const errorTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     return () => {
       if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
+      if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
     };
   }, []);
 
@@ -87,6 +90,34 @@ function ModelSelectorRow({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [confirmingDelete]);
+
+  useEffect(() => {
+    if (error) {
+      // Auto-dismiss error after 5 seconds
+      errorTimerRef.current = setTimeout(() => {
+        setError(null);
+      }, 5000);
+    }
+    return () => {
+      if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
+    };
+  }, [error]);
+
+  const handleDownload = async () => {
+    setError(null);
+    try {
+      await onDownload();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      if (errorMessage.includes("abort") || errorMessage.includes("cancel")) {
+        // Download was cancelled by user - no error message needed
+        setError(null);
+      } else {
+        // Download failed - show user-friendly error
+        setError(t("model.downloadFailed"));
+      }
+    }
+  };
 
   const handleDeleteClick = () => {
     if (confirmingDelete) {
@@ -152,9 +183,22 @@ function ModelSelectorRow({
           )}
         </div>
       ) : (
-        <button onClick={onDownload} disabled={downloadDisabled} className={`${btn.btn} ${btn.secondary} ${btn.sm}`}>
+        <button onClick={handleDownload} disabled={downloadDisabled} className={`${btn.btn} ${btn.secondary} ${btn.sm}`}>
           {t("model.download")}
         </button>
+      )}
+      {error && (
+        <div className={styles.error}>
+          <AlertTriangleIcon width={16} height={16} className={styles.errorIcon} />
+          <span className={styles.errorText}>{error}</span>
+          <button
+            className={styles.errorCloseBtn}
+            onClick={() => setError(null)}
+            aria-label="Close error message"
+          >
+            <XIcon width={14} height={14} />
+          </button>
+        </div>
       )}
     </div>
   );
