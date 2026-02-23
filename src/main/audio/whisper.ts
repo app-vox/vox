@@ -45,8 +45,16 @@ export async function transcribe(
   }
 }
 
+// On macOS Metal handles compute, so threads are less critical.
+// On Windows/Linux (CPU-only), using ~75% of cores gives the best throughput
+// without starving the OS.  Minimum 4 to avoid slowdowns on low-core machines.
+const WHISPER_THREADS = process.platform === "darwin"
+  ? 4
+  : Math.max(4, Math.floor(os.cpus().length * 0.75));
+
 function runWhisper(modelPath: string, filePath: string, prompt: string, language = "auto", temperature?: number): Promise<string> {
   const args = [
+    "-t", String(WHISPER_THREADS),
     "-l", language,
     "-m", modelPath,
     "-f", filePath,
