@@ -105,6 +105,7 @@
   "model.confirmDelete": "Potwierdzić?",
   "model.cancelDownload": "Anuluj pobieranie",
   "model.deleteModel": "Usuń model",
+  "model.downloadFailed": "Pobieranie nie powiodło się. Może to być spowodowane problemami z siecią, ograniczeniami zapory ogniowej, ustawieniami proxy firmowego lub problemami z weryfikacją certyfikatów SSL. Sprawdź konfigurację sieci lub spróbuj z innej sieci.",
   "llm.title": "Ulepszanie AI",
   "llm.titleSuffix": "(z LLM)",
   "llm.description": "Ulepsz transkrypcje, automatycznie poprawiając gramatykę, usuwając słowa wypełniające i czyszcząc tekst.",

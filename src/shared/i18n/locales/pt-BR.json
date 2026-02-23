@@ -105,6 +105,7 @@
   "model.confirmDelete": "Confirmar?",
   "model.cancelDownload": "Cancelar download",
   "model.deleteModel": "Excluir modelo",
+  "model.downloadFailed": "Falha no download. Isso pode ser causado por problemas de rede, restrições de firewall, configurações de proxy corporativo ou problemas de verificação de certificados SSL. Verifique sua configuração de rede ou tente de outra rede.",
   "llm.title": "Melhoria com IA",
   "llm.titleSuffix": "(com LLM)",
   "llm.description": "Melhore suas transcrições corrigindo automaticamente a gramática, removendo palavras de preenchimento e limpando sua fala.",

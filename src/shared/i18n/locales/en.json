@@ -108,6 +108,7 @@
   "model.confirmDelete": "Confirm?",
   "model.cancelDownload": "Cancel download",
   "model.deleteModel": "Delete model",
+  "model.downloadFailed": "Download failed. This could be caused by network issues, firewall restrictions, corporate proxy settings, or SSL certificate verification problems. Please check your network configuration or try from a different network.",
   "llm.title": "AI Enhancement",
   "llm.titleSuffix": "(with LLM)",
   "llm.description": "Enhance your transcriptions by automatically fixing grammar, removing filler words, and cleaning up your speech.",

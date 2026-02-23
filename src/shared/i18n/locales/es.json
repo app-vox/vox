@@ -105,6 +105,7 @@
   "model.confirmDelete": "¿Confirmar?",
   "model.cancelDownload": "Cancelar descarga",
   "model.deleteModel": "Eliminar modelo",
+  "model.downloadFailed": "Descarga fallida. Esto puede deberse a problemas de red, restricciones de firewall, configuración de proxy corporativo o problemas de verificación de certificados SSL. Verifica tu configuración de red o intenta desde otra red.",
   "llm.title": "Mejora con IA",
   "llm.titleSuffix": "(con LLM)",
   "llm.description": "Mejora tus transcripciones corrigiendo automáticamente la gramática, eliminando muletillas y limpiando tu discurso.",

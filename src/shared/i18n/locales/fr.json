@@ -105,6 +105,7 @@
   "model.confirmDelete": "Confirmer ?",
   "model.cancelDownload": "Annuler le téléchargement",
   "model.deleteModel": "Supprimer le modèle",
+  "model.downloadFailed": "Échec du téléchargement. Cela peut être causé par des problèmes de réseau, des restrictions de pare-feu, des paramètres de proxy d'entreprise ou des problèmes de vérification de certificats SSL. Vérifiez votre configuration réseau ou essayez depuis un autre réseau.",
   "llm.title": "Amélioration IA",
   "llm.titleSuffix": "(avec LLM)",
   "llm.description": "Améliorez vos transcriptions en corrigeant automatiquement la grammaire, en supprimant les mots de remplissage et en nettoyant votre discours.",

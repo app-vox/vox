@@ -105,6 +105,7 @@
   "model.confirmDelete": "Onayla?",
   "model.cancelDownload": "İndirmeyi iptal et",
   "model.deleteModel": "Modeli sil",
+  "model.downloadFailed": "İndirme başarısız oldu. Bu durum ağ sorunları, güvenlik duvarı kısıtlamaları, kurumsal proxy ayarları veya SSL sertifika doğrulama sorunlarından kaynaklanabilir. Ağ yapılandırmanızı kontrol edin veya farklı bir ağdan deneyin.",
   "llm.title": "Yapay Zeka İyileştirme",
   "llm.titleSuffix": "(LLM ile)",
   "llm.description": "Yazıya dökümlerinizi otomatik olarak dilbilgisi düzeltme, dolgu sözcüklerini kaldırma ve konuşmanızı temizleme ile iyileştirin.",

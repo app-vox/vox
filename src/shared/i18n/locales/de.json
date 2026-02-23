@@ -105,6 +105,7 @@
   "model.confirmDelete": "Bestätigen?",
   "model.cancelDownload": "Download abbrechen",
   "model.deleteModel": "Modell löschen",
+  "model.downloadFailed": "Download fehlgeschlagen. Dies kann durch Netzwerkprobleme, Firewall-Einschränkungen, Unternehmens-Proxy-Einstellungen oder SSL-Zertifikatsprobleme verursacht werden. Überprüfen Sie Ihre Netzwerkkonfiguration oder versuchen Sie es von einem anderen Netzwerk.",
   "llm.title": "KI-Verbesserung",
   "llm.titleSuffix": "(mit LLM)",
   "llm.description": "Verbessern Sie Ihre Transkriptionen durch automatische Grammatikkorrektur, Entfernung von Füllwörtern und Bereinigung Ihrer Sprache.",
