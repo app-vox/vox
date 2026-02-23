@@ -108,6 +108,7 @@ export class ConfigManager {
           reduceVisualEffects: saved.reduceVisualEffects ?? defaults.reduceVisualEffects,
           copyToClipboard: saved.copyToClipboard ?? defaults.copyToClipboard,
           lowercaseStart: saved.lowercaseStart ?? defaults.lowercaseStart,
+          shiftCapitalize: saved.shiftCapitalize ?? defaults.shiftCapitalize,
           onboardingCompleted: saved.onboardingCompleted ?? true,
         };
       } catch {

@@ -95,6 +95,7 @@ function buildHudHtml(): string {
     padding: 0 12px;
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
                 min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                max-width 0.2s ease,
                 height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
                 border-radius 0.3s cubic-bezier(0.4, 0, 0.2, 1),
                 background 0.3s ease,
@@ -240,6 +241,25 @@ function buildHudHtml(): string {
   }
   .pill-content.on { opacity: 1; pointer-events: auto; }
   .hidden { display: none !important; }
+  .shift-icon {
+    display: flex;
+    align-items: center;
+    color: rgba(255,255,255,0.7);
+    flex-shrink: 0;
+    width: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: width 0.2s ease, opacity 0.2s ease, margin 0.2s ease;
+    margin-left: 0;
+  }
+  .shift-icon.visible {
+    width: 14px;
+    opacity: 1;
+    margin-left: 4px;
+  }
+  .widget.pill.shift-expanded {
+    max-width: ${PILL_WIDTH + 20}px;
+  }
   .spinner {
     width: 12px; height: 12px;
     border: 2px solid rgba(255,255,255,0.2);
@@ -469,6 +489,7 @@ function buildHudHtml(): string {
         <path id="x-path" d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
       <span class="hidden" id="pill-label"></span>
+      <span class="shift-icon" id="shift-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L4 13h4v6h8v-6h4L12 3z"/></svg></span>
       <button class="pill-copy hidden" id="pill-copy" onclick="event.stopPropagation(); window.electronAPI?.hudCopyLatest()">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         <span id="copy-label"></span>
@@ -770,6 +791,7 @@ function setState(newState, cfg) {
   currentState = newState;
   clearHoverActions();
   stopCountdown();
+  if (newState !== 'transcribing' && newState !== 'enhancing') setShiftHeld(false);
 
   var isIdle = newState === 'idle';
   var isPill = !isIdle;
@@ -841,7 +863,7 @@ function setState(newState, cfg) {
     autoSizePill();
     startFlashHoverTracking();
   } else {
-    widget.style.minWidth = '';
+    if (!widget.classList.contains('shift-expanded')) widget.style.minWidth = '';
     stopFlashHoverTracking();
   }
 
@@ -856,6 +878,20 @@ function setState(newState, cfg) {
 
 function setAlwaysShow(val) { alwaysShow = val; }
 function setShowActions(val) { showActions = val; if (!val) clearHoverActions(); }
+function setShiftHeld(held) {
+  var icon = document.getElementById('shift-icon');
+  var widget = document.getElementById('widget');
+  if (!icon || !widget) return;
+  var show = held && (currentState === 'transcribing' || currentState === 'enhancing');
+  if (show && !icon.classList.contains('visible')) {
+    var currentWidth = widget.offsetWidth;
+    widget.style.minWidth = Math.ceil(currentWidth + 18) + 'px';
+  } else if (!show) {
+    widget.style.minWidth = '';
+  }
+  icon.classList.toggle('visible', show);
+  widget.classList.toggle('shift-expanded', show);
+}
 function setAudioLevels(levels) {
   var bars = document.querySelectorAll('.bar');
   bars.forEach(function(bar, i) {
@@ -1439,6 +1475,9 @@ export class HudWindow {
     this.execJs(`setShowActions(${show})`);
   }
 
+  setShiftHeld(held: boolean): void {
+    this.execJs(`setShiftHeld(${held})`);
+  }
 
   setPerformanceFlags(reduceAnimations: boolean, reduceVisualEffects: boolean): void {
     this.reduceAnimations = reduceAnimations;

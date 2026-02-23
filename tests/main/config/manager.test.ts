@@ -376,4 +376,17 @@ describe("ConfigManager", () => {
     expect(saved.llm.endpoint).toBe("https://foundry.com");
     expect(saved.llm.apiKey).toMatch(/^enc:/);
   });
+
+  it("should default shiftCapitalize to true when absent from saved config", () => {
+    const oldConfig = {
+      llm: { provider: "foundry", endpoint: "", apiKey: "", model: "gpt-4o" },
+      lowercaseStart: true,
+    };
+    fs.mkdirSync(testDir, { recursive: true });
+    fs.writeFileSync(path.join(testDir, "config.json"), JSON.stringify(oldConfig));
+
+    const loaded = manager.load();
+    expect(loaded.shiftCapitalize).toBe(true);
+    expect(loaded.lowercaseStart).toBe(true);
+  });
 });
