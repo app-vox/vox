@@ -50,7 +50,10 @@ jobs:
         run: npm run build
 
       - name: Post CI summary
-        if: always() && github.event_name == 'pull_request'
+        if: >-
+          always()
+          && github.event_name == 'pull_request'
+          && github.event.pull_request.head.repo.full_name == github.repository
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
