@@ -4,7 +4,7 @@ import reactHooks from "eslint-plugin-react-hooks";
 import i18next from "eslint-plugin-i18next";
 
 export default tseslint.config(
-  { ignores: ["out/", "dist/", "build/", "resources/"] },
+  { ignores: ["out/", "dist/", "build/", "resources/", "scripts/"] },
 
   eslint.configs.recommended,
   tseslint.configs.recommended,

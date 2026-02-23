@@ -23,7 +23,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "dist": "electron-vite build && electron-builder",
-    "postinstall": "./scripts/build-whisper.sh"
+    "postinstall": "node scripts/postinstall-whisper.js"
   },
   "author": "Rodrigo Silva (https://github.com/rodrigoluizs)",
   "license": "FSL-1.1-ALv2",
