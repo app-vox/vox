@@ -119,6 +119,7 @@
   "llm.providerTab": "Провайдер",
   "llm.customPromptTab": "Пользовательский промпт",
   "llm.providerLabel": "Провайдер",
+  "llm.selectProvider": "Выберите",
   "llm.testConnection": "Тест соединения",
   "llm.testingConnection": "Тестирование соединения...",
   "llm.connectionSuccessful": "Соединение успешно",

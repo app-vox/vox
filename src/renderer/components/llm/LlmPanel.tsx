@@ -20,7 +20,7 @@ import form from "../shared/forms.module.scss";
 import buttons from "../shared/buttons.module.scss";
 import styles from "./LlmPanel.module.scss";
 
-function isProviderConfigured(provider: LlmProviderType, llm: LlmConfig): boolean {
+export function isProviderConfigured(provider: LlmProviderType, llm: LlmConfig): boolean {
   if (provider !== llm.provider) return false;
   switch (llm.provider) {
     case "foundry":
@@ -55,6 +55,7 @@ export function LlmPanel() {
   const [initialPromptValue, setInitialPromptValue] = useState<string | null>(null);
   const [visitedCustomPrompt, setVisitedCustomPrompt] = useState(() => localStorage.getItem("vox:visited-custom-prompt") === "true");
   const [copiedExample, setCopiedExample] = useState<string | null>(null);
+  const [hasPickedProvider, setHasPickedProvider] = useState(false);
   const testSectionRef = useRef<HTMLDivElement>(null);
 
   const configHash = config ? computeLlmConfigHash(config) : "";
@@ -82,6 +83,11 @@ export function LlmPanel() {
     ? useDevOverrideValue("llmConnectionTested", undefined)
     : undefined;
 
+  const devLlmConfigured = import.meta.env.DEV
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ? useDevOverrideValue("llmProviderConfigured", undefined)
+    : undefined;
+
   const handlePromptTabClick = useCallback(() => {
     if (!visitedCustomPrompt) {
       setVisitedCustomPrompt(true);
@@ -97,6 +103,11 @@ export function LlmPanel() {
 
   const needsTest = effectiveEnhancement
     && (!effectiveTested || computeLlmConfigHash(config) !== config.llmConfigHash);
+
+  const providerConfigured = devLlmConfigured ?? isProviderConfigured(config.llm.provider, config.llm);
+  const providerEverTested = effectiveTested || config.llmConfigHash !== "";
+  const showPlaceholder = devLlmConfigured === false
+    || (!hasPickedProvider && !providerConfigured && !providerEverTested);
 
   if (!setupComplete) {
     return (
@@ -127,8 +138,11 @@ export function LlmPanel() {
     );
   }
 
-  const handleProviderChange = async (provider: LlmProviderType) => {
-    if (provider === config.llm.provider) return;
+  const handleProviderChange = async (value: string) => {
+    if (value === "") return;
+    const provider = value as LlmProviderType;
+    setHasPickedProvider(true);
+    if (provider === config.llm.provider && !showPlaceholder) return;
     const newLlm = await window.voxApi.config.loadLlmForProvider(provider);
     updateConfig({ llm: newLlm, llmConnectionTested: false, llmConfigHash: "" });
     saveConfig(true);
@@ -232,50 +246,57 @@ export function LlmPanel() {
                   <label htmlFor="llm-provider">{t("llm.providerLabel")}</label>
                   <CustomSelect
                     id="llm-provider"
-                    value={config.llm.provider || "foundry"}
-                    items={([
-                      { value: "foundry", label: "Microsoft Foundry" },
-                      { value: "bedrock", label: "AWS Bedrock" },
-                      { value: "openai", label: "OpenAI" },
-                      { value: "deepseek", label: "DeepSeek" },
-                      { value: "glm", label: "GLM (Zhipu AI)" },
-                      { value: "anthropic", label: "Anthropic" },
-                      { value: "litellm", label: "LiteLLM" },
-                      { value: "custom", label: t("llm.custom.label") },
-                    ] as const).map((item) => ({
-                      ...item,
-                      suffix: isProviderConfigured(item.value, config.llm)
-                        ? <CheckCircleIcon width={14} height={14} style={{ color: "var(--color-accent)" }} />
-                        : undefined,
-                    }))}
-                    onChange={(value) => handleProviderChange(value as LlmProviderType)}
+                    value={showPlaceholder ? "" : (config.llm.provider || "foundry")}
+                    items={[
+                      ...(showPlaceholder ? [{ value: "", label: t("llm.selectProvider") }] : []),
+                      ...([
+                        { value: "foundry", label: "Microsoft Foundry" },
+                        { value: "bedrock", label: "AWS Bedrock" },
+                        { value: "openai", label: "OpenAI" },
+                        { value: "deepseek", label: "DeepSeek" },
+                        { value: "glm", label: "GLM (Zhipu AI)" },
+                        { value: "anthropic", label: "Anthropic" },
+                        { value: "litellm", label: "LiteLLM" },
+                        { value: "custom", label: t("llm.custom.label") },
+                      ] as const).map((item) => ({
+                        ...item,
+                        suffix: isProviderConfigured(item.value, config.llm)
+                          ? <CheckCircleIcon width={14} height={14} style={{ color: "var(--color-accent)" }} />
+                          : undefined,
+                      })),
+                    ]}
+                    onChange={handleProviderChange}
                   />
                 </div>
 
-                {config.llm.provider === "litellm" ? (
-                  <LiteLLMFields />
-                ) : (config.llm.provider === "openai" || config.llm.provider === "deepseek" || config.llm.provider === "glm") ? (
-                  <OpenAICompatibleFields providerType={config.llm.provider} />
-                ) : config.llm.provider === "bedrock" ? (
-                  <BedrockFields />
-                ) : config.llm.provider === "anthropic" ? (
-                  <AnthropicFields />
-                ) : config.llm.provider === "custom" ? (
-                  <CustomProviderFields />
-                ) : (
-                  <FoundryFields />
+                {!showPlaceholder && (
+                  <>
+                    {config.llm.provider === "litellm" ? (
+                      <LiteLLMFields />
+                    ) : (config.llm.provider === "openai" || config.llm.provider === "deepseek" || config.llm.provider === "glm") ? (
+                      <OpenAICompatibleFields providerType={config.llm.provider} />
+                    ) : config.llm.provider === "bedrock" ? (
+                      <BedrockFields />
+                    ) : config.llm.provider === "anthropic" ? (
+                      <AnthropicFields />
+                    ) : config.llm.provider === "custom" ? (
+                      <CustomProviderFields />
+                    ) : (
+                      <FoundryFields />
+                    )}
+                  </>
                 )}
 
                 <div className={form.testSection} ref={testSectionRef}>
                   <button
                     onClick={handleTest}
-                    disabled={testing}
+                    disabled={testing || showPlaceholder}
                     className={`${buttons.btn} ${buttons.primary}`}
                   >
                     <PlayIcon width={14} height={14} />
                     {t("llm.testConnection")}
                   </button>
-                  <StatusBox text={testStatus.text} type={testStatus.type} />
+                  {!showPlaceholder && <StatusBox text={testStatus.text} type={testStatus.type} />}
                 </div>
               </>
             )}

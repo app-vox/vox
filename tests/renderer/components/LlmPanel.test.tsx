@@ -153,10 +153,30 @@ describe("LlmPanel", () => {
     expect(screen.queryByRole("switch")).not.toBeInTheDocument();
   });
 
-  it("shows provider fields when enhancement is enabled", async () => {
+  it("shows placeholder when enhancement is enabled but provider not configured", async () => {
     const LlmPanel = await loadLlmPanel();
     const config = createDefaultConfig();
     config.enableLlmEnhancement = true;
+
+    useConfigStore.setState({ config, setupComplete: true });
+
+    renderWithI18n(<LlmPanel />);
+
+    // Provider select should be visible
+    expect(screen.getByTestId("llm-provider")).toBeInTheDocument();
+    // But no provider fields since no provider has been configured/tested
+    expect(screen.queryByTestId("foundry-fields")).not.toBeInTheDocument();
+    // Test connection button should be disabled
+    const buttons = screen.getAllByRole("button");
+    const testButton = buttons.find((btn) => btn.querySelector("[data-testid='play-icon']"));
+    expect(testButton).toBeDisabled();
+  });
+
+  it("shows provider fields when enhancement is enabled and provider was previously tested", async () => {
+    const LlmPanel = await loadLlmPanel();
+    const config = createDefaultConfig();
+    config.enableLlmEnhancement = true;
+    config.llmConfigHash = "previously-tested";
 
     useConfigStore.setState({ config, setupComplete: true });
 
@@ -187,6 +207,7 @@ describe("LlmPanel", () => {
     const config = createDefaultConfig();
     config.enableLlmEnhancement = true;
     config.llm.provider = "bedrock";
+    config.llmConfigHash = "previously-tested";
 
     useConfigStore.setState({ config, setupComplete: true });
 
@@ -201,6 +222,7 @@ describe("LlmPanel", () => {
     const config = createDefaultConfig();
     config.enableLlmEnhancement = true;
     config.llm.provider = "openai";
+    config.llmConfigHash = "previously-tested";
 
     useConfigStore.setState({ config, setupComplete: true });
 
@@ -215,6 +237,7 @@ describe("LlmPanel", () => {
     const user = userEvent.setup();
     const config = createDefaultConfig();
     config.enableLlmEnhancement = true;
+    config.llmConfigHash = "previously-tested";
 
     useConfigStore.setState({ config, setupComplete: true });
 
@@ -249,6 +272,7 @@ describe("LlmPanel", () => {
     const user = userEvent.setup();
     const config = createDefaultConfig();
     config.enableLlmEnhancement = true;
+    config.llmConfigHash = "previously-tested";
 
     useConfigStore.setState({ config, setupComplete: true });
 
