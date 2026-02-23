@@ -34,7 +34,17 @@ export async function transcribe(
 
     const whisperArgs = buildWhisperArgs(speechLanguages);
     const prompt = buildWhisperPrompt(dictionary, whisperArgs.promptPrefix);
-    const stdout = await runWhisper(modelPath, tempPath, prompt, whisperArgs.language, temperature);
+    // On CPU-only platforms (Windows/Linux), language auto-detection runs the
+    // encoder twice — once to detect, once to transcribe — doubling latency.
+    // Use the first configured language instead; the LLM correction layer
+    // handles any cross-language artifacts.  On macOS Metal GPU the overhead
+    // is negligible so we keep auto-detect for accuracy.
+    const language = whisperArgs.language === "auto"
+      && process.platform !== "darwin"
+      && speechLanguages.length > 0
+      ? speechLanguages[0]
+      : whisperArgs.language;
+    const stdout = await runWhisper(modelPath, tempPath, prompt, language, temperature);
     const text = parseWhisperOutput(stdout);
 
     return { text };
