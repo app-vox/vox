@@ -209,6 +209,7 @@
   "shortcuts.restoreDefaults": "Standardeinstellungen wiederherstellen",
   "shortcuts.pressShortcut": "Tastenkombination drücken...",
   "shortcuts.notSet": "Klicken zum Aufnehmen",
+  "shortcuts.pressShortcutOrDoubleTap": "Tastenkombination drücken oder Zusatztaste doppelt antippen...",
   "shortcuts.mode": "Aufnahmemodus",
   "shortcuts.mode.hold": "Halten",
   "shortcuts.mode.toggle": "Umschalten",

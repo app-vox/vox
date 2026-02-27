@@ -209,6 +209,7 @@
   "shortcuts.restoreDefaults": "Rétablir les paramètres par défaut",
   "shortcuts.pressShortcut": "Appuyez sur le raccourci...",
   "shortcuts.notSet": "Cliquez pour enregistrer",
+  "shortcuts.pressShortcutOrDoubleTap": "Appuyez sur un raccourci ou tapez deux fois sur une touche de modification...",
   "shortcuts.mode": "Mode d'enregistrement",
   "shortcuts.mode.hold": "Maintenir",
   "shortcuts.mode.toggle": "Basculer",

@@ -209,6 +209,7 @@
   "shortcuts.restoreDefaults": "Ripristina predefiniti",
   "shortcuts.pressShortcut": "Premi la scorciatoia...",
   "shortcuts.notSet": "Clicca per registrare",
+  "shortcuts.pressShortcutOrDoubleTap": "Premi una scorciatoia o tocca due volte un tasto modificatore...",
   "shortcuts.mode": "Modalità di Registrazione",
   "shortcuts.mode.hold": "Tieni premuto",
   "shortcuts.mode.toggle": "Alterna",

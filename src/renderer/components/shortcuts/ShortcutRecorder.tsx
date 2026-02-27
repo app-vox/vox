@@ -248,7 +248,7 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
           <span className={styles.placeholder}>{t("shortcuts.notSet")}</span>
         )}
         {recording && previewParts.length === 0 && (
-          <span className={styles.placeholder}>{t("shortcuts.pressShortcut")}</span>
+          <span className={styles.placeholder}>{t("shortcuts.pressShortcutOrDoubleTap")}</span>
         )}
       </div>
       <p className={form.hint}>{hint}</p>
