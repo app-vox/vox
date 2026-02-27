@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useT } from "../../i18n-context";
 import log from "../../logger";
+import { isDoubleTap, getDoubleTapModifier, DOUBLE_TAP_PREFIX, DOUBLE_TAP_THRESHOLD_MS } from "../../../shared/shortcuts";
 
 const slog = log.scope("ShortcutRecorder");
 
@@ -58,6 +59,7 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
   const [conflict, setConflict] = useState(false);
   const previousValue = useRef(value);
   const fieldRef = useRef<HTMLDivElement>(null);
+  const lastModifierRef = useRef<{ code: string; time: number } | null>(null);
 
   const stopRecording = useCallback((cancel: boolean) => {
     setRecording(false);
@@ -68,6 +70,7 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
 
   const startRecording = useCallback(() => {
     previousValue.current = value;
+    lastModifierRef.current = null;
     setRecording(true);
     setPreviewParts([]);
     window.voxApi.shortcuts.disable();
@@ -119,7 +122,42 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
         return;
       }
 
-      if (isModifierCode(e.code)) {
+      if (isModifierCode(e.code) && !isFnDirect) {
+        const now = Date.now();
+        const last = lastModifierRef.current;
+
+        if (last && last.code === e.code && now - last.time <= DOUBLE_TAP_THRESHOLD_MS) {
+          // Double-tap detected — map code prefix to modifier name
+          let modifier: string;
+          if (e.code.startsWith("Meta")) modifier = "Command";
+          else if (e.code.startsWith("Control")) modifier = "Ctrl";
+          else if (e.code.startsWith("Alt")) modifier = "Alt";
+          else if (e.code.startsWith("Shift")) modifier = "Shift";
+          else {
+            // Unknown modifier, ignore
+            if (modifiers.length > 0) setPreviewParts(modifiers);
+            return;
+          }
+
+          const accelerator = `${DOUBLE_TAP_PREFIX}${modifier}`;
+
+          if (accelerator === otherValue) {
+            setConflict(true);
+            setTimeout(() => setConflict(false), 600);
+            lastModifierRef.current = null;
+            return;
+          }
+
+          onChange(accelerator);
+          setRecording(false);
+          setPreviewParts([]);
+          window.voxApi.shortcuts.enable();
+          lastModifierRef.current = null;
+          return;
+        }
+
+        // First tap — record for potential double-tap
+        lastModifierRef.current = { code: e.code, time: now };
         if (modifiers.length > 0) setPreviewParts(modifiers);
         return;
       }
@@ -174,7 +212,11 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
 
   const displayParts = recording && previewParts.length > 0
     ? previewParts
-    : value ? parseAccelerator(value) : [];
+    : value
+      ? isDoubleTap(value)
+        ? [getDoubleTapModifier(value)!, getDoubleTapModifier(value)!]
+        : parseAccelerator(value)
+      : [];
 
   const fieldClasses = [
     styles.field,
@@ -197,7 +239,7 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
           {displayParts.map((part, i) => (
             <span key={i}>
               {/* eslint-disable-next-line i18next/no-literal-string */}
-              {i > 0 && <span className={styles.separator}>+</span>}
+              {i > 0 && !isDoubleTap(value) && <span className={styles.separator}>+</span>}
               <kbd className={styles.kbd}>{PLATFORM_LABELS[part] || part}</kbd>
             </span>
           ))}
