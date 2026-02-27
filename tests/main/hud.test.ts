@@ -180,5 +180,24 @@ describe("HudWindow", () => {
 
       expect(mockWindow.webContents.executeJavaScript).not.toHaveBeenCalled();
     });
+
+    it("should force full scale and restart hover tracking when showOnHover is enabled", () => {
+      const hud = createHudWithWindow();
+      (hud as any).contentReady = true;
+      (hud as any).showOnHover = true;
+
+      vi.useFakeTimers();
+      hud.playAttentionAnimation();
+
+      expect(mockWindow.webContents.executeJavaScript).toHaveBeenCalledWith(
+        "setScale(1)"
+      );
+      expect(mockWindow.webContents.executeJavaScript).toHaveBeenCalledWith(
+        "playAttention()"
+      );
+
+      vi.advanceTimersByTime(1300);
+      vi.useRealTimers();
+    });
   });
 });

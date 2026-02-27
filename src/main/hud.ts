@@ -376,7 +376,7 @@ function buildHudHtml(): string {
     height: 42px;
     transform: translate(-50%, -50%) scale(1);
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(99,102,241,0.5) 0%, rgba(99,102,241,0.15) 40%, transparent 70%);
+    background: radial-gradient(circle, rgba(99,102,241,0.8) 0%, rgba(99,102,241,0.35) 40%, transparent 70%);
     pointer-events: none;
     opacity: 0;
     z-index: 0;
@@ -385,8 +385,8 @@ function buildHudHtml(): string {
     animation: hudAttention 1.2s ease-out forwards;
   }
   @keyframes hudAttention {
-    0%   { transform: translate(-50%, -50%) scale(8); opacity: 0.7; }
-    80%  { transform: translate(-50%, -50%) scale(1); opacity: 0.4; }
+    0%   { transform: translate(-50%, -50%) scale(8); opacity: 0.9; }
+    80%  { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
     100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
   }
 
@@ -1532,6 +1532,17 @@ export class HudWindow {
   }
 
   playAttentionAnimation(): void {
+    if (this.showOnHover) {
+      this.stopHoverTracking();
+      this.execSetScale(1.0);
+    }
     this.execJs("playAttention()");
+    if (this.showOnHover) {
+      setTimeout(() => {
+        if (this.window && !this.window.isDestroyed()) {
+          this.startHoverTracking();
+        }
+      }, 1300);
+    }
   }
 }
