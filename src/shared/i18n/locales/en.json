@@ -211,6 +211,7 @@
   "shortcuts.toggleHint": "Press once to start, press again to stop.",
   "shortcuts.restoreDefaults": "Restore Defaults",
   "shortcuts.pressShortcut": "Press shortcut...",
+  "shortcuts.notSet": "Click to record",
   "shortcuts.mode": "Recording Method",
   "shortcuts.mode.hold": "Hold",
   "shortcuts.mode.toggle": "Toggle",

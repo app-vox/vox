@@ -208,6 +208,7 @@
   "shortcuts.toggleHint": "Нажмите один раз для начала, нажмите снова для остановки.",
   "shortcuts.restoreDefaults": "Восстановить по умолчанию",
   "shortcuts.pressShortcut": "Нажмите комбинацию...",
+  "shortcuts.notSet": "Нажмите для записи",
   "shortcuts.mode": "Режим записи",
   "shortcuts.mode.hold": "Удержание",
   "shortcuts.mode.toggle": "Переключение",

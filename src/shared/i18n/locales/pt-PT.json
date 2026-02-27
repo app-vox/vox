@@ -208,6 +208,7 @@
   "shortcuts.toggleHint": "Prima uma vez para iniciar, prima novamente para parar.",
   "shortcuts.restoreDefaults": "Restaurar Predefinições",
   "shortcuts.pressShortcut": "Prima o atalho...",
+  "shortcuts.notSet": "Clique para gravar",
   "shortcuts.mode": "Modo de Gravação",
   "shortcuts.mode.hold": "Manter",
   "shortcuts.mode.toggle": "Alternar",

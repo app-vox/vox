@@ -208,6 +208,7 @@
   "shortcuts.toggleHint": "Presiona una vez para iniciar, presiona de nuevo para detener.",
   "shortcuts.restoreDefaults": "Restaurar Predeterminados",
   "shortcuts.pressShortcut": "Presiona el atajo...",
+  "shortcuts.notSet": "Haz clic para grabar",
   "shortcuts.mode": "Modo de Grabación",
   "shortcuts.mode.hold": "Mantener",
   "shortcuts.mode.toggle": "Alternar",

@@ -174,7 +174,7 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
 
   const displayParts = recording && previewParts.length > 0
     ? previewParts
-    : parseAccelerator(value);
+    : value ? parseAccelerator(value) : [];
 
   const fieldClasses = [
     styles.field,
@@ -202,6 +202,9 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
             </span>
           ))}
         </span>
+        {!recording && !value && (
+          <span className={styles.placeholder}>{t("shortcuts.notSet")}</span>
+        )}
         {recording && previewParts.length === 0 && (
           <span className={styles.placeholder}>{t("shortcuts.pressShortcut")}</span>
         )}

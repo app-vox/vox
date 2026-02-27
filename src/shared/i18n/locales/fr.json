@@ -208,6 +208,7 @@
   "shortcuts.toggleHint": "Appuyez une fois pour démarrer, appuyez à nouveau pour arrêter.",
   "shortcuts.restoreDefaults": "Rétablir les paramètres par défaut",
   "shortcuts.pressShortcut": "Appuyez sur le raccourci...",
+  "shortcuts.notSet": "Cliquez pour enregistrer",
   "shortcuts.mode": "Mode d'enregistrement",
   "shortcuts.mode.hold": "Maintenir",
   "shortcuts.mode.toggle": "Basculer",
