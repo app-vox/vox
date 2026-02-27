@@ -156,7 +156,7 @@ describe("HudWindow", () => {
   describe("playAttentionAnimation", () => {
     it("should call executeJavaScript with playAttention()", () => {
       const hud = createHudWithWindow();
-      // Simulate contentReady
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (hud as any).contentReady = true;
 
       hud.playAttentionAnimation();
@@ -173,7 +173,7 @@ describe("HudWindow", () => {
 
     it("should not call executeJavaScript when content is not ready", () => {
       const hud = createHudWithWindow();
-      // contentReady defaults to false for new HudWindow
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (hud as any).contentReady = false;
 
       hud.playAttentionAnimation();
@@ -183,7 +183,9 @@ describe("HudWindow", () => {
 
     it("should force full scale and restart hover tracking when showOnHover is enabled", () => {
       const hud = createHudWithWindow();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (hud as any).contentReady = true;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (hud as any).showOnHover = true;
 
       vi.useFakeTimers();

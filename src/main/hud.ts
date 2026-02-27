@@ -491,8 +491,8 @@ function buildHudHtml(): string {
   .undo-bar .undo-btn svg { flex-shrink: 0; }
 </style></head>
 <body>
-<div class="attention-overlay" id="attention-overlay"></div>
 <div class="scale-wrapper" id="scale-wrapper">
+  <div class="attention-overlay" id="attention-overlay"></div>
   <div class="widget" id="widget" role="button" tabindex="0">
     <!-- Circle mode icons -->
     <div class="circle-content" id="circle-content">
