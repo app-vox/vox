@@ -235,7 +235,7 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
         tabIndex={disabled ? -1 : 0}
         aria-disabled={disabled}
       >
-        <span>
+        <span className={isDoubleTap(value) && !recording ? styles.doubleTapKeys : undefined}>
           {displayParts.map((part, i) => (
             <span key={i}>
               {/* eslint-disable-next-line i18next/no-literal-string */}
