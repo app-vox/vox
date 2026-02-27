@@ -209,6 +209,7 @@
   "shortcuts.restoreDefaults": "Varsayılanları Geri Yükle",
   "shortcuts.pressShortcut": "Kısayola basın...",
   "shortcuts.notSet": "Kaydetmek için tıklayın",
+  "shortcuts.pressShortcutOrDoubleTap": "Bir kısayol girin veya bir değiştirici tuşa iki kez basın...",
   "shortcuts.mode": "Kayıt Modu",
   "shortcuts.mode.hold": "Basılı Tut",
   "shortcuts.mode.toggle": "Aç/Kapat",

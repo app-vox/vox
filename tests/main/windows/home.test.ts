@@ -63,6 +63,7 @@ vi.mock("electron", () => {
       buildFromTemplate: vi.fn().mockReturnValue({}),
       setApplicationMenu: vi.fn(),
     },
+    ipcMain: { on: vi.fn() },
     nativeTheme: { shouldUseDarkColors: false },
     screen: {
       getCursorScreenPoint: vi.fn().mockReturnValue({ x: 0, y: 0 }),

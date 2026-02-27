@@ -209,6 +209,7 @@
   "shortcuts.restoreDefaults": "Przywróć domyślne",
   "shortcuts.pressShortcut": "Naciśnij skrót...",
   "shortcuts.notSet": "Kliknij, aby nagrać",
+  "shortcuts.pressShortcutOrDoubleTap": "Naciśnij skrót lub dwukrotnie naciśnij klawisz modyfikatora...",
   "shortcuts.mode": "Tryb nagrywania",
   "shortcuts.mode.hold": "Przytrzymaj",
   "shortcuts.mode.toggle": "Przełącz",

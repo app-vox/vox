@@ -55,6 +55,11 @@
   font-size: var(--font-size-sm);
 }
 
+.doubleTapKeys {
+  display: inline-flex;
+  gap: var(--spacing-1-5);
+}
+
 .kbd {
   display: inline-flex;
   align-items: center;

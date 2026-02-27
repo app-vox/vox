@@ -212,6 +212,7 @@
   "shortcuts.restoreDefaults": "Restore Defaults",
   "shortcuts.pressShortcut": "Press shortcut...",
   "shortcuts.notSet": "Click to record",
+  "shortcuts.pressShortcutOrDoubleTap": "Press a shortcut or double-tap a modifier key...",
   "shortcuts.mode": "Recording Method",
   "shortcuts.mode.hold": "Hold",
   "shortcuts.mode.toggle": "Toggle",

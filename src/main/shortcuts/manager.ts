@@ -5,6 +5,8 @@ import { type ConfigManager } from "../config/manager";
 import { pasteText, isAccessibilityGranted } from "../input/paster";
 import { type Pipeline, CanceledError, NoModelError } from "../pipeline";
 import { ShortcutStateMachine, RecordingState } from "./listener";
+import { DoubleTapDetector } from "./double-tap";
+import { isDoubleTap, getDoubleTapModifier } from "../../shared/shortcuts";
 import { HudWindow } from "../hud";
 import { setTrayListeningState, updateTrayConfig } from "../tray";
 import { t } from "../../shared/i18n";
@@ -76,6 +78,21 @@ function getHoldKeyCodes(accelerator: string): Set<number> {
   return codes;
 }
 
+/** Return both left and right variants for a modifier keycode. */
+function getModifierKeycodeVariants(keycode: number): number[] {
+  const pairs: [number, number][] = [
+    [UiohookKey.Meta, UiohookKey.MetaRight],
+    [UiohookKey.Ctrl, UiohookKey.CtrlRight],
+    [UiohookKey.Alt, UiohookKey.AltRight],
+    [UiohookKey.Shift, UiohookKey.ShiftRight],
+  ];
+  for (const [left, right] of pairs) {
+    if (keycode === left) return [left, right];
+    if (keycode === right) return [left, right];
+  }
+  return [keycode];
+}
+
 export interface ShortcutManagerDeps {
   configManager: ConfigManager;
   getPipeline: () => Pipeline;
@@ -103,7 +120,14 @@ export class ShortcutManager {
   private isShiftHeld = false;
   private shiftAlone = false;
   private shiftTrackingActive = false;
+  private doubleTapToggleDetector: DoubleTapDetector | null = null;
+  private doubleTapHoldDetector: DoubleTapDetector | null = null;
+  private doubleTapToggleKeycode = 0;
+  private doubleTapHoldKeycode = 0;
+  private doubleTapHoldActive = false;
+  private doubleTapHoldActivatedAt = 0;
   private static readonly MIN_RECORDING_MS = 400;
+  private static readonly HOLD_TAP_THRESHOLD_MS = 300;
 
   constructor(deps: ShortcutManagerDeps) {
     this.deps = deps;
@@ -125,13 +149,39 @@ export class ShortcutManager {
         this.shiftAlone = false;
         if (this.shiftTrackingActive) this.hud.setShiftHeld(false);
       }
+      // Double-tap keyup tracking
+      if (this.doubleTapToggleDetector && this.isDoubleTapKeycode(e.keycode, this.doubleTapToggleKeycode)) {
+        this.doubleTapToggleDetector.handleKeyUp(Date.now());
+      }
+      if (this.doubleTapHoldDetector && this.isDoubleTapKeycode(e.keycode, this.doubleTapHoldKeycode)) {
+        this.doubleTapHoldDetector.handleKeyUp(Date.now());
+      }
       if (this.holdKeyCodes.has(e.keycode)) {
         // Ignore events during initialization to prevent spurious shortcuts
         if (this.isInitializing) {
           slog.debug("Ignoring shortcut during initialization");
           return;
         }
-        this.stateMachine.handleHoldKeyUp();
+        // Only call handleHoldKeyUp when either no double-tap hold is configured,
+        // or the double-tap hold was actually activated
+        if (!this.doubleTapHoldDetector || this.doubleTapHoldActive) {
+          // When both slots share the same double-tap modifier, a quick release
+          // switches to toggle mode instead of stopping the recording.
+          const sameModifier = this.doubleTapHoldKeycode !== 0 &&
+            this.doubleTapHoldKeycode === this.doubleTapToggleKeycode;
+          const quickRelease = this.doubleTapHoldActive &&
+            this.doubleTapHoldActivatedAt > 0 &&
+            Date.now() - this.doubleTapHoldActivatedAt < ShortcutManager.HOLD_TAP_THRESHOLD_MS;
+
+          if (sameModifier && quickRelease && this.stateMachine.getState() === RecordingState.Hold) {
+            slog.debug("Quick release after double-tap — switching to toggle mode");
+            this.stateMachine.handleTogglePress(); // Hold → Toggle
+          } else {
+            this.stateMachine.handleHoldKeyUp();
+          }
+          this.doubleTapHoldActive = false;
+          this.doubleTapHoldActivatedAt = 0;
+        }
       }
     });
 
@@ -143,6 +193,26 @@ export class ShortcutManager {
       } else if (this.isShiftHeld && this.shiftAlone) {
         this.shiftAlone = false;
         if (this.shiftTrackingActive) this.hud.setShiftHeld(false);
+      }
+      // Double-tap keydown detection
+      const isModifierKey = e.keycode === UiohookKey.Meta || e.keycode === UiohookKey.MetaRight ||
+                            e.keycode === UiohookKey.Ctrl || e.keycode === UiohookKey.CtrlRight ||
+                            e.keycode === UiohookKey.Alt || e.keycode === UiohookKey.AltRight ||
+                            e.keycode === UiohookKey.Shift || e.keycode === UiohookKey.ShiftRight;
+
+      if (!isModifierKey) {
+        this.doubleTapToggleDetector?.handleNonModifierKey();
+        this.doubleTapHoldDetector?.handleNonModifierKey();
+      }
+
+      // Hold takes priority: when both detectors share the same modifier,
+      // check hold first and skip toggle if hold's double-tap fired.
+      let holdDoubleTapFired = false;
+      if (this.doubleTapHoldDetector && this.isDoubleTapKeycode(e.keycode, this.doubleTapHoldKeycode)) {
+        holdDoubleTapFired = this.doubleTapHoldDetector.handleKeyDown(Date.now());
+      }
+      if (!holdDoubleTapFired && this.doubleTapToggleDetector && this.isDoubleTapKeycode(e.keycode, this.doubleTapToggleKeycode)) {
+        this.doubleTapToggleDetector.handleKeyDown(Date.now());
       }
       if (e.keycode === UiohookKey.Escape && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
         const state = this.stateMachine.getState();
@@ -443,6 +513,12 @@ export class ShortcutManager {
     return this.deps.hasModel();
   }
 
+  private isDoubleTapKeycode(keycode: number, targetKeycode: number): boolean {
+    if (targetKeycode === 0) return false;
+    const variants = getModifierKeycodeVariants(targetKeycode);
+    return variants.includes(keycode);
+  }
+
   setDevModelOverride(hasModel: boolean | null): void {
     this.devModelOverride = hasModel;
     this.updateHud();
@@ -474,6 +550,12 @@ export class ShortcutManager {
     }
     if (this.watchdogTimer) clearInterval(this.watchdogTimer);
     this.stopDisplayChangeListener();
+    this.doubleTapToggleDetector = null;
+    this.doubleTapHoldDetector = null;
+    this.doubleTapToggleKeycode = 0;
+    this.doubleTapHoldKeycode = 0;
+    this.doubleTapHoldActive = false;
+    this.doubleTapHoldActivatedAt = 0;
     this.hud.hide();
     globalShortcut.unregisterAll();
     uIOhook.stop();
@@ -515,6 +597,52 @@ export class ShortcutManager {
     return Promise.resolve();
   }
 
+  private createHoldCallback(): () => void {
+    return () => {
+      if (this.isInitializing) {
+        slog.debug("Ignoring hold shortcut during initialization");
+        return;
+      }
+      if (!this.hasModel()) {
+        this.hud.showError(3000, t("notification.setupRequired.indicator"));
+        return;
+      }
+      if (this.stateMachine.getState() === RecordingState.Canceling) {
+        this.silentAbortCancel();
+        this.stateMachine.handleHoldKeyDown();
+        return;
+      }
+      if (this.stateMachine.getState() === RecordingState.Processing) {
+        this.restartRecording("hold");
+        return;
+      }
+      this.stateMachine.handleHoldKeyDown();
+    };
+  }
+
+  private createToggleCallback(): () => void {
+    return () => {
+      if (this.isInitializing) {
+        slog.debug("Ignoring toggle shortcut during initialization");
+        return;
+      }
+      if (!this.hasModel()) {
+        this.hud.showError(3000, t("notification.setupRequired.indicator"));
+        return;
+      }
+      if (this.stateMachine.getState() === RecordingState.Canceling) {
+        this.silentAbortCancel();
+        this.stateMachine.handleTogglePress();
+        return;
+      }
+      if (this.stateMachine.getState() === RecordingState.Processing) {
+        this.restartRecording();
+        return;
+      }
+      this.stateMachine.handleTogglePress();
+    };
+  }
+
   registerShortcutKeys(): void {
     const config = this.deps.configManager.load();
     const busy = this.isRecording();
@@ -541,56 +669,68 @@ export class ShortcutManager {
     let holdOk = true;
     let toggleOk = true;
 
+    const holdCb = this.createHoldCallback();
+    const toggleCb = this.createToggleCallback();
+
     if (mode === "hold" || mode === "both") {
-      holdOk = globalShortcut.register(config.shortcuts.hold, () => {
-        if (this.isInitializing) {
-          slog.debug("Ignoring hold shortcut during initialization");
-          return;
+      if (isDoubleTap(config.shortcuts.hold)) {
+        const modifier = getDoubleTapModifier(config.shortcuts.hold);
+        if (modifier) {
+          const keycode = KEY_TO_UIOHOOK[modifier] ?? 0;
+          this.doubleTapHoldKeycode = keycode;
+          this.doubleTapHoldDetector = new DoubleTapDetector(() => {
+            // When both slots share the same modifier and we're already in
+            // toggle mode, a double-tap should stop the recording.
+            if (this.doubleTapHoldKeycode === this.doubleTapToggleKeycode &&
+                this.stateMachine.getState() === RecordingState.Toggle) {
+              toggleCb();
+              return;
+            }
+            this.doubleTapHoldActive = true;
+            this.doubleTapHoldActivatedAt = Date.now();
+            holdCb();
+          });
+          const variants = getModifierKeycodeVariants(keycode);
+          this.holdKeyCodes = new Set(variants);
         }
-        if (!this.hasModel()) {
-          this.hud.showError(3000, t("notification.setupRequired.indicator"));
-          return;
-        }
-        if (this.stateMachine.getState() === RecordingState.Canceling) {
-          this.silentAbortCancel();
-          this.stateMachine.handleHoldKeyDown();
-          return;
-        }
-        if (this.stateMachine.getState() === RecordingState.Processing) {
-          this.restartRecording("hold");
-          return;
-        }
-        this.stateMachine.handleHoldKeyDown();
-      });
+      } else {
+        this.doubleTapHoldDetector = null;
+        this.doubleTapHoldKeycode = 0;
+        this.doubleTapHoldActive = false;
+        this.doubleTapHoldActivatedAt = 0;
+        holdOk = globalShortcut.register(config.shortcuts.hold, holdCb);
+      }
+    } else {
+      this.doubleTapHoldDetector = null;
+      this.doubleTapHoldKeycode = 0;
+      this.doubleTapHoldActive = false;
+      this.doubleTapHoldActivatedAt = 0;
     }
 
     if (mode === "toggle" || mode === "both") {
-      toggleOk = globalShortcut.register(config.shortcuts.toggle, () => {
-        if (this.isInitializing) {
-          slog.debug("Ignoring toggle shortcut during initialization");
-          return;
+      if (isDoubleTap(config.shortcuts.toggle)) {
+        const modifier = getDoubleTapModifier(config.shortcuts.toggle);
+        if (modifier) {
+          const keycode = KEY_TO_UIOHOOK[modifier] ?? 0;
+          this.doubleTapToggleKeycode = keycode;
+          this.doubleTapToggleDetector = new DoubleTapDetector(toggleCb);
         }
-        if (!this.hasModel()) {
-          this.hud.showError(3000, t("notification.setupRequired.indicator"));
-          return;
-        }
-        if (this.stateMachine.getState() === RecordingState.Canceling) {
-          this.silentAbortCancel();
-          this.stateMachine.handleTogglePress();
-          return;
-        }
-        if (this.stateMachine.getState() === RecordingState.Processing) {
-          this.restartRecording();
-          return;
-        }
-        this.stateMachine.handleTogglePress();
-      });
+      } else {
+        this.doubleTapToggleDetector = null;
+        this.doubleTapToggleKeycode = 0;
+        toggleOk = globalShortcut.register(config.shortcuts.toggle, toggleCb);
+      }
+    } else {
+      this.doubleTapToggleDetector = null;
+      this.doubleTapToggleKeycode = 0;
     }
 
     if ((mode === "hold" || mode === "both") && !holdOk) slog.warn("Failed to register hold shortcut:", config.shortcuts.hold);
     if ((mode === "toggle" || mode === "both") && !toggleOk) slog.warn("Failed to register toggle shortcut:", config.shortcuts.toggle);
 
-    this.holdKeyCodes = (mode === "hold" || mode === "both") ? getHoldKeyCodes(config.shortcuts.hold) : new Set();
+    if (!isDoubleTap(config.shortcuts.hold)) {
+      this.holdKeyCodes = (mode === "hold" || mode === "both") ? getHoldKeyCodes(config.shortcuts.hold) : new Set();
+    }
 
     slog.info("Shortcuts registered: mode=%s, hold=%s, toggle=%s", mode, config.shortcuts.hold, config.shortcuts.toggle);
 
@@ -606,6 +746,16 @@ export class ShortcutManager {
   private registerIpcHandlers(): void {
     ipcMain.handle("shortcuts:disable", () => {
       globalShortcut.unregisterAll();
+      this.doubleTapToggleDetector?.reset();
+      this.doubleTapHoldDetector?.reset();
+      this.doubleTapToggleDetector = null;
+      this.doubleTapHoldDetector = null;
+      this.doubleTapToggleKeycode = 0;
+      this.doubleTapHoldKeycode = 0;
+      this.doubleTapHoldActive = false;
+      this.doubleTapHoldActivatedAt = 0;
+      this.holdKeyCodes = new Set();
+      this.isInitializing = true;
     });
 
     ipcMain.handle("shortcuts:enable", (_event, immediate?: boolean) => {

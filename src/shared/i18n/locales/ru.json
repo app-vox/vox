@@ -209,6 +209,7 @@
   "shortcuts.restoreDefaults": "Восстановить по умолчанию",
   "shortcuts.pressShortcut": "Нажмите комбинацию...",
   "shortcuts.notSet": "Нажмите для записи",
+  "shortcuts.pressShortcutOrDoubleTap": "Нажмите сочетание клавиш или дважды нажмите клавишу-модификатор...",
   "shortcuts.mode": "Режим записи",
   "shortcuts.mode.hold": "Удержание",
   "shortcuts.mode.toggle": "Переключение",

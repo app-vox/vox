@@ -209,6 +209,7 @@
   "shortcuts.restoreDefaults": "Restaurar Predeterminados",
   "shortcuts.pressShortcut": "Presiona el atajo...",
   "shortcuts.notSet": "Haz clic para grabar",
+  "shortcuts.pressShortcutOrDoubleTap": "Presiona un atajo o pulsa dos veces una tecla modificadora...",
   "shortcuts.mode": "Modo de Grabación",
   "shortcuts.mode.hold": "Mantener",
   "shortcuts.mode.toggle": "Alternar",
