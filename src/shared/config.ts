@@ -127,6 +127,7 @@ export interface VoxConfig {
   reduceVisualEffects: boolean;
   copyToClipboard: boolean;
   lowercaseStart: boolean;
+  shiftCapitalize: boolean;
   onboardingCompleted: boolean;
 }
 
@@ -170,6 +171,7 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     reduceVisualEffects: false,
     copyToClipboard: false,
     lowercaseStart: false,
+    shiftCapitalize: true,
     onboardingCompleted: false,
   };
 }

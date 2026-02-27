@@ -223,11 +223,12 @@ function injectViaClipboard(text: string): void {
 
 export interface PasteOptions {
   lowercaseStart?: boolean;
+  shiftCapitalize?: boolean;
 }
 
-export function applyCase(text: string, lowercaseStart: boolean): string {
+export function applyCase(text: string, lowercaseStart: boolean, forceCapitalize = false): string {
   if (!text) return text;
-  if (lowercaseStart) return text[0].toLowerCase() + text.slice(1);
+  if (lowercaseStart && !forceCapitalize) return text[0].toLowerCase() + text.slice(1);
   return text;
 }
 
@@ -273,7 +274,7 @@ function typeText(text: string): void {
 export function pasteText(text: string, copyToClipboard = true, options?: PasteOptions): boolean {
   if (!text) return false;
 
-  const finalText = applyCase(stripTrailingPeriod(text), options?.lowercaseStart ?? false);
+  const finalText = applyCase(stripTrailingPeriod(text), options?.lowercaseStart ?? false, options?.shiftCapitalize ?? false);
 
   if (copyToClipboard) {
     clipboard.writeText(finalText);

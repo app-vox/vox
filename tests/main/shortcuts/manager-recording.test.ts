@@ -68,6 +68,7 @@ vi.mock("../../../src/main/hud", () => {
       hide = vi.fn();
       show = vi.fn();
       destroy = vi.fn();
+      setShiftHeld = vi.fn();
     },
   };
 });
@@ -126,6 +127,7 @@ describe("ShortcutManager — recording start flow", () => {
       setState: vi.fn(),
       showError: vi.fn(),
       hide: vi.fn(),
+      setShiftHeld: vi.fn(),
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- access private member for testing
     (manager as any).hud = mockHud;

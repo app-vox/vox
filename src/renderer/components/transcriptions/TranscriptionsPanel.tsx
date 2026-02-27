@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useTranscriptionsStore } from "../../stores/transcriptions-store";
 import { useConfigStore } from "../../stores/config-store";
+import { useSaveToast } from "../../hooks/use-save-toast";
 import { useT } from "../../i18n-context";
 import type { TranscriptionEntry } from "../../../shared/types";
 import {
@@ -16,6 +17,7 @@ import {
 } from "../../../shared/icons";
 import { CustomSelect } from "../ui/CustomSelect";
 import card from "../shared/card.module.scss";
+import generalStyles from "../general/GeneralPanel.module.scss";
 import styles from "./TranscriptionsPanel.module.scss";
 
 const DEBOUNCE_MS = 300;
@@ -79,7 +81,11 @@ function CopyButton({ text, t }: { text: string; t: (key: string) => string }) {
 
 export function TranscriptionsPanel() {
   const t = useT();
-  const copyToClipboard = useConfigStore((s) => s.config?.copyToClipboard);
+  const config = useConfigStore((s) => s.config);
+  const updateConfig = useConfigStore((s) => s.updateConfig);
+  const saveConfig = useConfigStore((s) => s.saveConfig);
+  const triggerToast = useSaveToast((s) => s.trigger);
+  const copyToClipboard = config?.copyToClipboard;
   const entries = useTranscriptionsStore((s) => s.entries);
   const total = useTranscriptionsStore((s) => s.total);
   const page = useTranscriptionsStore((s) => s.page);
@@ -140,6 +146,42 @@ export function TranscriptionsPanel() {
 
   return (
     <>
+      <div className={card.card}>
+        <div className={card.body}>
+          <label className={generalStyles.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={config?.lowercaseStart ?? false}
+              onChange={async () => {
+                updateConfig({ lowercaseStart: !config?.lowercaseStart });
+                await saveConfig(false);
+                triggerToast();
+              }}
+            />
+            <div>
+              <div className={generalStyles.checkboxLabel}>{t("whisper.lowercaseStart")}</div>
+              <div className={generalStyles.checkboxDesc}>{t("whisper.lowercaseStartHint")}</div>
+            </div>
+          </label>
+          <label className={`${generalStyles.checkboxRow} ${!config?.lowercaseStart ? generalStyles.disabled : ""}`} style={{ marginLeft: 24 }}>
+            <input
+              type="checkbox"
+              disabled={!config?.lowercaseStart}
+              checked={config?.shiftCapitalize ?? true}
+              onChange={async () => {
+                updateConfig({ shiftCapitalize: !config?.shiftCapitalize });
+                await saveConfig(false);
+                triggerToast();
+              }}
+            />
+            <div>
+              <div className={generalStyles.checkboxLabel}>{t("whisper.shiftCapitalize")}</div>
+              <div className={generalStyles.checkboxDesc}>{t("whisper.shiftCapitalizeHint")}</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
       <div className={card.card}>
         <div className={card.header}>
           <h2>{t("history.title")}</h2>

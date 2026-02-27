@@ -81,6 +81,8 @@
   "whisper.testHint": "Nagrywa 5 sekund dźwięku i transkrybuje go przy użyciu wybranego lokalnego modelu. Lokalne modele działają całkowicie na Twoim urządzeniu, zapewniając, że dźwięk nigdy nie opuszcza komputera dla maksymalnej prywatności.",
   "whisper.lowercaseStart": "Zacznij małą literą",
   "whisper.lowercaseStartHint": "Transkrybowany tekst zawsze będzie zaczynał się małą literą.",
+  "whisper.shiftCapitalize": "Przytrzymaj ⇧ aby pisać wielką literą",
+  "whisper.shiftCapitalizeHint": "Przytrzymaj Shift podczas wklejania tekstu, aby zacząć wielką literą.",
   "whisper.recording": "Nagrywanie przez 5 sekund...",
   "whisper.transcribing": "Transkrybowanie...",
   "whisper.noSpeech": "(nie wykryto mowy)",

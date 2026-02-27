@@ -5,7 +5,7 @@ vi.mock("electron", () => ({
   Notification: class { show() {} },
 }));
 
-import { pasteText } from "../../../src/main/input/paster";
+import { pasteText, applyCase } from "../../../src/main/input/paster";
 import { clipboard } from "electron";
 
 describe("pasteText", () => {
@@ -38,5 +38,31 @@ describe("pasteText", () => {
 
   it("should not throw when CGEvent is unavailable and copyToClipboard is false", () => {
     expect(() => pasteText("Some text", false)).not.toThrow();
+  });
+});
+
+describe("applyCase", () => {
+  it("should lowercase first letter when lowercaseStart is true", () => {
+    expect(applyCase("Hello", true)).toBe("hello");
+  });
+
+  it("should not modify text when lowercaseStart is false", () => {
+    expect(applyCase("Hello", false)).toBe("Hello");
+  });
+
+  it("should return empty string unchanged", () => {
+    expect(applyCase("", true)).toBe("");
+  });
+
+  it("should override lowercaseStart when forceCapitalize is true", () => {
+    expect(applyCase("Hello", true, true)).toBe("Hello");
+  });
+
+  it("should not affect text when both lowercaseStart and forceCapitalize are false", () => {
+    expect(applyCase("Hello", false, false)).toBe("Hello");
+  });
+
+  it("should lowercase when lowercaseStart is true and forceCapitalize is false", () => {
+    expect(applyCase("Hello", true, false)).toBe("hello");
   });
 });

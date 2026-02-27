@@ -81,6 +81,8 @@
   "whisper.testHint": "Registra 5 secondi di audio e lo trascrive usando il modello locale selezionato. I modelli locali funzionano interamente sul tuo dispositivo, garantendo che il tuo audio non lasci mai il computer per la massima privacy.",
   "whisper.lowercaseStart": "Iniziare con minuscola",
   "whisper.lowercaseStartHint": "Il testo trascritto inizierà sempre con una lettera minuscola.",
+  "whisper.shiftCapitalize": "Tieni ⇧ per capitalizzare",
+  "whisper.shiftCapitalizeHint": "Tieni premuto Shift durante l'incollaggio del testo per capitalizzare la prima lettera.",
   "whisper.recording": "Registrazione per 5 secondi...",
   "whisper.transcribing": "Trascrizione...",
   "whisper.noSpeech": "(nessun parlato rilevato)",

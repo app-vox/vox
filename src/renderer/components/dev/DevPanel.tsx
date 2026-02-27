@@ -436,6 +436,8 @@ export function DevPanel() {
             </>
           ),
         },
+        { label: "Lowercase Start", render: () => <>{boolDot(config?.lowercaseStart)}</> },
+        { label: "Shift Capitalize", render: () => <>{boolDot(config?.shiftCapitalize)}</> },
         { label: "Keychain", render: () => <>{boolDot(keychainStatus?.available)}</> },
         { label: "Encrypted Secrets", render: () => <>{keychainStatus?.encryptedCount ?? 0}</> },
       ],

@@ -100,6 +100,9 @@ export class ShortcutManager {
   private canceledAtStage: string | null = null;
   private devModelOverride: boolean | null = null;
   private lastUnpastedText: string | null = null;
+  private isShiftHeld = false;
+  private shiftAlone = false;
+  private shiftTrackingActive = false;
   private static readonly MIN_RECORDING_MS = 400;
 
   constructor(deps: ShortcutManagerDeps) {
@@ -117,6 +120,11 @@ export class ShortcutManager {
     this.registerIpcHandlers();
 
     uIOhook.on("keyup", (e) => {
+      if (e.keycode === UiohookKey.Shift || e.keycode === UiohookKey.ShiftRight) {
+        this.isShiftHeld = false;
+        this.shiftAlone = false;
+        if (this.shiftTrackingActive) this.hud.setShiftHeld(false);
+      }
       if (this.holdKeyCodes.has(e.keycode)) {
         // Ignore events during initialization to prevent spurious shortcuts
         if (this.isInitializing) {
@@ -128,6 +136,14 @@ export class ShortcutManager {
     });
 
     uIOhook.on("keydown", (e) => {
+      if (e.keycode === UiohookKey.Shift || e.keycode === UiohookKey.ShiftRight) {
+        this.isShiftHeld = true;
+        this.shiftAlone = !e.ctrlKey && !e.altKey && !e.metaKey;
+        if (this.shiftTrackingActive && this.shiftAlone) this.hud.setShiftHeld(true);
+      } else if (this.isShiftHeld && this.shiftAlone) {
+        this.shiftAlone = false;
+        if (this.shiftTrackingActive) this.hud.setShiftHeld(false);
+      }
       if (e.keycode === UiohookKey.Escape && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
         const state = this.stateMachine.getState();
         if (state === RecordingState.Canceling) {
@@ -352,6 +368,8 @@ export class ShortcutManager {
     if (this.stateMachine.getState() !== RecordingState.Canceling) return;
 
     slog.info("Cancel confirmed — discarding");
+    this.shiftTrackingActive = false;
+    this.hud.setShiftHeld(false);
     this.deps.analytics?.track("graceful_cancel_confirmed", { stage: this.canceledAtStage });
     this.cancelTimer = null;
     this.canceledAtStage = null;
@@ -778,6 +796,8 @@ export class ShortcutManager {
     const pipeline = this.deps.getPipeline();
     this.recordingGeneration++;
     this.lastUnpastedText = null;
+    this.shiftTrackingActive = false;
+    this.hud.setShiftHeld(false);
     const gen = this.recordingGeneration;
     slog.info("Recording requested (gen=%d) — showing initializing HUD", gen);
     this.hud.setState("initializing");
@@ -860,6 +880,8 @@ export class ShortcutManager {
     this.hud.setState("transcribing");
 
     const config = this.deps.configManager.load();
+    this.shiftTrackingActive = config.lowercaseStart && config.shiftCapitalize;
+    this.hud.setShiftHeld(this.shiftTrackingActive && this.isShiftHeld && this.shiftAlone);
     const stopCueType = (config.recordingStopAudioCue ?? "pop") as AudioCueType;
     this.playCue(stopCueType);
 
@@ -885,7 +907,8 @@ export class ShortcutManager {
         slog.info("Valid text received, proceeding with paste");
         await new Promise((r) => setTimeout(r, 200));
         const pasteConfig = this.deps.configManager.load();
-        const pasted = pasteText(trimmedText, pasteConfig.copyToClipboard, { lowercaseStart: pasteConfig.lowercaseStart });
+        const forceCapitalize = this.isShiftHeld && this.shiftAlone && pasteConfig.shiftCapitalize && pasteConfig.lowercaseStart;
+        const pasted = pasteText(trimmedText, pasteConfig.copyToClipboard, { lowercaseStart: pasteConfig.lowercaseStart, shiftCapitalize: forceCapitalize });
 
         if (!pasted && config.onboardingCompleted) {
           slog.info("Text not inserted — showing HUD warning");
@@ -919,6 +942,8 @@ export class ShortcutManager {
         hudEndState = "error";
       }
     } finally {
+      this.shiftTrackingActive = false;
+      this.hud.setShiftHeld(false);
       // Only update state if this is still the current generation
       if (gen === this.recordingGeneration) {
         this.stateMachine.setIdle();
