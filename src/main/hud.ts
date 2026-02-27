@@ -1066,8 +1066,10 @@ export class HudWindow {
   private flashDurationMs = 0;
   private flashPausedAt: number | null = null;
   private flashRemainingMs = 0;
+  private pendingAttention = false;
 
   show(alwaysShow: boolean, showOnHover: boolean, position: WidgetPosition = "bottom-center"): void {
+    const wasOff = !this.alwaysShow;
     const positionChanged = this.position !== position;
     this.alwaysShow = alwaysShow;
     this.showOnHover = showOnHover;
@@ -1086,13 +1088,18 @@ export class HudWindow {
         this.execSetScale(1.0);
         this.resetIconCrossfade();
         this.window.showInactive();
+        if (wasOff) this.playAttentionAnimation();
       } else {
         this.startHoverTracking();
+        if (wasOff) this.playAttentionAnimation();
       }
       return;
     }
 
     this.contentReady = false;
+    if (alwaysShow) {
+      this.pendingAttention = true;
+    }
 
     this.window = new BrowserWindow({
       width: WIN_WIDTH,
@@ -1130,6 +1137,10 @@ export class HudWindow {
       this.execJs(`setAlwaysShow(${this.alwaysShow})`);
       this.sendTitles();
       this.execJs(`setPerformanceFlags(${this.reduceAnimations}, ${this.reduceVisualEffects})`);
+      if (this.pendingAttention) {
+        this.pendingAttention = false;
+        this.playAttentionAnimation();
+      }
       if (this.pendingUpdate) {
         this.execSetState(this.pendingUpdate.state);
         this.pendingUpdate = null;
@@ -1158,6 +1169,7 @@ export class HudWindow {
     }
     this.window = null;
     this.contentReady = false;
+    this.pendingAttention = false;
     this.pendingUpdate = null;
     this.currentState = "idle";
   }
