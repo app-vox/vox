@@ -716,6 +716,10 @@ export class ShortcutManager {
   private registerIpcHandlers(): void {
     ipcMain.handle("shortcuts:disable", () => {
       globalShortcut.unregisterAll();
+      this.doubleTapToggleDetector?.reset();
+      this.doubleTapHoldDetector?.reset();
+      this.doubleTapToggleDetector = null;
+      this.doubleTapHoldDetector = null;
     });
 
     ipcMain.handle("shortcuts:enable", (_event, immediate?: boolean) => {
