@@ -152,4 +152,33 @@ describe("HudWindow", () => {
       expect(x).toBeGreaterThanOrEqual(externalDisplay.workArea.x);
     });
   });
+
+  describe("playAttentionAnimation", () => {
+    it("should call executeJavaScript with playAttention()", () => {
+      const hud = createHudWithWindow();
+      // Simulate contentReady
+      (hud as any).contentReady = true;
+
+      hud.playAttentionAnimation();
+
+      expect(mockWindow.webContents.executeJavaScript).toHaveBeenCalledWith(
+        "playAttention()"
+      );
+    });
+
+    it("should not throw when window is null", () => {
+      const hud = new HudWindow();
+      expect(() => hud.playAttentionAnimation()).not.toThrow();
+    });
+
+    it("should not call executeJavaScript when content is not ready", () => {
+      const hud = createHudWithWindow();
+      // contentReady defaults to false for new HudWindow
+      (hud as any).contentReady = false;
+
+      hud.playAttentionAnimation();
+
+      expect(mockWindow.webContents.executeJavaScript).not.toHaveBeenCalled();
+    });
+  });
 });

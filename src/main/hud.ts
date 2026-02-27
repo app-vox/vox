@@ -1518,4 +1518,8 @@ export class HudWindow {
     this.reduceVisualEffects = reduceVisualEffects;
     this.execJs(`setPerformanceFlags(${reduceAnimations}, ${reduceVisualEffects})`);
   }
+
+  playAttentionAnimation(): void {
+    this.execJs("playAttention()");
+  }
 }
