@@ -141,13 +141,6 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
 
           const accelerator = `${DOUBLE_TAP_PREFIX}${modifier}`;
 
-          if (accelerator === otherValue) {
-            setConflict(true);
-            setTimeout(() => setConflict(false), 600);
-            lastModifierRef.current = null;
-            return;
-          }
-
           onChange(accelerator);
           setRecording(false);
           setPreviewParts([]);
