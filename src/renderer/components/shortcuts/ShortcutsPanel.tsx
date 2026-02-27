@@ -31,13 +31,21 @@ export function ShortcutsPanel() {
   };
 
   const setHold = async (accelerator: string) => {
-    updateConfig({ shortcuts: { ...config.shortcuts, hold: accelerator } });
+    const updates = { ...config.shortcuts, hold: accelerator };
+    if (mode !== "both" && accelerator === config.shortcuts.toggle) {
+      updates.toggle = "";
+    }
+    updateConfig({ shortcuts: updates });
     await saveConfig(false);
     triggerToast();
   };
 
   const setToggle = async (accelerator: string) => {
-    updateConfig({ shortcuts: { ...config.shortcuts, toggle: accelerator } });
+    const updates = { ...config.shortcuts, toggle: accelerator };
+    if (mode !== "both" && accelerator === config.shortcuts.hold) {
+      updates.hold = "";
+    }
+    updateConfig({ shortcuts: updates });
     await saveConfig(false);
     triggerToast();
   };
@@ -83,7 +91,7 @@ export function ShortcutsPanel() {
             label={t("shortcuts.holdMode")}
             hint={t("shortcuts.holdHint")}
             value={config.shortcuts.hold}
-            otherValue={config.shortcuts.toggle}
+            otherValue={mode === "both" ? config.shortcuts.toggle : ""}
             onChange={setHold}
           />
         )}
@@ -92,7 +100,7 @@ export function ShortcutsPanel() {
             label={t("shortcuts.toggleMode")}
             hint={t("shortcuts.toggleHint")}
             value={config.shortcuts.toggle}
-            otherValue={config.shortcuts.hold}
+            otherValue={mode === "both" ? config.shortcuts.hold : ""}
             onChange={setToggle}
           />
         )}
