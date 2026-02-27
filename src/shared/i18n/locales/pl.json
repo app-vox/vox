@@ -208,6 +208,7 @@
   "shortcuts.toggleHint": "Naciśnij raz, aby rozpocząć, naciśnij ponownie, aby zatrzymać.",
   "shortcuts.restoreDefaults": "Przywróć domyślne",
   "shortcuts.pressShortcut": "Naciśnij skrót...",
+  "shortcuts.notSet": "Kliknij, aby nagrać",
   "shortcuts.mode": "Tryb nagrywania",
   "shortcuts.mode.hold": "Przytrzymaj",
   "shortcuts.mode.toggle": "Przełącz",

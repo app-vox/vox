@@ -208,6 +208,7 @@
   "shortcuts.toggleHint": "Premi una volta per iniziare, premi di nuovo per fermare.",
   "shortcuts.restoreDefaults": "Ripristina predefiniti",
   "shortcuts.pressShortcut": "Premi la scorciatoia...",
+  "shortcuts.notSet": "Clicca per registrare",
   "shortcuts.mode": "Modalità di Registrazione",
   "shortcuts.mode.hold": "Tieni premuto",
   "shortcuts.mode.toggle": "Alterna",

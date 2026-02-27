@@ -208,6 +208,7 @@
   "shortcuts.toggleHint": "Pressione uma vez o atalho para iniciar a transcrição, pressione novamente para parar.",
   "shortcuts.restoreDefaults": "Restaurar Padrões",
   "shortcuts.pressShortcut": "Pressione o atalho...",
+  "shortcuts.notSet": "Clique para gravar",
   "shortcuts.mode": "Modo de Gravação",
   "shortcuts.mode.hold": "Segurar",
   "shortcuts.mode.toggle": "Alternar",

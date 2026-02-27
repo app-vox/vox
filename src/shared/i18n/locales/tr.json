@@ -208,6 +208,7 @@
   "shortcuts.toggleHint": "Başlatmak için bir kez basın, durdurmak için tekrar basın.",
   "shortcuts.restoreDefaults": "Varsayılanları Geri Yükle",
   "shortcuts.pressShortcut": "Kısayola basın...",
+  "shortcuts.notSet": "Kaydetmek için tıklayın",
   "shortcuts.mode": "Kayıt Modu",
   "shortcuts.mode.hold": "Basılı Tut",
   "shortcuts.mode.toggle": "Aç/Kapat",

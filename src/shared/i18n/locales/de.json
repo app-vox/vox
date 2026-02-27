@@ -208,6 +208,7 @@
   "shortcuts.toggleHint": "Einmal drücken zum Starten, erneut drücken zum Stoppen.",
   "shortcuts.restoreDefaults": "Standardeinstellungen wiederherstellen",
   "shortcuts.pressShortcut": "Tastenkombination drücken...",
+  "shortcuts.notSet": "Klicken zum Aufnehmen",
   "shortcuts.mode": "Aufnahmemodus",
   "shortcuts.mode.hold": "Halten",
   "shortcuts.mode.toggle": "Umschalten",
