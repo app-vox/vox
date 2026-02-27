@@ -147,10 +147,10 @@ jobs:
         with:
           name: vox-${{ needs.version.outputs.version }}-mac-arm64
           path: |
-            out/*.dmg
-            out/*.zip
-            out/*.blockmap
-            out/latest-mac.yml
+            dist/*.dmg
+            dist/*.zip
+            dist/*.blockmap
+            dist/latest-mac.yml
           if-no-files-found: error
 
   release:
