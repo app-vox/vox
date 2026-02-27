@@ -60,10 +60,14 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
   const previousValue = useRef(value);
   const fieldRef = useRef<HTMLDivElement>(null);
   const lastModifierRef = useRef<{ code: string; time: number } | null>(null);
+  const hasModifiersHeldRef = useRef(false);
+  const keyDownHandledRef = useRef(false);
 
   const stopRecording = useCallback((cancel: boolean) => {
     setRecording(false);
     setPreviewParts([]);
+    hasModifiersHeldRef.current = false;
+    window.voxApi.shortcuts.stopRecording();
     if (cancel) onChange(previousValue.current);
     window.voxApi.shortcuts.enable();
   }, [onChange]);
@@ -71,9 +75,12 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
   const startRecording = useCallback(() => {
     previousValue.current = value;
     lastModifierRef.current = null;
+    hasModifiersHeldRef.current = false;
+    keyDownHandledRef.current = false;
     setRecording(true);
     setPreviewParts([]);
     window.voxApi.shortcuts.disable();
+    window.voxApi.shortcuts.startRecording();
   }, [value]);
 
   useEffect(() => {
@@ -100,6 +107,8 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
       if (e.altKey) modifiers.push("Alt");
       if (e.shiftKey) modifiers.push("Shift");
 
+      hasModifiersHeldRef.current = modifiers.length > 0;
+
       const isFnDirect = e.key === "Fn" || e.code === "Fn" || e.keyCode === 63;
       const isFnBasedKey = e.code.startsWith("F") && parseInt(e.code.substring(1)) > 12;
       const isMediaKey = e.code.includes("Media") || e.code.includes("Audio") ||
@@ -123,6 +132,11 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
       }
 
       if (isModifierCode(e.code) && !isFnDirect) {
+        if (e.repeat) {
+          if (modifiers.length > 0) setPreviewParts(modifiers);
+          return;
+        }
+
         const now = Date.now();
         const last = lastModifierRef.current;
 
@@ -144,6 +158,8 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
           onChange(accelerator);
           setRecording(false);
           setPreviewParts([]);
+          hasModifiersHeldRef.current = false;
+          window.voxApi.shortcuts.stopRecording();
           window.voxApi.shortcuts.enable();
           lastModifierRef.current = null;
           return;
@@ -167,6 +183,7 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
       }
 
       slog.debug("Main key detected", mainKey);
+      keyDownHandledRef.current = true;
 
       const accelerator = modifiers.length > 0
         ? [...modifiers, mainKey].join("+")
@@ -181,6 +198,8 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
       onChange(accelerator);
       setRecording(false);
       setPreviewParts([]);
+      hasModifiersHeldRef.current = false;
+      window.voxApi.shortcuts.stopRecording();
       window.voxApi.shortcuts.enable();
     };
 
@@ -190,19 +209,92 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
       }
     };
 
-    const handleBlur = () => stopRecording(true);
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (isModifierCode(e.code)) return;
+      if (keyDownHandledRef.current) return;
+
+      const modifiers: string[] = [];
+      if (e.metaKey) modifiers.push("Command");
+      if (e.ctrlKey) modifiers.push("Ctrl");
+      if (e.altKey) modifiers.push("Alt");
+      if (e.shiftKey) modifiers.push("Shift");
+      if (modifiers.length === 0) return;
+
+      let mainKey = CODE_TO_KEY[e.code];
+      if (!mainKey && e.key) mainKey = CODE_TO_KEY[e.key] || e.key;
+      if (!mainKey) return;
+
+      const accelerator = [...modifiers, mainKey].join("+");
+      slog.debug("Main key detected via keyup fallback", accelerator);
+
+      if (accelerator === otherValue) {
+        setConflict(true);
+        setTimeout(() => setConflict(false), 600);
+        return;
+      }
+
+      onChange(accelerator);
+      setRecording(false);
+      setPreviewParts([]);
+      hasModifiersHeldRef.current = false;
+      window.voxApi.shortcuts.enable();
+    };
+
+    const handleBlur = () => {
+      if (hasModifiersHeldRef.current) return;
+      stopRecording(true);
+    };
+
+    const handleElectronKey = (data: { code: string; key: string; alt: boolean; shift: boolean; control: boolean; meta: boolean }) => {
+      if (keyDownHandledRef.current) return;
+
+      if (isModifierCode(data.code)) return;
+
+      const modifiers: string[] = [];
+      if (data.meta) modifiers.push("Command");
+      if (data.control) modifiers.push("Ctrl");
+      if (data.alt) modifiers.push("Alt");
+      if (data.shift) modifiers.push("Shift");
+      if (modifiers.length === 0) return;
+
+      let mainKey = CODE_TO_KEY[data.code];
+      if (!mainKey) mainKey = CODE_TO_KEY[data.key] || data.key;
+      if (!mainKey) return;
+
+      const accelerator = [...modifiers, mainKey].join("+");
+      slog.debug("Main key detected via before-input-event fallback", accelerator);
+
+      if (accelerator === otherValue) {
+        setConflict(true);
+        setTimeout(() => setConflict(false), 600);
+        return;
+      }
+
+      onChange(accelerator);
+      setRecording(false);
+      setPreviewParts([]);
+      hasModifiersHeldRef.current = false;
+      window.voxApi.shortcuts.stopRecording();
+      window.voxApi.shortcuts.enable();
+    };
+
+    const removeElectronKeyListener = window.voxApi.shortcuts.onKey(handleElectronKey);
 
     document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keyup", handleKeyUp);
     document.addEventListener("mousedown", handleMouseDown);
     window.addEventListener("blur", handleBlur);
 
     return () => {
+      removeElectronKeyListener();
       document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keyup", handleKeyUp);
       document.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("blur", handleBlur);
     };
   }, [recording, otherValue, onChange, stopRecording]);
 
+  const showingDoubleTap = !(recording && previewParts.length > 0) && isDoubleTap(value);
   const displayParts = recording && previewParts.length > 0
     ? previewParts
     : value
@@ -228,11 +320,11 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
         tabIndex={disabled ? -1 : 0}
         aria-disabled={disabled}
       >
-        <span className={isDoubleTap(value) && !(recording && previewParts.length > 0) ? styles.doubleTapKeys : undefined}>
+        <span className={showingDoubleTap ? styles.doubleTapKeys : undefined}>
           {displayParts.map((part, i) => (
             <span key={i}>
               {/* eslint-disable-next-line i18next/no-literal-string */}
-              {i > 0 && !isDoubleTap(value) && <span className={styles.separator}>+</span>}
+              {i > 0 && !showingDoubleTap && <span className={styles.separator}>+</span>}
               <kbd className={styles.kbd}>{PLATFORM_LABELS[part] || part}</kbd>
             </span>
           ))}

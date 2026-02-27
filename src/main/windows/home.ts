@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, nativeTheme, screen } from "electron";
+import { app, BrowserWindow, ipcMain, Menu, nativeTheme, screen } from "electron";
 import * as path from "path";
 import log from "electron-log/main";
 import { t } from "../../shared/i18n";
@@ -191,6 +191,23 @@ export function openHome(onClosed: () => void, initialTab?: string): void {
     if ((input.meta || input.control) && (input.key === "=" || input.key === "-" || input.key === "0" || input.key === "+" || input.key === "_")) {
       event.preventDefault();
     }
+  });
+
+  let shortcutRecording = false;
+  ipcMain.on("shortcut-recorder:start", () => { shortcutRecording = true; });
+  ipcMain.on("shortcut-recorder:stop", () => { shortcutRecording = false; });
+
+  homeWindow.webContents.on("before-input-event", (_event, input) => {
+    if (!shortcutRecording) return;
+    if (input.type !== "keyDown") return;
+    homeWindow?.webContents.send("shortcut-recorder:key", {
+      code: input.code,
+      key: input.key,
+      alt: input.alt,
+      shift: input.shift,
+      control: input.control,
+      meta: input.meta,
+    });
   });
 
   homeWindow.webContents.on("context-menu", (_event, params) => {

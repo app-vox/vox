@@ -57,6 +57,9 @@ export interface VoxAPI {
   shortcuts: {
     disable(): Promise<void>;
     enable(immediate?: boolean): Promise<void>;
+    startRecording(): void;
+    stopRecording(): void;
+    onKey(handler: (data: { code: string; key: string; alt: boolean; shift: boolean; control: boolean; meta: boolean }) => void): () => void;
   };
   llm: {
     test(config: import("../shared/config").VoxConfig): Promise<{ ok: boolean; error?: string }>;
@@ -183,6 +186,13 @@ const voxApi: VoxAPI = {
   shortcuts: {
     disable: () => ipcRenderer.invoke("shortcuts:disable"),
     enable: (immediate?: boolean) => ipcRenderer.invoke("shortcuts:enable", immediate),
+    startRecording: () => ipcRenderer.send("shortcut-recorder:start"),
+    stopRecording: () => ipcRenderer.send("shortcut-recorder:stop"),
+    onKey: (handler: (data: { code: string; key: string; alt: boolean; shift: boolean; control: boolean; meta: boolean }) => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, data: { code: string; key: string; alt: boolean; shift: boolean; control: boolean; meta: boolean }) => handler(data);
+      ipcRenderer.on("shortcut-recorder:key", listener);
+      return () => ipcRenderer.removeListener("shortcut-recorder:key", listener);
+    },
   },
   llm: {
     test: (config) => ipcRenderer.invoke("llm:test", config),
