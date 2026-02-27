@@ -24,7 +24,8 @@ vi.mock("electron-log/main", () => ({
 vi.mock("uiohook-napi", () => ({
   uIOhook: { on: vi.fn(), start: vi.fn(), stop: vi.fn() },
   UiohookKey: {
-    Meta: 3675, Ctrl: 29, Alt: 56, Shift: 42, Space: 57,
+    Meta: 3675, MetaRight: 3676, Ctrl: 29, CtrlRight: 3613,
+    Alt: 56, AltRight: 3640, Shift: 42, ShiftRight: 54, Space: 57,
     Enter: 28, Backspace: 14, Tab: 15, Delete: 3667,
     Home: 3655, End: 3663, PageUp: 3657, PageDown: 3665,
     ArrowUp: 3656, ArrowDown: 3664, ArrowLeft: 3658, ArrowRight: 3662,
