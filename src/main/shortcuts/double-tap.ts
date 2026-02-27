@@ -22,7 +22,7 @@ export class DoubleTapDetector {
     this.nonModifierPressed = false;
   }
 
-  handleKeyDown(timestamp: number): void {
+  handleKeyDown(timestamp: number): boolean {
     if (
       this.lastKeyUpTime > 0 &&
       !this.nonModifierPressed &&
@@ -31,10 +31,11 @@ export class DoubleTapDetector {
       this.onDoubleTap();
       this.lastKeyUpTime = 0; // consume the sequence
       this.consumed = true;
-      return;
+      return true;
     }
     // Not a double-tap — this keydown doesn't update lastKeyUpTime
     // (only keyup starts a new potential sequence)
+    return false;
   }
 
   handleNonModifierKey(): void {

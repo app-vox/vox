@@ -13,16 +13,18 @@ describe("DoubleTapDetector", () => {
 
   it("fires callback on second keydown within threshold", () => {
     detector.handleKeyUp(100);
-    detector.handleKeyDown(200);
+    const fired = detector.handleKeyDown(200);
 
     expect(onDoubleTap).toHaveBeenCalledOnce();
+    expect(fired).toBe(true);
   });
 
   it("does not fire if interval exceeds threshold", () => {
     detector.handleKeyUp(100);
-    detector.handleKeyDown(100 + DOUBLE_TAP_THRESHOLD_MS + 1);
+    const fired = detector.handleKeyDown(100 + DOUBLE_TAP_THRESHOLD_MS + 1);
 
     expect(onDoubleTap).not.toHaveBeenCalled();
+    expect(fired).toBe(false);
   });
 
   it("resets when a non-modifier key is pressed between taps", () => {
