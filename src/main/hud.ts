@@ -368,6 +368,28 @@ function buildHudHtml(): string {
     50% { filter: drop-shadow(0 0 16px var(--state-color)); }
   }
 
+  .attention-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 42px;
+    height: 42px;
+    transform: translate(-50%, -50%) scale(1);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(99,102,241,0.5) 0%, rgba(99,102,241,0.15) 40%, transparent 70%);
+    pointer-events: none;
+    opacity: 0;
+    z-index: 0;
+  }
+  .attention-overlay.active {
+    animation: hudAttention 1.2s ease-out forwards;
+  }
+  @keyframes hudAttention {
+    0%   { transform: translate(-50%, -50%) scale(8); opacity: 0.7; }
+    80%  { transform: translate(-50%, -50%) scale(1); opacity: 0.4; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+  }
+
   /* ---- SATELLITE BUTTONS (hover actions) ---- */
   .hover-btn {
     position: absolute;
@@ -469,6 +491,7 @@ function buildHudHtml(): string {
   .undo-bar .undo-btn svg { flex-shrink: 0; }
 </style></head>
 <body>
+<div class="attention-overlay" id="attention-overlay"></div>
 <div class="scale-wrapper" id="scale-wrapper">
   <div class="widget" id="widget" role="button" tabindex="0">
     <!-- Circle mode icons -->
@@ -953,6 +976,17 @@ function stopCountdown() {
 
 document.getElementById('undo-bar').addEventListener('mouseenter', function() { pauseCountdown(); });
 document.getElementById('undo-bar').addEventListener('mouseleave', function() { resumeCountdown(); });
+
+function playAttention() {
+  var overlay = document.getElementById('attention-overlay');
+  if (!overlay) return;
+  overlay.classList.remove('active');
+  void overlay.offsetWidth;
+  overlay.classList.add('active');
+  overlay.addEventListener('animationend', function() {
+    overlay.classList.remove('active');
+  }, { once: true });
+}
 
 function setPerformanceFlags(reduceAnimations, reduceEffects) {
   var id = 'perf-overrides';
