@@ -152,4 +152,54 @@ describe("HudWindow", () => {
       expect(x).toBeGreaterThanOrEqual(externalDisplay.workArea.x);
     });
   });
+
+  describe("playAttentionAnimation", () => {
+    it("should call executeJavaScript with playAttention()", () => {
+      const hud = createHudWithWindow();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (hud as any).contentReady = true;
+
+      hud.playAttentionAnimation();
+
+      expect(mockWindow.webContents.executeJavaScript).toHaveBeenCalledWith(
+        "playAttention()"
+      );
+    });
+
+    it("should not throw when window is null", () => {
+      const hud = new HudWindow();
+      expect(() => hud.playAttentionAnimation()).not.toThrow();
+    });
+
+    it("should not call executeJavaScript when content is not ready", () => {
+      const hud = createHudWithWindow();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (hud as any).contentReady = false;
+
+      hud.playAttentionAnimation();
+
+      expect(mockWindow.webContents.executeJavaScript).not.toHaveBeenCalled();
+    });
+
+    it("should force full scale and restart hover tracking when showOnHover is enabled", () => {
+      const hud = createHudWithWindow();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (hud as any).contentReady = true;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (hud as any).showOnHover = true;
+
+      vi.useFakeTimers();
+      hud.playAttentionAnimation();
+
+      expect(mockWindow.webContents.executeJavaScript).toHaveBeenCalledWith(
+        "setScale(1)"
+      );
+      expect(mockWindow.webContents.executeJavaScript).toHaveBeenCalledWith(
+        "playAttention()"
+      );
+
+      vi.advanceTimersByTime(1300);
+      vi.useRealTimers();
+    });
+  });
 });

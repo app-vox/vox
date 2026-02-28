@@ -368,6 +368,28 @@ function buildHudHtml(): string {
     50% { filter: drop-shadow(0 0 16px var(--state-color)); }
   }
 
+  .attention-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 42px;
+    height: 42px;
+    transform: translate(-50%, -50%) scale(1);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(99,102,241,0.8) 0%, rgba(99,102,241,0.35) 40%, transparent 70%);
+    pointer-events: none;
+    opacity: 0;
+    z-index: 0;
+  }
+  .attention-overlay.active {
+    animation: hudAttention 1.2s ease-out forwards;
+  }
+  @keyframes hudAttention {
+    0%   { transform: translate(-50%, -50%) scale(8); opacity: 0.9; }
+    80%  { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+  }
+
   /* ---- SATELLITE BUTTONS (hover actions) ---- */
   .hover-btn {
     position: absolute;
@@ -470,6 +492,7 @@ function buildHudHtml(): string {
 </style></head>
 <body>
 <div class="scale-wrapper" id="scale-wrapper">
+  <div class="attention-overlay" id="attention-overlay"></div>
   <div class="widget" id="widget" role="button" tabindex="0">
     <!-- Circle mode icons -->
     <div class="circle-content" id="circle-content">
@@ -954,6 +977,17 @@ function stopCountdown() {
 document.getElementById('undo-bar').addEventListener('mouseenter', function() { pauseCountdown(); });
 document.getElementById('undo-bar').addEventListener('mouseleave', function() { resumeCountdown(); });
 
+function playAttention() {
+  var overlay = document.getElementById('attention-overlay');
+  if (!overlay) return;
+  overlay.classList.remove('active');
+  void overlay.offsetWidth;
+  overlay.classList.add('active');
+  overlay.addEventListener('animationend', function() {
+    overlay.classList.remove('active');
+  }, { once: true });
+}
+
 function setPerformanceFlags(reduceAnimations, reduceEffects) {
   var id = 'perf-overrides';
   var existing = document.getElementById(id);
@@ -1032,8 +1066,10 @@ export class HudWindow {
   private flashDurationMs = 0;
   private flashPausedAt: number | null = null;
   private flashRemainingMs = 0;
+  private pendingAttention = false;
 
   show(alwaysShow: boolean, showOnHover: boolean, position: WidgetPosition = "bottom-center"): void {
+    const wasOff = !this.alwaysShow;
     const positionChanged = this.position !== position;
     this.alwaysShow = alwaysShow;
     this.showOnHover = showOnHover;
@@ -1052,13 +1088,18 @@ export class HudWindow {
         this.execSetScale(1.0);
         this.resetIconCrossfade();
         this.window.showInactive();
+        if (wasOff) this.playAttentionAnimation();
       } else {
         this.startHoverTracking();
+        if (wasOff) this.playAttentionAnimation();
       }
       return;
     }
 
     this.contentReady = false;
+    if (alwaysShow) {
+      this.pendingAttention = true;
+    }
 
     this.window = new BrowserWindow({
       width: WIN_WIDTH,
@@ -1096,6 +1137,10 @@ export class HudWindow {
       this.execJs(`setAlwaysShow(${this.alwaysShow})`);
       this.sendTitles();
       this.execJs(`setPerformanceFlags(${this.reduceAnimations}, ${this.reduceVisualEffects})`);
+      if (this.pendingAttention) {
+        this.pendingAttention = false;
+        this.playAttentionAnimation();
+      }
       if (this.pendingUpdate) {
         this.execSetState(this.pendingUpdate.state);
         this.pendingUpdate = null;
@@ -1124,6 +1169,7 @@ export class HudWindow {
     }
     this.window = null;
     this.contentReady = false;
+    this.pendingAttention = false;
     this.pendingUpdate = null;
     this.currentState = "idle";
   }
@@ -1483,5 +1529,20 @@ export class HudWindow {
     this.reduceAnimations = reduceAnimations;
     this.reduceVisualEffects = reduceVisualEffects;
     this.execJs(`setPerformanceFlags(${reduceAnimations}, ${reduceVisualEffects})`);
+  }
+
+  playAttentionAnimation(): void {
+    if (this.showOnHover) {
+      this.stopHoverTracking();
+      this.execSetScale(1.0);
+    }
+    this.execJs("playAttention()");
+    if (this.showOnHover) {
+      setTimeout(() => {
+        if (this.window && !this.window.isDestroyed()) {
+          this.startHoverTracking();
+        }
+      }, 1300);
+    }
   }
 }
