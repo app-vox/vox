@@ -93,7 +93,7 @@ vi.mock("../../../src/main/input/paster", () => ({
 }));
 
 import { uIOhook } from "uiohook-napi";
-import { ipcMain } from "electron";
+import { globalShortcut, ipcMain } from "electron";
 import { ShortcutManager, type ShortcutManagerDeps } from "../../../src/main/shortcuts/manager";
 import { RecordingState } from "../../../src/main/shortcuts/listener";
 
@@ -347,6 +347,33 @@ describe("ShortcutManager — double-tap integration", () => {
       sim.keydown(SHIFT_LEFT);
 
       expect(manager.getStateMachineState()).toBe(RecordingState.Toggle);
+    });
+  });
+
+  describe("invalid accelerator strings", () => {
+    it("does not crash when globalShortcut.register throws on invalid hold accelerator", () => {
+      (globalShortcut.register as ReturnType<typeof vi.fn>).mockImplementation(() => {
+        throw new TypeError("Error processing argument at index 0, conversion failure from InvalidKey");
+      });
+
+      // Should not throw — the try-catch inside registerShortcutKeys handles it
+      expect(() => {
+        buildManager(createDoubleTapConfig("hold", "InvalidKey", "Alt+Shift+Space"));
+      }).not.toThrow();
+
+      (globalShortcut.register as ReturnType<typeof vi.fn>).mockReturnValue(true);
+    });
+
+    it("does not crash when globalShortcut.register throws on invalid toggle accelerator", () => {
+      (globalShortcut.register as ReturnType<typeof vi.fn>).mockImplementation(() => {
+        throw new TypeError("Error processing argument at index 0, conversion failure from InvalidKey");
+      });
+
+      expect(() => {
+        buildManager(createDoubleTapConfig("toggle", "Alt+Space", "InvalidKey"));
+      }).not.toThrow();
+
+      (globalShortcut.register as ReturnType<typeof vi.fn>).mockReturnValue(true);
     });
   });
 });
