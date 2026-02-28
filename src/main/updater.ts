@@ -120,7 +120,9 @@ export async function checkForUpdates(): Promise<void> {
     try {
       await autoUpdater.checkForUpdates();
     } catch (err: unknown) {
-      slog.warn("Update check failed:", err instanceof Error ? err.message : err);
+      const message = err instanceof Error ? err.message : String(err);
+      slog.warn("Update check failed:", message);
+      setState({ status: "error", error: message });
     }
   } else {
     await devCheckForUpdates();
