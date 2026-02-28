@@ -257,6 +257,8 @@
   "notification.setupRequired.title": "Vox - Kurulum Gerekli",
   "notification.setupRequired.body": "Ayarlarda yerel modeli yapılandırın",
   "notification.setupRequired.indicator": "Yerel modeli yapılandırın",
+  "notification.shortcutReset.title": "Vox - Kısayollar Sıfırlandı",
+  "notification.shortcutReset.body": "Geçersiz bir kısayol algılandı. Kısayollar varsayılan değerlere sıfırlandı. Ayarlar'dan yeniden yapılandırabilirsiniz.",
   "notification.recordingFailed": "Kayıt başarısız: {error}",
   "notification.pasteFailed": "Otomatik yapıştırma başarısız: {error}. Metin panonuzda.",
   "notification.copiedToClipboard": "{text}...Kopyalandı — yapıştırmak için Cmd+V'ye basın.",

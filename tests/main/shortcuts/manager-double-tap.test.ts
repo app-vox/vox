@@ -2,10 +2,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 vi.mock("electron", () => ({
   app: { isPackaged: false, getAppPath: () => "/fake" },
-  BrowserWindow: vi.fn(),
+  BrowserWindow: Object.assign(vi.fn(), { getAllWindows: vi.fn().mockReturnValue([]) }),
   globalShortcut: { register: vi.fn().mockReturnValue(true), unregisterAll: vi.fn() },
   ipcMain: { handle: vi.fn(), removeHandler: vi.fn(), on: vi.fn() },
-  Notification: vi.fn().mockImplementation(() => ({ show: vi.fn() })),
+  Notification: vi.fn(function () { return { show: vi.fn() }; }),
   screen: {
     getPrimaryDisplay: vi.fn().mockReturnValue({ workAreaSize: { width: 1920, height: 1080 } }),
     on: vi.fn(),
@@ -93,7 +93,7 @@ vi.mock("../../../src/main/input/paster", () => ({
 }));
 
 import { uIOhook } from "uiohook-napi";
-import { globalShortcut, ipcMain } from "electron";
+import { BrowserWindow, globalShortcut, ipcMain, Notification } from "electron";
 import { ShortcutManager, type ShortcutManagerDeps } from "../../../src/main/shortcuts/manager";
 import { RecordingState } from "../../../src/main/shortcuts/listener";
 
@@ -184,7 +184,7 @@ describe("ShortcutManager — double-tap integration", () => {
 
   function buildManager(config = createDoubleTapConfig()) {
     mockPipeline = createMockPipeline();
-    const mockConfigManager = { load: vi.fn().mockReturnValue(config) };
+    const mockConfigManager = { load: vi.fn().mockReturnValue(config), save: vi.fn() };
 
     sim = captureUiohookHandlers();
 
@@ -199,6 +199,8 @@ describe("ShortcutManager — double-tap integration", () => {
     // Skip initialization delay
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (manager as any).isInitializing = false;
+
+    return mockConfigManager;
   }
 
   beforeEach(() => {
@@ -351,27 +353,35 @@ describe("ShortcutManager — double-tap integration", () => {
   });
 
   describe("invalid accelerator strings", () => {
-    it("does not crash when globalShortcut.register throws on invalid hold accelerator", () => {
+    it("does not crash and resets config when globalShortcut.register throws", () => {
       (globalShortcut.register as ReturnType<typeof vi.fn>).mockImplementation(() => {
         throw new TypeError("Error processing argument at index 0, conversion failure from InvalidKey");
       });
 
-      // Should not throw — the try-catch inside registerShortcutKeys handles it
-      expect(() => {
-        buildManager(createDoubleTapConfig("hold", "InvalidKey", "Alt+Shift+Space"));
-      }).not.toThrow();
+      const mockConfigManager = buildManager(createDoubleTapConfig("hold", "InvalidKey", "Alt+Shift+Space"));
+
+      // Config should be saved with defaults
+      expect(mockConfigManager.save).toHaveBeenCalledOnce();
+      const savedConfig = mockConfigManager.save.mock.calls[0][0];
+      expect(savedConfig.shortcuts.hold).toBe("Alt+Space");
+      expect(savedConfig.shortcuts.toggle).toBe("Alt+Shift+Space");
+      expect(savedConfig.shortcuts.mode).toBe("toggle");
+
+      // User should be notified
+      expect(Notification).toHaveBeenCalledOnce();
 
       (globalShortcut.register as ReturnType<typeof vi.fn>).mockReturnValue(true);
     });
 
-    it("does not crash when globalShortcut.register throws on invalid toggle accelerator", () => {
+    it("does not crash and resets config when toggle accelerator is invalid", () => {
       (globalShortcut.register as ReturnType<typeof vi.fn>).mockImplementation(() => {
         throw new TypeError("Error processing argument at index 0, conversion failure from InvalidKey");
       });
 
-      expect(() => {
-        buildManager(createDoubleTapConfig("toggle", "Alt+Space", "InvalidKey"));
-      }).not.toThrow();
+      const mockConfigManager = buildManager(createDoubleTapConfig("toggle", "Alt+Space", "InvalidKey"));
+
+      expect(mockConfigManager.save).toHaveBeenCalledOnce();
+      expect(Notification).toHaveBeenCalledOnce();
 
       (globalShortcut.register as ReturnType<typeof vi.fn>).mockReturnValue(true);
     });
