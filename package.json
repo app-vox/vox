@@ -76,7 +76,7 @@
     "appId": "com.rodrigoluizs.vox",
     "productName": "Vox",
     "directories": {
-      "output": "out"
+      "output": "dist"
     },
     "afterSign": "build/notarize.cjs",
     "mac": {
@@ -109,7 +109,7 @@
       ]
     },
     "files": [
-      "out/**/*",
+      "out{,/**/*}",
       "resources/**/*",
       "node_modules/**/*",
       "!node_modules/*/{CHANGELOG.md,README.md,readme.md}"
