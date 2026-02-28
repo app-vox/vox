@@ -1,5 +1,8 @@
 import { app, BrowserWindow } from "electron";
 import { autoUpdater, type UpdateInfo, type ProgressInfo } from "electron-updater";
+import log from "electron-log/main";
+
+const slog = log.scope("updater");
 
 export interface UpdateState {
   status: "idle" | "checking" | "available" | "downloading" | "ready" | "error";
