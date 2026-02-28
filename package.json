@@ -110,7 +110,7 @@
     },
     "files": [
       "out{,/**/*}",
-      "resources/**/*",
+      "resources{,/**/*}",
       "node_modules/**/*",
       "!node_modules/*/{CHANGELOG.md,README.md,readme.md}"
     ],
@@ -120,7 +120,7 @@
       "node_modules/uiohook-napi/**/*"
     ],
     "extraResources": [
-      "resources/**/*"
+      "resources{,/**/*}"
     ],
     "publish": {
       "provider": "github",

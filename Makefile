@@ -7,11 +7,11 @@ build:
 
 build-dev:
 	npm run build && CSC_IDENTITY_AUTO_DISCOVERY=false SKIP_NOTARIZE=1 npx electron-builder --mac dir -c.mac.provisioningProfile=
-	@printf 'provider: github\nowner: app-vox\nrepo: vox\n' > out/mac-arm64/Vox.app/Contents/Resources/app-update.yml
+	@printf 'provider: github\nowner: app-vox\nrepo: vox\n' > dist/mac-arm64/Vox.app/Contents/Resources/app-update.yml
 
 install:
-	@APP=$$(find out -maxdepth 2 -name 'Vox.app' -type d 2>/dev/null | head -1); \
-	if [ -z "$$APP" ]; then echo "Vox.app not found in out/. Run 'make build' first."; exit 1; fi; \
+	@APP=$$(find dist -maxdepth 2 -name 'Vox.app' -type d 2>/dev/null | head -1); \
+	if [ -z "$$APP" ]; then echo "Vox.app not found in dist/. Run 'make build' first."; exit 1; fi; \
 	cp -R "$$APP" /Applications/Vox.app; \
 	open /Applications/Vox.app
 
