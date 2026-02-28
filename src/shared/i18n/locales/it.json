@@ -257,6 +257,8 @@
   "notification.setupRequired.title": "Vox - Configurazione necessaria",
   "notification.setupRequired.body": "Configura il modello locale nelle Impostazioni",
   "notification.setupRequired.indicator": "Configura il modello locale",
+  "notification.shortcutReset.title": "Vox - Scorciatoie reimpostate",
+  "notification.shortcutReset.body": "È stata rilevata una scorciatoia non valida. Le scorciatoie sono state reimpostate ai valori predefiniti. Puoi riconfigurarle nelle Impostazioni.",
   "notification.recordingFailed": "Registrazione fallita: {error}",
   "notification.pasteFailed": "Incollaggio automatico fallito: {error}. Il testo è negli appunti.",
   "notification.copiedToClipboard": "{text}...Copiato — premi Cmd+V per incollare.",
