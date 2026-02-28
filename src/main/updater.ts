@@ -1,5 +1,8 @@
 import { app, BrowserWindow } from "electron";
 import { autoUpdater, type UpdateInfo, type ProgressInfo } from "electron-updater";
+import log from "electron-log/main";
+
+const slog = log.scope("updater");
 
 export interface UpdateState {
   status: "idle" | "checking" | "available" | "downloading" | "ready" | "error";
@@ -104,7 +107,9 @@ export function initAutoUpdater(onStateChange?: () => void): void {
 
   if (app.isPackaged) {
     setupAutoUpdater();
-    autoUpdater.checkForUpdates();
+    autoUpdater.checkForUpdates().catch((err: Error) => {
+      slog.warn("Initial update check failed:", err.message);
+    });
   } else {
     devCheckForUpdates();
   }
@@ -112,7 +117,11 @@ export function initAutoUpdater(onStateChange?: () => void): void {
 
 export async function checkForUpdates(): Promise<void> {
   if (app.isPackaged) {
-    await autoUpdater.checkForUpdates();
+    try {
+      await autoUpdater.checkForUpdates();
+    } catch (err: unknown) {
+      slog.warn("Update check failed:", err instanceof Error ? err.message : err);
+    }
   } else {
     await devCheckForUpdates();
   }
