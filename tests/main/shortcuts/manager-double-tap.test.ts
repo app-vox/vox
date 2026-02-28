@@ -93,7 +93,7 @@ vi.mock("../../../src/main/input/paster", () => ({
 }));
 
 import { uIOhook } from "uiohook-napi";
-import { BrowserWindow, globalShortcut, ipcMain, Notification } from "electron";
+import { globalShortcut, ipcMain, Notification } from "electron";
 import { ShortcutManager, type ShortcutManagerDeps } from "../../../src/main/shortcuts/manager";
 import { RecordingState } from "../../../src/main/shortcuts/listener";
 
