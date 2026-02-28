@@ -698,7 +698,12 @@ export class ShortcutManager {
         this.doubleTapHoldKeycode = 0;
         this.doubleTapHoldActive = false;
         this.doubleTapHoldActivatedAt = 0;
-        holdOk = globalShortcut.register(config.shortcuts.hold, holdCb);
+        try {
+          holdOk = globalShortcut.register(config.shortcuts.hold, holdCb);
+        } catch (err: unknown) {
+          slog.error("Invalid hold shortcut accelerator: %s", config.shortcuts.hold, err);
+          holdOk = false;
+        }
       }
     } else {
       this.doubleTapHoldDetector = null;
@@ -718,7 +723,12 @@ export class ShortcutManager {
       } else {
         this.doubleTapToggleDetector = null;
         this.doubleTapToggleKeycode = 0;
-        toggleOk = globalShortcut.register(config.shortcuts.toggle, toggleCb);
+        try {
+          toggleOk = globalShortcut.register(config.shortcuts.toggle, toggleCb);
+        } catch (err: unknown) {
+          slog.error("Invalid toggle shortcut accelerator: %s", config.shortcuts.toggle, err);
+          toggleOk = false;
+        }
       }
     } else {
       this.doubleTapToggleDetector = null;
