@@ -1,5 +1,9 @@
 import { app, BrowserWindow } from "electron";
 import { autoUpdater, type UpdateInfo, type ProgressInfo } from "electron-updater";
+import { setUpdating } from "./update-state";
+import log from "./logger";
+
+const slog = log.scope("updater");
 
 export interface UpdateState {
   status: "idle" | "checking" | "available" | "downloading" | "ready" | "error";
@@ -122,8 +126,13 @@ export function getUpdateState(): UpdateState {
   return state;
 }
 
+export { isUpdating } from "./update-state";
+
 export function quitAndInstall(): void {
+  setUpdating(true);
+
   if (app.isPackaged) {
+    slog.info("quitAndInstall: delegating to autoUpdater");
     autoUpdater.quitAndInstall(false, true);
     return;
   }
