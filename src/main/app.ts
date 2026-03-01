@@ -6,7 +6,7 @@ import { ConfigManager } from "./config/manager";
 import { createSecretStore } from "./config/secrets";
 import { ModelManager } from "./models/manager";
 import { AudioRecorder } from "./audio/recorder";
-import { transcribe } from "./audio/whisper";
+import { transcribe, initWhisperServer, shutdownWhisperServer } from "./audio/whisper";
 import { createLlmProvider } from "./llm/factory";
 import { Pipeline } from "./pipeline";
 import { ShortcutManager } from "./shortcuts/manager";
@@ -186,6 +186,16 @@ function reloadConfig(): void {
   if (!busy) {
     setupPipeline();
   }
+
+  // Restart the whisper-server when the model changes (server auto-skips
+  // if the model is the same; on macOS this is a no-op).
+  const newModelPath = config.whisper.model
+    ? modelManager.getModelPath(config.whisper.model)
+    : "";
+  initWhisperServer(newModelPath).catch((err) => {
+    slog.error("Failed to restart whisper-server after config change", err);
+  });
+
   shortcutManager?.registerShortcutKeys();
   shortcutManager?.updateHud();
   updateTrayConfig(config);
@@ -281,6 +291,17 @@ app.whenReady().then(async () => {
   });
 
   setupPipeline();
+
+  // Start persistent whisper-server on non-macOS platforms to eliminate
+  // the cold-start model-loading overhead on each transcription.
+  {
+    const whisperModel = configManager.load().whisper.model;
+    const initialModelPath = whisperModel ? modelManager.getModelPath(whisperModel) : "";
+    initWhisperServer(initialModelPath).catch((err) => {
+      slog.error("Failed to start whisper-server at launch", err);
+    });
+  }
+
   historyManager.cleanup();
 
   // Clean up orphaned audio files
@@ -452,6 +473,7 @@ app.on("activate", () => {
 
 app.on("before-quit", () => {
   shortcutManager?.stop();
+  shutdownWhisperServer().catch(() => {});
   destroyTray();
   for (const win of BrowserWindow.getAllWindows()) {
     if (!win.isDestroyed()) win.destroy();
