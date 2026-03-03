@@ -130,6 +130,7 @@ export interface VoxConfig {
   shiftCapitalize: boolean;
   finishWithPeriod: boolean;
   onboardingCompleted: boolean;
+  audioRetentionCount: number;
 }
 
 export function createDefaultConfig(isProduction = false): VoxConfig {
@@ -175,6 +176,7 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     shiftCapitalize: true,
     finishWithPeriod: true,
     onboardingCompleted: false,
+    audioRetentionCount: 5,
   };
 }
 

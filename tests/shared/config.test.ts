@@ -57,6 +57,11 @@ describe("VoxConfig", () => {
     const config = createDefaultConfig();
     expect(config.speechLanguages).toEqual([]);
   });
+
+  it("should have audioRetentionCount default of 5", () => {
+    const config = createDefaultConfig();
+    expect(config.audioRetentionCount).toBe(5);
+  });
 });
 
 describe("createDefaultLlmFlat", () => {

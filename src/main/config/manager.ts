@@ -111,6 +111,7 @@ export class ConfigManager {
           shiftCapitalize: saved.shiftCapitalize ?? defaults.shiftCapitalize,
           finishWithPeriod: saved.finishWithPeriod ?? defaults.finishWithPeriod,
           onboardingCompleted: saved.onboardingCompleted ?? true,
+          audioRetentionCount: saved.audioRetentionCount ?? defaults.audioRetentionCount,
         };
       } catch {
         config = defaults;
