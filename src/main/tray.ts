@@ -1,9 +1,13 @@
 import { app, Tray, Menu, nativeImage, shell } from "electron";
+import { existsSync } from "fs";
 import { getResourcePath } from "./resources";
 import { type VoxConfig } from "../shared/config";
 import { getUpdateState, quitAndInstall } from "./updater";
 import { t } from "../shared/i18n";
 import { getLlmModelName } from "../shared/llm-utils";
+import log from "./logger";
+
+const slog = log.scope("tray");
 
 let tray: Tray | null = null;
 
@@ -83,11 +87,18 @@ export function setupTray(trayCallbacks: TrayCallbacks): void {
   callbacks = trayCallbacks;
 
   const iconPath = getResourcePath("trayIcon.png");
+  if (!existsSync(iconPath)) {
+    slog.error("Tray icon not found at", iconPath);
+  }
   let icon = nativeImage.createFromPath(iconPath);
+  if (icon.isEmpty()) {
+    slog.error("Tray icon image is empty, tray will not be visible");
+  }
   // Resize to 18x18 to provide better vertical alignment in macOS menu bar
   icon = icon.resize({ width: 18, height: 18 });
   icon.setTemplateImage(true);
   tray = new Tray(icon);
+  slog.info("System tray created");
 
   updateTrayMenu();
 }
@@ -109,6 +120,13 @@ export function updateTrayConfig(config: VoxConfig): void {
 
 export function getTrayState() {
   return { isListening, hasModel, trayActive: tray !== null };
+}
+
+export function destroyTray(): void {
+  if (tray && !tray.isDestroyed()) {
+    tray.destroy();
+    tray = null;
+  }
 }
 
 export function updateTrayMenu(): void {

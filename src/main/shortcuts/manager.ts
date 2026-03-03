@@ -11,7 +11,7 @@ import { HudWindow } from "../hud";
 import { setTrayListeningState, updateTrayConfig } from "../tray";
 import { t } from "../../shared/i18n";
 import { generateCueSamples, isWavCue, getWavFilename, parseWavSamples } from "../../shared/audio-cue";
-import type { AudioCueType } from "../../shared/config";
+import { type AudioCueType, createDefaultConfig } from "../../shared/config";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { app } from "electron";
@@ -698,7 +698,12 @@ export class ShortcutManager {
         this.doubleTapHoldKeycode = 0;
         this.doubleTapHoldActive = false;
         this.doubleTapHoldActivatedAt = 0;
-        holdOk = globalShortcut.register(config.shortcuts.hold, holdCb);
+        try {
+          holdOk = globalShortcut.register(config.shortcuts.hold, holdCb);
+        } catch (err: unknown) {
+          slog.error("Invalid hold shortcut accelerator: %s", config.shortcuts.hold, err);
+          holdOk = false;
+        }
       }
     } else {
       this.doubleTapHoldDetector = null;
@@ -718,7 +723,12 @@ export class ShortcutManager {
       } else {
         this.doubleTapToggleDetector = null;
         this.doubleTapToggleKeycode = 0;
-        toggleOk = globalShortcut.register(config.shortcuts.toggle, toggleCb);
+        try {
+          toggleOk = globalShortcut.register(config.shortcuts.toggle, toggleCb);
+        } catch (err: unknown) {
+          slog.error("Invalid toggle shortcut accelerator: %s", config.shortcuts.toggle, err);
+          toggleOk = false;
+        }
       }
     } else {
       this.doubleTapToggleDetector = null;
@@ -727,6 +737,19 @@ export class ShortcutManager {
 
     if ((mode === "hold" || mode === "both") && !holdOk) slog.warn("Failed to register hold shortcut:", config.shortcuts.hold);
     if ((mode === "toggle" || mode === "both") && !toggleOk) slog.warn("Failed to register toggle shortcut:", config.shortcuts.toggle);
+
+    if (!holdOk || !toggleOk) {
+      const defaults = createDefaultConfig().shortcuts;
+      config.shortcuts = defaults;
+      this.deps.configManager.save(config);
+      for (const win of BrowserWindow.getAllWindows()) {
+        win.webContents.send("config:changed");
+      }
+      new Notification({
+        title: t("notification.shortcutReset.title"),
+        body: t("notification.shortcutReset.body"),
+      }).show();
+    }
 
     if (!isDoubleTap(config.shortcuts.hold)) {
       this.holdKeyCodes = (mode === "hold" || mode === "both") ? getHoldKeyCodes(config.shortcuts.hold) : new Set();

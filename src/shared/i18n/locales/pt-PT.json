@@ -257,6 +257,8 @@
   "notification.setupRequired.title": "Vox - Configuração Necessária",
   "notification.setupRequired.body": "Configure o modelo local nas Definições",
   "notification.setupRequired.indicator": "Configure o modelo local",
+  "notification.shortcutReset.title": "Vox - Atalhos Repostos",
+  "notification.shortcutReset.body": "Foi detetado um atalho inválido. Os atalhos foram repostos para os predefinidos. Pode reconfigurá-los nas Definições.",
   "notification.recordingFailed": "Falha na gravação: {error}",
   "notification.pasteFailed": "Falha ao colar automaticamente: {error}. O texto está na sua área de transferência.",
   "notification.copiedToClipboard": "{text}...Copiado — prima Cmd+V para colar.",

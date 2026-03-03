@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, Menu, nativeTheme, screen } from "electron
 import * as path from "path";
 import log from "electron-log/main";
 import { t } from "../../shared/i18n";
+import { isUpdating } from "../update-state";
 
 const slog = log.scope("Vox");
 
@@ -227,7 +228,7 @@ export function openHome(onClosed: () => void, initialTab?: string): void {
 
   if (isMac) {
     homeWindow.on("close", (event) => {
-      if (!forceQuit) {
+      if (!forceQuit && !isUpdating()) {
         event.preventDefault();
         homeWindow?.hide();
       }

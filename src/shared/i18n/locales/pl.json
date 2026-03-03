@@ -257,6 +257,8 @@
   "notification.setupRequired.title": "Vox - Wymagana konfiguracja",
   "notification.setupRequired.body": "Skonfiguruj lokalny model w Ustawieniach",
   "notification.setupRequired.indicator": "Skonfiguruj lokalny model",
+  "notification.shortcutReset.title": "Vox - Skróty zresetowane",
+  "notification.shortcutReset.body": "Wykryto nieprawidłowy skrót. Skróty zostały przywrócone do wartości domyślnych. Możesz je ponownie skonfigurować w Ustawieniach.",
   "notification.recordingFailed": "Nagrywanie nie powiodło się: {error}",
   "notification.pasteFailed": "Automatyczne wklejanie nie powiodło się: {error}. Tekst jest w schowku.",
   "notification.copiedToClipboard": "{text}...Skopiowano — naciśnij Cmd+V, aby wkleić.",

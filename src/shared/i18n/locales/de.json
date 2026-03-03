@@ -257,6 +257,8 @@
   "notification.setupRequired.title": "Vox - Einrichtung erforderlich",
   "notification.setupRequired.body": "Bitte konfigurieren Sie das lokale Modell in den Einstellungen",
   "notification.setupRequired.indicator": "Bitte konfigurieren Sie das lokale Modell",
+  "notification.shortcutReset.title": "Vox - Tastenkombinationen zurückgesetzt",
+  "notification.shortcutReset.body": "Eine ungültige Tastenkombination wurde erkannt. Die Tastenkombinationen wurden auf die Standardwerte zurückgesetzt. Sie können sie in den Einstellungen neu konfigurieren.",
   "notification.recordingFailed": "Aufnahme fehlgeschlagen: {error}",
   "notification.pasteFailed": "Automatisches Einfügen fehlgeschlagen: {error}. Der Text befindet sich in Ihrer Zwischenablage.",
   "notification.copiedToClipboard": "{text}...Kopiert — drücken Sie Cmd+V zum Einfügen.",

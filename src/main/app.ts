@@ -10,8 +10,9 @@ import { transcribe } from "./audio/whisper";
 import { createLlmProvider } from "./llm/factory";
 import { Pipeline } from "./pipeline";
 import { ShortcutManager } from "./shortcuts/manager";
-import { setupTray, setTrayModelState, updateTrayConfig, updateTrayMenu, getTrayState } from "./tray";
+import { setupTray, setTrayModelState, updateTrayConfig, updateTrayMenu, getTrayState, destroyTray } from "./tray";
 import { initAutoUpdater } from "./updater";
+import { isUpdating } from "./update-state";
 import { openHome, setAppMenuCallbacks, refreshAppMenu } from "./windows/home";
 import { registerIpcHandlers } from "./ipc";
 import { isAccessibilityGranted, applyCase, stripTrailingPeriod } from "./input/paster";
@@ -128,7 +129,7 @@ function reloadConfig(): void {
 }
 
 app.whenReady().then(async () => {
-  app.dock?.show();
+  await app.dock?.show();
 
   session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
     callback(permission === "media");
@@ -312,6 +313,8 @@ app.whenReady().then(async () => {
 
   shortcutManager.updateHud();
   openHome(reloadConfig);
+}).catch((err) => {
+  slog.error("Fatal error during app initialization", err);
 });
 
 app.on("activate", () => {
@@ -320,6 +323,7 @@ app.on("activate", () => {
 
 app.on("before-quit", () => {
   shortcutManager?.stop();
+  destroyTray();
   for (const win of BrowserWindow.getAllWindows()) {
     if (!win.isDestroyed()) win.destroy();
   }
@@ -327,6 +331,11 @@ app.on("before-quit", () => {
 
 let isQuitting = false;
 app.on("will-quit", (event) => {
+  // When electron-updater is performing quit-and-install, stay completely out
+  // of the way.  Its own will-quit handler must run uninterrupted to install
+  // the update and relaunch via Squirrel.Mac.
+  if (isUpdating()) return;
+
   if (!isQuitting) {
     isQuitting = true;
     event.preventDefault();

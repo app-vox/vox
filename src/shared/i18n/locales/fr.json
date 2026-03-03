@@ -257,6 +257,8 @@
   "notification.setupRequired.title": "Vox - Configuration requise",
   "notification.setupRequired.body": "Veuillez configurer le modèle local dans les Réglages",
   "notification.setupRequired.indicator": "Veuillez configurer le modèle local",
+  "notification.shortcutReset.title": "Vox - Raccourcis réinitialisés",
+  "notification.shortcutReset.body": "Un raccourci invalide a été détecté. Les raccourcis ont été réinitialisés aux valeurs par défaut. Vous pouvez les reconfigurer dans les Paramètres.",
   "notification.recordingFailed": "Échec de l'enregistrement : {error}",
   "notification.pasteFailed": "Échec du collage automatique : {error}. Le texte est dans votre presse-papiers.",
   "notification.copiedToClipboard": "{text}...Copié — appuyez sur Cmd+V pour coller.",

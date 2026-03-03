@@ -257,6 +257,8 @@
   "notification.setupRequired.title": "Vox - Configuración Necesaria",
   "notification.setupRequired.body": "Configure el modelo local en Ajustes",
   "notification.setupRequired.indicator": "Configure el modelo local",
+  "notification.shortcutReset.title": "Vox - Atajos Restablecidos",
+  "notification.shortcutReset.body": "Se detectó un atajo no válido. Los atajos se han restablecido a los valores predeterminados. Puedes reconfigurarlos en Ajustes.",
   "notification.recordingFailed": "Error en la grabación: {error}",
   "notification.pasteFailed": "Error al pegar automáticamente: {error}. El texto está en su portapapeles.",
   "notification.copiedToClipboard": "{text}...Copiado — presione Cmd+V para pegar.",

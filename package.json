@@ -1,11 +1,11 @@
 {
   "name": "vox",
-  "version": "0.12.0",
+  "version": "0.12.2",
   "description": "Open-source macOS voice-to-text with local Whisper transcription and LLM correction",
   "main": "out/main/index.js",
   "engines": {
     "node": "25.*.*",
-    "npm": "11.10.1"
+    "npm": "11.11.0"
   },
   "scripts": {
     "build": "electron-vite build",
@@ -69,7 +69,7 @@
   },
   "overrides": {
     "fast-xml-parser": "^5.3.6",
-    "minimatch": "10.2.3"
+    "minimatch": "10.2.4"
   },
   "build": {
     "npmRebuild": false,

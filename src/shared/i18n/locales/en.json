@@ -260,6 +260,8 @@
   "notification.setupRequired.title": "Vox - Setup Required",
   "notification.setupRequired.body": "Please configure local model in Settings",
   "notification.setupRequired.indicator": "Please configure local model",
+  "notification.shortcutReset.title": "Vox - Shortcuts Reset",
+  "notification.shortcutReset.body": "An invalid shortcut was detected. Shortcuts have been reset to defaults. You can reconfigure them in Settings.",
   "notification.recordingFailed": "Recording failed: {error}",
   "notification.pasteFailed": "Auto-paste failed: {error}. Text is on your clipboard.",
   "notification.copiedToClipboard": "{text}...Copied — press Cmd+V to paste.",

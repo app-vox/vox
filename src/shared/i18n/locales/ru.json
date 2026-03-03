@@ -257,6 +257,8 @@
   "notification.setupRequired.title": "Vox - Требуется настройка",
   "notification.setupRequired.body": "Настройте локальную модель в Настройках",
   "notification.setupRequired.indicator": "Настройте локальную модель",
+  "notification.shortcutReset.title": "Vox - Сочетания клавиш сброшены",
+  "notification.shortcutReset.body": "Обнаружено недопустимое сочетание клавиш. Сочетания клавиш были сброшены до значений по умолчанию. Вы можете перенастроить их в Настройках.",
   "notification.recordingFailed": "Ошибка записи: {error}",
   "notification.pasteFailed": "Ошибка автовставки: {error}. Текст скопирован в буфер обмена.",
   "notification.copiedToClipboard": "{text}...Скопировано — нажмите Cmd+V для вставки.",
