@@ -93,6 +93,7 @@ function setupPipeline(): void {
           llmEnhanced: config.enableLlmEnhancement,
           llmProvider: config.enableLlmEnhancement ? config.llm.provider : undefined,
           llmModel: config.enableLlmEnhancement ? getLlmModelName(config.llm) : undefined,
+          status: "success",
         });
         for (const win of BrowserWindow.getAllWindows()) {
           win.webContents.send("history:entry-added");

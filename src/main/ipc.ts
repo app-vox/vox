@@ -340,6 +340,7 @@ export function registerIpcHandlers(
     historyManager.add({
       ...entry,
       wordCount: entry.text.split(/\s+/).filter(Boolean).length,
+      status: "success",
     });
     for (const win of BrowserWindow.getAllWindows()) {
       win.webContents.send("history:entry-added");

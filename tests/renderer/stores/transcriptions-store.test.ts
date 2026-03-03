@@ -15,6 +15,7 @@ const fakeEntry = (id: string): TranscriptionEntry => ({
   audioDurationMs: 1000,
   whisperModel: "small",
   llmEnhanced: false,
+  status: "success",
 });
 
 beforeEach(() => {
