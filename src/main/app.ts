@@ -25,6 +25,8 @@ import { getLlmModelName } from "../shared/llm-utils";
 import { AnalyticsService } from "./analytics/service";
 import { setupAnalyticsErrorCapture } from "./logger";
 import log from "./logger";
+import { saveAudioFile, cleanupOrphanedAudioFiles } from "./audio/persistence";
+import * as crypto from "crypto";
 
 log.initialize();
 const slog = log.scope("Vox");
@@ -85,6 +87,23 @@ function setupPipeline(): void {
       try {
         const latestConfig = configManager.load();
         const finalText = applyCase(stripTrailingPeriod(result.text), latestConfig.lowercaseStart);
+
+        let audioFilePath: string | undefined;
+        if (latestConfig.audioRetentionCount > 0) {
+          try {
+            const entryId = crypto.randomUUID();
+            audioFilePath = saveAudioFile(
+              result.recording.audioBuffer,
+              result.recording.sampleRate,
+              entryId,
+            );
+          } catch (err) {
+            slog.warn("Failed to save audio file", err);
+          }
+        }
+
+        const status = result.llmFailed ? "llm_failed" as const : "success" as const;
+
         historyManager.add({
           ...result,
           text: finalText,
@@ -93,14 +112,60 @@ function setupPipeline(): void {
           llmEnhanced: config.enableLlmEnhancement,
           llmProvider: config.enableLlmEnhancement ? config.llm.provider : undefined,
           llmModel: config.enableLlmEnhancement ? getLlmModelName(config.llm) : undefined,
-          status: "success",
+          status,
+          audioFilePath,
+          errorMessage: result.errorMessage,
+          failedStep: result.llmFailed ? "llm" : undefined,
         });
+
+        historyManager.enforceAudioRetention(latestConfig.audioRetentionCount);
+
         for (const win of BrowserWindow.getAllWindows()) {
           win.webContents.send("history:entry-added");
           win.webContents.send("pipeline:result", finalText);
         }
       } catch (err) {
         slog.error("Failed to save transcription to history", err);
+      }
+    },
+    onFailure: (result) => {
+      try {
+        const latestConfig = configManager.load();
+
+        let audioFilePath: string | undefined;
+        if (latestConfig.audioRetentionCount > 0) {
+          try {
+            const entryId = crypto.randomUUID();
+            audioFilePath = saveAudioFile(
+              result.recording.audioBuffer,
+              result.recording.sampleRate,
+              entryId,
+            );
+          } catch (err) {
+            slog.warn("Failed to save audio file for failed transcription", err);
+          }
+        }
+
+        historyManager.add({
+          text: "",
+          originalText: "",
+          wordCount: 0,
+          audioDurationMs: result.audioDurationMs,
+          whisperModel: config.whisper.model || "unknown",
+          llmEnhanced: false,
+          status: "whisper_failed",
+          audioFilePath,
+          errorMessage: result.error.message,
+          failedStep: "whisper",
+        });
+
+        historyManager.enforceAudioRetention(latestConfig.audioRetentionCount);
+
+        for (const win of BrowserWindow.getAllWindows()) {
+          win.webContents.send("history:entry-added");
+        }
+      } catch (err) {
+        slog.error("Failed to save failed transcription to history", err);
       }
     },
   });
@@ -180,6 +245,15 @@ app.whenReady().then(async () => {
 
   setupPipeline();
   historyManager.cleanup();
+
+  // Clean up orphaned audio files
+  const allEntries = historyManager.get(0, 999999).entries;
+  const validIds = new Set(
+    allEntries
+      .filter((e) => e.audioFilePath)
+      .map((e) => e.id)
+  );
+  cleanupOrphanedAudioFiles(validIds);
 
   const hasAccessibility = isAccessibilityGranted();
   if (!hasAccessibility && initialConfig.onboardingCompleted) {
