@@ -14,6 +14,10 @@ import {
   ChevronRightIcon,
   ChevronsRightIcon,
   InfoCircleIcon,
+  PlayIcon,
+  DownloadIcon,
+  RefreshIcon,
+  AlertTriangleIcon,
 } from "../../../shared/icons";
 import { CustomSelect } from "../ui/CustomSelect";
 import card from "../shared/card.module.scss";
@@ -79,6 +83,82 @@ function CopyButton({ text, t }: { text: string; t: (key: string) => string }) {
   );
 }
 
+function AudioPlayer({ entryId }: { entryId: string }) {
+  const t = useT();
+  const [playing, setPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const togglePlay = useCallback(async () => {
+    if (playing && audioRef.current) {
+      audioRef.current.pause();
+      setPlaying(false);
+      return;
+    }
+
+    const audioPath = await window.voxApi.history.getAudioPath(entryId);
+    if (!audioPath) return;
+
+    if (!audioRef.current) {
+      audioRef.current = new Audio(`file://${audioPath}`);
+      audioRef.current.onended = () => setPlaying(false);
+    }
+    await audioRef.current.play();
+    setPlaying(true);
+  }, [entryId, playing]);
+
+  useEffect(() => {
+    return () => { audioRef.current?.pause(); };
+  }, []);
+
+  return (
+    <button
+      className={`${styles.audioButton} ${playing ? styles.audioButtonPlaying : ""}`}
+      onClick={togglePlay}
+      title={playing ? t("history.pause") : t("history.play")}
+    >
+      <PlayIcon width={14} height={14} />
+    </button>
+  );
+}
+
+function DownloadButton({ entryId }: { entryId: string }) {
+  const t = useT();
+  const [downloaded, setDownloaded] = useState(false);
+
+  const handleDownload = useCallback(async () => {
+    await window.voxApi.history.downloadAudio(entryId);
+    setDownloaded(true);
+    setTimeout(() => setDownloaded(false), 2000);
+  }, [entryId]);
+
+  return (
+    <button
+      className={styles.audioButton}
+      onClick={handleDownload}
+      title={downloaded ? t("history.downloaded") : t("history.download")}
+    >
+      {downloaded ? <CheckIcon width={14} height={14} /> : <DownloadIcon width={14} height={14} />}
+    </button>
+  );
+}
+
+function RetryButton({ entryId, retryEntry, retryingId }: { entryId: string; retryEntry: (id: string) => Promise<void>; retryingId: string | null }) {
+  const t = useT();
+  const isRetrying = retryingId === entryId;
+
+  return (
+    <button
+      className={styles.retryButton}
+      onClick={() => retryEntry(entryId)}
+      disabled={isRetrying || retryingId !== null}
+      title={t("history.retry")}
+    >
+      <RefreshIcon width={14} height={14} />
+      <span>{isRetrying ? t("history.retrying") : t("history.retry")}</span>
+    </button>
+  );
+}
+
 export function TranscriptionsPanel() {
   const t = useT();
   const config = useConfigStore((s) => s.config);
@@ -99,6 +179,8 @@ export function TranscriptionsPanel() {
   const deleteEntry = useTranscriptionsStore((s) => s.deleteEntry);
   const clearHistory = useTranscriptionsStore((s) => s.clearHistory);
   const reset = useTranscriptionsStore((s) => s.reset);
+  const retryEntry = useTranscriptionsStore((s) => s.retryEntry);
+  const retryingId = useTranscriptionsStore((s) => s.retryingId);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -217,32 +299,80 @@ export function TranscriptionsPanel() {
               {Array.from(groups.entries()).map(([dateLabel, groupEntries]) => (
                 <div key={dateLabel} className={styles.dateGroup}>
                   <div className={styles.dateHeader}>{dateLabel}</div>
-                  {groupEntries.map((entry) => (
-                    <div key={entry.id} className={styles.entry}>
-                      <div className={styles.entryContent}>
-                        <p className={styles.entryText}>{entry.text}</p>
-                        <div className={styles.entryMeta}>
-                          <span>{formatTime(entry.timestamp)}</span>
-                          <span>{t("history.words", { count: entry.wordCount })}</span>
-                          <span>{formatDuration(entry.audioDurationMs)}</span>
-                          <span>{entry.whisperModel}</span>
-                          {entry.llmEnhanced && entry.llmProvider && (
-                            <span className={styles.badge}>{entry.llmProvider}</span>
+                  {groupEntries.map((entry) => {
+                    const entryClass = [
+                      styles.entry,
+                      entry.status === "whisper_failed" ? styles.entryWhisperFailed : "",
+                      entry.status === "llm_failed" ? styles.entryLlmFailed : "",
+                    ].filter(Boolean).join(" ");
+
+                    return (
+                      <div key={entry.id} className={entryClass}>
+                        <div className={styles.entryContent}>
+                          {entry.status === "whisper_failed" ? (
+                            <>
+                              <p className={styles.errorText}>
+                                {t("history.status.whisperFailed")}
+                              </p>
+                              {entry.errorMessage && (
+                                <p className={styles.errorText}>{entry.errorMessage}</p>
+                              )}
+                            </>
+                          ) : (
+                            <p className={styles.entryText}>{entry.text}</p>
+                          )}
+                          <div className={styles.entryMeta}>
+                            <span>{formatTime(entry.timestamp)}</span>
+                            {entry.status !== "whisper_failed" && (
+                              <span>{t("history.words", { count: entry.wordCount })}</span>
+                            )}
+                            <span>{formatDuration(entry.audioDurationMs)}</span>
+                            <span>{entry.whisperModel}</span>
+                            {entry.llmEnhanced && entry.llmProvider && (
+                              <span className={styles.badge}>{entry.llmProvider}</span>
+                            )}
+                            {entry.status === "llm_failed" && (
+                              <span className={`${styles.statusBadge} ${styles.statusBadgeWarning}`}>
+                                <AlertTriangleIcon width={12} height={12} />
+                                {t("history.status.llmFailed")}
+                              </span>
+                            )}
+                            {entry.status === "whisper_failed" && (
+                              <span className={`${styles.statusBadge} ${styles.statusBadgeError}`}>
+                                <AlertTriangleIcon width={12} height={12} />
+                                {t("history.status.whisperFailed")}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className={styles.entryActions}>
+                          {entry.audioFilePath && (
+                            <div className={styles.audioActions}>
+                              <AudioPlayer entryId={entry.id} />
+                              <DownloadButton entryId={entry.id} />
+                            </div>
+                          )}
+                          {entry.status !== "success" && entry.audioFilePath && (
+                            <RetryButton
+                              entryId={entry.id}
+                              retryEntry={retryEntry}
+                              retryingId={retryingId}
+                            />
+                          )}
+                          <button
+                            className={styles.deleteButton}
+                            onClick={() => deleteEntry(entry.id)}
+                            title={t("history.deleteTranscription")}
+                          >
+                            <TrashAltIcon width={14} height={14} />
+                          </button>
+                          {entry.status !== "whisper_failed" && (
+                            <CopyButton text={entry.text} t={t} />
                           )}
                         </div>
                       </div>
-                      <div className={styles.entryActions}>
-                        <button
-                          className={styles.deleteButton}
-                          onClick={() => deleteEntry(entry.id)}
-                          title={t("history.deleteTranscription")}
-                        >
-                          <TrashAltIcon width={14} height={14} />
-                        </button>
-                        <CopyButton text={entry.text} t={t} />
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ))}
             </div>
