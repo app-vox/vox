@@ -108,7 +108,9 @@ export function initAutoUpdater(onStateChange?: () => void): void {
 
   if (app.isPackaged) {
     setupAutoUpdater();
-    autoUpdater.checkForUpdates();
+    autoUpdater.checkForUpdates().catch((err: Error) => {
+      slog.warn("Initial update check failed:", err.message);
+    });
   } else {
     devCheckForUpdates();
   }
@@ -116,7 +118,13 @@ export function initAutoUpdater(onStateChange?: () => void): void {
 
 export async function checkForUpdates(): Promise<void> {
   if (app.isPackaged) {
-    await autoUpdater.checkForUpdates();
+    try {
+      await autoUpdater.checkForUpdates();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      slog.warn("Update check failed:", message);
+      setState({ status: "error", error: message });
+    }
   } else {
     await devCheckForUpdates();
   }
