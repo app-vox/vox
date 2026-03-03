@@ -33,6 +33,14 @@ jobs:
         id: lint
         run: npm run lint
 
+      - name: Lint CSS
+        id: lint_css
+        run: npm run lint:css
+
+      - name: Check design tokens
+        id: check_tokens
+        run: npm run check:tokens
+
       - name: Test
         id: test
         run: npm run test:coverage
@@ -62,6 +70,8 @@ jobs:
           REPO: ${{ github.repository }}
           TYPECHECK_OUTCOME: ${{ steps.typecheck.outcome }}
           LINT_OUTCOME: ${{ steps.lint.outcome }}
+          LINT_CSS_OUTCOME: ${{ steps.lint_css.outcome }}
+          CHECK_TOKENS_OUTCOME: ${{ steps.check_tokens.outcome }}
           TEST_OUTCOME: ${{ steps.test.outcome }}
           BUILD_OUTCOME: ${{ steps.build.outcome }}
         run: .github/scripts/post-ci-summary.sh

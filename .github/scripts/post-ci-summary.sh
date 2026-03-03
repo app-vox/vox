@@ -3,7 +3,8 @@ set -euo pipefail
 
 # Posts (or updates) a CI summary comment on a pull request.
 # Required env vars: REPO, PR_NUMBER, RUN_NUMBER, RUN_URL,
-#   TYPECHECK_OUTCOME, LINT_OUTCOME, TEST_OUTCOME, BUILD_OUTCOME
+#   TYPECHECK_OUTCOME, LINT_OUTCOME, LINT_CSS_OUTCOME, CHECK_TOKENS_OUTCOME,
+#   TEST_OUTCOME, BUILD_OUTCOME
 
 status_icon() {
   case "$1" in
@@ -15,6 +16,8 @@ status_icon() {
 
 TYPECHECK=$(status_icon "$TYPECHECK_OUTCOME")
 LINT=$(status_icon "$LINT_OUTCOME")
+LINT_CSS=$(status_icon "$LINT_CSS_OUTCOME")
+CHECK_TOKENS=$(status_icon "$CHECK_TOKENS_OUTCOME")
 TEST=$(status_icon "$TEST_OUTCOME")
 BUILD=$(status_icon "$BUILD_OUTCOME")
 
@@ -27,6 +30,8 @@ BODY="${MARKER}
 |-------|--------|
 | Typecheck | ${TYPECHECK} |
 | Lint | ${LINT} |
+| Lint CSS | ${LINT_CSS} |
+| Design Tokens | ${CHECK_TOKENS} |
 | Test | ${TEST} |
 | Build | ${BUILD} |
 
