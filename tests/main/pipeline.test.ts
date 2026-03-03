@@ -359,6 +359,30 @@ describe("Pipeline", () => {
     }));
   });
 
+  it("should process from a saved audio via retryFromRecording", async () => {
+    const onComplete = vi.fn();
+
+    const pipeline = new Pipeline({
+      recorder: mockRecorder, // Not used for retry
+      transcribe: mockTranscribe,
+      llmProvider: mockProvider,
+      modelPath: "/models/ggml-small.bin",
+      onComplete,
+    });
+
+    const recording = {
+      audioBuffer: new Float32Array([0.1, 0.2]),
+      sampleRate: 16000,
+    };
+
+    const result = await pipeline.retryFromRecording(recording);
+
+    expect(mockTranscribe).toHaveBeenCalled();
+    expect(mockProvider.correct).toHaveBeenCalled();
+    expect(result).toBe("corrected text");
+    expect(onComplete).toHaveBeenCalled();
+  });
+
   it("should track llm_enhancement_failed when LLM errors", async () => {
     const failingProvider: LlmProvider = {
       correct: vi.fn().mockRejectedValue(new Error("LLM unavailable")),
