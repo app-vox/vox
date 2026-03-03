@@ -241,6 +241,21 @@ export class Pipeline {
     return this.processFromRecording(this.heldRecording!, gen);
   }
 
+  async retryFromRecording(recording: RecordingResult): Promise<string> {
+    if (!existsSync(this.deps.modelPath)) {
+      throw new NoModelError();
+    }
+    this.canceled = false;
+    this.cancelingStage = null;
+    this.heldRecording = recording;
+    this.heldTranscription = null;
+    this.currentStage = null;
+    this.generation++;
+    const gen = this.generation;
+
+    return this.processFromRecording(recording, gen);
+  }
+
   confirmCancel(): void {
     this.cancelingStage = null;
     this.heldRecording = null;
