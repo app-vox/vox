@@ -78,6 +78,7 @@ export function createVoxApiMock(): VoxAPI {
       retry: vi.fn().mockResolvedValue(undefined),
       downloadAudio: vi.fn().mockResolvedValue(""),
       getAudioPath: vi.fn().mockResolvedValue(null),
+      getAudioDataUrl: vi.fn().mockResolvedValue(null),
     },
     navigation: {
       onNavigateTab: vi.fn(),
