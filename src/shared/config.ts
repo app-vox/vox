@@ -129,6 +129,7 @@ export interface VoxConfig {
   lowercaseStart: boolean;
   shiftCapitalize: boolean;
   onboardingCompleted: boolean;
+  audioRetentionCount: number;
 }
 
 export function createDefaultConfig(isProduction = false): VoxConfig {
@@ -173,6 +174,7 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     lowercaseStart: false,
     shiftCapitalize: true,
     onboardingCompleted: false,
+    audioRetentionCount: 5,
   };
 }
 

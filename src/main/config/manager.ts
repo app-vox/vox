@@ -110,6 +110,7 @@ export class ConfigManager {
           lowercaseStart: saved.lowercaseStart ?? defaults.lowercaseStart,
           shiftCapitalize: saved.shiftCapitalize ?? defaults.shiftCapitalize,
           onboardingCompleted: saved.onboardingCompleted ?? true,
+          audioRetentionCount: saved.audioRetentionCount ?? defaults.audioRetentionCount,
         };
       } catch {
         config = defaults;
