@@ -1,5 +1,6 @@
 import Store from "electron-store";
 import type { TranscriptionEntry, PaginatedResult } from "../../shared/types";
+import { deleteAudioFile } from "../audio/persistence";
 
 const RETENTION_DAYS = 30;
 
@@ -44,6 +45,22 @@ export class HistoryManager {
     };
   }
 
+  getEntry(id: string): TranscriptionEntry | undefined {
+    return this.getAllEntries().find((e) => e.id === id);
+  }
+
+  updateEntry(
+    id: string,
+    updates: Partial<Omit<TranscriptionEntry, "id" | "timestamp">>,
+  ): TranscriptionEntry {
+    const entries = this.getAllEntries();
+    const index = entries.findIndex((e) => e.id === id);
+    if (index === -1) throw new Error(`Entry not found: ${id}`);
+    entries[index] = { ...entries[index], ...updates };
+    this.store.set("entries", entries);
+    return entries[index];
+  }
+
   search(query: string, offset: number, limit: number): PaginatedResult<TranscriptionEntry> {
     const lowerQuery = query.toLowerCase();
     const entries = this.getAllEntries();
@@ -60,10 +77,18 @@ export class HistoryManager {
 
   deleteEntry(id: string): void {
     const entries = this.getAllEntries();
+    const entry = entries.find((e) => e.id === id);
+    if (entry?.audioFilePath) {
+      deleteAudioFile(entry.audioFilePath);
+    }
     this.store.set("entries", entries.filter((e) => e.id !== id));
   }
 
   clear(): void {
+    const entries = this.getAllEntries();
+    for (const entry of entries) {
+      if (entry.audioFilePath) deleteAudioFile(entry.audioFilePath);
+    }
     this.store.set("entries", []);
   }
 
@@ -79,6 +104,14 @@ export class HistoryManager {
 
   private prune(entries: TranscriptionEntry[]): TranscriptionEntry[] {
     const cutoff = Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000;
-    return entries.filter((e) => new Date(e.timestamp).getTime() > cutoff);
+    const keep: TranscriptionEntry[] = [];
+    for (const e of entries) {
+      if (new Date(e.timestamp).getTime() > cutoff) {
+        keep.push(e);
+      } else if (e.audioFilePath) {
+        deleteAudioFile(e.audioFilePath);
+      }
+    }
+    return keep;
   }
 }
