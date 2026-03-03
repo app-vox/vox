@@ -256,3 +256,108 @@
     color: var(--color-danger, #ef4444);
   }
 }
+
+.entryWhisperFailed {
+  border-left: 3px solid var(--color-error);
+  padding-left: var(--spacing-3);
+}
+
+.entryLlmFailed {
+  border-left: 3px solid var(--color-warning);
+  padding-left: var(--spacing-3);
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: 0 var(--spacing-1);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-sm);
+}
+
+.statusBadgeError {
+  color: var(--color-error);
+  background: var(--color-error-bg-light);
+}
+
+.statusBadgeWarning {
+  color: var(--color-warning);
+  background: var(--color-warning-bg-light);
+}
+
+.audioActions {
+  display: flex;
+  gap: var(--spacing-1);
+  align-items: center;
+}
+
+.audioButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-1-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: var(--color-bg-root);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-default),
+              border-color var(--duration-fast) var(--ease-default);
+
+  &:hover {
+    border-color: var(--color-border-hover);
+    color: var(--color-text-primary);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+}
+
+.audioButtonPlaying {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.retryButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: var(--color-bg-root);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-default),
+              border-color var(--duration-fast) var(--ease-default);
+  gap: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-2);
+  font-size: var(--font-size-xs);
+
+  &:hover {
+    border-color: var(--color-border-hover);
+    color: var(--color-text-primary);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+}
+
+.errorText {
+  color: var(--color-error);
+  font-style: italic;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.audioUnavailable {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
