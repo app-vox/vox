@@ -39,6 +39,7 @@ describe("HistoryManager", () => {
         llmEnhanced: true,
         llmProvider: "foundry",
         llmModel: "gpt-4o",
+        status: "success",
       });
 
       expect(entry.id).toBe("test-uuid-1234");
@@ -47,8 +48,8 @@ describe("HistoryManager", () => {
     });
 
     it("should prepend new entries (newest first)", () => {
-      manager.add({ text: "First", originalText: "first", wordCount: 1, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false });
-      manager.add({ text: "Second", originalText: "second", wordCount: 1, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false });
+      manager.add({ text: "First", originalText: "first", wordCount: 1, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false, status: "success" });
+      manager.add({ text: "Second", originalText: "second", wordCount: 1, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false, status: "success" });
 
       const result = manager.get(0, 10);
       expect(result.entries[0].text).toBe("Second");
@@ -59,7 +60,7 @@ describe("HistoryManager", () => {
   describe("get", () => {
     it("should return paginated entries with total count", () => {
       for (let i = 0; i < 5; i++) {
-        manager.add({ text: `Entry ${i}`, originalText: `entry ${i}`, wordCount: 2, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false });
+        manager.add({ text: `Entry ${i}`, originalText: `entry ${i}`, wordCount: 2, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false, status: "success" });
       }
 
       const page1 = manager.get(0, 2);
@@ -80,9 +81,9 @@ describe("HistoryManager", () => {
 
   describe("search", () => {
     it("should filter entries by text content (case-insensitive)", () => {
-      manager.add({ text: "Meeting notes about React", originalText: "meeting notes about react", wordCount: 4, audioDurationMs: 2000, whisperModel: "small", llmEnhanced: false });
-      manager.add({ text: "Shopping list for groceries", originalText: "shopping list for groceries", wordCount: 4, audioDurationMs: 1500, whisperModel: "small", llmEnhanced: false });
-      manager.add({ text: "React component design", originalText: "react component design", wordCount: 3, audioDurationMs: 1800, whisperModel: "small", llmEnhanced: false });
+      manager.add({ text: "Meeting notes about React", originalText: "meeting notes about react", wordCount: 4, audioDurationMs: 2000, whisperModel: "small", llmEnhanced: false, status: "success" });
+      manager.add({ text: "Shopping list for groceries", originalText: "shopping list for groceries", wordCount: 4, audioDurationMs: 1500, whisperModel: "small", llmEnhanced: false, status: "success" });
+      manager.add({ text: "React component design", originalText: "react component design", wordCount: 3, audioDurationMs: 1800, whisperModel: "small", llmEnhanced: false, status: "success" });
 
       const result = manager.search("react", 0, 10);
       expect(result.entries).toHaveLength(2);
@@ -90,7 +91,7 @@ describe("HistoryManager", () => {
     });
 
     it("should search in originalText too", () => {
-      manager.add({ text: "Enhanced version", originalText: "original version with keyword", wordCount: 2, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: true });
+      manager.add({ text: "Enhanced version", originalText: "original version with keyword", wordCount: 2, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: true, status: "success" });
 
       const result = manager.search("keyword", 0, 10);
       expect(result.entries).toHaveLength(1);
@@ -98,7 +99,7 @@ describe("HistoryManager", () => {
 
     it("should return paginated search results", () => {
       for (let i = 0; i < 5; i++) {
-        manager.add({ text: `React tip ${i}`, originalText: `react tip ${i}`, wordCount: 3, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false });
+        manager.add({ text: `React tip ${i}`, originalText: `react tip ${i}`, wordCount: 3, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false, status: "success" });
       }
 
       const result = manager.search("react", 0, 2);
@@ -109,7 +110,7 @@ describe("HistoryManager", () => {
 
   describe("clear", () => {
     it("should remove all entries", () => {
-      manager.add({ text: "Entry", originalText: "entry", wordCount: 1, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false });
+      manager.add({ text: "Entry", originalText: "entry", wordCount: 1, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false, status: "success" });
       manager.clear();
 
       const result = manager.get(0, 10);
@@ -130,6 +131,7 @@ describe("HistoryManager", () => {
         audioDurationMs: 1000,
         whisperModel: "small",
         llmEnhanced: false,
+        status: "success",
       };
 
       // Access internal store to inject the old entry
@@ -137,7 +139,7 @@ describe("HistoryManager", () => {
       store.set("entries", [oldEntry]);
 
       // Adding a new entry should trigger cleanup
-      manager.add({ text: "New entry", originalText: "new entry", wordCount: 2, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false });
+      manager.add({ text: "New entry", originalText: "new entry", wordCount: 2, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false, status: "success" });
 
       const result = manager.get(0, 10);
       expect(result.entries).toHaveLength(1);
