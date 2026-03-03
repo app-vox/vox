@@ -354,6 +354,7 @@
   "history.pause": "Mettre en pause l'audio",
   "history.download": "Télécharger l'audio",
   "history.downloaded": "Téléchargé !",
+  "history.moreActions": "Plus d'actions",
   "history.audioRetention": "Rétention audio",
   "history.audioRetentionDesc": "Nombre d'enregistrements audio récents à conserver sur le disque",
   "history.audioRetentionDisabled": "Désactivé",

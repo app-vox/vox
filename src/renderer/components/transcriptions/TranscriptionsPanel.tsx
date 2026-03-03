@@ -15,9 +15,11 @@ import {
   ChevronsRightIcon,
   InfoCircleIcon,
   PlayIcon,
+  PauseIcon,
   DownloadIcon,
   RefreshIcon,
   AlertTriangleIcon,
+  EllipsisVerticalIcon,
 } from "../../../shared/icons";
 import { CustomSelect } from "../ui/CustomSelect";
 import card from "../shared/card.module.scss";
@@ -72,13 +74,12 @@ function CopyButton({ text, t }: { text: string; t: (key: string) => string }) {
   };
 
   return (
-    <button className={styles.copyButton} onClick={handleCopy} title={t("history.copyToClipboard")}>
+    <button className={styles.copyButton} onClick={handleCopy} title={copied ? t("history.copied") : t("history.copyToClipboard")}>
       {copied ? (
         <CheckIcon width={14} height={14} />
       ) : (
         <CopyIcon width={14} height={14} />
       )}
-      <span>{copied ? t("history.copied") : t("history.copy")}</span>
     </button>
   );
 }
@@ -95,11 +96,10 @@ function AudioPlayer({ entryId }: { entryId: string }) {
       return;
     }
 
-    const audioPath = await window.voxApi.history.getAudioPath(entryId);
-    if (!audioPath) return;
-
     if (!audioRef.current) {
-      audioRef.current = new Audio(`file://${audioPath}`);
+      const dataUrl = await window.voxApi.history.getAudioDataUrl(entryId);
+      if (!dataUrl) return;
+      audioRef.current = new Audio(dataUrl);
       audioRef.current.onended = () => setPlaying(false);
     }
     await audioRef.current.play();
@@ -116,46 +116,63 @@ function AudioPlayer({ entryId }: { entryId: string }) {
       onClick={togglePlay}
       title={playing ? t("history.pause") : t("history.play")}
     >
-      <PlayIcon width={14} height={14} />
+      {playing ? <PauseIcon width={14} height={14} /> : <PlayIcon width={14} height={14} />}
     </button>
   );
 }
 
-function DownloadButton({ entryId }: { entryId: string }) {
+function OverflowMenu({
+  entry,
+  retryEntry,
+  retryingId,
+  deleteEntry,
+}: {
+  entry: TranscriptionEntry;
+  retryEntry: (id: string) => Promise<void>;
+  retryingId: string | null;
+  deleteEntry: (id: string) => void;
+}) {
   const t = useT();
-  const [downloaded, setDownloaded] = useState(false);
-
-  const handleDownload = useCallback(async () => {
-    await window.voxApi.history.downloadAudio(entryId);
-    setDownloaded(true);
-    setTimeout(() => setDownloaded(false), 2000);
-  }, [entryId]);
+  const isRetrying = retryingId === entry.id;
 
   return (
-    <button
-      className={styles.audioButton}
-      onClick={handleDownload}
-      title={downloaded ? t("history.downloaded") : t("history.download")}
-    >
-      {downloaded ? <CheckIcon width={14} height={14} /> : <DownloadIcon width={14} height={14} />}
-    </button>
-  );
-}
-
-function RetryButton({ entryId, retryEntry, retryingId }: { entryId: string; retryEntry: (id: string) => Promise<void>; retryingId: string | null }) {
-  const t = useT();
-  const isRetrying = retryingId === entryId;
-
-  return (
-    <button
-      className={styles.retryButton}
-      onClick={() => retryEntry(entryId)}
-      disabled={isRetrying || retryingId !== null}
-      title={t("history.retry")}
-    >
-      <RefreshIcon width={14} height={14} />
-      <span>{isRetrying ? t("history.retrying") : t("history.retry")}</span>
-    </button>
+    <div className={styles.overflowMenu}>
+      <button
+        className={styles.overflowTrigger}
+      >
+        <EllipsisVerticalIcon width={14} height={14} />
+      </button>
+      <div className={styles.overflowDropdown}>
+        <div className={styles.overflowDropdownInner}>
+          {entry.audioFilePath && (
+            <button
+              className={styles.overflowItem}
+              onClick={() => retryEntry(entry.id)}
+              disabled={isRetrying || retryingId !== null}
+            >
+              <RefreshIcon width={14} height={14} />
+              <span>{isRetrying ? t("history.retrying") : t("history.retry")}</span>
+            </button>
+          )}
+          {entry.audioFilePath && (
+            <button
+              className={styles.overflowItem}
+              onClick={() => window.voxApi.history.downloadAudio(entry.id)}
+            >
+              <DownloadIcon width={14} height={14} />
+              <span>{t("history.download")}</span>
+            </button>
+          )}
+          <button
+            className={`${styles.overflowItem} ${styles.overflowItemDanger}`}
+            onClick={() => deleteEntry(entry.id)}
+          >
+            <TrashAltIcon width={14} height={14} />
+            <span>{t("history.deleteTranscription")}</span>
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -178,7 +195,6 @@ export function TranscriptionsPanel() {
   const search = useTranscriptionsStore((s) => s.search);
   const deleteEntry = useTranscriptionsStore((s) => s.deleteEntry);
   const clearHistory = useTranscriptionsStore((s) => s.clearHistory);
-  const reset = useTranscriptionsStore((s) => s.reset);
   const retryEntry = useTranscriptionsStore((s) => s.retryEntry);
   const retryingId = useTranscriptionsStore((s) => s.retryingId);
 
@@ -193,16 +209,14 @@ export function TranscriptionsPanel() {
   }, []);
 
   useEffect(() => {
-    reset();
     fetchPage();
-  }, [reset, fetchPage]);
+  }, [fetchPage]);
 
   useEffect(() => {
     window.voxApi.history.onEntryAdded(() => {
-      reset();
       fetchPage();
     });
-  }, [reset, fetchPage]);
+  }, [fetchPage]);
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -344,6 +358,7 @@ export function TranscriptionsPanel() {
                       styles.entry,
                       entry.status === "whisper_failed" ? styles.entryWhisperFailed : "",
                       entry.status === "llm_failed" ? styles.entryLlmFailed : "",
+                      retryingId === entry.id ? styles.entryRetrying : "",
                     ].filter(Boolean).join(" ");
 
                     return (
@@ -387,28 +402,17 @@ export function TranscriptionsPanel() {
                         </div>
                         <div className={styles.entryActions}>
                           {entry.audioFilePath && (
-                            <div className={styles.audioActions}>
-                              <AudioPlayer entryId={entry.id} />
-                              <DownloadButton entryId={entry.id} />
-                            </div>
+                            <AudioPlayer entryId={entry.id} />
                           )}
-                          {entry.status !== "success" && entry.audioFilePath && (
-                            <RetryButton
-                              entryId={entry.id}
-                              retryEntry={retryEntry}
-                              retryingId={retryingId}
-                            />
-                          )}
-                          <button
-                            className={styles.deleteButton}
-                            onClick={() => deleteEntry(entry.id)}
-                            title={t("history.deleteTranscription")}
-                          >
-                            <TrashAltIcon width={14} height={14} />
-                          </button>
                           {entry.status !== "whisper_failed" && (
                             <CopyButton text={entry.text} t={t} />
                           )}
+                          <OverflowMenu
+                            entry={entry}
+                            retryEntry={retryEntry}
+                            retryingId={retryingId}
+                            deleteEntry={deleteEntry}
+                          />
                         </div>
                       </div>
                     );

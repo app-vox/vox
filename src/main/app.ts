@@ -26,7 +26,6 @@ import { AnalyticsService } from "./analytics/service";
 import { setupAnalyticsErrorCapture } from "./logger";
 import log from "./logger";
 import { saveAudioFile, cleanupOrphanedAudioFiles } from "./audio/persistence";
-import * as crypto from "crypto";
 
 log.initialize();
 const slog = log.scope("Vox");
@@ -89,22 +88,9 @@ function setupPipeline(): void {
         const stripped = latestConfig.finishWithPeriod ? result.text : stripTrailingPeriod(result.text);
         const finalText = applyCase(stripped, latestConfig.lowercaseStart);
 
-        let audioFilePath: string | undefined;
-        if (latestConfig.audioRetentionCount > 0) {
-          try {
-            const entryId = crypto.randomUUID();
-            audioFilePath = saveAudioFile(
-              result.recording.audioBuffer,
-              result.recording.sampleRate,
-              entryId,
-            );
-          } catch (err) {
-            slog.warn("Failed to save audio file", err);
-          }
-        }
-
         const status = result.llmFailed ? "llm_failed" as const : "success" as const;
-        historyManager.add({
+
+        const entry = historyManager.add({
           ...result,
           text: finalText,
           wordCount: finalText.split(/\s+/).filter(Boolean).length,
@@ -113,10 +99,22 @@ function setupPipeline(): void {
           llmProvider: config.enableLlmEnhancement ? config.llm.provider : undefined,
           llmModel: config.enableLlmEnhancement ? getLlmModelName(config.llm) : undefined,
           status,
-          audioFilePath,
           errorMessage: result.errorMessage,
           failedStep: result.llmFailed ? "llm" : undefined,
         });
+
+        if (latestConfig.audioRetentionCount > 0) {
+          try {
+            const audioFilePath = saveAudioFile(
+              result.recording.audioBuffer,
+              result.recording.sampleRate,
+              entry.id,
+            );
+            historyManager.updateEntry(entry.id, { audioFilePath });
+          } catch (err) {
+            slog.warn("Failed to save audio file", err);
+          }
+        }
 
         historyManager.enforceAudioRetention(latestConfig.audioRetentionCount);
 
@@ -132,21 +130,7 @@ function setupPipeline(): void {
       try {
         const latestConfig = configManager.load();
 
-        let audioFilePath: string | undefined;
-        if (latestConfig.audioRetentionCount > 0) {
-          try {
-            const entryId = crypto.randomUUID();
-            audioFilePath = saveAudioFile(
-              result.recording.audioBuffer,
-              result.recording.sampleRate,
-              entryId,
-            );
-          } catch (err) {
-            slog.warn("Failed to save audio file for failed transcription", err);
-          }
-        }
-
-        historyManager.add({
+        const entry = historyManager.add({
           text: "",
           originalText: "",
           wordCount: 0,
@@ -154,10 +138,22 @@ function setupPipeline(): void {
           whisperModel: config.whisper.model || "unknown",
           llmEnhanced: false,
           status: "whisper_failed",
-          audioFilePath,
           errorMessage: result.error.message,
           failedStep: "whisper",
         });
+
+        if (latestConfig.audioRetentionCount > 0) {
+          try {
+            const audioFilePath = saveAudioFile(
+              result.recording.audioBuffer,
+              result.recording.sampleRate,
+              entry.id,
+            );
+            historyManager.updateEntry(entry.id, { audioFilePath });
+          } catch (err) {
+            slog.warn("Failed to save audio file for failed transcription", err);
+          }
+        }
 
         historyManager.enforceAudioRetention(latestConfig.audioRetentionCount);
 

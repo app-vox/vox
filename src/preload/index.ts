@@ -110,6 +110,7 @@ export interface VoxAPI {
     retry(entryId: string): Promise<import("../shared/types").TranscriptionEntry>;
     downloadAudio(entryId: string): Promise<string>;
     getAudioPath(entryId: string): Promise<string | null>;
+    getAudioDataUrl(entryId: string): Promise<string | null>;
   };
   navigation: {
     onNavigateTab(callback: (tab: string) => void): void;
@@ -258,6 +259,7 @@ const voxApi: VoxAPI = {
     retry: (entryId) => ipcRenderer.invoke("history:retry", entryId),
     downloadAudio: (entryId) => ipcRenderer.invoke("history:download-audio", entryId),
     getAudioPath: (entryId) => ipcRenderer.invoke("history:get-audio-path", entryId),
+    getAudioDataUrl: (entryId) => ipcRenderer.invoke("history:get-audio-data-url", entryId),
   },
   navigation: {
     onNavigateTab: (callback) => {

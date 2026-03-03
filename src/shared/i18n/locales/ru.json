@@ -354,6 +354,7 @@
   "history.pause": "Пауза аудио",
   "history.download": "Скачать аудио",
   "history.downloaded": "Скачано!",
+  "history.moreActions": "Другие действия",
   "history.audioRetention": "Хранение аудио",
   "history.audioRetentionDesc": "Количество последних аудиозаписей для хранения на диске",
   "history.audioRetentionDisabled": "Отключено",

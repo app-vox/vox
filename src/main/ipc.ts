@@ -395,10 +395,6 @@ export function registerIpcHandlers(
         llmModel: config.enableLlmEnhancement ? getLlmModelName(config.llm) : undefined,
       });
 
-      for (const win of BrowserWindow.getAllWindows()) {
-        win.webContents.send("history:entry-added");
-      }
-
       return historyManager.getEntry(entryId);
     } catch (err) {
       historyManager.updateEntry(entryId, {
@@ -427,6 +423,15 @@ export function registerIpcHandlers(
       return null;
     }
     return entry.audioFilePath;
+  });
+
+  ipcMain.handle("history:get-audio-data-url", (_event, entryId: string) => {
+    const entry = historyManager.getEntry(entryId);
+    if (!entry?.audioFilePath || !fs.existsSync(entry.audioFilePath)) {
+      return null;
+    }
+    const buffer = fs.readFileSync(entry.audioFilePath);
+    return `data:audio/wav;base64,${buffer.toString("base64")}`;
   });
 
   ipcMain.handle("clipboard:write", (_event, text: string) => {

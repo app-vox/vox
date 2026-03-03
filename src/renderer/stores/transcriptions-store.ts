@@ -90,8 +90,10 @@ export const useTranscriptionsStore = create<TranscriptionsState>((set, get) => 
   retryEntry: async (id) => {
     set({ retryingId: id });
     try {
-      await window.voxApi.history.retry(id);
-      get().fetchPage();
+      const updated = await window.voxApi.history.retry(id);
+      set((state) => ({
+        entries: state.entries.map((e) => (e.id === id ? updated : e)),
+      }));
     } finally {
       set({ retryingId: null });
     }

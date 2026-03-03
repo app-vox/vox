@@ -153,16 +153,18 @@ describe("transcriptions-store", () => {
   });
 
   describe("retryEntry", () => {
-    it("calls IPC retry and re-fetches page", async () => {
-      const updated = fakeEntry("retried");
-      updated.status = "success";
+    it("calls IPC retry and updates entry in-place", async () => {
+      const original = fakeEntry("retried");
+      original.status = "whisper_failed";
+      const updated = { ...original, status: "success" as const, text: "retried text" };
       voxApi.history.retry = vi.fn().mockResolvedValue(updated);
-      voxApi.history.get = vi.fn().mockResolvedValue({ entries: [updated], total: 1 });
 
+      useTranscriptionsStore.setState({ entries: [original], total: 1 });
       await useTranscriptionsStore.getState().retryEntry("retried");
 
       expect(voxApi.history.retry).toHaveBeenCalledWith("retried");
-      await vi.waitFor(() => expect(voxApi.history.get).toHaveBeenCalled());
+      expect(useTranscriptionsStore.getState().entries[0].status).toBe("success");
+      expect(useTranscriptionsStore.getState().entries[0].text).toBe("retried text");
     });
 
     it("sets retryingId during retry and clears it after", async () => {

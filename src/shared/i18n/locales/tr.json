@@ -354,6 +354,7 @@
   "history.pause": "Sesi duraklat",
   "history.download": "Sesi indir",
   "history.downloaded": "İndirildi!",
+  "history.moreActions": "Diğer işlemler",
   "history.audioRetention": "Ses saklama",
   "history.audioRetentionDesc": "Diskte saklanacak son ses kaydı sayısı",
   "history.audioRetentionDisabled": "Devre dışı",
