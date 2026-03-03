@@ -266,6 +266,30 @@ export function TranscriptionsPanel() {
 
       <div className={card.card}>
         <div className={card.header}>
+          <h2>{t("history.audioRetention")}</h2>
+          <p className={card.description}>{t("history.audioRetentionDesc")}</p>
+        </div>
+        <div className={card.body}>
+          <CustomSelect
+            value={String(config?.audioRetentionCount ?? 5)}
+            items={[
+              { value: "0", label: t("history.audioRetentionDisabled") },
+              { value: "3", label: "3" },
+              { value: "5", label: "5" },
+              { value: "10", label: "10" },
+              { value: "20", label: "20" },
+            ]}
+            onChange={async (value) => {
+              updateConfig({ audioRetentionCount: Number(value) });
+              await saveConfig(false);
+              triggerToast();
+            }}
+          />
+        </div>
+      </div>
+
+      <div className={card.card}>
+        <div className={card.header}>
           <h2>{t("history.title")}</h2>
           <p className={card.description}>
             {total > 0 ? (total === 1 ? t("history.oneStored") : t("history.countStored", { count: total })) : t("history.emptyState")}
