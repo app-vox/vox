@@ -8,38 +8,42 @@
   align-items: center;
   justify-content: center;
   background: var(--color-bg-root);
-  animation: overlayExpand 400ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation: overlay-expand 400ms cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
 .overlayClosing {
-  animation: overlayCollapse 500ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: overlay-collapse 500ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
   pointer-events: none;
 }
 
-@keyframes overlayExpand {
+@keyframes overlay-expand {
   0% {
     opacity: 0;
     clip-path: circle(0% at 85% 12%);
   }
+
   30% {
     opacity: 1;
     clip-path: circle(8% at 85% 12%);
   }
+
   100% {
     opacity: 1;
     clip-path: circle(150% at 50% 50%);
   }
 }
 
-@keyframes overlayCollapse {
+@keyframes overlay-collapse {
   0% {
     opacity: 1;
     clip-path: circle(150% at 50% 50%);
   }
+
   70% {
     opacity: 1;
     clip-path: circle(8% at 85% 12%);
   }
+
   100% {
     opacity: 0;
     clip-path: circle(0% at 85% 12%);
@@ -125,7 +129,7 @@
 /* ---- Typography ---- */
 
 .title {
-  font-size: 24px;
+  font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-semibold);
   letter-spacing: -0.02em;
   color: var(--color-text-primary);
@@ -271,7 +275,7 @@
   font-weight: var(--font-weight-semibold);
   color: var(--color-accent);
   background: color-mix(in srgb, var(--color-accent) 12%, transparent);
-  padding: 1px 6px;
+  padding: 1px var(--spacing-1-5);
   border-radius: var(--radius-full);
 }
 
@@ -321,9 +325,9 @@
   border: none;
   color: var(--color-text-tertiary);
   cursor: pointer;
-  font-size: 16px;
+  font-size: var(--font-size-xl);
   line-height: 1;
-  padding: 0 2px;
+  padding: 0 var(--spacing-half);
 
   &:hover {
     color: var(--color-error);
@@ -603,25 +607,42 @@
   background: var(--color-accent);
   color: white;
   box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent) 30%, transparent);
-  animation: hudFloat 3s ease-in-out infinite;
+  animation: hud-float 3s ease-in-out infinite;
 }
 
 .hudPreviewCursor {
   position: absolute;
   right: 16px;
   bottom: 12px;
-  animation: cursorApproach 3s ease-in-out infinite;
+  animation: cursor-approach 3s ease-in-out infinite;
 }
 
-@keyframes hudFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+@keyframes hud-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
 }
 
-@keyframes cursorApproach {
-  0% { transform: translate(12px, 8px); opacity: 0.4; }
-  50% { transform: translate(0, 0); opacity: 1; }
-  100% { transform: translate(12px, 8px); opacity: 0.4; }
+@keyframes cursor-approach {
+  0% {
+    transform: translate(12px, 8px);
+    opacity: 0.4;
+  }
+
+  50% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(12px, 8px);
+    opacity: 0.4;
+  }
 }
 
 .hudButtonRow {

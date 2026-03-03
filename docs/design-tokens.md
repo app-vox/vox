@@ -31,7 +31,14 @@ For pull requests and future development, reference this document to use existin
 - `--color-btn-primary-text` - Primary button text
 - `--color-success` - Success state (green)
 - `--color-error` - Error state (red)
+- `--color-error-hover` - Error hover state (darker red)
+- `--color-error-active` - Error active/pressed state (darkest red)
 - `--color-warning` - Warning state (amber)
+- `--color-dev-accent` - Dev panel accent (violet)
+- `--color-status-yellow` - Status dot yellow (#eab308)
+- `--color-status-gray` - Status dot gray (#6b7280)
+- `--color-badge-neutral` - Neutral badge text
+- `--color-badge-neutral-bg` - Neutral badge background
 
 ### Opacity Variants
 - `--color-success-bg-light` - Success background (10% opacity)
@@ -63,11 +70,14 @@ Micro spacing:
 ## Typography Tokens
 
 ### Font Sizes
+- `--font-size-2xs` - 10px
 - `--font-size-xs` - 11px
 - `--font-size-sm` - 12px
 - `--font-size-base` - 13px
 - `--font-size-md` - 14px
 - `--font-size-lg` - 15px
+- `--font-size-xl` - 16px
+- `--font-size-2xl` - 24px
 
 ### Font Weights
 - `--font-weight-normal` - 400

@@ -18,7 +18,14 @@
   --color-success: #22c55e;
   --color-checkmark: #6366f1;
   --color-error: #ef4444;
+  --color-error-hover: #dc2626;
+  --color-error-active: #b91c1c;
   --color-warning: #f59e0b;
+  --color-dev-accent: #8b5cf6;
+  --color-status-yellow: #eab308;
+  --color-status-gray: #6b7280;
+  --color-badge-neutral: #9ca3af;
+  --color-badge-neutral-bg: #374151;
 
   /* Spacing scale */
   --spacing-0: 0;
@@ -37,11 +44,14 @@
   --spacing-2-5: 10px;
 
   /* Typography scale */
+  --font-size-2xs: 10px;
   --font-size-xs: 11px;
   --font-size-sm: 12px;
   --font-size-base: 13px;
   --font-size-md: 14px;
   --font-size-lg: 15px;
+  --font-size-xl: 16px;
+  --font-size-2xl: 24px;
 
   /* Font weights */
   --font-weight-normal: 400;
@@ -114,7 +124,14 @@
   --color-success: #22c55e;
   --color-checkmark: #6366f1;
   --color-error: #ef4444;
+  --color-error-hover: #dc2626;
+  --color-error-active: #b91c1c;
   --color-warning: #f59e0b;
+  --color-dev-accent: #8b5cf6;
+  --color-status-yellow: #eab308;
+  --color-status-gray: #6b7280;
+  --color-badge-neutral: #9ca3af;
+  --color-badge-neutral-bg: #374151;
 
   /* Spacing scale duplicates for tree-shaking workaround */
   --spacing-0: 0;
@@ -131,11 +148,14 @@
   --spacing-2-5: 10px;
 
   /* Typography duplicates */
+  --font-size-2xs: 10px;
   --font-size-xs: 11px;
   --font-size-sm: 12px;
   --font-size-base: 13px;
   --font-size-md: 14px;
   --font-size-lg: 15px;
+  --font-size-xl: 16px;
+  --font-size-2xl: 24px;
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
@@ -162,7 +182,6 @@
 
   /* Shadow and animation duplicates */
   --shadow-toast: 0 4px 12px rgb(0 0 0 / 30%);
-  --color-checkmark: #6366f1;
   --duration-fast: 150ms;
   --duration-base: 200ms;
   --duration-slow: 300ms;
@@ -202,7 +221,14 @@
   --color-success: #16a34a;
   --color-checkmark: #4f46e5;
   --color-error: #dc2626;
+  --color-error-hover: #dc2626;
+  --color-error-active: #b91c1c;
   --color-warning: #d97706;
+  --color-dev-accent: #8b5cf6;
+  --color-status-yellow: #eab308;
+  --color-status-gray: #6b7280;
+  --color-badge-neutral: #6b7280;
+  --color-badge-neutral-bg: #f3f4f6;
 
   /* Color opacity variants - light theme (same values work) */
   --color-success-bg-light: rgb(34 197 94 / 10%);
@@ -269,10 +295,22 @@ input[type="text"] {
   user-select: text;
   -webkit-user-select: text;
 
-  &:hover { border-color: var(--color-border-hover); }
-  &:focus { border-color: var(--color-border-focus); }
-  &[readonly] { color: var(--color-text-secondary); cursor: default; }
-  &::placeholder { color: var(--color-text-muted); }
+  &:hover {
+    border-color: var(--color-border-hover);
+  }
+
+  &:focus {
+    border-color: var(--color-border-focus);
+  }
+
+  &[readonly] {
+    color: var(--color-text-secondary);
+    cursor: default;
+  }
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
 }
 
 /* ---- Select ---- */
@@ -290,15 +328,19 @@ select {
   transition: border-color 150ms ease;
   outline: none;
   appearance: none;
-  appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   padding-right: 32px;
   cursor: pointer;
 
-  &:hover { border-color: var(--color-border-hover); }
-  &:focus { border-color: var(--color-border-focus); }
+  &:hover {
+    border-color: var(--color-border-hover);
+  }
+
+  &:focus {
+    border-color: var(--color-border-focus);
+  }
 }
 
 /* ---- Content area ---- */
@@ -308,10 +350,22 @@ select {
   overflow-y: scroll;
   padding: 24px;
 
-  &::-webkit-scrollbar { width: 6px; }
-  &::-webkit-scrollbar-track { background: var(--color-bg-hover); }
-  &::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
-  &::-webkit-scrollbar-thumb:hover { background: var(--color-border-hover); }
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--color-bg-hover);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--color-border-hover);
+  }
 }
 
 /* ---- Animations ---- */
