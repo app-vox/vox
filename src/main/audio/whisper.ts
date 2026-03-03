@@ -86,9 +86,9 @@ function parseWhisperOutput(output: string): string {
 
 // Scale audio so peak amplitude reaches the target, preventing Whisper
 // hallucinations on quiet input. Skips silence-only buffers.
-const NORM_TARGET = 0.89; // ≈ -1 dB
+export const NORM_TARGET = 0.89; // ≈ -1 dB
 
-function normalizeAudio(samples: Float32Array): Float32Array {
+export function normalizeAudio(samples: Float32Array): Float32Array {
   let peak = 0;
   for (let i = 0; i < samples.length; i++) {
     const abs = Math.abs(samples[i]);
@@ -105,7 +105,7 @@ function normalizeAudio(samples: Float32Array): Float32Array {
   return out;
 }
 
-function encodeWav(samples: Float32Array, sampleRate: number): Buffer {
+export function encodeWav(samples: Float32Array, sampleRate: number): Buffer {
   const numChannels = 1;
   const bitsPerSample = 16;
   const byteRate = sampleRate * numChannels * (bitsPerSample / 8);
