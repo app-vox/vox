@@ -98,6 +98,24 @@ export class HistoryManager {
     this.store.set("entries", pruned);
   }
 
+  enforceAudioRetention(limit: number): void {
+    const entries = this.getAllEntries();
+    const withAudio = entries.filter((e) => e.audioFilePath);
+
+    if (withAudio.length <= limit) return;
+
+    // Entries are sorted newest-first. Remove audio from oldest beyond limit.
+    const toRemove = withAudio.slice(limit);
+    for (const entry of toRemove) {
+      if (entry.audioFilePath) {
+        deleteAudioFile(entry.audioFilePath);
+      }
+      entry.audioFilePath = undefined;
+    }
+
+    this.store.set("entries", entries);
+  }
+
   private getAllEntries(): TranscriptionEntry[] {
     return this.store.get("entries", []);
   }

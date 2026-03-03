@@ -227,4 +227,48 @@ describe("HistoryManager", () => {
       expect(deleteAudioFile).toHaveBeenCalledWith("/mock/audio/e2.wav");
     });
   });
+
+  describe("enforceAudioRetention", () => {
+    it("should remove audioFilePath from oldest entries beyond retention limit", () => {
+      for (let i = 0; i < 3; i++) {
+        manager.add({
+          text: `Entry ${i}`, originalText: `entry ${i}`, wordCount: 2,
+          audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false,
+          status: "success", audioFilePath: `/mock/audio/entry-${i}.wav`,
+        });
+      }
+
+      manager.enforceAudioRetention(2);
+
+      const result = manager.get(0, 10);
+      const withAudio = result.entries.filter((e) => e.audioFilePath);
+      expect(withAudio).toHaveLength(2);
+    });
+
+    it("should do nothing when count is within limit", () => {
+      manager.add({
+        text: "Entry", originalText: "entry", wordCount: 1,
+        audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false,
+        status: "success", audioFilePath: "/mock/audio/entry.wav",
+      });
+
+      manager.enforceAudioRetention(5);
+
+      const result = manager.get(0, 10);
+      expect(result.entries[0].audioFilePath).toBeDefined();
+    });
+
+    it("should remove all audio when limit is 0", () => {
+      manager.add({
+        text: "Entry", originalText: "entry", wordCount: 1,
+        audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false,
+        status: "success", audioFilePath: "/mock/audio/entry.wav",
+      });
+
+      manager.enforceAudioRetention(0);
+
+      const result = manager.get(0, 10);
+      expect(result.entries[0].audioFilePath).toBeUndefined();
+    });
+  });
 });
