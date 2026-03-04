@@ -112,4 +112,6 @@ Pipeline tests (`npm run test:pipeline`) are **not** part of the standard valida
 
 ## Issue Tracking
 
-Business, strategy, and roadmap issues are tracked privately. This repo is for bugs, features, and technical work only. Never reference or link to the internal tracking repo in any public context.
+Bugs, feature requests, and technical work are tracked as GitHub Issues in **this repo**. When creating issues, always add them to the organization's public project board (the one linked to `app-vox/vox`).
+
+Business, strategy, and roadmap issues are tracked in a private internal repository. Never reference or link to it in any public context (issues, PRs, commits, code comments, or docs).
