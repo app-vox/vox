@@ -390,7 +390,7 @@ export class ShortcutManager {
       } else {
         slog.info("Undo succeeded, pasting text");
         const config = this.deps.configManager.load();
-        const pasted = pasteText(trimmedText, config.copyToClipboard);
+        const pasted = pasteText(trimmedText, config.copyToClipboard, { finishWithPeriod: config.finishWithPeriod });
 
         if (!pasted) {
           slog.info("Text not inserted — showing HUD warning");
@@ -1081,7 +1081,7 @@ export class ShortcutManager {
         await new Promise((r) => setTimeout(r, 200));
         const pasteConfig = this.deps.configManager.load();
         const forceCapitalize = this.isShiftHeld && this.shiftAlone && pasteConfig.shiftCapitalize && pasteConfig.lowercaseStart;
-        const pasted = pasteText(trimmedText, pasteConfig.copyToClipboard, { lowercaseStart: pasteConfig.lowercaseStart, shiftCapitalize: forceCapitalize });
+        const pasted = pasteText(trimmedText, pasteConfig.copyToClipboard, { lowercaseStart: pasteConfig.lowercaseStart, shiftCapitalize: forceCapitalize, finishWithPeriod: pasteConfig.finishWithPeriod });
 
         if (!pasted && config.onboardingCompleted) {
           slog.info("Text not inserted — showing HUD warning");

@@ -224,6 +224,7 @@ function injectViaClipboard(text: string): void {
 export interface PasteOptions {
   lowercaseStart?: boolean;
   shiftCapitalize?: boolean;
+  finishWithPeriod?: boolean;
 }
 
 export function applyCase(text: string, lowercaseStart: boolean, forceCapitalize = false): string {
@@ -234,9 +235,7 @@ export function applyCase(text: string, lowercaseStart: boolean, forceCapitalize
 
 export function stripTrailingPeriod(text: string): string {
   if (!text.endsWith(".")) return text;
-  const words = text.trim().split(/\s+/);
-  if (words.length <= 3) return text.slice(0, -1);
-  return text;
+  return text.slice(0, -1);
 }
 
 const UNICODE_CHUNK_SIZE = 20;
@@ -274,7 +273,8 @@ function typeText(text: string): void {
 export function pasteText(text: string, copyToClipboard = true, options?: PasteOptions): boolean {
   if (!text) return false;
 
-  const finalText = applyCase(stripTrailingPeriod(text), options?.lowercaseStart ?? false, options?.shiftCapitalize ?? false);
+  const stripped = (options?.finishWithPeriod ?? true) ? text : stripTrailingPeriod(text);
+  const finalText = applyCase(stripped, options?.lowercaseStart ?? false, options?.shiftCapitalize ?? false);
 
   if (copyToClipboard) {
     clipboard.writeText(finalText);
