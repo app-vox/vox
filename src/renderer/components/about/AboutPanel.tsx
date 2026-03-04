@@ -74,7 +74,7 @@ export function AboutPanel() {
             alt="Vox"
             className={styles.aboutLogo}
             draggable={false}
-            onClick={() => window.voxApi.shell.openExternal("https://app-vox.github.io/vox/")}
+            onClick={() => window.voxApi.shell.openExternal("https://usevox.app/")}
             title={t("sidebar.visitWebsite")}
           />
         )}

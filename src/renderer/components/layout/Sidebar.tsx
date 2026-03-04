@@ -22,7 +22,7 @@ import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
 import { useDevOverrideValue, useDevOverridesActive } from "../../hooks/use-dev-override";
 import styles from "./Sidebar.module.scss";
 
-const VOX_WEBSITE_URL = "https://app-vox.github.io/vox/";
+const VOX_WEBSITE_URL = "https://usevox.app/";
 
 interface NavItemDef {
   id: string;
