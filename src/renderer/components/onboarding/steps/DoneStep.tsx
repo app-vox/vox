@@ -27,7 +27,7 @@ export function DoneStep({ onComplete, onExploreSettings }: DoneStepProps) {
 
       <a
         className={styles.skipLink}
-        href="https://app-vox.github.io/vox/"
+        href="https://usevox.app/"
         target="_blank"
         rel="noopener noreferrer"
       >
