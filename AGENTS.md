@@ -109,3 +109,9 @@ npx vitest run             # All tests
 All five commands must exit with code 0. Do not commit or claim success if any of them fail.
 
 Pipeline tests (`npm run test:pipeline`) are **not** part of the standard validation. They call external LLM APIs (with real cost) and require a separate config file. Never run them automatically — only on explicit user request. See `docs/pipeline-testing.md` for setup.
+
+## Issue Tracking
+
+Bugs, feature requests, and technical work are tracked as GitHub Issues in **this repo**. When creating issues, always add them to the organization's public project board (the one linked to `app-vox/vox`).
+
+Business, strategy, and roadmap issues are tracked in a private internal repository. Never reference or link to it in any public context (issues, PRs, commits, code comments, or docs).
