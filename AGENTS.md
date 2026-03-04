@@ -109,3 +109,7 @@ npx vitest run             # All tests
 All five commands must exit with code 0. Do not commit or claim success if any of them fail.
 
 Pipeline tests (`npm run test:pipeline`) are **not** part of the standard validation. They call external LLM APIs (with real cost) and require a separate config file. Never run them automatically — only on explicit user request. See `docs/pipeline-testing.md` for setup.
+
+## Issue Tracking
+
+Business, strategy, and roadmap issues are tracked privately. This repo is for bugs, features, and technical work only. Never reference or link to the internal tracking repo in any public context.
