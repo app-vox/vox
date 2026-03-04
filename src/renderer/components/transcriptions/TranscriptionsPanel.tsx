@@ -1,7 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useTranscriptionsStore } from "../../stores/transcriptions-store";
 import { useConfigStore } from "../../stores/config-store";
-import { useSaveToast } from "../../hooks/use-save-toast";
 import { useT } from "../../i18n-context";
 import type { TranscriptionEntry } from "../../../shared/types";
 import {
@@ -23,7 +22,6 @@ import {
 } from "../../../shared/icons";
 import { CustomSelect } from "../ui/CustomSelect";
 import card from "../shared/card.module.scss";
-import generalStyles from "../general/GeneralPanel.module.scss";
 import styles from "./TranscriptionsPanel.module.scss";
 
 const DEBOUNCE_MS = 300;
@@ -134,6 +132,7 @@ function OverflowMenu({
 }) {
   const t = useT();
   const isRetrying = retryingId === entry.id;
+  const [downloaded, setDownloaded] = useState(false);
 
   return (
     <div className={styles.overflowMenu}>
@@ -157,10 +156,14 @@ function OverflowMenu({
           {entry.audioFilePath && (
             <button
               className={styles.overflowItem}
-              onClick={() => window.voxApi.history.downloadAudio(entry.id)}
+              onClick={async () => {
+                await window.voxApi.history.downloadAudio(entry.id);
+                setDownloaded(true);
+                setTimeout(() => setDownloaded(false), 2000);
+              }}
             >
-              <DownloadIcon width={14} height={14} />
-              <span>{t("history.download")}</span>
+              {downloaded ? <CheckIcon width={14} height={14} /> : <DownloadIcon width={14} height={14} />}
+              <span>{downloaded ? t("history.downloaded") : t("history.download")}</span>
             </button>
           )}
           <button
@@ -179,9 +182,6 @@ function OverflowMenu({
 export function TranscriptionsPanel() {
   const t = useT();
   const config = useConfigStore((s) => s.config);
-  const updateConfig = useConfigStore((s) => s.updateConfig);
-  const saveConfig = useConfigStore((s) => s.saveConfig);
-  const triggerToast = useSaveToast((s) => s.trigger);
   const copyToClipboard = config?.copyToClipboard;
   const entries = useTranscriptionsStore((s) => s.entries);
   const total = useTranscriptionsStore((s) => s.total);
@@ -242,66 +242,6 @@ export function TranscriptionsPanel() {
 
   return (
     <>
-      <div className={card.card}>
-        <div className={card.body}>
-          <label className={generalStyles.checkboxRow}>
-            <input
-              type="checkbox"
-              checked={config?.lowercaseStart ?? false}
-              onChange={async () => {
-                updateConfig({ lowercaseStart: !config?.lowercaseStart });
-                await saveConfig(false);
-                triggerToast();
-              }}
-            />
-            <div>
-              <div className={generalStyles.checkboxLabel}>{t("whisper.lowercaseStart")}</div>
-              <div className={generalStyles.checkboxDesc}>{t("whisper.lowercaseStartHint")}</div>
-            </div>
-          </label>
-          <label className={`${generalStyles.checkboxRow} ${!config?.lowercaseStart ? generalStyles.disabled : ""}`} style={{ marginLeft: 24 }}>
-            <input
-              type="checkbox"
-              disabled={!config?.lowercaseStart}
-              checked={config?.shiftCapitalize ?? true}
-              onChange={async () => {
-                updateConfig({ shiftCapitalize: !config?.shiftCapitalize });
-                await saveConfig(false);
-                triggerToast();
-              }}
-            />
-            <div>
-              <div className={generalStyles.checkboxLabel}>{t("whisper.shiftCapitalize")}</div>
-              <div className={generalStyles.checkboxDesc}>{t("whisper.shiftCapitalizeHint")}</div>
-            </div>
-          </label>
-        </div>
-      </div>
-
-      <div className={card.card}>
-        <div className={card.header}>
-          <h2>{t("history.audioRetention")}</h2>
-          <p className={card.description}>{t("history.audioRetentionDesc")}</p>
-        </div>
-        <div className={card.body}>
-          <CustomSelect
-            value={String(config?.audioRetentionCount ?? 5)}
-            items={[
-              { value: "0", label: t("history.audioRetentionDisabled") },
-              { value: "3", label: "3" },
-              { value: "5", label: "5" },
-              { value: "10", label: "10" },
-              { value: "20", label: "20" },
-            ]}
-            onChange={async (value) => {
-              updateConfig({ audioRetentionCount: Number(value) });
-              await saveConfig(false);
-              triggerToast();
-            }}
-          />
-        </div>
-      </div>
-
       <div className={card.card}>
         <div className={card.header}>
           <h2>{t("history.title")}</h2>
