@@ -159,6 +159,9 @@ export interface VoxAPI {
   analytics: {
     track(event: string, properties?: Record<string, unknown>): Promise<void>;
   };
+  tts: {
+    test(apiKey: string, voiceId: string): Promise<boolean>;
+  };
 }
 
 const voxApi: VoxAPI = {
@@ -284,6 +287,9 @@ const voxApi: VoxAPI = {
     track: (event: string, properties?: Record<string, unknown>) =>
       ipcRenderer.invoke("analytics:track", event, properties),
   },
+  tts: {
+    test: (apiKey: string, voiceId: string) => ipcRenderer.invoke("tts:test", apiKey, voiceId),
+  },
 };
 
 contextBridge.exposeInMainWorld("voxApi", voxApi);
@@ -305,4 +311,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
   hudDismiss: () => ipcRenderer.invoke("hud:dismiss"),
   pauseFlashTimer: () => ipcRenderer.invoke("hud:pause-flash"),
   resumeFlashTimer: () => ipcRenderer.invoke("hud:resume-flash"),
+  hudPlayTts: () => ipcRenderer.invoke("tts:play"),
+  hudStopTts: () => ipcRenderer.invoke("tts:stop"),
+  hudCheckSelectedText: () => ipcRenderer.invoke("tts:has-selected-text"),
+  onTtsStateChanged: (cb: (state: string) => void) =>
+    ipcRenderer.on("tts:state-changed", (_event, state) => cb(state)),
 });

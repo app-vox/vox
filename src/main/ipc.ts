@@ -14,6 +14,7 @@ import { getResourcePath } from "./resources";
 import { SetupChecker } from "./setup/checker";
 import { checkForUpdates, getUpdateState, quitAndInstall } from "./updater";
 import { t } from "../shared/i18n";
+import { type TtsManager } from "./tts/manager";
 
 const testLog = log.scope("LlmTest");
 
@@ -22,7 +23,8 @@ export function registerIpcHandlers(
   modelManager: ModelManager,
   historyManager: HistoryManager,
   onConfigChange?: () => void,
-  analytics?: AnalyticsService
+  analytics?: AnalyticsService,
+  ttsManager?: TtsManager
 ): void {
   ipcMain.handle("resources:data-url", (_event, ...segments: string[]) => {
     const filePath = getResourcePath(...segments);
@@ -356,5 +358,27 @@ export function registerIpcHandlers(
 
   ipcMain.handle("analytics:track", (_event, name: string, properties?: Record<string, unknown>) => {
     analytics?.track(name, properties);
+  });
+
+  ipcMain.handle("tts:play", async () => {
+    const config = configManager.load();
+    await ttsManager?.play({
+      ttsEnabled: config.ttsEnabled,
+      elevenLabsApiKey: config.elevenLabsApiKey,
+      elevenLabsVoiceId: config.elevenLabsVoiceId,
+    });
+  });
+
+  ipcMain.handle("tts:stop", () => {
+    ttsManager?.stop();
+  });
+
+  ipcMain.handle("tts:has-selected-text", async () => {
+    return ttsManager?.hasSelectedText() ?? false;
+  });
+
+  ipcMain.handle("tts:test", async (_event, apiKey: string, voiceId: string) => {
+    const { testConnection } = await import("./tts/elevenlabs");
+    return testConnection(apiKey, voiceId);
   });
 }
