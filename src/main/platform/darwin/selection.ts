@@ -77,11 +77,12 @@ function getFrontmostPid(): number | null {
   try {
     const { execSync } = require("child_process");
     const out = execSync(
-      `osascript -e 'tell application "System Events" to unix id of (first process whose frontmost is true)'`,
+      `osascript -e 'tell application "System Events" to unix id of (first process whose frontmost is true and name is not "Vox")'`,
       { encoding: "utf8", timeout: 500 },
     );
     const pid = parseInt(out.trim(), 10);
-    return Number.isFinite(pid) ? pid : null;
+    if (!Number.isFinite(pid) || pid === process.pid) return null;
+    return pid;
   } catch {
     return null;
   }
@@ -150,6 +151,26 @@ export async function getSelectedText(): Promise<string> {
 
     const koffi = require("koffi");
 
+    // Primary path: query the frontmost app directly (avoids focus race
+    // when the HUD steals system focus via setIgnoreMouseEvents).
+    const pid = getFrontmostPid();
+    if (pid != null) {
+      const appElement = AXUIElementCreateApplication(pid);
+      if (appElement) {
+        const focused = queryFocusedElement(koffi, appElement);
+        CFRelease(appElement);
+        if (focused) {
+          try {
+            const text = readSelectedText(koffi, focused);
+            if (text) return text;
+          } finally {
+            CFRelease(focused);
+          }
+        }
+      }
+    }
+
+    // Fallback: try system-wide AXFocusedUIElement
     const systemWide = AXUIElementCreateSystemWide();
     if (systemWide) {
       const focused = queryFocusedElement(koffi, systemWide);
@@ -163,21 +184,7 @@ export async function getSelectedText(): Promise<string> {
       }
     }
 
-    const pid = getFrontmostPid();
-    if (pid == null) return "";
-
-    const appElement = AXUIElementCreateApplication(pid);
-    if (!appElement) return "";
-
-    const focused = queryFocusedElement(koffi, appElement);
-    CFRelease(appElement);
-    if (!focused) return "";
-
-    try {
-      return readSelectedText(koffi, focused);
-    } finally {
-      CFRelease(focused);
-    }
+    return "";
   } catch {
     return "";
   }

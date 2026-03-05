@@ -520,6 +520,8 @@
   "tts.test": "Testa voce",
   "tts.testSuccess": "Sintesi vocale funzionante correttamente",
   "tts.testError": "Connessione a ElevenLabs fallita. Controlla la tua chiave API.",
+  "tts.testPlaying": "Riproduzione audio di test...",
+  "tts.learnMore": "Ottieni la tua chiave API su elevenlabs.io",
   "tts.playing": "Lettura ad alta voce…",
   "tts.error": "Sintesi vocale fallita"
 }

@@ -454,7 +454,10 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle("tts:test", async (_event, apiKey: string, voiceId: string) => {
+    if (ttsManager) {
+      return ttsManager.testAndPlay(apiKey, voiceId);
+    }
     const { testConnection } = await import("./tts/elevenlabs");
-    return testConnection(apiKey, voiceId);
+    return (await testConnection(apiKey, voiceId)) !== null;
   });
 }

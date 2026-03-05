@@ -430,6 +430,14 @@ export function LlmPanel() {
                     }}
                     placeholder={t("tts.apiKeyPlaceholder")}
                   />
+                  <button
+                    type="button"
+                    onClick={() => window.voxApi.shell.openExternal("https://elevenlabs.io/app/settings/api-keys")}
+                    className={card.learnMore}
+                  >
+                    {t("tts.learnMore")}
+                    <ExternalLinkIcon width={12} height={12} />
+                  </button>
                 </div>
 
                 <p className={form.hint}>{t("tts.voiceDefault")}</p>
@@ -438,7 +446,7 @@ export function LlmPanel() {
                   <button
                     onClick={async () => {
                       setTtsTesting(true);
-                      setTtsTestStatus(null);
+                      setTtsTestStatus({ text: t("tts.testPlaying"), type: "info" });
                       try {
                         const ok = await window.voxApi.tts.test(
                           config.elevenLabsApiKey,
