@@ -265,6 +265,7 @@ app.whenReady().then(async () => {
   const ttsRecorder = new AudioRecorder();
   const ttsManager = new TtsManager({
     playAudio: (buffer) => ttsRecorder.playMp3Buffer(buffer),
+    stopAudio: () => ttsRecorder.stopMp3Playback(),
   });
   ttsManager.setOnStateChange((state) => {
     for (const win of BrowserWindow.getAllWindows()) {
