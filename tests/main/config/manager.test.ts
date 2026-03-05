@@ -389,4 +389,65 @@ describe("ConfigManager", () => {
     expect(loaded.shiftCapitalize).toBe(true);
     expect(loaded.lowercaseStart).toBe(true);
   });
+
+  describe("TTS config fields", () => {
+    it("should round-trip TTS fields (save then load preserves values)", () => {
+      const config = createDefaultConfig();
+      config.ttsEnabled = true;
+      config.elevenLabsApiKey = "el-key-123";
+      config.elevenLabsVoiceId = "custom-voice-id";
+
+      manager.save(config);
+      const loaded = manager.load();
+
+      expect(loaded.ttsEnabled).toBe(true);
+      expect(loaded.elevenLabsApiKey).toBe("el-key-123");
+      expect(loaded.elevenLabsVoiceId).toBe("custom-voice-id");
+    });
+
+    it("should encrypt elevenLabsApiKey on save and decrypt on load", () => {
+      const config = createDefaultConfig();
+      config.elevenLabsApiKey = "el-secret-key";
+
+      manager.save(config);
+
+      const raw = JSON.parse(fs.readFileSync(path.join(testDir, "config.json"), "utf-8"));
+      expect(raw.elevenLabsApiKey).toMatch(/^enc:/);
+      expect(raw.elevenLabsApiKey).not.toBe("el-secret-key");
+
+      const loaded = manager.load();
+      expect(loaded.elevenLabsApiKey).toBe("el-secret-key");
+    });
+
+    it("should count elevenLabsApiKey in countEncryptedSecrets", () => {
+      const config = createDefaultConfig();
+      config.elevenLabsApiKey = "el-key";
+
+      manager.save(config);
+      expect(manager.countEncryptedSecrets()).toBe(1);
+    });
+
+    it("should count both LLM and TTS secrets together", () => {
+      const config = createDefaultConfig();
+      config.llm = { provider: "foundry", endpoint: "", apiKey: "llm-key", model: "gpt-4o" };
+      config.elevenLabsApiKey = "el-key";
+
+      manager.save(config);
+      expect(manager.countEncryptedSecrets()).toBe(2);
+    });
+
+    it("should default TTS fields when absent from saved config", () => {
+      const oldConfig = {
+        llm: { provider: "foundry", endpoint: "", apiKey: "", model: "gpt-4o" },
+        theme: "system",
+      };
+      fs.mkdirSync(testDir, { recursive: true });
+      fs.writeFileSync(path.join(testDir, "config.json"), JSON.stringify(oldConfig));
+
+      const loaded = manager.load();
+      expect(loaded.ttsEnabled).toBe(false);
+      expect(loaded.elevenLabsApiKey).toBe("");
+      expect(loaded.elevenLabsVoiceId).toBe("21m00Tcm4TlvDq8ikWAM");
+    });
+  });
 });

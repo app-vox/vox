@@ -47,6 +47,8 @@ export interface SecretStore {
 
 export const SENSITIVE_FIELDS: (keyof LlmConfigFlat)[] = ["apiKey", "secretAccessKey", "accessKeyId", "openaiApiKey", "deepseekApiKey", "glmApiKey", "litellmApiKey", "anthropicApiKey", "customToken"];
 
+export const SENSITIVE_CONFIG_FIELDS: (keyof VoxConfig)[] = ["elevenLabsApiKey"];
+
 export class ConfigManager {
   private readonly configPath: string;
   private readonly secrets: SecretStore;
@@ -110,7 +112,17 @@ export class ConfigManager {
           lowercaseStart: saved.lowercaseStart ?? defaults.lowercaseStart,
           shiftCapitalize: saved.shiftCapitalize ?? defaults.shiftCapitalize,
           onboardingCompleted: saved.onboardingCompleted ?? true,
+          ttsEnabled: saved.ttsEnabled ?? defaults.ttsEnabled,
+          elevenLabsApiKey: saved.elevenLabsApiKey ?? defaults.elevenLabsApiKey,
+          elevenLabsVoiceId: saved.elevenLabsVoiceId ?? defaults.elevenLabsVoiceId,
         };
+
+        for (const field of SENSITIVE_CONFIG_FIELDS) {
+          const value = config[field];
+          if (typeof value === "string" && value) {
+            (config as unknown as Record<string, string>)[field] = this.secrets.decrypt(value);
+          }
+        }
       } catch {
         config = defaults;
       }
@@ -156,6 +168,13 @@ export class ConfigManager {
 
     const toWrite = structuredClone({ ...config, llm: toWriteFlat });
 
+    for (const field of SENSITIVE_CONFIG_FIELDS) {
+      const value = (toWrite as unknown as Record<string, unknown>)[field];
+      if (typeof value === "string" && value) {
+        (toWrite as unknown as Record<string, string>)[field] = this.secrets.encrypt(value);
+      }
+    }
+
     fs.writeFileSync(this.configPath, JSON.stringify(toWrite, null, 2), "utf-8");
   }
 
@@ -184,11 +203,18 @@ export class ConfigManager {
     if (!fs.existsSync(this.configPath)) return 0;
     try {
       const raw = JSON.parse(fs.readFileSync(this.configPath, "utf-8"));
-      if (!raw.llm) return 0;
-      return SENSITIVE_FIELDS.filter((field) => {
-        const value = raw.llm[field];
+      let count = 0;
+      if (raw.llm) {
+        count += SENSITIVE_FIELDS.filter((field) => {
+          const value = raw.llm[field];
+          return typeof value === "string" && value.startsWith(ENCRYPTED_PREFIX);
+        }).length;
+      }
+      count += SENSITIVE_CONFIG_FIELDS.filter((field) => {
+        const value = raw[field];
         return typeof value === "string" && value.startsWith(ENCRYPTED_PREFIX);
       }).length;
+      return count;
     } catch {
       return 0;
     }
