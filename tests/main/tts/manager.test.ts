@@ -143,4 +143,53 @@ describe("TtsManager", () => {
       expect(await manager.hasSelectedText()).toBe(false);
     });
   });
+
+  describe("selected text caching", () => {
+    it("play() uses text cached by hasSelectedText() instead of re-reading", async () => {
+      const fakeAudio = new ArrayBuffer(256);
+      mockGetSelectedText.mockResolvedValue("cached text");
+      mockSynthesize.mockResolvedValue(fakeAudio);
+
+      await manager.hasSelectedText();
+      expect(mockGetSelectedText).toHaveBeenCalledTimes(1);
+
+      mockGetSelectedText.mockReset();
+
+      await manager.play(validConfig());
+
+      expect(mockGetSelectedText).not.toHaveBeenCalled();
+      expect(mockSynthesize).toHaveBeenCalledWith(
+        expect.objectContaining({ text: "cached text" }),
+      );
+    });
+
+    it("play() clears cache after use", async () => {
+      const fakeAudio = new ArrayBuffer(256);
+      mockGetSelectedText.mockResolvedValue("cached text");
+      mockSynthesize.mockResolvedValue(fakeAudio);
+
+      await manager.hasSelectedText();
+      await manager.play(validConfig());
+
+      mockGetSelectedText.mockReset();
+      mockGetSelectedText.mockResolvedValue("");
+      await expect(manager.play(validConfig())).rejects.toThrow(
+        "No text selected",
+      );
+      expect(mockGetSelectedText).toHaveBeenCalledTimes(1);
+    });
+
+    it("play() falls back to getSelectedText() when no cached text", async () => {
+      const fakeAudio = new ArrayBuffer(256);
+      mockGetSelectedText.mockResolvedValue("fresh text");
+      mockSynthesize.mockResolvedValue(fakeAudio);
+
+      await manager.play(validConfig());
+
+      expect(mockGetSelectedText).toHaveBeenCalledTimes(1);
+      expect(mockSynthesize).toHaveBeenCalledWith(
+        expect.objectContaining({ text: "fresh text" }),
+      );
+    });
+  });
 });
