@@ -517,6 +517,14 @@ export function DevPanel() {
       ],
     },
     {
+      title: "Text to Speech",
+      rows: [
+        { label: "TTS Enabled", render: () => <>{boolDot(config?.ttsEnabled)}</> },
+        { label: "API Key", render: () => <>{config?.elevenLabsApiKey ? "configured" : "not set"}</> },
+        { label: "Voice ID", render: () => <>{config?.elevenLabsVoiceId || "(none)"}</> },
+      ],
+    },
+    {
       title: "Whisper",
       rows: [
         { label: "Model", render: () => <>{selectedModel}</> },
