@@ -56,6 +56,9 @@ export function registerIpcHandlers(
     if (previousConfig.llm.provider !== config.llm.provider) {
       analytics?.track("llm_provider_selected", { provider: config.llm.provider });
     }
+    if (previousConfig.ttsEnabled !== config.ttsEnabled) {
+      analytics?.track(config.ttsEnabled ? "tts_enabled" : "tts_disabled");
+    }
     analytics?.track("config_changed");
 
     // Apply launch at login setting (macOS only, packaged builds only)

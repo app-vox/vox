@@ -26,12 +26,14 @@ describe("TtsManager", () => {
   let manager: TtsManager;
   let playAudio: ReturnType<typeof vi.fn>;
   let stopAudio: ReturnType<typeof vi.fn>;
+  let analytics: { track: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     vi.useFakeTimers();
     playAudio = vi.fn().mockResolvedValue(undefined);
     stopAudio = vi.fn().mockResolvedValue(undefined);
-    manager = new TtsManager({ playAudio, stopAudio });
+    analytics = { track: vi.fn() };
+    manager = new TtsManager({ playAudio, stopAudio, analytics });
     mockSynthesize.mockReset();
     mockGetSelectedText.mockReset();
   });

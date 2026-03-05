@@ -12,6 +12,7 @@ interface TtsConfig {
 interface TtsManagerDeps {
   playAudio: (buffer: ArrayBuffer) => Promise<void>;
   stopAudio: () => Promise<void>;
+  analytics?: { track(event: string, properties?: Record<string, unknown>): void };
 }
 
 export class TtsManager {
@@ -50,11 +51,15 @@ export class TtsManager {
     this.abortController = new AbortController();
     const { signal } = this.abortController;
 
+    const voiceId = config.elevenLabsVoiceId;
+    this.deps.analytics?.track("tts_started", { voice_id: voiceId });
+    const startTime = Date.now();
+
     try {
       const audio = await synthesize({
         text,
         apiKey: config.elevenLabsApiKey,
-        voiceId: config.elevenLabsVoiceId,
+        voiceId,
         signal: this.abortController.signal,
       });
 
@@ -63,9 +68,16 @@ export class TtsManager {
       this.setState("playing");
       await this.deps.playAudio(audio);
       this.setState("idle");
+
+      const durationMs = Date.now() - startTime;
+      this.deps.analytics?.track("tts_completed", { voice_id: voiceId, duration_ms: durationMs });
     } catch (err) {
       if (signal.aborted) return;
 
+      this.deps.analytics?.track("tts_failed", {
+        voice_id: voiceId,
+        error_type: err instanceof Error ? err.name : "unknown",
+      });
       this.setState("error");
       setTimeout(() => this.setState("idle"), 2000);
       throw err;
@@ -73,6 +85,7 @@ export class TtsManager {
   }
 
   stop(): void {
+    this.deps.analytics?.track("tts_stopped");
     if (this.abortController) {
       this.abortController.abort();
       this.abortController = null;
@@ -83,6 +96,8 @@ export class TtsManager {
 
   async testAndPlay(apiKey: string, voiceId: string): Promise<boolean> {
     const buffer = await testConnection(apiKey, voiceId);
+    const success = buffer !== null;
+    this.deps.analytics?.track("tts_test_connection", { success });
     if (!buffer) return false;
     await this.deps.playAudio(buffer);
     return true;

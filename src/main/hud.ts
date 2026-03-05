@@ -690,6 +690,33 @@ document.body.addEventListener('mouseleave', function() {
 });
 
 var buttonsVisible = false;
+var ttsPollingInterval = null;
+
+function startTtsPolling() {
+  if (ttsPollingInterval) return;
+  ttsPollingInterval = setInterval(function() {
+    if (!buttonsVisible) { stopTtsPolling(); return; }
+    if (window.electronAPI?.hudCheckSelectedText) {
+      window.electronAPI.hudCheckSelectedText().then(function(hasText) {
+        var ttsBtn = document.getElementById('tts-btn');
+        if (!ttsBtn) return;
+        if (hasText) {
+          ttsBtn.classList.add('tts-available');
+        } else {
+          ttsBtn.classList.remove('tts-available');
+        }
+      });
+    }
+  }, 1500);
+}
+
+function stopTtsPolling() {
+  if (ttsPollingInterval) {
+    clearInterval(ttsPollingInterval);
+    ttsPollingInterval = null;
+  }
+}
+
 function showSideButtons() {
   buttonsVisible = true;
   document.getElementById('transcriptions-btn').classList.add('visible');
@@ -703,11 +730,13 @@ function showSideButtons() {
         ttsBtn.classList.add('tts-available');
         ttsBtn.classList.add('visible');
       }
+      startTtsPolling();
     });
   }
 }
 function hideSideButtons() {
   buttonsVisible = false;
+  stopTtsPolling();
   document.getElementById('transcriptions-btn').classList.remove('visible');
   document.getElementById('settings-btn').classList.remove('visible');
   document.getElementById('close-btn').classList.remove('visible');
