@@ -254,6 +254,72 @@ export class AudioRecorder {
     `, true);
   }
 
+  async playMp3Buffer(mp3Buffer: ArrayBuffer): Promise<void> {
+    if (mp3Buffer.byteLength === 0) return;
+    const win = await this.ensureWindow();
+
+    const base64 = Buffer.from(mp3Buffer).toString("base64");
+
+    await win.webContents.executeJavaScript(`
+      (async () => {
+        const base64 = "${base64}";
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+        try {
+          const tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          tempStream.getTracks().forEach(t => t.stop());
+        } catch {}
+
+        const ctx = new AudioContext();
+        let retries = 0;
+        while (ctx.state === "suspended" && retries < 10) {
+          await ctx.resume();
+          if (ctx.state === "suspended") await new Promise(r => setTimeout(r, 30));
+          retries++;
+        }
+        if (ctx.state === "suspended") { ctx.close(); return; }
+
+        const audioBuffer = await ctx.decodeAudioData(bytes.buffer);
+        const source = ctx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(ctx.destination);
+        source.start();
+
+        window._ttsSource = source;
+        window._ttsCtx = ctx;
+
+        return new Promise(resolve => {
+          source.onended = () => {
+            ctx.close();
+            window._ttsSource = null;
+            window._ttsCtx = null;
+            resolve();
+          };
+        });
+      })()
+    `, true);
+  }
+
+  async stopMp3Playback(): Promise<void> {
+    const win = this.win;
+    if (!win) return;
+
+    await win.webContents.executeJavaScript(`
+      (async () => {
+        if (window._ttsSource) {
+          try { window._ttsSource.stop(); } catch {}
+          window._ttsSource = null;
+        }
+        if (window._ttsCtx) {
+          try { window._ttsCtx.close(); } catch {}
+          window._ttsCtx = null;
+        }
+      })()
+    `, true);
+  }
+
   private stopLevels(): void {
     if (this.levelsInterval) {
       clearInterval(this.levelsInterval);
