@@ -20,6 +20,7 @@ export class TtsManager {
   private onStateChange: ((state: TtsState) => void) | null = null;
   private abortController: AbortController | null = null;
   private readonly deps: TtsManagerDeps;
+  private cachedSelectedText: string = "";
 
   constructor(deps: TtsManagerDeps) {
     this.deps = deps;
@@ -42,7 +43,8 @@ export class TtsManager {
       throw new Error("ElevenLabs API key is required");
     }
 
-    const text = await getSelectedText();
+    const text = this.cachedSelectedText || (await getSelectedText());
+    this.cachedSelectedText = "";
     if (!text) {
       throw new Error("No text selected");
     }
@@ -105,6 +107,7 @@ export class TtsManager {
 
   async hasSelectedText(): Promise<boolean> {
     const text = await getSelectedText();
+    this.cachedSelectedText = text;
     return text.length > 0;
   }
 

@@ -76,13 +76,25 @@ function init(): void {
 function getFrontmostPid(): number | null {
   try {
     const { execSync } = require("child_process");
+    const myPid = process.pid;
     const out = execSync(
-      `osascript -e 'tell application "System Events" to unix id of (first process whose frontmost is true and name is not "Vox")'`,
+      `osascript -e 'tell application "System Events" to unix id of (first process whose frontmost is true)'`,
       { encoding: "utf8", timeout: 500 },
     );
     const pid = parseInt(out.trim(), 10);
-    if (!Number.isFinite(pid) || pid === process.pid) return null;
-    return pid;
+    if (!Number.isFinite(pid)) return null;
+    if (pid !== myPid) return pid;
+
+    const out2 = execSync(
+      `osascript -e 'tell application "System Events" to get unix id of every process whose visible is true and unix id is not ${myPid}'`,
+      { encoding: "utf8", timeout: 500 },
+    );
+    const pids = out2
+      .trim()
+      .split(",")
+      .map((s: string) => parseInt(s.trim(), 10))
+      .filter(Number.isFinite);
+    return pids.length > 0 ? pids[0] : null;
   } catch {
     return null;
   }
