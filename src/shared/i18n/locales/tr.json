@@ -467,5 +467,17 @@
   "menu.checkForUpdates": "Güncellemeleri Kontrol Et…",
   "menu.visitOnboarding": "Karşılama Turunu Başlat",
   "menu.window": "Pencere",
-  "menu.bringAllToFront": "Tümünü Öne Getir"
+  "menu.bringAllToFront": "Tümünü Öne Getir",
+  "tts.title": "Metinden Sese",
+  "tts.description": "Seçili metni ElevenLabs kullanarak sesli okuyun",
+  "tts.enableCheckbox": "Metinden Sese'yi Etkinleştir",
+  "tts.enableHint": "Etkinleştirildiğinde, seçili metni sesli okumak için HUD'da bir oynatma düğmesi görünür",
+  "tts.apiKey": "ElevenLabs API Anahtarı",
+  "tts.apiKeyPlaceholder": "ElevenLabs API anahtarınızı girin",
+  "tts.voiceDefault": "Varsayılan ses: Rachel",
+  "tts.test": "Sesi Test Et",
+  "tts.testSuccess": "Ses sentezi doğru çalışıyor",
+  "tts.testError": "ElevenLabs'a bağlanılamadı. API anahtarınızı kontrol edin.",
+  "tts.playing": "Sesli okunuyor…",
+  "tts.error": "Metinden sese dönüştürme başarısız"
 }

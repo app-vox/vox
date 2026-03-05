@@ -467,5 +467,17 @@
   "menu.checkForUpdates": "Sprawdź aktualizacje…",
   "menu.visitOnboarding": "Uruchom samouczek",
   "menu.window": "Okno",
-  "menu.bringAllToFront": "Przenieś wszystko na wierzch"
+  "menu.bringAllToFront": "Przenieś wszystko na wierzch",
+  "tts.title": "Tekst na mowę",
+  "tts.description": "Odczytaj zaznaczony tekst na głos za pomocą ElevenLabs",
+  "tts.enableCheckbox": "Włącz tekst na mowę",
+  "tts.enableHint": "Po włączeniu na HUD pojawia się przycisk odtwarzania, aby odczytać zaznaczony tekst na głos",
+  "tts.apiKey": "Klucz API ElevenLabs",
+  "tts.apiKeyPlaceholder": "Wprowadź klucz API ElevenLabs",
+  "tts.voiceDefault": "Domyślny głos: Rachel",
+  "tts.test": "Testuj głos",
+  "tts.testSuccess": "Synteza mowy działa prawidłowo",
+  "tts.testError": "Nie udało się połączyć z ElevenLabs. Sprawdź klucz API.",
+  "tts.playing": "Czytanie na głos…",
+  "tts.error": "Synteza mowy nie powiodła się"
 }
