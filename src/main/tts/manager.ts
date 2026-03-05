@@ -1,4 +1,4 @@
-import { synthesize } from "./elevenlabs";
+import { synthesize, testConnection } from "./elevenlabs";
 import { getSelectedText } from "../input/selection";
 
 export type TtsState = "idle" | "loading" | "playing" | "error";
@@ -79,6 +79,13 @@ export class TtsManager {
     }
     this.deps.stopAudio();
     this.setState("idle");
+  }
+
+  async testAndPlay(apiKey: string, voiceId: string): Promise<boolean> {
+    const buffer = await testConnection(apiKey, voiceId);
+    if (!buffer) return false;
+    await this.deps.playAudio(buffer);
+    return true;
   }
 
   async hasSelectedText(): Promise<boolean> {

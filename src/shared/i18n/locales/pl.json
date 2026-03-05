@@ -530,6 +530,8 @@
   "tts.test": "Testuj głos",
   "tts.testSuccess": "Synteza mowy działa prawidłowo",
   "tts.testError": "Nie udało się połączyć z ElevenLabs. Sprawdź klucz API.",
+  "tts.testPlaying": "Odtwarzanie testowego dźwięku...",
+  "tts.learnMore": "Uzyskaj klucz API na elevenlabs.io",
   "tts.playing": "Czytanie na głos…",
   "tts.error": "Synteza mowy nie powiodła się"
 }

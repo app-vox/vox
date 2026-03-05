@@ -530,6 +530,8 @@
   "tts.test": "Sesi Test Et",
   "tts.testSuccess": "Ses sentezi doğru çalışıyor",
   "tts.testError": "ElevenLabs'a bağlanılamadı. API anahtarınızı kontrol edin.",
+  "tts.testPlaying": "Test sesi oynatılıyor...",
+  "tts.learnMore": "API anahtarınızı elevenlabs.io'dan alın",
   "tts.playing": "Sesli okunuyor…",
   "tts.error": "Metinden sese dönüştürme başarısız"
 }

@@ -530,6 +530,8 @@
   "tts.test": "Stimme testen",
   "tts.testSuccess": "Sprachsynthese funktioniert korrekt",
   "tts.testError": "Verbindung zu ElevenLabs fehlgeschlagen. Überprüfen Sie Ihren API Key.",
+  "tts.testPlaying": "Testaudio wird abgespielt...",
+  "tts.learnMore": "API Key auf elevenlabs.io erhalten",
   "tts.playing": "Wird vorgelesen…",
   "tts.error": "Text-zu-Sprache fehlgeschlagen"
 }
