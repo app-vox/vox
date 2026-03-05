@@ -302,24 +302,15 @@ export class AudioRecorder {
       (async () => {
         const base64 = "${base64}";
         const binary = atob(base64);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const len = binary.length;
+        const buffer = new ArrayBuffer(len);
+        const view = new Uint8Array(buffer);
+        for (let i = 0; i < len; i++) view[i] = binary.charCodeAt(i);
 
-        try {
-          const tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          tempStream.getTracks().forEach(t => t.stop());
-        } catch {}
+        const ctx = new AudioContext({ sampleRate: 44100 });
+        await ctx.resume();
 
-        const ctx = new AudioContext();
-        let retries = 0;
-        while (ctx.state === "suspended" && retries < 10) {
-          await ctx.resume();
-          if (ctx.state === "suspended") await new Promise(r => setTimeout(r, 30));
-          retries++;
-        }
-        if (ctx.state === "suspended") { ctx.close(); return; }
-
-        const audioBuffer = await ctx.decodeAudioData(bytes.buffer);
+        const audioBuffer = await ctx.decodeAudioData(buffer);
         const source = ctx.createBufferSource();
         source.buffer = audioBuffer;
         source.connect(ctx.destination);
