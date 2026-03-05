@@ -519,5 +519,17 @@
   "menu.checkForUpdates": "Buscar Actualizaciones…",
   "menu.visitOnboarding": "Iniciar Tour de Bienvenida",
   "menu.window": "Ventana",
-  "menu.bringAllToFront": "Traer Todo al Frente"
+  "menu.bringAllToFront": "Traer Todo al Frente",
+  "tts.title": "Texto a Voz",
+  "tts.description": "Lee el texto seleccionado en voz alta usando ElevenLabs",
+  "tts.enableCheckbox": "Activar Texto a Voz",
+  "tts.enableHint": "Cuando está activado, aparece un botón de reproducción en el HUD para leer el texto seleccionado en voz alta",
+  "tts.apiKey": "Clave de API de ElevenLabs",
+  "tts.apiKeyPlaceholder": "Introduce tu clave de API de ElevenLabs",
+  "tts.voiceDefault": "Voz predeterminada: Rachel",
+  "tts.test": "Probar Voz",
+  "tts.testSuccess": "Síntesis de voz funcionando correctamente",
+  "tts.testError": "Error al conectar con ElevenLabs. Verifica tu clave de API.",
+  "tts.playing": "Leyendo en voz alta…",
+  "tts.error": "Error en la conversión de texto a voz"
 }

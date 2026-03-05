@@ -519,5 +519,17 @@
   "menu.checkForUpdates": "Проверить обновления…",
   "menu.visitOnboarding": "Начать вводный тур",
   "menu.window": "Окно",
-  "menu.bringAllToFront": "Все окна — на передний план"
+  "menu.bringAllToFront": "Все окна — на передний план",
+  "tts.title": "Озвучивание текста",
+  "tts.description": "Прочитать выделенный текст вслух с помощью ElevenLabs",
+  "tts.enableCheckbox": "Включить озвучивание текста",
+  "tts.enableHint": "При включении на HUD появляется кнопка воспроизведения для озвучивания выделенного текста",
+  "tts.apiKey": "API-ключ ElevenLabs",
+  "tts.apiKeyPlaceholder": "Введите ваш API-ключ ElevenLabs",
+  "tts.voiceDefault": "Голос по умолчанию: Rachel",
+  "tts.test": "Тестировать голос",
+  "tts.testSuccess": "Синтез речи работает корректно",
+  "tts.testError": "Не удалось подключиться к ElevenLabs. Проверьте ваш API-ключ.",
+  "tts.playing": "Чтение вслух…",
+  "tts.error": "Ошибка озвучивания текста"
 }

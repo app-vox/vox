@@ -519,5 +519,17 @@
   "menu.checkForUpdates": "Rechercher les mises à jour…",
   "menu.visitOnboarding": "Découvrir l'accueil",
   "menu.window": "Fenêtre",
-  "menu.bringAllToFront": "Tout mettre au premier plan"
+  "menu.bringAllToFront": "Tout mettre au premier plan",
+  "tts.title": "Synthèse vocale",
+  "tts.description": "Lire le texte sélectionné à voix haute avec ElevenLabs",
+  "tts.enableCheckbox": "Activer la synthèse vocale",
+  "tts.enableHint": "Lorsqu'activé, un bouton de lecture apparaît sur le HUD pour lire le texte sélectionné à voix haute",
+  "tts.apiKey": "Clé API ElevenLabs",
+  "tts.apiKeyPlaceholder": "Entrez votre clé API ElevenLabs",
+  "tts.voiceDefault": "Voix par défaut : Rachel",
+  "tts.test": "Tester la voix",
+  "tts.testSuccess": "Synthèse vocale fonctionnelle",
+  "tts.testError": "Échec de connexion à ElevenLabs. Vérifiez votre clé API.",
+  "tts.playing": "Lecture à voix haute…",
+  "tts.error": "Échec de la synthèse vocale"
 }
