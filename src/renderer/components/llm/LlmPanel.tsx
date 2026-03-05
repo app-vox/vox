@@ -10,9 +10,10 @@ import { LiteLLMFields } from "./LiteLLMFields";
 import { AnthropicFields } from "./AnthropicFields";
 import { CustomProviderFields } from "./CustomProviderFields";
 import { StatusBox } from "../ui/StatusBox";
+import { SecretInput } from "../ui/SecretInput";
 import { NewDot } from "../ui/NewDot";
 import { CustomSelect } from "../ui/CustomSelect";
-import { ExternalLinkIcon, CheckCircleIcon, InfoCircleAltIcon, CopyIcon, SparkleIcon, PlayIcon } from "../../../shared/icons";
+import { ExternalLinkIcon, CheckCircleIcon, InfoCircleAltIcon, CopyIcon, SparkleIcon, PlayIcon, VolumeIcon } from "../../../shared/icons";
 import type { LlmProviderType, LlmConfig } from "../../../shared/config";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
 import card from "../shared/card.module.scss";
@@ -51,11 +52,13 @@ export function LlmPanel() {
   const { debouncedSave, flush } = useDebouncedSave(500, true);
   const [testing, setTesting] = useState(false);
   const [testStatus, setTestStatus] = useState<{ text: string; type: "info" | "success" | "error" }>({ text: "", type: "info" });
-  const [activeTab, setActiveTab] = useState<"provider" | "prompt">("provider");
+  const [activeTab, setActiveTab] = useState<"provider" | "prompt" | "tts">("provider");
   const [initialPromptValue, setInitialPromptValue] = useState<string | null>(null);
   const [visitedCustomPrompt, setVisitedCustomPrompt] = useState(() => localStorage.getItem("vox:visited-custom-prompt") === "true");
   const [copiedExample, setCopiedExample] = useState<string | null>(null);
   const [hasPickedProvider, setHasPickedProvider] = useState(false);
+  const [ttsTesting, setTtsTesting] = useState(false);
+  const [ttsTestStatus, setTtsTestStatus] = useState<{ text: string; type: "info" | "success" | "error" } | null>(null);
   const testSectionRef = useRef<HTMLDivElement>(null);
 
   const configHash = config ? computeLlmConfigHash(config) : "";
@@ -96,9 +99,16 @@ export function LlmPanel() {
     setActiveTab("prompt");
   }, [visitedCustomPrompt]);
 
+  const effectiveEnhancement = devLlmEnhancement ?? config?.enableLlmEnhancement;
+
+  useEffect(() => {
+    if (!effectiveEnhancement && activeTab !== "tts") {
+      setActiveTab("tts");
+    }
+  }, [effectiveEnhancement, activeTab]);
+
   if (!config) return null;
 
-  const effectiveEnhancement = devLlmEnhancement ?? config.enableLlmEnhancement;
   const effectiveTested = devLlmTested ?? config.llmConnectionTested;
 
   const needsTest = effectiveEnhancement
@@ -216,15 +226,15 @@ export function LlmPanel() {
           <div className={`${styles.toggle} ${effectiveEnhancement ? styles.toggleOn : ""}`} />
         </div>
 
-        {effectiveEnhancement && (
-          <>
-            {needsTest && (
-              <div className={card.warningBannerInline}>
-                {t("llm.connectionTestRequired")}
-              </div>
-            )}
+        {effectiveEnhancement && needsTest && (
+          <div className={card.warningBannerInline}>
+            {t("llm.connectionTestRequired")}
+          </div>
+        )}
 
-            <div className={form.inlineTabs}>
+        <div className={form.inlineTabs}>
+          {effectiveEnhancement && (
+            <>
               <button
                 onClick={() => setActiveTab("provider")}
                 className={`${form.inlineTab} ${activeTab === "provider" ? form.active : ""}`}
@@ -238,136 +248,221 @@ export function LlmPanel() {
                 {t("llm.customPromptTab")}
                 {!visitedCustomPrompt && <NewDot />}
               </button>
+            </>
+          )}
+          <button
+            onClick={() => setActiveTab("tts")}
+            className={`${form.inlineTab} ${activeTab === "tts" ? form.active : ""}`}
+          >
+            {t("tts.title")}
+          </button>
+        </div>
+
+        {effectiveEnhancement && activeTab === "provider" && (
+          <>
+            <div className={form.field}>
+              <label htmlFor="llm-provider">{t("llm.providerLabel")}</label>
+              <CustomSelect
+                id="llm-provider"
+                value={showPlaceholder ? "" : (config.llm.provider || "foundry")}
+                items={[
+                  ...(showPlaceholder ? [{ value: "", label: t("llm.selectProvider") }] : []),
+                  ...([
+                    { value: "foundry", label: "Microsoft Foundry" },
+                    { value: "bedrock", label: "AWS Bedrock" },
+                    { value: "openai", label: "OpenAI" },
+                    { value: "deepseek", label: "DeepSeek" },
+                    { value: "glm", label: "GLM (Zhipu AI)" },
+                    { value: "anthropic", label: "Anthropic" },
+                    { value: "litellm", label: "LiteLLM" },
+                    { value: "custom", label: t("llm.custom.label") },
+                  ] as const).map((item) => ({
+                    ...item,
+                    suffix: isProviderConfigured(item.value, config.llm)
+                      ? <CheckCircleIcon width={14} height={14} style={{ color: "var(--color-accent)" }} />
+                      : undefined,
+                  })),
+                ]}
+                onChange={handleProviderChange}
+              />
             </div>
 
-            {activeTab === "provider" && (
+            {!showPlaceholder && (
               <>
-                <div className={form.field}>
-                  <label htmlFor="llm-provider">{t("llm.providerLabel")}</label>
-                  <CustomSelect
-                    id="llm-provider"
-                    value={showPlaceholder ? "" : (config.llm.provider || "foundry")}
-                    items={[
-                      ...(showPlaceholder ? [{ value: "", label: t("llm.selectProvider") }] : []),
-                      ...([
-                        { value: "foundry", label: "Microsoft Foundry" },
-                        { value: "bedrock", label: "AWS Bedrock" },
-                        { value: "openai", label: "OpenAI" },
-                        { value: "deepseek", label: "DeepSeek" },
-                        { value: "glm", label: "GLM (Zhipu AI)" },
-                        { value: "anthropic", label: "Anthropic" },
-                        { value: "litellm", label: "LiteLLM" },
-                        { value: "custom", label: t("llm.custom.label") },
-                      ] as const).map((item) => ({
-                        ...item,
-                        suffix: isProviderConfigured(item.value, config.llm)
-                          ? <CheckCircleIcon width={14} height={14} style={{ color: "var(--color-accent)" }} />
-                          : undefined,
-                      })),
-                    ]}
-                    onChange={handleProviderChange}
-                  />
-                </div>
-
-                {!showPlaceholder && (
-                  <>
-                    {config.llm.provider === "litellm" ? (
-                      <LiteLLMFields />
-                    ) : (config.llm.provider === "openai" || config.llm.provider === "deepseek" || config.llm.provider === "glm") ? (
-                      <OpenAICompatibleFields providerType={config.llm.provider} />
-                    ) : config.llm.provider === "bedrock" ? (
-                      <BedrockFields />
-                    ) : config.llm.provider === "anthropic" ? (
-                      <AnthropicFields />
-                    ) : config.llm.provider === "custom" ? (
-                      <CustomProviderFields />
-                    ) : (
-                      <FoundryFields />
-                    )}
-                  </>
+                {config.llm.provider === "litellm" ? (
+                  <LiteLLMFields />
+                ) : (config.llm.provider === "openai" || config.llm.provider === "deepseek" || config.llm.provider === "glm") ? (
+                  <OpenAICompatibleFields providerType={config.llm.provider} />
+                ) : config.llm.provider === "bedrock" ? (
+                  <BedrockFields />
+                ) : config.llm.provider === "anthropic" ? (
+                  <AnthropicFields />
+                ) : config.llm.provider === "custom" ? (
+                  <CustomProviderFields />
+                ) : (
+                  <FoundryFields />
                 )}
-
-                <div className={form.testSection} ref={testSectionRef}>
-                  <button
-                    onClick={handleTest}
-                    disabled={testing || showPlaceholder}
-                    className={`${buttons.btn} ${buttons.primary}`}
-                  >
-                    <PlayIcon width={14} height={14} />
-                    {t("llm.testConnection")}
-                  </button>
-                  {!showPlaceholder && <StatusBox text={testStatus.text} type={testStatus.type} />}
-                </div>
               </>
             )}
 
-            {activeTab === "prompt" && (
-              <div className={form.field}>
-                <label htmlFor="custom-prompt">{t("llm.customInstructions")}</label>
-                <p className={form.hint}>
-                  {t("llm.customInstructionsHint")}
-                </p>
-                <textarea
-                  id="custom-prompt"
-                  value={config.customPrompt || ""}
-                  onChange={(e) => {
-                    updateConfig({ customPrompt: e.target.value });
-                    debouncedSave();
-                  }}
-                  onFocus={() => {
-                    setInitialPromptValue(config.customPrompt || "");
-                  }}
-                  onBlur={() => {
-                    const currentValue = config.customPrompt || "";
-                    const hasChanged = initialPromptValue !== null && initialPromptValue !== currentValue;
-                    if (hasChanged) {
-                      flush();
-                    }
-                    setInitialPromptValue(null);
-                  }}
-                  placeholder={t("llm.customInstructionsPlaceholder")}
-                  rows={12}
-                  className={form.monospaceTextarea}
-                  style={{ resize: "none" }}
-                />
-                <details className={form.exampleDetails}>
-                  <summary>
-                    <InfoCircleAltIcon width={13} height={13} />
-                    {t("llm.exampleInstructions")}
-                  </summary>
-                  <ul>
-                    {([
-                      { label: t("llm.exampleProfessionalLabel"), text: t("llm.exampleProfessional"), key: "professional" },
-                      { label: t("llm.exampleFormalLabel"), text: t("llm.exampleFormal"), key: "formal" },
-                      { label: t("llm.exampleCasualLabel"), text: t("llm.exampleCasual"), key: "casual" },
-                      { label: t("llm.exampleFunnyLabel"), text: t("llm.exampleFunny"), key: "funny" },
-                      { label: t("llm.exampleEmojisLabel"), text: t("llm.exampleEmojis"), key: "emojis" },
-                      { label: t("llm.exampleConciseLabel"), text: t("llm.exampleConcise"), key: "concise" },
-                      { label: t("llm.exampleLanguageLabel"), text: t("llm.exampleLanguage"), key: "language" },
-                    ]).map((ex) => (
-                      <li key={ex.key} className={form.exampleItem}>
-                        <span><strong>{ex.label}</strong> {ex.text}</span>
-                        <button
-                          type="button"
-                          className={form.exampleCopyBtn}
-                          title={copiedExample === ex.key ? t("history.copied") : t("history.copy")}
-                          onClick={() => {
-                            const clean = ex.text.replace(/^[""\u201C]|[""\u201D]$/g, "");
-                            window.voxApi.clipboard.write(clean);
-                            setCopiedExample(ex.key);
-                            setTimeout(() => setCopiedExample((prev) => prev === ex.key ? null : prev), 1500);
-                          }}
-                        >
-                          {copiedExample === ex.key
-                            ? <CheckCircleIcon width={12} height={12} />
-                            : <CopyIcon width={12} height={12} />
-                          }
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </details>
+            <div className={form.testSection} ref={testSectionRef}>
+              <button
+                onClick={handleTest}
+                disabled={testing || showPlaceholder}
+                className={`${buttons.btn} ${buttons.primary}`}
+              >
+                <PlayIcon width={14} height={14} />
+                {t("llm.testConnection")}
+              </button>
+              {!showPlaceholder && <StatusBox text={testStatus.text} type={testStatus.type} />}
+            </div>
+          </>
+        )}
+
+        {effectiveEnhancement && activeTab === "prompt" && (
+          <div className={form.field}>
+            <label htmlFor="custom-prompt">{t("llm.customInstructions")}</label>
+            <p className={form.hint}>
+              {t("llm.customInstructionsHint")}
+            </p>
+            <textarea
+              id="custom-prompt"
+              value={config.customPrompt || ""}
+              onChange={(e) => {
+                updateConfig({ customPrompt: e.target.value });
+                debouncedSave();
+              }}
+              onFocus={() => {
+                setInitialPromptValue(config.customPrompt || "");
+              }}
+              onBlur={() => {
+                const currentValue = config.customPrompt || "";
+                const hasChanged = initialPromptValue !== null && initialPromptValue !== currentValue;
+                if (hasChanged) {
+                  flush();
+                }
+                setInitialPromptValue(null);
+              }}
+              placeholder={t("llm.customInstructionsPlaceholder")}
+              rows={12}
+              className={form.monospaceTextarea}
+              style={{ resize: "none" }}
+            />
+            <details className={form.exampleDetails}>
+              <summary>
+                <InfoCircleAltIcon width={13} height={13} />
+                {t("llm.exampleInstructions")}
+              </summary>
+              <ul>
+                {([
+                  { label: t("llm.exampleProfessionalLabel"), text: t("llm.exampleProfessional"), key: "professional" },
+                  { label: t("llm.exampleFormalLabel"), text: t("llm.exampleFormal"), key: "formal" },
+                  { label: t("llm.exampleCasualLabel"), text: t("llm.exampleCasual"), key: "casual" },
+                  { label: t("llm.exampleFunnyLabel"), text: t("llm.exampleFunny"), key: "funny" },
+                  { label: t("llm.exampleEmojisLabel"), text: t("llm.exampleEmojis"), key: "emojis" },
+                  { label: t("llm.exampleConciseLabel"), text: t("llm.exampleConcise"), key: "concise" },
+                  { label: t("llm.exampleLanguageLabel"), text: t("llm.exampleLanguage"), key: "language" },
+                ]).map((ex) => (
+                  <li key={ex.key} className={form.exampleItem}>
+                    <span><strong>{ex.label}</strong> {ex.text}</span>
+                    <button
+                      type="button"
+                      className={form.exampleCopyBtn}
+                      title={copiedExample === ex.key ? t("history.copied") : t("history.copy")}
+                      onClick={() => {
+                        const clean = ex.text.replace(/^[""\u201C]|[""\u201D]$/g, "");
+                        window.voxApi.clipboard.write(clean);
+                        setCopiedExample(ex.key);
+                        setTimeout(() => setCopiedExample((prev) => prev === ex.key ? null : prev), 1500);
+                      }}
+                    >
+                      {copiedExample === ex.key
+                        ? <CheckCircleIcon width={12} height={12} />
+                        : <CopyIcon width={12} height={12} />
+                      }
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          </div>
+        )}
+
+        {activeTab === "tts" && (
+          <>
+            <div
+              className={`${styles.enhanceToggle} ${config.ttsEnabled ? styles.active : ""}`}
+              role="switch"
+              aria-checked={config.ttsEnabled}
+              tabIndex={0}
+              onClick={() => {
+                updateConfig({ ttsEnabled: !config.ttsEnabled });
+                saveConfig(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  updateConfig({ ttsEnabled: !config.ttsEnabled });
+                  saveConfig(true);
+                }
+              }}
+            >
+              <div className={styles.enhanceIcon}>
+                <VolumeIcon width={18} height={18} />
               </div>
+              <div className={styles.enhanceText}>
+                <div className={styles.enhanceTitle}>{t("tts.enableCheckbox")}</div>
+                <div className={styles.enhanceDesc}>{t("tts.enableHint")}</div>
+              </div>
+              <div className={`${styles.toggle} ${config.ttsEnabled ? styles.toggleOn : ""}`} />
+            </div>
+
+            {config.ttsEnabled && (
+              <>
+                <div className={form.field}>
+                  <label htmlFor="tts-api-key">{t("tts.apiKey")}</label>
+                  <SecretInput
+                    id="tts-api-key"
+                    value={config.elevenLabsApiKey}
+                    onChange={(v) => {
+                      updateConfig({ elevenLabsApiKey: v });
+                      debouncedSave();
+                    }}
+                    placeholder={t("tts.apiKeyPlaceholder")}
+                  />
+                </div>
+
+                <p className={form.hint}>{t("tts.voiceDefault")}</p>
+
+                <div className={form.testSection}>
+                  <button
+                    onClick={async () => {
+                      setTtsTesting(true);
+                      setTtsTestStatus(null);
+                      try {
+                        const ok = await window.voxApi.tts.test(
+                          config.elevenLabsApiKey,
+                          config.elevenLabsVoiceId,
+                        );
+                        setTtsTestStatus(ok
+                          ? { text: t("tts.testSuccess"), type: "success" }
+                          : { text: t("tts.testError"), type: "error" },
+                        );
+                      } catch {
+                        setTtsTestStatus({ text: t("tts.testError"), type: "error" });
+                      } finally {
+                        setTtsTesting(false);
+                      }
+                    }}
+                    disabled={ttsTesting || !config.elevenLabsApiKey}
+                    className={`${buttons.btn} ${buttons.primary}`}
+                  >
+                    <PlayIcon width={14} height={14} />
+                    {t("tts.test")}
+                  </button>
+                  {ttsTestStatus && <StatusBox text={ttsTestStatus.text} type={ttsTestStatus.type} />}
+                </div>
+              </>
             )}
           </>
         )}
