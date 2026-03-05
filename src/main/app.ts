@@ -25,6 +25,7 @@ import { t, setLanguage, resolveSystemLanguage } from "../shared/i18n";
 import { getLlmModelName } from "../shared/llm-utils";
 import { AnalyticsService } from "./analytics/service";
 import { setupAnalyticsErrorCapture } from "./logger";
+import { TtsManager } from "./tts/manager";
 import log from "./logger";
 import { saveAudioFile, cleanupOrphanedAudioFiles, getAudioFilePath } from "./audio/persistence";
 
@@ -261,7 +262,17 @@ app.whenReady().then(async () => {
     launch_at_login: initialConfig.launchAtLogin,
   });
 
-  registerIpcHandlers(configManager, modelManager, historyManager, reloadConfig, analytics);
+  const ttsRecorder = new AudioRecorder();
+  const ttsManager = new TtsManager({
+    playAudio: (buffer) => ttsRecorder.playMp3Buffer(buffer),
+  });
+  ttsManager.setOnStateChange((state) => {
+    for (const win of BrowserWindow.getAllWindows()) {
+      win.webContents.send("tts:state-changed", state);
+    }
+  });
+
+  registerIpcHandlers(configManager, modelManager, historyManager, reloadConfig, analytics, ttsManager);
 
   ipcMain.handle("audio:preview-cue", async (_event, cueType: string) => {
     if (cueType === "none" || !pipeline) return;
