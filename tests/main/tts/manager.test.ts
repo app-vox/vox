@@ -25,11 +25,13 @@ function validConfig() {
 describe("TtsManager", () => {
   let manager: TtsManager;
   let playAudio: ReturnType<typeof vi.fn>;
+  let stopAudio: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.useFakeTimers();
     playAudio = vi.fn().mockResolvedValue(undefined);
-    manager = new TtsManager({ playAudio });
+    stopAudio = vi.fn().mockResolvedValue(undefined);
+    manager = new TtsManager({ playAudio, stopAudio });
     mockSynthesize.mockReset();
     mockGetSelectedText.mockReset();
   });
@@ -73,6 +75,7 @@ describe("TtsManager", () => {
       text: "Hello world",
       apiKey: "test-api-key",
       voiceId: "voice-123",
+      signal: expect.any(AbortSignal),
     });
     expect(playAudio).toHaveBeenCalledWith(fakeAudio);
     expect(states).toEqual(["loading", "playing", "idle"]);
@@ -102,6 +105,11 @@ describe("TtsManager", () => {
     await vi.advanceTimersByTimeAsync(5000);
     await playPromise;
     expect(playAudio).not.toHaveBeenCalled();
+  });
+
+  it("stop() calls stopAudio to halt active MP3 playback", () => {
+    manager.stop();
+    expect(stopAudio).toHaveBeenCalledOnce();
   });
 
   it("sets error state and resets after timeout on failure", async () => {

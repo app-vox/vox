@@ -11,6 +11,7 @@ interface TtsConfig {
 
 interface TtsManagerDeps {
   playAudio: (buffer: ArrayBuffer) => Promise<void>;
+  stopAudio: () => Promise<void>;
 }
 
 export class TtsManager {
@@ -54,6 +55,7 @@ export class TtsManager {
         text,
         apiKey: config.elevenLabsApiKey,
         voiceId: config.elevenLabsVoiceId,
+        signal: this.abortController.signal,
       });
 
       if (signal.aborted) return;
@@ -75,6 +77,7 @@ export class TtsManager {
       this.abortController.abort();
       this.abortController = null;
     }
+    this.deps.stopAudio();
     this.setState("idle");
   }
 

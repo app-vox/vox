@@ -5,11 +5,17 @@ interface SynthesizeOptions {
   text: string;
   apiKey: string;
   voiceId: string;
+  signal?: AbortSignal;
 }
 
 export async function synthesize(opts: SynthesizeOptions): Promise<ArrayBuffer> {
   if (!opts.text) {
     throw new Error("Text must not be empty");
+  }
+
+  const MAX_TEXT_LENGTH = 5000;
+  if (opts.text.length > MAX_TEXT_LENGTH) {
+    throw new Error(`Text exceeds maximum length of ${MAX_TEXT_LENGTH} characters`);
   }
 
   const url = `${ELEVENLABS_API_URL}/${opts.voiceId}`;
@@ -25,6 +31,7 @@ export async function synthesize(opts: SynthesizeOptions): Promise<ArrayBuffer> 
       text: opts.text,
       model_id: MODEL_ID,
     }),
+    signal: opts.signal,
   });
 
   if (!response.ok) {
