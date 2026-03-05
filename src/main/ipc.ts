@@ -450,6 +450,8 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle("tts:has-selected-text", async () => {
+    const config = configManager.load();
+    if (!config.ttsEnabled || !config.elevenLabsApiKey) return false;
     return ttsManager?.hasSelectedText() ?? false;
   });
 
