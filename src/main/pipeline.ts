@@ -8,6 +8,8 @@ import log from "electron-log/main";
 
 const slog = log.scope("Pipeline");
 
+const GARBAGE_AUDIO_THRESHOLD_MS = 5000;
+
 export type PipelineStage = "transcribing" | "enhancing";
 
 export interface PipelineDeps {
@@ -38,8 +40,17 @@ export interface PipelineDeps {
     text: string;
     originalText: string;
     audioDurationMs: number;
+    recording: RecordingResult;
+    llmFailed?: boolean;
+    errorMessage?: string;
   }) => void;
   onLlmFailed?: () => void;
+  onFailure?: (result: {
+    failedStep: "whisper" | "garbage";
+    error: Error;
+    recording: RecordingResult;
+    audioDurationMs: number;
+  }) => void;
 }
 
 /**
@@ -230,6 +241,21 @@ export class Pipeline {
     return this.processFromRecording(this.heldRecording!, gen);
   }
 
+  async retryFromRecording(recording: RecordingResult): Promise<string> {
+    if (!existsSync(this.deps.modelPath)) {
+      throw new NoModelError();
+    }
+    this.canceled = false;
+    this.cancelingStage = null;
+    this.heldRecording = recording;
+    this.heldTranscription = null;
+    this.currentStage = null;
+    this.generation++;
+    const gen = this.generation;
+
+    return this.processFromRecording(recording, gen);
+  }
+
   confirmCancel(): void {
     this.cancelingStage = null;
     this.heldRecording = null;
@@ -273,6 +299,13 @@ export class Pipeline {
         whisper_model: this.whisperModelName,
         error_type: err instanceof Error ? err.name : "unknown",
       });
+      const audioDurationMs = Math.round((recording.audioBuffer.length / recording.sampleRate) * 1000);
+      this.deps.onFailure?.({
+        failedStep: "whisper",
+        error: err instanceof Error ? err : new Error(String(err)),
+        recording,
+        audioDurationMs,
+      });
       throw err;
     }
 
@@ -302,7 +335,7 @@ export class Pipeline {
       this.deps.analytics?.track("llm_enhancement_skipped");
       if (!rawText) return "";
       this.currentStage = null;
-      this.deps.onComplete?.({ text: rawText, originalText: rawText, audioDurationMs });
+      this.deps.onComplete?.({ text: rawText, originalText: rawText, audioDurationMs, recording });
       return rawText;
     }
 
@@ -312,6 +345,14 @@ export class Pipeline {
       this.deps.analytics?.track("transcription_garbage_detected", {
         whisper_model: this.whisperModelName,
       });
+      if (audioDurationMs > GARBAGE_AUDIO_THRESHOLD_MS) {
+        this.deps.onFailure?.({
+          failedStep: "garbage",
+          error: new Error("No speech detected"),
+          recording,
+          audioDurationMs,
+        });
+      }
       return "";
     }
     slog.info("Transcription passed, sending to LLM");
@@ -381,6 +422,23 @@ export class Pipeline {
       });
       this.deps.onLlmFailed?.();
       finalText = rawText;
+
+      if (this.canceled || gen !== this.generation) {
+        throw new CanceledError();
+      }
+
+      const totalTimeMs = Number((performance.now() - processingStartTime).toFixed(1));
+      slog.info("Pipeline complete (LLM failed)", { totalTimeMs });
+      this.currentStage = null;
+      this.deps.onComplete?.({
+        text: finalText,
+        originalText: rawText,
+        audioDurationMs,
+        recording,
+        llmFailed: true,
+        errorMessage: err instanceof Error ? err.message : String(err),
+      });
+      return finalText;
     }
 
     if (this.canceled || gen !== this.generation) {
@@ -391,7 +449,7 @@ export class Pipeline {
     slog.info("Pipeline complete", { totalTimeMs });
     this.currentStage = null;
 
-    this.deps.onComplete?.({ text: finalText, originalText: rawText, audioDurationMs });
+    this.deps.onComplete?.({ text: finalText, originalText: rawText, audioDurationMs, recording });
     return finalText;
   }
 }

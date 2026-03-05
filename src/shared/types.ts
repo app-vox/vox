@@ -1,3 +1,5 @@
+export type TranscriptionStatus = "success" | "whisper_failed" | "llm_failed";
+
 export interface TranscriptionEntry {
   id: string;
   timestamp: string;
@@ -9,6 +11,10 @@ export interface TranscriptionEntry {
   llmEnhanced: boolean;
   llmProvider?: string;
   llmModel?: string;
+  status: TranscriptionStatus;
+  audioFilePath?: string;
+  errorMessage?: string;
+  failedStep?: "whisper" | "llm";
 }
 
 export interface PaginatedResult<T> {

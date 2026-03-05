@@ -14,7 +14,12 @@ vi.mock("electron-store", () => {
 // Mock crypto.randomUUID
 vi.stubGlobal("crypto", { randomUUID: vi.fn(() => "test-uuid-1234") });
 
+vi.mock("../../../src/main/audio/persistence", () => ({
+  deleteAudioFile: vi.fn(),
+}));
+
 import { HistoryManager } from "../../../src/main/history/manager";
+import { deleteAudioFile } from "../../../src/main/audio/persistence";
 import type { TranscriptionEntry } from "../../../src/shared/types";
 
 describe("HistoryManager", () => {
@@ -22,6 +27,7 @@ describe("HistoryManager", () => {
 
   beforeEach(() => {
     manager = new HistoryManager();
+    vi.mocked(deleteAudioFile).mockReset();
   });
 
   afterEach(() => {
@@ -39,6 +45,7 @@ describe("HistoryManager", () => {
         llmEnhanced: true,
         llmProvider: "foundry",
         llmModel: "gpt-4o",
+        status: "success",
       });
 
       expect(entry.id).toBe("test-uuid-1234");
@@ -47,8 +54,8 @@ describe("HistoryManager", () => {
     });
 
     it("should prepend new entries (newest first)", () => {
-      manager.add({ text: "First", originalText: "first", wordCount: 1, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false });
-      manager.add({ text: "Second", originalText: "second", wordCount: 1, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false });
+      manager.add({ text: "First", originalText: "first", wordCount: 1, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false, status: "success" });
+      manager.add({ text: "Second", originalText: "second", wordCount: 1, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false, status: "success" });
 
       const result = manager.get(0, 10);
       expect(result.entries[0].text).toBe("Second");
@@ -59,7 +66,7 @@ describe("HistoryManager", () => {
   describe("get", () => {
     it("should return paginated entries with total count", () => {
       for (let i = 0; i < 5; i++) {
-        manager.add({ text: `Entry ${i}`, originalText: `entry ${i}`, wordCount: 2, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false });
+        manager.add({ text: `Entry ${i}`, originalText: `entry ${i}`, wordCount: 2, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false, status: "success" });
       }
 
       const page1 = manager.get(0, 2);
@@ -80,9 +87,9 @@ describe("HistoryManager", () => {
 
   describe("search", () => {
     it("should filter entries by text content (case-insensitive)", () => {
-      manager.add({ text: "Meeting notes about React", originalText: "meeting notes about react", wordCount: 4, audioDurationMs: 2000, whisperModel: "small", llmEnhanced: false });
-      manager.add({ text: "Shopping list for groceries", originalText: "shopping list for groceries", wordCount: 4, audioDurationMs: 1500, whisperModel: "small", llmEnhanced: false });
-      manager.add({ text: "React component design", originalText: "react component design", wordCount: 3, audioDurationMs: 1800, whisperModel: "small", llmEnhanced: false });
+      manager.add({ text: "Meeting notes about React", originalText: "meeting notes about react", wordCount: 4, audioDurationMs: 2000, whisperModel: "small", llmEnhanced: false, status: "success" });
+      manager.add({ text: "Shopping list for groceries", originalText: "shopping list for groceries", wordCount: 4, audioDurationMs: 1500, whisperModel: "small", llmEnhanced: false, status: "success" });
+      manager.add({ text: "React component design", originalText: "react component design", wordCount: 3, audioDurationMs: 1800, whisperModel: "small", llmEnhanced: false, status: "success" });
 
       const result = manager.search("react", 0, 10);
       expect(result.entries).toHaveLength(2);
@@ -90,7 +97,7 @@ describe("HistoryManager", () => {
     });
 
     it("should search in originalText too", () => {
-      manager.add({ text: "Enhanced version", originalText: "original version with keyword", wordCount: 2, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: true });
+      manager.add({ text: "Enhanced version", originalText: "original version with keyword", wordCount: 2, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: true, status: "success" });
 
       const result = manager.search("keyword", 0, 10);
       expect(result.entries).toHaveLength(1);
@@ -98,7 +105,7 @@ describe("HistoryManager", () => {
 
     it("should return paginated search results", () => {
       for (let i = 0; i < 5; i++) {
-        manager.add({ text: `React tip ${i}`, originalText: `react tip ${i}`, wordCount: 3, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false });
+        manager.add({ text: `React tip ${i}`, originalText: `react tip ${i}`, wordCount: 3, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false, status: "success" });
       }
 
       const result = manager.search("react", 0, 2);
@@ -109,7 +116,7 @@ describe("HistoryManager", () => {
 
   describe("clear", () => {
     it("should remove all entries", () => {
-      manager.add({ text: "Entry", originalText: "entry", wordCount: 1, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false });
+      manager.add({ text: "Entry", originalText: "entry", wordCount: 1, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false, status: "success" });
       manager.clear();
 
       const result = manager.get(0, 10);
@@ -130,6 +137,7 @@ describe("HistoryManager", () => {
         audioDurationMs: 1000,
         whisperModel: "small",
         llmEnhanced: false,
+        status: "success",
       };
 
       // Access internal store to inject the old entry
@@ -137,11 +145,130 @@ describe("HistoryManager", () => {
       store.set("entries", [oldEntry]);
 
       // Adding a new entry should trigger cleanup
-      manager.add({ text: "New entry", originalText: "new entry", wordCount: 2, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false });
+      manager.add({ text: "New entry", originalText: "new entry", wordCount: 2, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false, status: "success" });
 
       const result = manager.get(0, 10);
       expect(result.entries).toHaveLength(1);
       expect(result.entries[0].text).toBe("New entry");
+    });
+  });
+
+  describe("getEntry", () => {
+    it("should return the entry by id", () => {
+      const entry = manager.add({
+        text: "Test", originalText: "test", wordCount: 1,
+        audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false,
+        status: "success",
+      });
+      expect(manager.getEntry(entry.id)).toEqual(entry);
+    });
+
+    it("should return undefined for missing id", () => {
+      expect(manager.getEntry("nonexistent")).toBeUndefined();
+    });
+  });
+
+  describe("updateEntry", () => {
+    it("should update fields of an existing entry", () => {
+      const entry = manager.add({
+        text: "", originalText: "", wordCount: 0,
+        audioDurationMs: 2000, whisperModel: "small", llmEnhanced: false,
+        status: "whisper_failed", errorMessage: "Timeout",
+      });
+
+      manager.updateEntry(entry.id, {
+        text: "Recovered text", originalText: "recovered text",
+        wordCount: 2, status: "success", errorMessage: undefined,
+      });
+
+      const updated = manager.getEntry(entry.id);
+      expect(updated?.text).toBe("Recovered text");
+      expect(updated?.status).toBe("success");
+      expect(updated?.errorMessage).toBeUndefined();
+    });
+
+    it("should throw if entry not found", () => {
+      expect(() => manager.updateEntry("missing", { text: "x" })).toThrow();
+    });
+  });
+
+  describe("deleteEntry with audio cleanup", () => {
+    it("should call deleteAudioFile when entry has audioFilePath", () => {
+      const entry = manager.add({
+        text: "Test", originalText: "test", wordCount: 1,
+        audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false,
+        status: "success", audioFilePath: "/mock/audio/test.wav",
+      });
+
+      manager.deleteEntry(entry.id);
+
+      expect(deleteAudioFile).toHaveBeenCalledWith("/mock/audio/test.wav");
+      const result = manager.get(0, 10);
+      expect(result.entries).toHaveLength(0);
+    });
+  });
+
+  describe("clear with audio cleanup", () => {
+    it("should delete all audio files when clearing history", () => {
+      manager.add({
+        text: "Entry 1", originalText: "entry 1", wordCount: 2,
+        audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false,
+        status: "success", audioFilePath: "/mock/audio/e1.wav",
+      });
+      manager.add({
+        text: "Entry 2", originalText: "entry 2", wordCount: 2,
+        audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false,
+        status: "success", audioFilePath: "/mock/audio/e2.wav",
+      });
+
+      manager.clear();
+
+      expect(deleteAudioFile).toHaveBeenCalledWith("/mock/audio/e1.wav");
+      expect(deleteAudioFile).toHaveBeenCalledWith("/mock/audio/e2.wav");
+    });
+  });
+
+  describe("enforceAudioRetention", () => {
+    it("should remove audioFilePath from oldest entries beyond retention limit", () => {
+      for (let i = 0; i < 3; i++) {
+        manager.add({
+          text: `Entry ${i}`, originalText: `entry ${i}`, wordCount: 2,
+          audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false,
+          status: "success", audioFilePath: `/mock/audio/entry-${i}.wav`,
+        });
+      }
+
+      manager.enforceAudioRetention(2);
+
+      const result = manager.get(0, 10);
+      const withAudio = result.entries.filter((e) => e.audioFilePath);
+      expect(withAudio).toHaveLength(2);
+    });
+
+    it("should do nothing when count is within limit", () => {
+      manager.add({
+        text: "Entry", originalText: "entry", wordCount: 1,
+        audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false,
+        status: "success", audioFilePath: "/mock/audio/entry.wav",
+      });
+
+      manager.enforceAudioRetention(5);
+
+      const result = manager.get(0, 10);
+      expect(result.entries[0].audioFilePath).toBeDefined();
+    });
+
+    it("should remove all audio when limit is 0", () => {
+      manager.add({
+        text: "Entry", originalText: "entry", wordCount: 1,
+        audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false,
+        status: "success", audioFilePath: "/mock/audio/entry.wav",
+      });
+
+      manager.enforceAudioRetention(0);
+
+      const result = manager.get(0, 10);
+      expect(result.entries[0].audioFilePath).toBeUndefined();
     });
   });
 });

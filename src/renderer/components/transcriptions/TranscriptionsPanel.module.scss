@@ -65,11 +65,18 @@
   display: flex;
   align-items: flex-start;
   gap: var(--spacing-3);
-  padding: var(--spacing-3) 0;
+  padding: var(--spacing-3);
+  margin: 0 calc(-1 * var(--spacing-3));
   border-bottom: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  transition: background var(--duration-fast) var(--ease-default);
 
   &:last-child {
     border-bottom: none;
+  }
+
+  &:hover {
+    background: var(--color-bg-hover);
   }
 }
 
@@ -83,9 +90,6 @@
   font-size: var(--font-size-sm);
   color: var(--color-text-primary);
   line-height: 1.5;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .entryMeta {
@@ -117,48 +121,118 @@
   align-items: center;
   gap: var(--spacing-1);
   flex-shrink: 0;
+
+  button > svg {
+    pointer-events: none;
+  }
 }
 
-.deleteButton {
-  display: none;
+.overflowMenu {
+  position: relative;
+}
+
+.overflowTrigger {
+  display: flex;
   align-items: center;
   justify-content: center;
   padding: var(--spacing-1-5);
-  border: 1px solid transparent;
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-base);
-  background: none;
-  color: var(--color-text-muted);
+  background: var(--color-bg-root);
+  color: var(--color-text-secondary);
   cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
   transition:
     color var(--duration-fast) var(--ease-default),
-    border-color var(--duration-fast) var(--ease-default);
+    border-color var(--duration-fast) var(--ease-default),
+    opacity var(--duration-fast) var(--ease-default);
 
   .entry:hover & {
-    display: flex;
+    opacity: 1;
+    pointer-events: auto;
   }
 
   &:hover {
+    color: var(--color-text-primary);
+    border-color: var(--color-border-hover);
+  }
+}
+
+.overflowDropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 10;
+  min-width: 160px;
+  padding-top: var(--spacing-1);
+
+  .overflowMenu:hover & {
+    display: block;
+  }
+}
+
+.overflowDropdownInner {
+  padding: var(--spacing-1) 0;
+  background: var(--color-bg-root);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 10%);
+}
+
+.overflowItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  width: 100%;
+  padding: var(--spacing-2) var(--spacing-3);
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--duration-fast) var(--ease-default);
+
+  &:hover {
+    background: var(--color-bg-hover);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+}
+
+.overflowItemDanger {
+  &:hover {
     color: var(--color-danger, #ef4444);
-    border-color: var(--color-danger, #ef4444);
   }
 }
 
 .copyButton {
   display: flex;
   align-items: center;
-  gap: var(--spacing-1);
-  padding: var(--spacing-1-5) var(--spacing-2);
+  justify-content: center;
+  padding: var(--spacing-1-5);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-base);
   background: var(--color-bg-root);
   color: var(--color-text-secondary);
-  font-size: var(--font-size-xs);
   cursor: pointer;
-  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
   transition:
     border-color var(--duration-fast) var(--ease-default),
-    color var(--duration-fast) var(--ease-default);
+    color var(--duration-fast) var(--ease-default),
+    opacity var(--duration-fast) var(--ease-default);
   flex-shrink: 0;
+
+  .entry:hover & {
+    opacity: 1;
+    pointer-events: auto;
+  }
 
   &:hover {
     border-color: var(--color-border-hover);
@@ -255,4 +329,108 @@
     border-color: var(--color-danger, #ef4444);
     color: var(--color-danger, #ef4444);
   }
+}
+
+.entryWhisperFailed {
+  border-left: 3px solid var(--color-error);
+  padding-left: var(--spacing-3);
+}
+
+.entryLlmFailed {
+  border-left: 3px solid var(--color-warning);
+  padding-left: var(--spacing-3);
+}
+
+@keyframes retryPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.entryRetrying {
+  animation: retryPulse 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: 0 var(--spacing-1);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-sm);
+}
+
+.statusBadgeError {
+  color: var(--color-error);
+  background: var(--color-error-bg-light);
+}
+
+.statusBadgeWarning {
+  color: var(--color-warning);
+  background: var(--color-warning-bg-light);
+}
+
+.audioButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-1-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: var(--color-bg-root);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: color var(--duration-fast) var(--ease-default),
+              border-color var(--duration-fast) var(--ease-default),
+              opacity var(--duration-fast) var(--ease-default);
+
+  .entry:hover & {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  &:hover {
+    border-color: var(--color-border-hover);
+    color: var(--color-text-primary);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+}
+
+.audioButtonPlaying {
+  opacity: 1;
+  pointer-events: auto;
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+
+  &:hover {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+}
+
+.errorText {
+  color: var(--color-error);
+  font-style: italic;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.audioUnavailable {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-style: italic;
 }
