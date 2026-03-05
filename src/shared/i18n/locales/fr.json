@@ -478,6 +478,8 @@
   "tts.test": "Tester la voix",
   "tts.testSuccess": "Synthèse vocale fonctionnelle",
   "tts.testError": "Échec de connexion à ElevenLabs. Vérifiez votre clé API.",
+  "tts.testPlaying": "Lecture de l'audio de test...",
+  "tts.learnMore": "Obtenez votre clé API sur elevenlabs.io",
   "tts.playing": "Lecture à voix haute…",
   "tts.error": "Échec de la synthèse vocale"
 }

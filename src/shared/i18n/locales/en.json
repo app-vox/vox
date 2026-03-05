@@ -478,6 +478,8 @@
   "tts.test": "Test Voice",
   "tts.testSuccess": "Voice synthesis working correctly",
   "tts.testError": "Failed to connect to ElevenLabs. Check your API key.",
+  "tts.testPlaying": "Playing test audio...",
+  "tts.learnMore": "Get your API key at elevenlabs.io",
   "tts.playing": "Reading aloud…",
   "tts.error": "Text-to-speech failed"
 }

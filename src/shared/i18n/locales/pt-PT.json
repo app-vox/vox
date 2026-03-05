@@ -478,6 +478,8 @@
   "tts.test": "Testar Voz",
   "tts.testSuccess": "Síntese de voz a funcionar corretamente",
   "tts.testError": "Falha ao ligar ao ElevenLabs. Verifique a sua chave de API.",
+  "tts.testPlaying": "A reproduzir áudio de teste...",
+  "tts.learnMore": "Obtenha a sua chave de API em elevenlabs.io",
   "tts.playing": "A ler em voz alta…",
   "tts.error": "Falha na conversão de texto para fala"
 }

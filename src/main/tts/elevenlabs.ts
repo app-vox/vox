@@ -44,11 +44,10 @@ export async function synthesize(opts: SynthesizeOptions): Promise<ArrayBuffer> 
   return response.arrayBuffer();
 }
 
-export async function testConnection(apiKey: string, voiceId: string): Promise<boolean> {
+export async function testConnection(apiKey: string, voiceId: string): Promise<ArrayBuffer | null> {
   try {
-    await synthesize({ text: "test", apiKey, voiceId });
-    return true;
+    return await synthesize({ text: "Hello! Text to speech is working.", apiKey, voiceId });
   } catch {
-    return false;
+    return null;
   }
 }
