@@ -95,6 +95,9 @@ export function createVoxApiMock(): VoxAPI {
     analytics: {
       track: vi.fn().mockResolvedValue(undefined),
     },
+    tts: {
+      test: vi.fn().mockResolvedValue(true),
+    },
   };
 }
 
