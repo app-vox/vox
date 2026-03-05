@@ -443,12 +443,16 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle("tts:play", async () => {
-    const config = configManager.load();
-    await ttsManager?.play({
-      ttsEnabled: config.ttsEnabled,
-      elevenLabsApiKey: config.elevenLabsApiKey,
-      elevenLabsVoiceId: config.elevenLabsVoiceId,
-    });
+    try {
+      const config = configManager.load();
+      await ttsManager?.play({
+        ttsEnabled: config.ttsEnabled,
+        elevenLabsApiKey: config.elevenLabsApiKey,
+        elevenLabsVoiceId: config.elevenLabsVoiceId,
+      });
+    } catch (err) {
+      log.warn("TTS play failed:", err);
+    }
   });
 
   ipcMain.handle("tts:stop", () => {
