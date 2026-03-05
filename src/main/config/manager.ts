@@ -109,6 +109,7 @@ export class ConfigManager {
           copyToClipboard: saved.copyToClipboard ?? defaults.copyToClipboard,
           lowercaseStart: saved.lowercaseStart ?? defaults.lowercaseStart,
           shiftCapitalize: saved.shiftCapitalize ?? defaults.shiftCapitalize,
+          finishWithPeriod: saved.finishWithPeriod ?? defaults.finishWithPeriod,
           onboardingCompleted: saved.onboardingCompleted ?? true,
         };
       } catch {
