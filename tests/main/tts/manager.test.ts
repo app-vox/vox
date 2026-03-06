@@ -179,6 +179,28 @@ describe("TtsManager", () => {
       expect(mockGetSelectedText).toHaveBeenCalledTimes(1);
     });
 
+    it("polling with empty text does not clear a previously cached selection", async () => {
+      const fakeAudio = new ArrayBuffer(256);
+      mockSynthesize.mockResolvedValue(fakeAudio);
+
+      // First poll finds text
+      mockGetSelectedText.mockResolvedValue("important text");
+      await manager.hasSelectedText();
+
+      // Second poll returns empty (e.g. focus shifted to HUD)
+      mockGetSelectedText.mockResolvedValue("");
+      await manager.hasSelectedText();
+
+      // play() should still use the previously cached text
+      mockGetSelectedText.mockReset();
+      await manager.play(validConfig());
+
+      expect(mockGetSelectedText).not.toHaveBeenCalled();
+      expect(mockSynthesize).toHaveBeenCalledWith(
+        expect.objectContaining({ text: "important text" }),
+      );
+    });
+
     it("play() falls back to getSelectedText() when no cached text", async () => {
       const fakeAudio = new ArrayBuffer(256);
       mockGetSelectedText.mockResolvedValue("fresh text");

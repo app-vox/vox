@@ -1,3 +1,7 @@
+import log from "electron-log/main";
+
+const slog = log.scope("Selection");
+
 type Pointer = NonNullable<unknown>;
 
 let initialized = false;
@@ -166,6 +170,7 @@ export async function getSelectedText(): Promise<string> {
     // Primary path: query the frontmost app directly (avoids focus race
     // when the HUD steals system focus via setIgnoreMouseEvents).
     const pid = getFrontmostPid();
+    slog.info("getSelectedText: frontmost pid=%s, my pid=%d", pid, process.pid);
     if (pid != null) {
       const appElement = AXUIElementCreateApplication(pid);
       if (appElement) {
@@ -174,10 +179,13 @@ export async function getSelectedText(): Promise<string> {
         if (focused) {
           try {
             const text = readSelectedText(koffi, focused);
+            slog.info("getSelectedText: primary path text=%s (len=%d)", text.slice(0, 40), text.length);
             if (text) return text;
           } finally {
             CFRelease(focused);
           }
+        } else {
+          slog.info("getSelectedText: no focused element for pid=%d", pid);
         }
       }
     }
@@ -189,13 +197,16 @@ export async function getSelectedText(): Promise<string> {
       CFRelease(systemWide);
       if (focused) {
         try {
-          return readSelectedText(koffi, focused);
+          const text = readSelectedText(koffi, focused);
+          slog.info("getSelectedText: fallback text=%s (len=%d)", text.slice(0, 40), text.length);
+          return text;
         } finally {
           CFRelease(focused);
         }
       }
     }
 
+    slog.info("getSelectedText: no text found");
     return "";
   } catch {
     return "";
