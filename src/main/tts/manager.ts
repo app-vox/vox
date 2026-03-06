@@ -1,5 +1,8 @@
+import log from "electron-log/main";
 import { synthesize, testConnection } from "./elevenlabs";
 import { getSelectedText } from "../input/selection";
+
+const slog = log.scope("TTS");
 
 export type TtsState = "idle" | "loading" | "playing" | "error";
 
@@ -45,6 +48,7 @@ export class TtsManager {
 
     const text = this.cachedSelectedText || (await getSelectedText());
     this.cachedSelectedText = "";
+    slog.info("play() text=%s (length=%d)", text.slice(0, 80), text.length);
     if (!text) {
       throw new Error("No text selected");
     }
@@ -107,8 +111,18 @@ export class TtsManager {
 
   async hasSelectedText(): Promise<boolean> {
     const text = await getSelectedText();
-    this.cachedSelectedText = text;
+    // Only update cache when text is found — never clear it, so a
+    // subsequent polling call that returns empty (e.g. focus shifted to
+    // HUD) doesn't wipe a previously cached selection.
+    if (text.length > 0) {
+      this.cachedSelectedText = text;
+      slog.info("hasSelectedText: cached %d chars", text.length);
+    }
     return text.length > 0;
+  }
+
+  clearCache(): void {
+    this.cachedSelectedText = "";
   }
 
   private setState(state: TtsState): void {
