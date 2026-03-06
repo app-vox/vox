@@ -129,6 +129,9 @@ export interface VoxConfig {
   lowercaseStart: boolean;
   shiftCapitalize: boolean;
   onboardingCompleted: boolean;
+  ttsEnabled: boolean;
+  elevenLabsApiKey: string;
+  elevenLabsVoiceId: string;
 }
 
 export function createDefaultConfig(isProduction = false): VoxConfig {
@@ -173,6 +176,9 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     lowercaseStart: false,
     shiftCapitalize: true,
     onboardingCompleted: false,
+    ttsEnabled: false,
+    elevenLabsApiKey: "",
+    elevenLabsVoiceId: "21m00Tcm4TlvDq8ikWAM",
   };
 }
 

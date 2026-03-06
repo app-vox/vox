@@ -14,6 +14,7 @@ import { getResourcePath } from "./resources";
 import { SetupChecker } from "./setup/checker";
 import { checkForUpdates, getUpdateState, quitAndInstall } from "./updater";
 import { t } from "../shared/i18n";
+import { type TtsManager } from "./tts/manager";
 
 const testLog = log.scope("LlmTest");
 
@@ -22,7 +23,8 @@ export function registerIpcHandlers(
   modelManager: ModelManager,
   historyManager: HistoryManager,
   onConfigChange?: () => void,
-  analytics?: AnalyticsService
+  analytics?: AnalyticsService,
+  ttsManager?: TtsManager
 ): void {
   ipcMain.handle("resources:data-url", (_event, ...segments: string[]) => {
     const filePath = getResourcePath(...segments);
@@ -53,6 +55,9 @@ export function registerIpcHandlers(
     }
     if (previousConfig.llm.provider !== config.llm.provider) {
       analytics?.track("llm_provider_selected", { provider: config.llm.provider });
+    }
+    if (previousConfig.ttsEnabled !== config.ttsEnabled) {
+      analytics?.track(config.ttsEnabled ? "tts_enabled" : "tts_disabled");
     }
     analytics?.track("config_changed");
 
@@ -356,5 +361,36 @@ export function registerIpcHandlers(
 
   ipcMain.handle("analytics:track", (_event, name: string, properties?: Record<string, unknown>) => {
     analytics?.track(name, properties);
+  });
+
+  ipcMain.handle("tts:play", async () => {
+    try {
+      const config = configManager.load();
+      await ttsManager?.play({
+        ttsEnabled: config.ttsEnabled,
+        elevenLabsApiKey: config.elevenLabsApiKey,
+        elevenLabsVoiceId: config.elevenLabsVoiceId,
+      });
+    } catch (err) {
+      log.warn("TTS play failed:", err);
+    }
+  });
+
+  ipcMain.handle("tts:stop", () => {
+    ttsManager?.stop();
+  });
+
+  ipcMain.handle("tts:has-selected-text", async () => {
+    const config = configManager.load();
+    if (!config.ttsEnabled || !config.elevenLabsApiKey) return false;
+    return ttsManager?.hasSelectedText() ?? false;
+  });
+
+  ipcMain.handle("tts:test", async (_event, apiKey: string, voiceId: string) => {
+    if (ttsManager) {
+      return ttsManager.testAndPlay(apiKey, voiceId);
+    }
+    const { testConnection } = await import("./tts/elevenlabs");
+    return (await testConnection(apiKey, voiceId)) !== null;
   });
 }
