@@ -31,6 +31,9 @@ let AXUIElementCreateApplication!: (pid: number) => Pointer | null;
 const kCFStringEncodingUTF8 = 0x08000100;
 const kAXErrorSuccess = 0;
 
+// Remember the last PID that had selected text so we can try it first.
+let lastKnownPid: number | null = null;
+
 function init(): void {
   if (process.env.VITEST) return;
   if (initialized) return;
@@ -77,6 +80,24 @@ function init(): void {
   );
 }
 
+function getVisiblePids(): number[] {
+  try {
+    const { execSync } = require("child_process");
+    const myPid = process.pid;
+    const out = execSync(
+      `osascript -e 'tell application "System Events" to get unix id of every process whose visible is true'`,
+      { encoding: "utf8", timeout: 500 },
+    );
+    return out
+      .trim()
+      .split(",")
+      .map((s: string) => parseInt(s.trim(), 10))
+      .filter((p: number) => Number.isFinite(p) && p !== myPid);
+  } catch {
+    return [];
+  }
+}
+
 function getFrontmostPid(): number | null {
   try {
     const { execSync } = require("child_process");
@@ -88,17 +109,7 @@ function getFrontmostPid(): number | null {
     const pid = parseInt(out.trim(), 10);
     if (!Number.isFinite(pid)) return null;
     if (pid !== myPid) return pid;
-
-    const out2 = execSync(
-      `osascript -e 'tell application "System Events" to get unix id of every process whose visible is true and unix id is not ${myPid}'`,
-      { encoding: "utf8", timeout: 500 },
-    );
-    const pids = out2
-      .trim()
-      .split(",")
-      .map((s: string) => parseInt(s.trim(), 10))
-      .filter(Number.isFinite);
-    return pids.length > 0 ? pids[0] : null;
+    return null;
   } catch {
     return null;
   }
@@ -158,6 +169,22 @@ function readSelectedText(
   }
 }
 
+/** Try to read selected text from a specific PID. Returns text or "". */
+function tryReadFromPid(koffi: typeof import("koffi"), pid: number): string {
+  const appElement = AXUIElementCreateApplication(pid);
+  if (!appElement) return "";
+
+  const focused = queryFocusedElement(koffi, appElement);
+  CFRelease(appElement);
+  if (!focused) return "";
+
+  try {
+    return readSelectedText(koffi, focused);
+  } finally {
+    CFRelease(focused);
+  }
+}
+
 export async function getSelectedText(): Promise<string> {
   if (process.env.VITEST) return "";
 
@@ -167,30 +194,41 @@ export async function getSelectedText(): Promise<string> {
 
     const koffi = require("koffi");
 
-    // Primary path: query the frontmost app directly (avoids focus race
-    // when the HUD steals system focus via setIgnoreMouseEvents).
-    const pid = getFrontmostPid();
-    slog.info("getSelectedText: frontmost pid=%s, my pid=%d", pid, process.pid);
-    if (pid != null) {
-      const appElement = AXUIElementCreateApplication(pid);
-      if (appElement) {
-        const focused = queryFocusedElement(koffi, appElement);
-        CFRelease(appElement);
-        if (focused) {
-          try {
-            const text = readSelectedText(koffi, focused);
-            slog.info("getSelectedText: primary path text=%s (len=%d)", text.slice(0, 40), text.length);
-            if (text) return text;
-          } finally {
-            CFRelease(focused);
-          }
-        } else {
-          slog.info("getSelectedText: no focused element for pid=%d", pid);
-        }
+    // 1. Try the frontmost non-Electron app first (most common case).
+    const frontPid = getFrontmostPid();
+    slog.info("frontPid=%s lastKnownPid=%s myPid=%d", frontPid, lastKnownPid, process.pid);
+
+    if (frontPid != null) {
+      const text = tryReadFromPid(koffi, frontPid);
+      if (text) {
+        lastKnownPid = frontPid;
+        slog.info("found via frontmost pid=%d len=%d", frontPid, text.length);
+        return text;
       }
     }
 
-    // Fallback: try system-wide AXFocusedUIElement
+    // 2. Try the last PID that had text (survives focus shifts to HUD).
+    if (lastKnownPid != null && lastKnownPid !== frontPid) {
+      const text = tryReadFromPid(koffi, lastKnownPid);
+      if (text) {
+        slog.info("found via lastKnown pid=%d len=%d", lastKnownPid, text.length);
+        return text;
+      }
+    }
+
+    // 3. Brute-force: try every visible non-Electron process.
+    const pids = getVisiblePids();
+    for (const pid of pids) {
+      if (pid === frontPid || pid === lastKnownPid) continue; // already tried
+      const text = tryReadFromPid(koffi, pid);
+      if (text) {
+        lastKnownPid = pid;
+        slog.info("found via scan pid=%d len=%d", pid, text.length);
+        return text;
+      }
+    }
+
+    // 4. Fallback: system-wide AXFocusedUIElement
     const systemWide = AXUIElementCreateSystemWide();
     if (systemWide) {
       const focused = queryFocusedElement(koffi, systemWide);
@@ -198,17 +236,20 @@ export async function getSelectedText(): Promise<string> {
       if (focused) {
         try {
           const text = readSelectedText(koffi, focused);
-          slog.info("getSelectedText: fallback text=%s (len=%d)", text.slice(0, 40), text.length);
-          return text;
+          if (text) {
+            slog.info("found via system-wide len=%d", text.length);
+            return text;
+          }
         } finally {
           CFRelease(focused);
         }
       }
     }
 
-    slog.info("getSelectedText: no text found");
+    slog.info("no selected text found");
     return "";
-  } catch {
+  } catch (err) {
+    slog.warn("getSelectedText error: %s", err instanceof Error ? err.message : String(err));
     return "";
   }
 }
