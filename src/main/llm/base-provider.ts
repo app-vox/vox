@@ -1,6 +1,10 @@
 import log from "electron-log/main";
 import type { LlmProvider } from "./provider";
 
+export function wrapTranscription(rawText: string): string {
+  return `Clean the following raw speech transcription. Return ONLY the cleaned text, nothing else.\n\n<transcription>\n${rawText}\n</transcription>`;
+}
+
 export abstract class BaseLlmProvider implements LlmProvider {
   protected abstract readonly providerName: string;
   protected readonly customPromptText: string;
@@ -20,7 +24,8 @@ export abstract class BaseLlmProvider implements LlmProvider {
       systemPrompt: this.customPromptText,
     });
 
-    const correctedText = await this.enhance(rawText);
+    const wrappedText = wrapTranscription(rawText);
+    const correctedText = await this.enhance(wrappedText);
 
     slog.info("Enhanced text", { correctedText });
     slog.debug("Response stats", {

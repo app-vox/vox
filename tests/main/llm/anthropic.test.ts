@@ -10,6 +10,7 @@ vi.mock("electron-log/main", () => ({
 
 import { AnthropicProvider } from "../../../src/main/llm/anthropic";
 import { type LlmProvider } from "../../../src/main/llm/provider";
+import { wrapTranscription } from "../../../src/main/llm/base-provider";
 import { LLM_SYSTEM_PROMPT } from "../../../src/shared/constants";
 
 const mockFetch = vi.fn();
@@ -107,7 +108,7 @@ describe("AnthropicProvider", () => {
     const body = JSON.parse(mockFetch.mock.calls[0][1].body);
     expect(body.system).toBe(LLM_SYSTEM_PROMPT);
     expect(body.messages[0].role).toBe("user");
-    expect(body.messages[0].content).toBe("raw text");
+    expect(body.messages[0].content).toBe(wrapTranscription("raw text"));
     expect(body.model).toBe("claude-sonnet-4-20250514");
     expect(body.temperature).toBe(0.1);
     expect(body.max_tokens).toBe(4096);

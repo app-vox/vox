@@ -31,6 +31,11 @@ describe("constants", () => {
     expect(LLM_SYSTEM_PROMPT).toMatch(/fala isso em ingl/i);
     expect(LLM_SYSTEM_PROMPT).toContain("NOT talking to you");
   });
+
+  it("should reference transcription XML tags for content boundary", () => {
+    expect(LLM_SYSTEM_PROMPT).toContain("<transcription>");
+    expect(LLM_SYSTEM_PROMPT).toContain("</transcription>");
+  });
 });
 
 describe("buildWhisperPrompt", () => {

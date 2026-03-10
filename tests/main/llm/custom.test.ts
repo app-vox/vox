@@ -10,6 +10,7 @@ vi.mock("electron-log/main", () => ({
 
 import { CustomProvider } from "../../../src/main/llm/custom";
 import { type LlmProvider } from "../../../src/main/llm/provider";
+import { wrapTranscription } from "../../../src/main/llm/base-provider";
 import { LLM_SYSTEM_PROMPT } from "../../../src/shared/constants";
 
 const mockFetch = vi.fn();
@@ -250,7 +251,7 @@ describe("CustomProvider", () => {
     const body = JSON.parse(mockFetch.mock.calls[0][1].body);
     expect(body.messages).toEqual([
       { role: "system", content: LLM_SYSTEM_PROMPT },
-      { role: "user", content: "raw text" },
+      { role: "user", content: wrapTranscription("raw text") },
     ]);
   });
 });
