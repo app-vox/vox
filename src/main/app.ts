@@ -73,6 +73,9 @@ function setupPipeline(): void {
     onStage: (stage) => {
       shortcutManager?.getHud().setState(stage);
     },
+    onTranscriptionComplete: (rawText) => {
+      shortcutManager?.getHud().showTextPanel(rawText);
+    },
     onLlmFailed: () => {
       const cfg = configManager.load();
       cfg.llmConnectionTested = false;
@@ -91,7 +94,11 @@ function setupPipeline(): void {
           const stripped = latestConfig.finishWithPeriod ? result.text : stripTrailingPeriod(result.text);
           const finalText = applyCase(stripped, latestConfig.lowercaseStart);
 
-          const status = result.llmFailed ? "llm_failed" as const : "success" as const;
+        if (result.originalText !== result.text) {
+          shortcutManager?.getHud().morphText(finalText);
+        }
+
+        const status = result.llmFailed ? "llm_failed" as const : "success" as const;
 
           const entry = historyManager.add({
             text: finalText,
