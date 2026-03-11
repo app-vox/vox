@@ -12,6 +12,9 @@ const WIN_WIDTH = MAX_PILL_WIDTH + 40;
 const WIN_HEIGHT = 120;
 const DOCK_MARGIN = 24;
 const MIN_SCALE = 0.55;
+const TEXT_PANEL_GAP = 10;
+const TEXT_PANEL_MAX_HEIGHT = 120;
+const EXPANDED_WIN_HEIGHT = WIN_HEIGHT + TEXT_PANEL_GAP + TEXT_PANEL_MAX_HEIGHT + 20;
 
 export type HudState = "idle" | "initializing" | "listening" | "transcribing" | "enhancing" | "error" | "canceled" | "warning";
 
@@ -40,10 +43,11 @@ function buildHudHtml(): string {
     background: transparent;
     overflow: hidden;
     width: ${WIN_WIDTH}px;
-    height: ${WIN_HEIGHT}px;
+    height: ${EXPANDED_WIN_HEIGHT}px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
+    padding-top: ${(WIN_HEIGHT - CIRCLE_SIZE) / 2}px;
   }
 
   .scale-wrapper {
@@ -489,6 +493,104 @@ function buildHudHtml(): string {
   .undo-bar .undo-btn:hover { background: rgba(255,255,255,0.16); color: white; }
   .undo-bar .undo-btn:active { transform: scale(0.95); }
   .undo-bar .undo-btn svg { flex-shrink: 0; }
+
+  /* Text panel */
+  .text-panel {
+    position: absolute;
+    top: ${CIRCLE_SIZE + TEXT_PANEL_GAP + (WIN_HEIGHT - CIRCLE_SIZE) / 2}px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(20,20,35,0.95);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 0;
+    width: 380px;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1),
+                opacity 0.3s ease,
+                border-color 0.4s ease,
+                transform 0.3s ease;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+  }
+  .text-panel.visible {
+    padding: 12px 16px;
+    max-height: ${TEXT_PANEL_MAX_HEIGHT}px;
+    opacity: 1;
+    overflow-y: auto;
+  }
+  .text-panel.morph-border {
+    border-color: rgba(68,170,255,0.3);
+  }
+  .text-panel.fade-out {
+    opacity: 0;
+    max-height: 0;
+    padding: 0;
+    transform: translateX(-50%) translateY(-8px);
+    transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1),
+                opacity 0.3s ease,
+                padding 0.3s ease,
+                transform 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+  .text-panel::-webkit-scrollbar { width: 3px; }
+  .text-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+  .text-content {
+    font-size: 12px;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.85);
+    font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+
+  .text-content .word {
+    display: inline;
+    transition: opacity 0.3s ease, filter 0.3s ease, transform 0.3s ease, color 0.5s ease;
+  }
+  .text-content .word.appearing {
+    animation: wordAppear 0.2s ease forwards;
+  }
+  .text-content .word.morphing-out {
+    filter: blur(2px);
+    opacity: 0.15;
+    transform: translateY(-2px);
+  }
+  .text-content .word.morphing-in {
+    animation: wordMorphIn 0.35s ease forwards;
+    color: rgba(68,170,255,0.95);
+  }
+  .text-content .word.morphed {
+    color: rgba(255,255,255,0.95);
+  }
+
+  @keyframes wordAppear {
+    0% { opacity: 0; transform: translateY(4px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes wordMorphIn {
+    0% { opacity: 0; filter: blur(3px); transform: translateY(2px); }
+    60% { opacity: 1; filter: blur(0); }
+    100% { opacity: 1; filter: blur(0); transform: translateY(0); }
+  }
+
+  .tp-cursor {
+    display: inline-block;
+    width: 1.5px;
+    height: 13px;
+    background: rgba(255,170,0,0.7);
+    margin-left: 1px;
+    vertical-align: middle;
+    animation: tpBlink 0.8s step-end infinite;
+  }
+  .tp-cursor.enhanced { background: rgba(68,170,255,0.7); }
+  .tp-cursor.hidden { display: none; }
+
+  @keyframes tpBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
 </style></head>
 <body>
 <div class="scale-wrapper" id="scale-wrapper">
@@ -540,6 +642,10 @@ function buildHudHtml(): string {
     <div class="countdown-track"><div class="countdown-fill" id="countdown-fill"></div></div>
     <button class="undo-btn" id="undo-btn" onclick="event.stopPropagation(); window.electronAPI?.undoCancelRecording()"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M2 2l4 4M6 2l-4 4" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></svg><span id="undo-label">Undo</span></button>
   </div>
+</div>
+<div class="text-panel" id="text-panel">
+  <div class="text-content" id="text-content"></div>
+  <span class="tp-cursor hidden" id="tp-cursor"></span>
 </div>
 <script>
 var currentState = 'idle';
@@ -1007,6 +1113,96 @@ function setPerformanceFlags(reduceAnimations, reduceEffects) {
     style.textContent = rules.join(' ');
     document.head.appendChild(style);
   }
+}
+
+// --- Text Panel ---
+var tpPanel = document.getElementById('text-panel');
+var tpContent = document.getElementById('text-content');
+var tpCursor = document.getElementById('tp-cursor');
+var tpTypingTimer = null;
+var tpMorphTimer = null;
+
+function showTextPanel(text) {
+  clearTextPanelTimers();
+  tpContent.innerHTML = '';
+  tpCursor.className = 'tp-cursor';
+  tpContent.appendChild(tpCursor);
+  tpPanel.className = 'text-panel visible';
+  var words = text.split(/\s+/).filter(function(w) { return w.length > 0; });
+  var i = 0;
+  function typeNext() {
+    if (i >= words.length) { tpTypingTimer = null; return; }
+    var span = document.createElement('span');
+    span.className = 'word appearing';
+    span.textContent = words[i] + ' ';
+    tpContent.insertBefore(span, tpCursor);
+    tpPanel.scrollTop = tpPanel.scrollHeight;
+    i++;
+    tpTypingTimer = setTimeout(typeNext, 60 + Math.random() * 40);
+  }
+  typeNext();
+}
+
+function morphText(enhancedText) {
+  clearTextPanelTimers();
+  tpCursor.className = 'tp-cursor enhanced';
+  tpPanel.classList.add('morph-border');
+  var oldWords = tpContent.querySelectorAll('.word');
+  var idx = 0;
+  function blurNext() {
+    if (idx >= oldWords.length) {
+      tpMorphTimer = setTimeout(function() { replaceWithEnhanced(enhancedText); }, 300);
+      return;
+    }
+    oldWords[idx].classList.add('morphing-out');
+    idx++;
+    tpMorphTimer = setTimeout(blurNext, 25);
+  }
+  blurNext();
+}
+
+function replaceWithEnhanced(text) {
+  tpContent.innerHTML = '';
+  tpCursor.className = 'tp-cursor enhanced';
+  tpContent.appendChild(tpCursor);
+  var words = text.split(/\s+/).filter(function(w) { return w.length > 0; });
+  var i = 0;
+  function morphInNext() {
+    if (i >= words.length) {
+      tpMorphTimer = setTimeout(function() {
+        tpContent.querySelectorAll('.word').forEach(function(w) { w.className = 'word morphed'; });
+        tpCursor.className = 'tp-cursor hidden';
+        tpMorphTimer = null;
+      }, 400);
+      return;
+    }
+    var span = document.createElement('span');
+    span.className = 'word morphing-in';
+    span.textContent = words[i] + ' ';
+    tpContent.insertBefore(span, tpCursor);
+    tpPanel.scrollTop = tpPanel.scrollHeight;
+    i++;
+    tpMorphTimer = setTimeout(morphInNext, 50);
+  }
+  morphInNext();
+}
+
+function hideTextPanel() {
+  clearTextPanelTimers();
+  tpPanel.classList.remove('visible');
+  tpPanel.classList.remove('morph-border');
+  tpPanel.classList.add('fade-out');
+  setTimeout(function() {
+    tpPanel.className = 'text-panel';
+    tpContent.innerHTML = '';
+    tpCursor.className = 'tp-cursor hidden';
+    tpContent.appendChild(tpCursor);
+  }, 450);
+}
+
+function clearTextPanelTimers() {
+  if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
+  if (tpMorphTimer) { clearTimeout(tpMorphTimer); tpMorphTimer = null; }
 }
 </script>
 </body></html>`;
