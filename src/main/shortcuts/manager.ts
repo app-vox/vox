@@ -343,6 +343,7 @@ export class ShortcutManager {
 
       this.stateMachine.setCanceling();
       this.hud.setState("canceled", undefined, true);
+      this.hud.hideTextPanel();
       this.hud.showUndoBar(3000);
 
       this.cancelTimer = setTimeout(() => {
@@ -1041,6 +1042,7 @@ export class ShortcutManager {
       this.playCue(errorCueType);
       this.stateMachine.setIdle();
       this.hud.setState("canceled");
+      this.hud.hideTextPanel();
       this.updateTrayState();
       return;
     }
@@ -1075,6 +1077,7 @@ export class ShortcutManager {
         slog.info("No valid text to paste, showing error");
         const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
         this.playCue(errorCueType);
+        this.hud.hideTextPanel();
         hudEndState = "error";
       } else {
         slog.info("Valid text received, proceeding with %s", config.copyToClipboard ? "paste" : "injection");
@@ -1088,9 +1091,11 @@ export class ShortcutManager {
           const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
           this.playCue(errorCueType);
           this.lastUnpastedText = trimmedText;
+          this.hud.hideTextPanel();
           hudEndState = "warning";
         } else {
           this.lastUnpastedText = null;
+          this.hud.hideTextPanel();
           this.deps.analytics?.track("paste_completed", { method: !pasted ? "onboarding" : "auto-paste" });
         }
       }
@@ -1104,6 +1109,7 @@ export class ShortcutManager {
         slog.info("Operation canceled by user");
         const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
         this.playCue(errorCueType);
+        this.hud.hideTextPanel();
         hudEndState = "canceled";
       } else {
         slog.error("Pipeline failed", err);
@@ -1112,6 +1118,7 @@ export class ShortcutManager {
         });
         const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
         this.playCue(errorCueType);
+        this.hud.hideTextPanel();
         hudEndState = "error";
       }
     } finally {

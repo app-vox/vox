@@ -78,6 +78,9 @@ vi.mock("../../../src/main/hud", () => {
       setCustomPosition = vi.fn();
       setShowActions = vi.fn();
       setPerformanceFlags = vi.fn();
+      showTextPanel = vi.fn();
+      morphText = vi.fn();
+      hideTextPanel = vi.fn();
     },
   };
 });

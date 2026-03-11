@@ -70,6 +70,9 @@ vi.mock("../../../src/main/hud", () => {
       show = vi.fn();
       destroy = vi.fn();
       setShiftHeld = vi.fn();
+      showTextPanel = vi.fn();
+      morphText = vi.fn();
+      hideTextPanel = vi.fn();
     },
   };
 });
