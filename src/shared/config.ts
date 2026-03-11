@@ -128,6 +128,7 @@ export interface VoxConfig {
   copyToClipboard: boolean;
   lowercaseStart: boolean;
   shiftCapitalize: boolean;
+  finishWithPeriod: boolean;
   onboardingCompleted: boolean;
 }
 
@@ -172,6 +173,7 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     copyToClipboard: false,
     lowercaseStart: false,
     shiftCapitalize: true,
+    finishWithPeriod: true,
     onboardingCompleted: false,
   };
 }

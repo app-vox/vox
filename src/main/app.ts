@@ -84,7 +84,8 @@ function setupPipeline(): void {
     onComplete: (result) => {
       try {
         const latestConfig = configManager.load();
-        const finalText = applyCase(stripTrailingPeriod(result.text), latestConfig.lowercaseStart);
+        const stripped = latestConfig.finishWithPeriod ? result.text : stripTrailingPeriod(result.text);
+        const finalText = applyCase(stripped, latestConfig.lowercaseStart);
         historyManager.add({
           ...result,
           text: finalText,

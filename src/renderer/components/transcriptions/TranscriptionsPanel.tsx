@@ -148,6 +148,22 @@ export function TranscriptionsPanel() {
     <>
       <div className={card.card}>
         <div className={card.body}>
+          <p className={card.description}>{t("whisper.preferencesTitle")}</p>
+          <label className={generalStyles.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={config?.finishWithPeriod ?? true}
+              onChange={async () => {
+                updateConfig({ finishWithPeriod: !(config?.finishWithPeriod ?? true) });
+                await saveConfig(false);
+                triggerToast();
+              }}
+            />
+            <div>
+              <div className={generalStyles.checkboxLabel}>{t("whisper.finishWithPeriod")}</div>
+              <div className={generalStyles.checkboxDesc}>{t("whisper.finishWithPeriodHint")}</div>
+            </div>
+          </label>
           <label className={generalStyles.checkboxRow}>
             <input
               type="checkbox"
