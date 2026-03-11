@@ -25,6 +25,7 @@ import { getLlmModelName } from "../shared/llm-utils";
 import { AnalyticsService } from "./analytics/service";
 import { setupAnalyticsErrorCapture } from "./logger";
 import log from "./logger";
+import { saveAudioFile, cleanupOrphanedAudioFiles } from "./audio/persistence";
 
 log.initialize();
 const slog = log.scope("Vox");
@@ -86,7 +87,10 @@ function setupPipeline(): void {
         const latestConfig = configManager.load();
         const stripped = latestConfig.finishWithPeriod ? result.text : stripTrailingPeriod(result.text);
         const finalText = applyCase(stripped, latestConfig.lowercaseStart);
-        historyManager.add({
+
+        const status = result.llmFailed ? "llm_failed" as const : "success" as const;
+
+        const entry = historyManager.add({
           ...result,
           text: finalText,
           wordCount: finalText.split(/\s+/).filter(Boolean).length,
@@ -94,13 +98,70 @@ function setupPipeline(): void {
           llmEnhanced: config.enableLlmEnhancement,
           llmProvider: config.enableLlmEnhancement ? config.llm.provider : undefined,
           llmModel: config.enableLlmEnhancement ? getLlmModelName(config.llm) : undefined,
+          status,
+          errorMessage: result.errorMessage,
+          failedStep: result.llmFailed ? "llm" : undefined,
         });
+
+        if (latestConfig.audioRetentionCount > 0) {
+          try {
+            const audioFilePath = saveAudioFile(
+              result.recording.audioBuffer,
+              result.recording.sampleRate,
+              entry.id,
+            );
+            historyManager.updateEntry(entry.id, { audioFilePath });
+          } catch (err) {
+            slog.warn("Failed to save audio file", err);
+          }
+        }
+
+        historyManager.enforceAudioRetention(latestConfig.audioRetentionCount);
+
         for (const win of BrowserWindow.getAllWindows()) {
           win.webContents.send("history:entry-added");
           win.webContents.send("pipeline:result", finalText);
         }
       } catch (err) {
         slog.error("Failed to save transcription to history", err);
+      }
+    },
+    onFailure: (result) => {
+      try {
+        const latestConfig = configManager.load();
+
+        const entry = historyManager.add({
+          text: "",
+          originalText: "",
+          wordCount: 0,
+          audioDurationMs: result.audioDurationMs,
+          whisperModel: config.whisper.model || "unknown",
+          llmEnhanced: false,
+          status: "whisper_failed",
+          errorMessage: result.error.message,
+          failedStep: "whisper",
+        });
+
+        if (latestConfig.audioRetentionCount > 0) {
+          try {
+            const audioFilePath = saveAudioFile(
+              result.recording.audioBuffer,
+              result.recording.sampleRate,
+              entry.id,
+            );
+            historyManager.updateEntry(entry.id, { audioFilePath });
+          } catch (err) {
+            slog.warn("Failed to save audio file for failed transcription", err);
+          }
+        }
+
+        historyManager.enforceAudioRetention(latestConfig.audioRetentionCount);
+
+        for (const win of BrowserWindow.getAllWindows()) {
+          win.webContents.send("history:entry-added");
+        }
+      } catch (err) {
+        slog.error("Failed to save failed transcription to history", err);
       }
     },
   });
@@ -180,6 +241,15 @@ app.whenReady().then(async () => {
 
   setupPipeline();
   historyManager.cleanup();
+
+  // Clean up orphaned audio files
+  const allEntries = historyManager.get(0, 999999).entries;
+  const validIds = new Set(
+    allEntries
+      .filter((e) => e.audioFilePath)
+      .map((e) => e.id)
+  );
+  cleanupOrphanedAudioFiles(validIds);
 
   const hasAccessibility = isAccessibilityGranted();
   if (!hasAccessibility && initialConfig.onboardingCompleted) {

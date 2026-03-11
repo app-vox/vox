@@ -108,11 +108,15 @@ describe("Pipeline", () => {
     await pipeline.startRecording();
     await pipeline.stopAndProcess();
 
-    expect(onComplete).toHaveBeenCalledWith({
+    expect(onComplete).toHaveBeenCalledWith(expect.objectContaining({
       text: "corrected text",
       originalText: "raw transcription",
       audioDurationMs: expect.any(Number),
-    });
+      recording: expect.objectContaining({
+        audioBuffer: expect.any(Float32Array),
+        sampleRate: 16000,
+      }),
+    }));
   });
 
   it("should not call onComplete when transcription is empty", async () => {
@@ -276,6 +280,107 @@ describe("Pipeline", () => {
     pipeline.confirmCancel();
 
     expect(pipeline.isCanceling()).toBe(false);
+  });
+
+  it("should call onFailure with whisper error when transcription throws", async () => {
+    const onFailure = vi.fn();
+    const failingTranscribe = vi.fn().mockRejectedValue(new Error("Whisper timeout"));
+
+    const pipeline = new Pipeline({
+      recorder: mockRecorder,
+      transcribe: failingTranscribe,
+      llmProvider: mockProvider,
+      modelPath: "/models/ggml-small.bin",
+      onFailure,
+    });
+
+    await pipeline.startRecording();
+    await expect(pipeline.stopAndProcess()).rejects.toThrow("Whisper timeout");
+
+    expect(onFailure).toHaveBeenCalledWith({
+      failedStep: "whisper",
+      error: expect.any(Error),
+      recording: expect.objectContaining({
+        audioBuffer: expect.any(Float32Array),
+        sampleRate: 16000,
+      }),
+      audioDurationMs: expect.any(Number),
+    });
+  });
+
+  it("should include llmFailed flag in onComplete when LLM fails", async () => {
+    const onComplete = vi.fn();
+    const failingProvider = {
+      correct: vi.fn().mockRejectedValue(new Error("LLM error")),
+    };
+
+    const pipeline = new Pipeline({
+      recorder: mockRecorder,
+      transcribe: mockTranscribe,
+      llmProvider: failingProvider,
+      modelPath: "/models/ggml-small.bin",
+      onComplete,
+    });
+
+    await pipeline.startRecording();
+    await pipeline.stopAndProcess();
+
+    expect(onComplete).toHaveBeenCalledWith(expect.objectContaining({
+      text: "raw transcription",
+      originalText: "raw transcription",
+      llmFailed: true,
+      errorMessage: "LLM error",
+    }));
+  });
+
+  it("should call onFailure for garbage detection on recordings longer than 5 seconds", async () => {
+    const onFailure = vi.fn();
+    const longBuffer = new Float32Array(96000); // 6 seconds at 16kHz
+    const longRecorder = {
+      start: vi.fn(),
+      stop: vi.fn().mockResolvedValue({ audioBuffer: longBuffer, sampleRate: 16000 }),
+    };
+    const garbageTranscribe = vi.fn().mockResolvedValue({ text: "thank you for watching" });
+
+    const pipeline = new Pipeline({
+      recorder: longRecorder,
+      transcribe: garbageTranscribe,
+      llmProvider: mockProvider,
+      modelPath: "/models/ggml-small.bin",
+      onFailure,
+    });
+
+    await pipeline.startRecording();
+    await pipeline.stopAndProcess();
+
+    expect(onFailure).toHaveBeenCalledWith(expect.objectContaining({
+      failedStep: "garbage",
+      recording: expect.objectContaining({ audioBuffer: longBuffer }),
+    }));
+  });
+
+  it("should process from a saved audio via retryFromRecording", async () => {
+    const onComplete = vi.fn();
+
+    const pipeline = new Pipeline({
+      recorder: mockRecorder, // Not used for retry
+      transcribe: mockTranscribe,
+      llmProvider: mockProvider,
+      modelPath: "/models/ggml-small.bin",
+      onComplete,
+    });
+
+    const recording = {
+      audioBuffer: new Float32Array([0.1, 0.2]),
+      sampleRate: 16000,
+    };
+
+    const result = await pipeline.retryFromRecording(recording);
+
+    expect(mockTranscribe).toHaveBeenCalled();
+    expect(mockProvider.correct).toHaveBeenCalled();
+    expect(result).toBe("corrected text");
+    expect(onComplete).toHaveBeenCalled();
   });
 
   it("should track llm_enhancement_failed when LLM errors", async () => {

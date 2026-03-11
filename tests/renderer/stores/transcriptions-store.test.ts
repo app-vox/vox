@@ -15,6 +15,7 @@ const fakeEntry = (id: string): TranscriptionEntry => ({
   audioDurationMs: 1000,
   whisperModel: "small",
   llmEnhanced: false,
+  status: "success",
 });
 
 beforeEach(() => {
@@ -148,6 +149,54 @@ describe("transcriptions-store", () => {
       expect(useTranscriptionsStore.getState().total).toBe(0);
       expect(useTranscriptionsStore.getState().page).toBe(1);
       expect(voxApi.history.get).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("retryEntry", () => {
+    it("calls IPC retry and updates entry in-place", async () => {
+      const original = fakeEntry("retried");
+      original.status = "whisper_failed";
+      const updated = { ...original, status: "success" as const, text: "retried text" };
+      voxApi.history.retry = vi.fn().mockResolvedValue(updated);
+
+      useTranscriptionsStore.setState({ entries: [original], total: 1 });
+      await useTranscriptionsStore.getState().retryEntry("retried");
+
+      expect(voxApi.history.retry).toHaveBeenCalledWith("retried");
+      expect(useTranscriptionsStore.getState().entries[0].status).toBe("success");
+      expect(useTranscriptionsStore.getState().entries[0].text).toBe("retried text");
+    });
+
+    it("sets retryingId during retry and clears it after", async () => {
+      voxApi.history.retry = vi.fn().mockImplementation(
+        () => new Promise((resolve) => setTimeout(resolve, 10))
+      );
+      voxApi.history.get = vi.fn().mockResolvedValue({ entries: [], total: 0 });
+
+      const promise = useTranscriptionsStore.getState().retryEntry("entry-1");
+      expect(useTranscriptionsStore.getState().retryingId).toBe("entry-1");
+
+      await promise;
+      expect(useTranscriptionsStore.getState().retryingId).toBeNull();
+    });
+
+    it("clears retryingId even on error", async () => {
+      voxApi.history.retry = vi.fn().mockRejectedValue(new Error("fail"));
+
+      await useTranscriptionsStore.getState().retryEntry("entry-1").catch(() => {});
+
+      expect(useTranscriptionsStore.getState().retryingId).toBeNull();
+    });
+  });
+
+  describe("downloadAudio", () => {
+    it("calls IPC download and returns file path", async () => {
+      voxApi.history.downloadAudio = vi.fn().mockResolvedValue("/Downloads/vox-recording.wav");
+
+      const result = await useTranscriptionsStore.getState().downloadAudio("entry-1");
+
+      expect(voxApi.history.downloadAudio).toHaveBeenCalledWith("entry-1");
+      expect(result).toBe("/Downloads/vox-recording.wav");
     });
   });
 

@@ -14,6 +14,11 @@ import { getResourcePath } from "./resources";
 import { SetupChecker } from "./setup/checker";
 import { checkForUpdates, getUpdateState, quitAndInstall } from "./updater";
 import { t } from "../shared/i18n";
+import * as path from "path";
+import { decodeWavFile } from "./audio/persistence";
+import { Pipeline } from "./pipeline";
+import { getLlmModelName } from "../shared/llm-utils";
+import { applyCase, stripTrailingPeriod } from "./input/paster";
 
 const testLog = log.scope("LlmTest");
 
@@ -340,10 +345,93 @@ export function registerIpcHandlers(
     historyManager.add({
       ...entry,
       wordCount: entry.text.split(/\s+/).filter(Boolean).length,
+      status: "success",
     });
     for (const win of BrowserWindow.getAllWindows()) {
       win.webContents.send("history:entry-added");
     }
+  });
+
+  ipcMain.handle("history:retry", async (_event, entryId: string) => {
+    const entry = historyManager.getEntry(entryId);
+    if (!entry) throw new Error("Entry not found");
+    if (!entry.audioFilePath) throw new Error("Audio file not available");
+    if (!fs.existsSync(entry.audioFilePath)) throw new Error("Audio file missing from disk");
+
+    const recording = decodeWavFile(entry.audioFilePath);
+
+    const config = configManager.load();
+    const modelPath = config.whisper.model
+      ? modelManager.getModelPath(config.whisper.model)
+      : "";
+    const llmProvider = createLlmProvider(config);
+
+    const retryPipeline = new Pipeline({
+      recorder: { start: async () => {}, stop: async () => recording, cancel: async () => {} },
+      transcribe,
+      llmProvider,
+      modelPath,
+      dictionary: config.dictionary ?? [],
+      speechLanguages: config.speechLanguages ?? [],
+      hasCustomPrompt: Boolean(config.customPrompt),
+      llmModelName: config.enableLlmEnhancement ? getLlmModelName(config.llm) : undefined,
+      analytics,
+    });
+
+    try {
+      const text = await retryPipeline.retryFromRecording(recording);
+      const finalText = applyCase(stripTrailingPeriod(text), config.lowercaseStart);
+
+      historyManager.updateEntry(entryId, {
+        text: finalText,
+        originalText: text,
+        wordCount: finalText.split(/\s+/).filter(Boolean).length,
+        status: "success",
+        errorMessage: undefined,
+        failedStep: undefined,
+        whisperModel: config.whisper.model || "unknown",
+        llmEnhanced: config.enableLlmEnhancement,
+        llmProvider: config.enableLlmEnhancement ? config.llm.provider : undefined,
+        llmModel: config.enableLlmEnhancement ? getLlmModelName(config.llm) : undefined,
+      });
+
+      return historyManager.getEntry(entryId);
+    } catch (err) {
+      historyManager.updateEntry(entryId, {
+        errorMessage: err instanceof Error ? err.message : String(err),
+      });
+      throw err;
+    }
+  });
+
+  ipcMain.handle("history:download-audio", async (_event, entryId: string) => {
+    const entry = historyManager.getEntry(entryId);
+    if (!entry?.audioFilePath || !fs.existsSync(entry.audioFilePath)) {
+      throw new Error("Audio file not available");
+    }
+
+    const downloadsDir = app.getPath("downloads");
+    const timestamp = new Date(entry.timestamp).toISOString().replace(/[:.]/g, "-");
+    const destPath = path.join(downloadsDir, `vox-recording-${timestamp}.wav`);
+    fs.copyFileSync(entry.audioFilePath, destPath);
+    return destPath;
+  });
+
+  ipcMain.handle("history:get-audio-path", (_event, entryId: string) => {
+    const entry = historyManager.getEntry(entryId);
+    if (!entry?.audioFilePath || !fs.existsSync(entry.audioFilePath)) {
+      return null;
+    }
+    return entry.audioFilePath;
+  });
+
+  ipcMain.handle("history:get-audio-data-url", (_event, entryId: string) => {
+    const entry = historyManager.getEntry(entryId);
+    if (!entry?.audioFilePath || !fs.existsSync(entry.audioFilePath)) {
+      return null;
+    }
+    const buffer = fs.readFileSync(entry.audioFilePath);
+    return `data:audio/wav;base64,${buffer.toString("base64")}`;
   });
 
   ipcMain.handle("clipboard:write", (_event, text: string) => {

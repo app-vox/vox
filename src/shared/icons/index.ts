@@ -40,5 +40,7 @@ export { default as SparkleIcon } from "./svg/sparkle.svg?react";
 export { default as DownloadIcon } from "./svg/download.svg?react";
 export { default as MoveIcon } from "./svg/move.svg?react";
 export { default as ShiftIcon } from "./svg/shift.svg?react";
+export { default as EllipsisVerticalIcon } from "./svg/ellipsis-vertical.svg?react";
+export { default as PauseIcon } from "./svg/pause.svg?react";
 
 export { Icon } from "./Icon";

@@ -18,6 +18,9 @@ interface TranscriptionsState {
   search: (query: string) => Promise<void>;
   deleteEntry: (id: string) => Promise<void>;
   clearHistory: () => Promise<void>;
+  retryEntry: (id: string) => Promise<void>;
+  downloadAudio: (id: string) => Promise<string>;
+  retryingId: string | null;
   reset: () => void;
 }
 
@@ -28,6 +31,7 @@ export const useTranscriptionsStore = create<TranscriptionsState>((set, get) => 
   pageSize: DEFAULT_PAGE_SIZE,
   searchQuery: "",
   loading: false,
+  retryingId: null,
 
   fetchPage: async () => {
     const { page, pageSize, searchQuery, loading } = get();
@@ -83,7 +87,23 @@ export const useTranscriptionsStore = create<TranscriptionsState>((set, get) => 
     set({ entries: [], total: 0, page: 1 });
   },
 
+  retryEntry: async (id) => {
+    set({ retryingId: id });
+    try {
+      const updated = await window.voxApi.history.retry(id);
+      set((state) => ({
+        entries: state.entries.map((e) => (e.id === id ? updated : e)),
+      }));
+    } finally {
+      set({ retryingId: null });
+    }
+  },
+
+  downloadAudio: async (id) => {
+    return window.voxApi.history.downloadAudio(id);
+  },
+
   reset: () => {
-    set({ entries: [], total: 0, page: 1, searchQuery: "", loading: false });
+    set({ entries: [], total: 0, page: 1, searchQuery: "", loading: false, retryingId: null });
   },
 }));

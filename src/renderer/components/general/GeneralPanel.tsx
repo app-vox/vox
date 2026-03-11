@@ -734,6 +734,58 @@ export function GeneralPanel() {
         </div>
       </details>
 
+      {/* Text processing */}
+      <div className={card.card}>
+        <div className={card.body}>
+          <label className={styles.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={config.finishWithPeriod ?? true}
+              onChange={async () => {
+                updateConfig({ finishWithPeriod: !(config.finishWithPeriod ?? true) });
+                await saveConfig(false);
+                triggerToast();
+              }}
+            />
+            <div>
+              <div className={styles.checkboxLabel}>{t("whisper.finishWithPeriod")}</div>
+              <div className={styles.checkboxDesc}>{t("whisper.finishWithPeriodHint")}</div>
+            </div>
+          </label>
+          <label className={styles.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={config.lowercaseStart ?? false}
+              onChange={async () => {
+                updateConfig({ lowercaseStart: !config.lowercaseStart });
+                await saveConfig(false);
+                triggerToast();
+              }}
+            />
+            <div>
+              <div className={styles.checkboxLabel}>{t("whisper.lowercaseStart")}</div>
+              <div className={styles.checkboxDesc}>{t("whisper.lowercaseStartHint")}</div>
+            </div>
+          </label>
+          <label className={`${styles.checkboxRow} ${!config.lowercaseStart ? styles.disabled : ""}`} style={{ marginLeft: 24 }}>
+            <input
+              type="checkbox"
+              disabled={!config.lowercaseStart}
+              checked={config.shiftCapitalize ?? true}
+              onChange={async () => {
+                updateConfig({ shiftCapitalize: !config.shiftCapitalize });
+                await saveConfig(false);
+                triggerToast();
+              }}
+            />
+            <div>
+              <div className={styles.checkboxLabel}>{t("whisper.shiftCapitalize")}</div>
+              <div className={styles.checkboxDesc}>{t("whisper.shiftCapitalizeHint")}</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
       <div className={card.card}>
         <div className={card.header}>
           <h2>{t("general.startup.title")}</h2>

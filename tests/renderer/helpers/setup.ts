@@ -75,6 +75,10 @@ export function createVoxApiMock(): VoxAPI {
       deleteEntry: vi.fn().mockResolvedValue(undefined),
       clear: vi.fn().mockResolvedValue(undefined),
       onEntryAdded: vi.fn(),
+      retry: vi.fn().mockResolvedValue(undefined),
+      downloadAudio: vi.fn().mockResolvedValue(""),
+      getAudioPath: vi.fn().mockResolvedValue(null),
+      getAudioDataUrl: vi.fn().mockResolvedValue(null),
     },
     navigation: {
       onNavigateTab: vi.fn(),
@@ -130,6 +134,7 @@ export function resetStores(): void {
     pageSize: 10,
     searchQuery: "",
     loading: false,
+    retryingId: null,
   });
 
   useDevOverrides.setState({

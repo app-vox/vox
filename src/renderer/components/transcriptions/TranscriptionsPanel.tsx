@@ -1,7 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useTranscriptionsStore } from "../../stores/transcriptions-store";
 import { useConfigStore } from "../../stores/config-store";
-import { useSaveToast } from "../../hooks/use-save-toast";
 import { useT } from "../../i18n-context";
 import type { TranscriptionEntry } from "../../../shared/types";
 import {
@@ -14,10 +13,15 @@ import {
   ChevronRightIcon,
   ChevronsRightIcon,
   InfoCircleIcon,
+  PlayIcon,
+  PauseIcon,
+  DownloadIcon,
+  RefreshIcon,
+  AlertTriangleIcon,
+  EllipsisVerticalIcon,
 } from "../../../shared/icons";
 import { CustomSelect } from "../ui/CustomSelect";
 import card from "../shared/card.module.scss";
-import generalStyles from "../general/GeneralPanel.module.scss";
 import styles from "./TranscriptionsPanel.module.scss";
 
 const DEBOUNCE_MS = 300;
@@ -68,23 +72,116 @@ function CopyButton({ text, t }: { text: string; t: (key: string) => string }) {
   };
 
   return (
-    <button className={styles.copyButton} onClick={handleCopy} title={t("history.copyToClipboard")}>
+    <button className={styles.copyButton} onClick={handleCopy} title={copied ? t("history.copied") : t("history.copyToClipboard")}>
       {copied ? (
         <CheckIcon width={14} height={14} />
       ) : (
         <CopyIcon width={14} height={14} />
       )}
-      <span>{copied ? t("history.copied") : t("history.copy")}</span>
     </button>
+  );
+}
+
+function AudioPlayer({ entryId }: { entryId: string }) {
+  const t = useT();
+  const [playing, setPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const togglePlay = useCallback(async () => {
+    if (playing && audioRef.current) {
+      audioRef.current.pause();
+      setPlaying(false);
+      return;
+    }
+
+    if (!audioRef.current) {
+      const dataUrl = await window.voxApi.history.getAudioDataUrl(entryId);
+      if (!dataUrl) return;
+      audioRef.current = new Audio(dataUrl);
+      audioRef.current.onended = () => setPlaying(false);
+    }
+    await audioRef.current.play();
+    setPlaying(true);
+  }, [entryId, playing]);
+
+  useEffect(() => {
+    return () => { audioRef.current?.pause(); };
+  }, []);
+
+  return (
+    <button
+      className={`${styles.audioButton} ${playing ? styles.audioButtonPlaying : ""}`}
+      onClick={togglePlay}
+      title={playing ? t("history.pause") : t("history.play")}
+    >
+      {playing ? <PauseIcon width={14} height={14} /> : <PlayIcon width={14} height={14} />}
+    </button>
+  );
+}
+
+function OverflowMenu({
+  entry,
+  retryEntry,
+  retryingId,
+  deleteEntry,
+}: {
+  entry: TranscriptionEntry;
+  retryEntry: (id: string) => Promise<void>;
+  retryingId: string | null;
+  deleteEntry: (id: string) => void;
+}) {
+  const t = useT();
+  const isRetrying = retryingId === entry.id;
+  const [downloaded, setDownloaded] = useState(false);
+
+  return (
+    <div className={styles.overflowMenu}>
+      <button
+        className={styles.overflowTrigger}
+      >
+        <EllipsisVerticalIcon width={14} height={14} />
+      </button>
+      <div className={styles.overflowDropdown}>
+        <div className={styles.overflowDropdownInner}>
+          {entry.audioFilePath && (
+            <button
+              className={styles.overflowItem}
+              onClick={() => retryEntry(entry.id)}
+              disabled={isRetrying || retryingId !== null}
+            >
+              <RefreshIcon width={14} height={14} />
+              <span>{isRetrying ? t("history.retrying") : t("history.retry")}</span>
+            </button>
+          )}
+          {entry.audioFilePath && (
+            <button
+              className={styles.overflowItem}
+              onClick={async () => {
+                await window.voxApi.history.downloadAudio(entry.id);
+                setDownloaded(true);
+                setTimeout(() => setDownloaded(false), 2000);
+              }}
+            >
+              {downloaded ? <CheckIcon width={14} height={14} /> : <DownloadIcon width={14} height={14} />}
+              <span>{downloaded ? t("history.downloaded") : t("history.download")}</span>
+            </button>
+          )}
+          <button
+            className={`${styles.overflowItem} ${styles.overflowItemDanger}`}
+            onClick={() => deleteEntry(entry.id)}
+          >
+            <TrashAltIcon width={14} height={14} />
+            <span>{t("history.deleteTranscription")}</span>
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
 export function TranscriptionsPanel() {
   const t = useT();
   const config = useConfigStore((s) => s.config);
-  const updateConfig = useConfigStore((s) => s.updateConfig);
-  const saveConfig = useConfigStore((s) => s.saveConfig);
-  const triggerToast = useSaveToast((s) => s.trigger);
   const copyToClipboard = config?.copyToClipboard;
   const entries = useTranscriptionsStore((s) => s.entries);
   const total = useTranscriptionsStore((s) => s.total);
@@ -98,7 +195,8 @@ export function TranscriptionsPanel() {
   const search = useTranscriptionsStore((s) => s.search);
   const deleteEntry = useTranscriptionsStore((s) => s.deleteEntry);
   const clearHistory = useTranscriptionsStore((s) => s.clearHistory);
-  const reset = useTranscriptionsStore((s) => s.reset);
+  const retryEntry = useTranscriptionsStore((s) => s.retryEntry);
+  const retryingId = useTranscriptionsStore((s) => s.retryingId);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -111,16 +209,14 @@ export function TranscriptionsPanel() {
   }, []);
 
   useEffect(() => {
-    reset();
     fetchPage();
-  }, [reset, fetchPage]);
+  }, [fetchPage]);
 
   useEffect(() => {
     window.voxApi.history.onEntryAdded(() => {
-      reset();
       fetchPage();
     });
-  }, [reset, fetchPage]);
+  }, [fetchPage]);
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,58 +242,6 @@ export function TranscriptionsPanel() {
 
   return (
     <>
-      <div className={card.card}>
-        <div className={card.body}>
-          <p className={card.description}>{t("whisper.preferencesTitle")}</p>
-          <label className={generalStyles.checkboxRow}>
-            <input
-              type="checkbox"
-              checked={config?.finishWithPeriod ?? true}
-              onChange={async () => {
-                updateConfig({ finishWithPeriod: !(config?.finishWithPeriod ?? true) });
-                await saveConfig(false);
-                triggerToast();
-              }}
-            />
-            <div>
-              <div className={generalStyles.checkboxLabel}>{t("whisper.finishWithPeriod")}</div>
-              <div className={generalStyles.checkboxDesc}>{t("whisper.finishWithPeriodHint")}</div>
-            </div>
-          </label>
-          <label className={generalStyles.checkboxRow}>
-            <input
-              type="checkbox"
-              checked={config?.lowercaseStart ?? false}
-              onChange={async () => {
-                updateConfig({ lowercaseStart: !config?.lowercaseStart });
-                await saveConfig(false);
-                triggerToast();
-              }}
-            />
-            <div>
-              <div className={generalStyles.checkboxLabel}>{t("whisper.lowercaseStart")}</div>
-              <div className={generalStyles.checkboxDesc}>{t("whisper.lowercaseStartHint")}</div>
-            </div>
-          </label>
-          <label className={`${generalStyles.checkboxRow} ${!config?.lowercaseStart ? generalStyles.disabled : ""}`} style={{ marginLeft: 24 }}>
-            <input
-              type="checkbox"
-              disabled={!config?.lowercaseStart}
-              checked={config?.shiftCapitalize ?? true}
-              onChange={async () => {
-                updateConfig({ shiftCapitalize: !config?.shiftCapitalize });
-                await saveConfig(false);
-                triggerToast();
-              }}
-            />
-            <div>
-              <div className={generalStyles.checkboxLabel}>{t("whisper.shiftCapitalize")}</div>
-              <div className={generalStyles.checkboxDesc}>{t("whisper.shiftCapitalizeHint")}</div>
-            </div>
-          </label>
-        </div>
-      </div>
-
       <div className={card.card}>
         <div className={card.header}>
           <h2>{t("history.title")}</h2>
@@ -233,32 +277,70 @@ export function TranscriptionsPanel() {
               {Array.from(groups.entries()).map(([dateLabel, groupEntries]) => (
                 <div key={dateLabel} className={styles.dateGroup}>
                   <div className={styles.dateHeader}>{dateLabel}</div>
-                  {groupEntries.map((entry) => (
-                    <div key={entry.id} className={styles.entry}>
-                      <div className={styles.entryContent}>
-                        <p className={styles.entryText}>{entry.text}</p>
-                        <div className={styles.entryMeta}>
-                          <span>{formatTime(entry.timestamp)}</span>
-                          <span>{t("history.words", { count: entry.wordCount })}</span>
-                          <span>{formatDuration(entry.audioDurationMs)}</span>
-                          <span>{entry.whisperModel}</span>
-                          {entry.llmEnhanced && entry.llmProvider && (
-                            <span className={styles.badge}>{entry.llmProvider}</span>
+                  {groupEntries.map((entry) => {
+                    const entryClass = [
+                      styles.entry,
+                      entry.status === "whisper_failed" ? styles.entryWhisperFailed : "",
+                      entry.status === "llm_failed" ? styles.entryLlmFailed : "",
+                      retryingId === entry.id ? styles.entryRetrying : "",
+                    ].filter(Boolean).join(" ");
+
+                    return (
+                      <div key={entry.id} className={entryClass}>
+                        <div className={styles.entryContent}>
+                          {entry.status === "whisper_failed" ? (
+                            <>
+                              <p className={styles.errorText}>
+                                {t("history.status.whisperFailed")}
+                              </p>
+                              {entry.errorMessage && (
+                                <p className={styles.errorText}>{entry.errorMessage}</p>
+                              )}
+                            </>
+                          ) : (
+                            <p className={styles.entryText}>{entry.text}</p>
                           )}
+                          <div className={styles.entryMeta}>
+                            <span>{formatTime(entry.timestamp)}</span>
+                            {entry.status !== "whisper_failed" && (
+                              <span>{t("history.words", { count: entry.wordCount })}</span>
+                            )}
+                            <span>{formatDuration(entry.audioDurationMs)}</span>
+                            <span>{entry.whisperModel}</span>
+                            {entry.llmEnhanced && entry.llmProvider && (
+                              <span className={styles.badge}>{entry.llmProvider}</span>
+                            )}
+                            {entry.status === "llm_failed" && (
+                              <span className={`${styles.statusBadge} ${styles.statusBadgeWarning}`}>
+                                <AlertTriangleIcon width={12} height={12} />
+                                {t("history.status.llmFailed")}
+                              </span>
+                            )}
+                            {entry.status === "whisper_failed" && (
+                              <span className={`${styles.statusBadge} ${styles.statusBadgeError}`}>
+                                <AlertTriangleIcon width={12} height={12} />
+                                {t("history.status.whisperFailed")}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className={styles.entryActions}>
+                          {entry.audioFilePath && (
+                            <AudioPlayer entryId={entry.id} />
+                          )}
+                          {entry.status !== "whisper_failed" && (
+                            <CopyButton text={entry.text} t={t} />
+                          )}
+                          <OverflowMenu
+                            entry={entry}
+                            retryEntry={retryEntry}
+                            retryingId={retryingId}
+                            deleteEntry={deleteEntry}
+                          />
                         </div>
                       </div>
-                      <div className={styles.entryActions}>
-                        <button
-                          className={styles.deleteButton}
-                          onClick={() => deleteEntry(entry.id)}
-                          title={t("history.deleteTranscription")}
-                        >
-                          <TrashAltIcon width={14} height={14} />
-                        </button>
-                        <CopyButton text={entry.text} t={t} />
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ))}
             </div>
