@@ -1263,6 +1263,8 @@ export class HudWindow {
   private flashPausedAt: number | null = null;
   private flashRemainingMs = 0;
   private pendingAttention = false;
+  private textPanelVisible = false;
+  private textPanelResizeTimer: ReturnType<typeof setTimeout> | null = null;
 
   show(alwaysShow: boolean, showOnHover: boolean, position: WidgetPosition = "bottom-center"): void {
     const wasOff = !this.alwaysShow;
@@ -1452,6 +1454,51 @@ export class HudWindow {
 
   showWarning(customText?: string): void {
     this.setState("warning", customText);
+  }
+
+  showTextPanel(text: string): void {
+    if (!this.window || this.window.isDestroyed() || !this.contentReady) return;
+    if (this.textPanelResizeTimer) {
+      clearTimeout(this.textPanelResizeTimer);
+      this.textPanelResizeTimer = null;
+    }
+    this.textPanelVisible = true;
+    const escaped = JSON.stringify(text);
+    this.execJs(`showTextPanel(${escaped})`);
+    const bounds = this.window.getBounds();
+    this.window.setBounds({
+      x: bounds.x,
+      y: bounds.y,
+      width: bounds.width,
+      height: EXPANDED_WIN_HEIGHT,
+    });
+  }
+
+  morphText(text: string): void {
+    if (!this.window || this.window.isDestroyed() || !this.contentReady) return;
+    const escaped = JSON.stringify(text);
+    this.execJs(`morphText(${escaped})`);
+  }
+
+  hideTextPanel(): void {
+    if (!this.window || this.window.isDestroyed() || !this.contentReady) return;
+    if (!this.textPanelVisible) return;
+    this.textPanelVisible = false;
+    this.execJs(`hideTextPanel()`);
+    if (this.textPanelResizeTimer) {
+      clearTimeout(this.textPanelResizeTimer);
+    }
+    this.textPanelResizeTimer = setTimeout(() => {
+      this.textPanelResizeTimer = null;
+      if (!this.window || this.window.isDestroyed()) return;
+      const bounds = this.window.getBounds();
+      this.window.setBounds({
+        x: bounds.x,
+        y: bounds.y,
+        width: bounds.width,
+        height: WIN_HEIGHT,
+      });
+    }, 450);
   }
 
   pauseFlashTimer(): void {
