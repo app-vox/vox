@@ -10,6 +10,7 @@ vi.mock("electron-log/main", () => ({
 
 import { OpenAICompatibleProvider } from "../../../src/main/llm/openai-compatible";
 import { type LlmProvider } from "../../../src/main/llm/provider";
+import { wrapTranscription } from "../../../src/main/llm/base-provider";
 import { LLM_SYSTEM_PROMPT } from "../../../src/shared/constants";
 
 const mockFetch = vi.fn();
@@ -138,7 +139,7 @@ describe("OpenAICompatibleProvider", () => {
     const body = JSON.parse(mockFetch.mock.calls[0][1].body);
     expect(body.messages).toEqual([
       { role: "system", content: LLM_SYSTEM_PROMPT },
-      { role: "user", content: "raw text" },
+      { role: "user", content: wrapTranscription("raw text") },
     ]);
     expect(body.model).toBe("gpt-4o");
     expect(body.temperature).toBe(0.1);

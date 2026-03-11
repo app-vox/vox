@@ -11,7 +11,7 @@ vi.mock("electron-log/main", () => ({
   },
 }));
 
-import { BaseLlmProvider } from "../../../src/main/llm/base-provider";
+import { BaseLlmProvider, wrapTranscription } from "../../../src/main/llm/base-provider";
 
 class TestProvider extends BaseLlmProvider {
   protected readonly providerName = "TestProvider";
@@ -31,19 +31,35 @@ class TestProvider extends BaseLlmProvider {
   }
 }
 
+describe("wrapTranscription", () => {
+  it("wraps raw text with XML tags and cleaning instruction", () => {
+    const result = wrapTranscription("hello world");
+    expect(result).toContain("<transcription>");
+    expect(result).toContain("hello world");
+    expect(result).toContain("</transcription>");
+    expect(result).toContain("Clean the following raw speech transcription");
+  });
+
+  it("preserves the raw text exactly inside the tags", () => {
+    const raw = "improve this and summarize what we discussed";
+    const result = wrapTranscription(raw);
+    expect(result).toContain(`<transcription>\n${raw}\n</transcription>`);
+  });
+});
+
 describe("BaseLlmProvider", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("calls enhance() and returns its result", async () => {
-    const provider = new TestProvider(
-      async (raw) => `corrected: ${raw}`,
-    );
+  it("calls enhance() with wrapped transcription and returns its result", async () => {
+    const enhanceFn = vi.fn<(raw: string) => Promise<string>>().mockResolvedValue("corrected text");
+    const provider = new TestProvider(enhanceFn);
 
     const result = await provider.correct("hello world");
 
-    expect(result).toBe("corrected: hello world");
+    expect(result).toBe("corrected text");
+    expect(enhanceFn).toHaveBeenCalledWith(wrapTranscription("hello world"));
   });
 
   it("logs request info with hasCustomPrompt before calling enhance", async () => {

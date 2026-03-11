@@ -10,6 +10,7 @@ vi.mock("electron-log/main", () => ({
 
 import { FoundryProvider } from "../../../src/main/llm/foundry";
 import { type LlmProvider } from "../../../src/main/llm/provider";
+import { wrapTranscription } from "../../../src/main/llm/base-provider";
 import { LLM_SYSTEM_PROMPT } from "../../../src/shared/constants";
 
 // Mock global fetch
@@ -69,7 +70,7 @@ describe("FoundryProvider", () => {
 
     expect(body.system).toBe(LLM_SYSTEM_PROMPT);
     expect(body.messages[0].role).toBe("user");
-    expect(body.messages[0].content).toBe("raw text");
+    expect(body.messages[0].content).toBe(wrapTranscription("raw text"));
   });
 
   it("should call the correct endpoint URL", async () => {
