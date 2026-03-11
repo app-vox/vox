@@ -378,6 +378,8 @@
   "general.recordingFeedback.sound.error": "Error",
   "general.recordingFeedback.classic": "Klasik",
   "general.recordingFeedback.errorSound": "Uyarı sesi",
+  "general.textProcessing.title": "Transkripsiyon tercihleri",
+  "general.textProcessing.description": "Transkript edilen metnin biçimlendirmesini ayarlayın.",
   "indicator.initializing": "Başlatılıyor...",
   "ui.offlineWarning": "Çevrimdışı görünüyorsunuz. Model indirme gibi bazı özellikler çalışmayabilir.",
   "general.permissions.title": "İzinleri Ver",

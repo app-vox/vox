@@ -17,6 +17,7 @@ import buttons from "../shared/buttons.module.scss";
 import styles from "./GeneralPanel.module.scss";
 
 const DISPLAY_COLLAPSED_KEY = "vox:display-collapsed";
+const TEXT_PROCESSING_COLLAPSED_KEY = "vox:text-processing-collapsed";
 const HUD_BANNER_DISMISSED_KEY = "vox:hud-banner-dismissed";
 const SHORTCUTS_BANNER_DISMISSED_KEY = "vox:shortcuts-banner-dismissed";
 const VISITED_SHORTCUTS_KEY = "vox:visited-shortcuts";
@@ -159,6 +160,7 @@ export function GeneralPanel() {
   ];
 
   const [displayCollapsed, setDisplayCollapsed] = useState(() => localStorage.getItem(DISPLAY_COLLAPSED_KEY) !== "false");
+  const [textProcessingCollapsed, setTextProcessingCollapsed] = useState(() => localStorage.getItem(TEXT_PROCESSING_COLLAPSED_KEY) !== "false");
   const [perfCollapsed, setPerfCollapsed] = useState(true);
   const [hudBannerDismissed, setHudBannerDismissed] = useState(() => localStorage.getItem(HUD_BANNER_DISMISSED_KEY) === "true");
   const [shortcutsBannerDismissedLocal, setShortcutsBannerDismissed] = useState(() =>
@@ -736,54 +738,77 @@ export function GeneralPanel() {
 
       {/* Text processing */}
       <div className={card.card}>
-        <div className={card.body}>
-          <label className={styles.checkboxRow}>
-            <input
-              type="checkbox"
-              checked={config.finishWithPeriod ?? true}
-              onChange={async () => {
-                updateConfig({ finishWithPeriod: !(config.finishWithPeriod ?? true) });
-                await saveConfig(false);
-                triggerToast();
-              }}
-            />
-            <div>
-              <div className={styles.checkboxLabel}>{t("whisper.finishWithPeriod")}</div>
-              <div className={styles.checkboxDesc}>{t("whisper.finishWithPeriodHint")}</div>
-            </div>
-          </label>
-          <label className={styles.checkboxRow}>
-            <input
-              type="checkbox"
-              checked={config.lowercaseStart ?? false}
-              onChange={async () => {
-                updateConfig({ lowercaseStart: !config.lowercaseStart });
-                await saveConfig(false);
-                triggerToast();
-              }}
-            />
-            <div>
-              <div className={styles.checkboxLabel}>{t("whisper.lowercaseStart")}</div>
-              <div className={styles.checkboxDesc}>{t("whisper.lowercaseStartHint")}</div>
-            </div>
-          </label>
-          <label className={`${styles.checkboxRow} ${!config.lowercaseStart ? styles.disabled : ""}`} style={{ marginLeft: 24 }}>
-            <input
-              type="checkbox"
-              disabled={!config.lowercaseStart}
-              checked={config.shiftCapitalize ?? true}
-              onChange={async () => {
-                updateConfig({ shiftCapitalize: !config.shiftCapitalize });
-                await saveConfig(false);
-                triggerToast();
-              }}
-            />
-            <div>
-              <div className={styles.checkboxLabel}>{t("whisper.shiftCapitalize")}</div>
-              <div className={styles.checkboxDesc}>{t("whisper.shiftCapitalizeHint")}</div>
-            </div>
-          </label>
-        </div>
+        <button
+          className={styles.collapsibleHeader}
+          onClick={() => {
+            setTextProcessingCollapsed((prev) => {
+              const next = !prev;
+              localStorage.setItem(TEXT_PROCESSING_COLLAPSED_KEY, String(next));
+              return next;
+            });
+          }}
+          aria-expanded={!textProcessingCollapsed}
+        >
+          <div>
+            <h2>{t("general.textProcessing.title")}</h2>
+            <p className={card.description}>{t("general.textProcessing.description")}</p>
+          </div>
+          <ChevronDownIcon
+            width={16}
+            height={16}
+            className={`${styles.collapseChevron} ${textProcessingCollapsed ? styles.collapsed : ""}`}
+          />
+        </button>
+        {!textProcessingCollapsed && (
+          <div className={card.body}>
+            <label className={styles.checkboxRow}>
+              <input
+                type="checkbox"
+                checked={config.finishWithPeriod ?? true}
+                onChange={async () => {
+                  updateConfig({ finishWithPeriod: !(config.finishWithPeriod ?? true) });
+                  await saveConfig(false);
+                  triggerToast();
+                }}
+              />
+              <div>
+                <div className={styles.checkboxLabel}>{t("whisper.finishWithPeriod")}</div>
+                <div className={styles.checkboxDesc}>{t("whisper.finishWithPeriodHint")}</div>
+              </div>
+            </label>
+            <label className={styles.checkboxRow}>
+              <input
+                type="checkbox"
+                checked={config.lowercaseStart ?? false}
+                onChange={async () => {
+                  updateConfig({ lowercaseStart: !config.lowercaseStart });
+                  await saveConfig(false);
+                  triggerToast();
+                }}
+              />
+              <div>
+                <div className={styles.checkboxLabel}>{t("whisper.lowercaseStart")}</div>
+                <div className={styles.checkboxDesc}>{t("whisper.lowercaseStartHint")}</div>
+              </div>
+            </label>
+            <label className={`${styles.checkboxRow} ${!config.lowercaseStart ? styles.disabled : ""}`} style={{ marginLeft: 24 }}>
+              <input
+                type="checkbox"
+                disabled={!config.lowercaseStart}
+                checked={config.shiftCapitalize ?? true}
+                onChange={async () => {
+                  updateConfig({ shiftCapitalize: !config.shiftCapitalize });
+                  await saveConfig(false);
+                  triggerToast();
+                }}
+              />
+              <div>
+                <div className={styles.checkboxLabel}>{t("whisper.shiftCapitalize")}</div>
+                <div className={styles.checkboxDesc}>{t("whisper.shiftCapitalizeHint")}</div>
+              </div>
+            </label>
+          </div>
+        )}
       </div>
 
       <div className={card.card}>

@@ -378,6 +378,8 @@
   "general.recordingFeedback.sound.error": "Error",
   "general.recordingFeedback.classic": "Классические",
   "general.recordingFeedback.errorSound": "Звук оповещения",
+  "general.textProcessing.title": "Настройки транскрипции",
+  "general.textProcessing.description": "Настройте форматирование транскрибированного текста.",
   "indicator.initializing": "Запуск...",
   "ui.offlineWarning": "Похоже, вы не в сети. Некоторые функции, такие как загрузка моделей, могут не работать.",
   "general.permissions.title": "Предоставить Разрешения",
