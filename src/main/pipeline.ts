@@ -40,6 +40,7 @@ export interface PipelineDeps {
     track(event: string, properties?: Record<string, unknown>): void;
   };
   onStage?: (stage: PipelineStage) => void;
+  onTranscriptionComplete?: (rawText: string) => void;
   onComplete?: (result: {
     text: string;
     originalText: string;
@@ -378,6 +379,7 @@ export class Pipeline {
       slog.info("LLM enhancement disabled", { processingTimeMs });
       this.deps.analytics?.track("llm_enhancement_skipped");
       if (!rawText) return "";
+      this.deps.onTranscriptionComplete?.(rawText);
       this.currentStage = null;
       this.deps.onComplete?.({ text: rawText, originalText: rawText, audioDurationMs, recording });
       return rawText;
@@ -410,6 +412,7 @@ export class Pipeline {
       return "";
     }
     slog.info("Transcription passed, sending to LLM");
+    this.deps.onTranscriptionComplete?.(rawText);
 
     if (this.canceled || gen !== this.generation) {
       throw new CanceledError();
