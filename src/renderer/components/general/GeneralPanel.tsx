@@ -813,8 +813,8 @@ export function GeneralPanel() {
 
       <div className={card.card}>
         <div className={card.header}>
-          <h2>{t("general.startup.title")}</h2>
-          <p className={card.description}>{t("general.startup.description")}</p>
+          <h2>{t("general.system.title")}</h2>
+          <p className={card.description}>{t("general.system.description")}</p>
         </div>
         <div className={card.body}>
           <label className={`${styles.checkboxRow} ${isDevMode ? styles.disabled : ""}`}>
@@ -825,13 +825,45 @@ export function GeneralPanel() {
               onChange={toggleLaunchAtLogin}
             />
             <div>
-              <div className={styles.checkboxLabel}>{t("general.startup.launchAtLogin")}</div>
+              <div className={styles.checkboxLabel}>{t("general.system.launchAtLogin")}</div>
               <div className={styles.checkboxDesc}>
                 {isDevMode
-                  ? t("general.startup.devDisabled")
-                  : t("general.startup.autoStart")
+                  ? t("general.system.devDisabled")
+                  : t("general.system.autoStart")
                 }
               </div>
+            </div>
+          </label>
+          <label className={styles.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={config.showInDock}
+              onChange={async () => {
+                if (config.showInDock && !config.showInTray) return;
+                updateConfig({ showInDock: !config.showInDock });
+                await saveConfig(false);
+                triggerToast();
+              }}
+            />
+            <div>
+              <div className={styles.checkboxLabel}>{t("general.system.showInDock")}</div>
+              <div className={styles.checkboxDesc}>{t("general.system.showInDockDesc")}</div>
+            </div>
+          </label>
+          <label className={styles.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={config.showInTray}
+              onChange={async () => {
+                if (config.showInTray && !config.showInDock) return;
+                updateConfig({ showInTray: !config.showInTray });
+                await saveConfig(false);
+                triggerToast();
+              }}
+            />
+            <div>
+              <div className={styles.checkboxLabel}>{t("general.system.showInTray")}</div>
+              <div className={styles.checkboxDesc}>{t("general.system.showInTrayDesc")}</div>
             </div>
           </label>
         </div>
