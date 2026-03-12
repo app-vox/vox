@@ -378,6 +378,8 @@
   "general.recordingFeedback.sound.error": "Error",
   "general.recordingFeedback.classic": "Classico",
   "general.recordingFeedback.errorSound": "Suono di avviso",
+  "general.textProcessing.title": "Preferenze di trascrizione",
+  "general.textProcessing.description": "Regola come viene formattato il testo trascritto.",
   "indicator.initializing": "Avvio...",
   "ui.offlineWarning": "Sembra che tu sia offline. Alcune funzionalità come il download dei modelli potrebbero non funzionare.",
   "general.permissions.title": "Concedi Permessi",

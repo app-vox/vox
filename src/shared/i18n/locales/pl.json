@@ -361,6 +361,8 @@
   "general.recordingFeedback.sound.error": "Error",
   "general.recordingFeedback.classic": "Klasyczne",
   "general.recordingFeedback.errorSound": "Dźwięk alertu",
+  "general.textProcessing.title": "Preferencje transkrypcji",
+  "general.textProcessing.description": "Dostosuj formatowanie transkrybowanego tekstu.",
   "indicator.initializing": "Uruchamianie...",
   "history.deleteTranscription": "Usuń transkrypcję",
   "history.status.whisperFailed": "Transkrypcja nie powiodła się",
