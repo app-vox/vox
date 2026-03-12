@@ -43,11 +43,10 @@ function buildHudHtml(): string {
     background: transparent;
     overflow: hidden;
     width: ${WIN_WIDTH}px;
-    height: ${EXPANDED_WIN_HEIGHT}px;
+    height: ${WIN_HEIGHT}px;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
-    padding-top: ${(WIN_HEIGHT - CIRCLE_SIZE) / 2}px;
   }
 
   .scale-wrapper {
@@ -496,8 +495,9 @@ function buildHudHtml(): string {
 
   /* Text panel */
   .text-panel {
+    display: none;
     position: absolute;
-    top: ${CIRCLE_SIZE + TEXT_PANEL_GAP + (WIN_HEIGHT - CIRCLE_SIZE) / 2}px;
+    top: ${(WIN_HEIGHT + CIRCLE_SIZE) / 2 + TEXT_PANEL_GAP}px;
     left: 50%;
     transform: translateX(-50%);
     background: rgba(20,20,35,0.95);
@@ -517,6 +517,7 @@ function buildHudHtml(): string {
     backdrop-filter: blur(20px);
   }
   .text-panel.visible {
+    display: block;
     padding: 12px 16px;
     max-height: ${TEXT_PANEL_MAX_HEIGHT}px;
     opacity: 1;
@@ -526,6 +527,7 @@ function buildHudHtml(): string {
     border-color: rgba(68,170,255,0.3);
   }
   .text-panel.fade-out {
+    display: block;
     opacity: 0;
     max-height: 0;
     padding: 0;
@@ -1127,6 +1129,8 @@ function showTextPanel(text) {
   tpContent.innerHTML = '';
   tpCursor.className = 'tp-cursor';
   tpContent.appendChild(tpCursor);
+  document.documentElement.style.height = '${EXPANDED_WIN_HEIGHT}px';
+  document.body.style.height = '${EXPANDED_WIN_HEIGHT}px';
   tpPanel.className = 'text-panel visible';
   var words = text.split(/[ \t\n\r\f]+/).filter(function(w) { return w.length > 0; });
   var i = 0;
@@ -1197,6 +1201,8 @@ function hideTextPanel() {
     tpContent.innerHTML = '';
     tpCursor.className = 'tp-cursor hidden';
     tpContent.appendChild(tpCursor);
+    document.documentElement.style.height = '${WIN_HEIGHT}px';
+    document.body.style.height = '${WIN_HEIGHT}px';
   }, 450);
 }
 
@@ -1463,8 +1469,6 @@ export class HudWindow {
       this.textPanelResizeTimer = null;
     }
     this.textPanelVisible = true;
-    const escaped = JSON.stringify(text);
-    this.execJs(`showTextPanel(${escaped})`);
     const bounds = this.window.getBounds();
     this.window.setBounds({
       x: bounds.x,
@@ -1472,6 +1476,8 @@ export class HudWindow {
       width: bounds.width,
       height: EXPANDED_WIN_HEIGHT,
     });
+    const escaped = JSON.stringify(text);
+    this.execJs(`showTextPanel(${escaped})`);
   }
 
   morphText(text: string): void {
