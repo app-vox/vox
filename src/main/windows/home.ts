@@ -112,6 +112,7 @@ export function refreshAppMenu(): void {
 
 let homeWindow: BrowserWindow | null = null;
 let forceQuit = false;
+let blurSuppressed = false;
 const isMac = process.platform === "darwin";
 
 if (isMac) {
@@ -247,7 +248,7 @@ export function openHome(onClosed: () => void, initialTab?: string): void {
       if (graceTimer) { clearTimeout(graceTimer); graceTimer = null; }
     });
     homeWindow.on("blur", () => {
-      if (blurEnabled && !forceQuit && homeWindow && !homeWindow.isDestroyed()) {
+      if (blurEnabled && !blurSuppressed && !forceQuit && homeWindow && !homeWindow.isDestroyed()) {
         homeWindow.hide();
       }
     });
@@ -257,4 +258,11 @@ export function openHome(onClosed: () => void, initialTab?: string): void {
     homeWindow = null;
     onClosed();
   });
+}
+
+const BLUR_SUPPRESS_MS = 500;
+
+export function suppressBlur(): void {
+  blurSuppressed = true;
+  setTimeout(() => { blurSuppressed = false; }, BLUR_SUPPRESS_MS);
 }
