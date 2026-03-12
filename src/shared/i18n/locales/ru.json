@@ -357,7 +357,7 @@
   "history.moreActions": "Другие действия",
   "history.audioRetention": "Хранение аудио",
   "history.audioRetentionDesc": "Количество последних аудиозаписей для хранения на диске",
-  "history.audioRetentionDisabled": "Отключено",
+  "history.audioRetentionHint": "Установите 0, чтобы отключить хранение аудио",
   "history.cannotRetryWhileRecording": "Невозможно повторить во время записи",
   "general.recordingFeedback.title": "Обратная связь записи",
   "general.recordingFeedback.description": "Воспроизводить звуки при начале и окончании записи.",

@@ -356,7 +356,7 @@
   "history.moreActions": "More actions",
   "history.audioRetention": "Audio retention",
   "history.audioRetentionDesc": "Number of recent audio recordings to keep on disk",
-  "history.audioRetentionDisabled": "Disabled",
+  "history.audioRetentionHint": "Set to 0 to disable audio retention",
   "history.cannotRetryWhileRecording": "Cannot retry while recording is in progress",
   "general.recordingFeedback.title": "Recording Feedback",
   "general.recordingFeedback.description": "Play sounds when recording starts and stops.",

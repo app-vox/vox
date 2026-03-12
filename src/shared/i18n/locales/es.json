@@ -357,7 +357,7 @@
   "history.moreActions": "Más acciones",
   "history.audioRetention": "Retención de audio",
   "history.audioRetentionDesc": "Número de grabaciones de audio recientes a conservar en disco",
-  "history.audioRetentionDisabled": "Desactivado",
+  "history.audioRetentionHint": "Establezca en 0 para desactivar la retención de audio",
   "history.cannotRetryWhileRecording": "No se puede reintentar mientras la grabación está en progreso",
   "general.recordingFeedback.title": "Retroalimentación de Grabación",
   "general.recordingFeedback.description": "Reproducir sonidos al iniciar y detener la grabación.",
