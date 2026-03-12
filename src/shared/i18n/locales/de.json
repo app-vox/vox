@@ -357,7 +357,7 @@
   "history.moreActions": "Weitere Aktionen",
   "history.audioRetention": "Audio-Aufbewahrung",
   "history.audioRetentionDesc": "Anzahl der zuletzt gespeicherten Audioaufnahmen auf dem Datenträger",
-  "history.audioRetentionDisabled": "Deaktiviert",
+  "history.audioRetentionHint": "Auf 0 setzen, um die Audioaufbewahrung zu deaktivieren",
   "history.cannotRetryWhileRecording": "Erneuter Versuch während laufender Aufnahme nicht möglich",
   "general.recordingFeedback.title": "Aufnahme-Feedback",
   "general.recordingFeedback.description": "Töne beim Starten und Stoppen der Aufnahme abspielen.",

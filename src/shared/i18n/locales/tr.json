@@ -357,7 +357,7 @@
   "history.moreActions": "Diğer işlemler",
   "history.audioRetention": "Ses saklama",
   "history.audioRetentionDesc": "Diskte saklanacak son ses kaydı sayısı",
-  "history.audioRetentionDisabled": "Devre dışı",
+  "history.audioRetentionHint": "Ses kaydı tutmayı devre dışı bırakmak için 0 olarak ayarlayın",
   "history.cannotRetryWhileRecording": "Kayıt devam ederken yeniden denenemez",
   "general.recordingFeedback.title": "Kayıt Geri Bildirimi",
   "general.recordingFeedback.description": "Kayıt başladığında ve durduğunda ses çal.",

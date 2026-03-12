@@ -379,7 +379,7 @@
   "history.moreActions": "Więcej akcji",
   "history.audioRetention": "Przechowywanie audio",
   "history.audioRetentionDesc": "Liczba ostatnich nagrań audio do przechowywania na dysku",
-  "history.audioRetentionDisabled": "Wyłączone",
+  "history.audioRetentionHint": "Ustaw na 0, aby wyłączyć przechowywanie nagrań audio",
   "history.cannotRetryWhileRecording": "Nie można ponowić próby podczas trwającego nagrywania",
   "ui.offlineWarning": "Wygląda na to, że jesteś offline. Niektóre funkcje, takie jak pobieranie modeli, mogą nie działać.",
   "general.permissions.title": "Przyznaj Uprawnienia",

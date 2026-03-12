@@ -7,7 +7,7 @@ import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useT } from "../../i18n-context";
 import { ModelSelector } from "../ui/ModelSelector";
 import { TranscriptionTest } from "../ui/TranscriptionTest";
-import { CustomSelect } from "../ui/CustomSelect";
+import { useState } from "react";
 import { OfflineBanner } from "../ui/OfflineBanner";
 import { AlertTriangleIcon } from "../../../shared/icons";
 import card from "../shared/card.module.scss";
@@ -29,6 +29,7 @@ export function WhisperPanel() {
 
   const modelManager = useModelManager();
   const transcriptionTest = useTranscriptionTest(5);
+  const [retentionDraft, setRetentionDraft] = useState<string | null>(null);
 
   if (!config) return null;
 
@@ -83,21 +84,28 @@ export function WhisperPanel() {
           <p className={card.description}>{t("history.audioRetentionDesc")}</p>
         </div>
         <div className={card.body}>
-          <CustomSelect
-            value={String(config.audioRetentionCount ?? 5)}
-            items={[
-              { value: "0", label: t("history.audioRetentionDisabled") },
-              { value: "3", label: "3" },
-              { value: "5", label: "5" },
-              { value: "10", label: "10" },
-              { value: "20", label: "20" },
-            ]}
-            onChange={async (value) => {
-              updateConfig({ audioRetentionCount: Number(value) });
-              await saveConfig(false);
-              triggerToast();
-            }}
-          />
+          <div className={form.field}>
+            <input
+              id="audio-retention-count"
+              type="number"
+              min={0}
+              value={retentionDraft ?? String(config.audioRetentionCount ?? 5)}
+              onChange={(e) => setRetentionDraft(e.target.value)}
+              onBlur={async (e) => {
+                const parsed = Math.max(0, Math.round(Number(e.target.value) || 0));
+                setRetentionDraft(null);
+                updateConfig({ audioRetentionCount: parsed });
+                await saveConfig(false);
+                triggerToast();
+              }}
+              onKeyDown={async (e) => {
+                if (e.key === "Enter") {
+                  (e.target as HTMLInputElement).blur();
+                }
+              }}
+            />
+            <p className={form.hint}>{t("history.audioRetentionHint")}</p>
+          </div>
         </div>
       </div>
     </>
