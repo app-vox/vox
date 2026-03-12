@@ -238,11 +238,13 @@ export function openHome(onClosed: () => void, initialTab?: string): void {
     let blurEnabled = false;
     let graceTimer: ReturnType<typeof setTimeout> | null = null;
     homeWindow.on("show", () => {
+      app.dock?.hide();
       blurEnabled = false;
       if (graceTimer) clearTimeout(graceTimer);
       graceTimer = setTimeout(() => { blurEnabled = true; }, BLUR_GRACE_MS);
     });
     homeWindow.on("hide", () => {
+      app.dock?.hide();
       blurEnabled = false;
       if (graceTimer) { clearTimeout(graceTimer); graceTimer = null; }
     });
