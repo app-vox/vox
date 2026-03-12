@@ -20,6 +20,7 @@ export interface PipelineDeps {
     start(): Promise<void>;
     stop(): Promise<RecordingResult>;
     cancel(): Promise<void>;
+    snapshot?(): Promise<RecordingResult | null>;
     playAudioCue?(samples: number[], sampleRate?: number): Promise<void>;
   };
   transcribe(
@@ -216,6 +217,28 @@ export class Pipeline {
 
   async playAudioCue(samples: number[], sampleRate?: number): Promise<void> {
     await this.deps.recorder.playAudioCue?.(samples, sampleRate);
+  }
+
+  async snapshotAndTranscribe(): Promise<string | null> {
+    const snapshot = await this.deps.recorder.snapshot?.();
+    if (!snapshot || snapshot.audioBuffer.length === 0) return null;
+    // Require at least 0.5s of audio for meaningful transcription
+    const durationMs = (snapshot.audioBuffer.length / snapshot.sampleRate) * 1000;
+    if (durationMs < 500) return null;
+    try {
+      const result = await this.deps.transcribe(
+        snapshot.audioBuffer,
+        snapshot.sampleRate,
+        this.deps.modelPath,
+        this.deps.dictionary,
+        this.deps.speechLanguages,
+      );
+      const text = result.text.trim();
+      if (!text || isGarbageTranscription(text)) return null;
+      return text;
+    } catch {
+      return null;
+    }
   }
 
   async startRecording(): Promise<void> {

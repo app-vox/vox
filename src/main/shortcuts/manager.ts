@@ -117,6 +117,7 @@ export class ShortcutManager {
   private canceledAtStage: string | null = null;
   private devModelOverride: boolean | null = null;
   private lastUnpastedText: string | null = null;
+  private liveTranscriptionTimer: ReturnType<typeof setTimeout> | null = null;
   private isShiftHeld = false;
   private shiftAlone = false;
   private shiftTrackingActive = false;
@@ -329,6 +330,7 @@ export class ShortcutManager {
     }
     if (state === RecordingState.Hold || state === RecordingState.Toggle || state === RecordingState.Processing) {
       slog.info("Graceful cancel requested");
+      this.stopLiveTranscription();
       this.micActiveAt = 0;
       this.recordingGeneration++;
       const pipeline = this.deps.getPipeline();
@@ -1002,6 +1004,7 @@ export class ShortcutManager {
       }
 
       this.hud.setState("listening");
+      this.startLiveTranscription(pipeline, gen);
     }).catch((err: Error) => {
       if (gen !== this.recordingGeneration) {
         slog.info("Stale recording error (gen=%d, current=%d) — discarding", gen, this.recordingGeneration);
@@ -1028,6 +1031,7 @@ export class ShortcutManager {
   }
 
   private async onRecordingStop(): Promise<void> {
+    this.stopLiveTranscription();
     const elapsed = this.micActiveAt > 0 ? Date.now() - this.micActiveAt : 0;
     if (this.micActiveAt === 0 || elapsed < ShortcutManager.MIN_RECORDING_MS) {
       slog.info("Recording too short (%dms) or mic not ready — canceling", elapsed);
@@ -1080,8 +1084,8 @@ export class ShortcutManager {
         this.hud.hideTextPanel();
         hudEndState = "error";
       } else {
-        slog.info("Valid text received, proceeding with %s", config.copyToClipboard ? "paste" : "injection");
-        await new Promise((r) => setTimeout(r, 200));
+        slog.info("Valid text received, proceeding with paste");
+        await this.hud.waitForMorph();
         const pasteConfig = this.deps.configManager.load();
         const forceCapitalize = this.isShiftHeld && this.shiftAlone && pasteConfig.shiftCapitalize && pasteConfig.lowercaseStart;
         const pasted = pasteText(trimmedText, pasteConfig.copyToClipboard, { lowercaseStart: pasteConfig.lowercaseStart, shiftCapitalize: forceCapitalize, finishWithPeriod: pasteConfig.finishWithPeriod });
@@ -1131,6 +1135,45 @@ export class ShortcutManager {
         this.updateTrayState();
         slog.info("Ready for next recording");
       }
+    }
+  }
+
+  private startLiveTranscription(pipeline: Pipeline, gen: number): void {
+    this.stopLiveTranscription();
+    let running = false;
+    this.hud.showTextPanelEmpty();
+
+    const tick = async (): Promise<void> => {
+      if (gen !== this.recordingGeneration) return;
+      if (running) {
+        // Previous transcription still in progress, schedule next tick
+        this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 1000);
+        return;
+      }
+      running = true;
+      try {
+        const text = await pipeline.snapshotAndTranscribe();
+        if (gen !== this.recordingGeneration) return;
+        if (text) {
+          this.hud.updateTextPanel(text);
+        }
+      } catch {
+        // Ignore errors during live transcription
+      } finally {
+        running = false;
+      }
+      if (gen !== this.recordingGeneration) return;
+      this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 2000);
+    };
+
+    // First snapshot after 2s of recording
+    this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 2000);
+  }
+
+  private stopLiveTranscription(): void {
+    if (this.liveTranscriptionTimer) {
+      clearTimeout(this.liveTranscriptionTimer);
+      this.liveTranscriptionTimer = null;
     }
   }
 }

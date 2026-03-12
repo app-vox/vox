@@ -1152,6 +1152,21 @@ function showTextPanel(text) {
   typeNext();
 }
 
+function updateTextPanel(text) {
+  if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
+  tpContent.innerHTML = '';
+  tpCursor.className = 'tp-cursor';
+  tpContent.appendChild(tpCursor);
+  var words = text.split(/\\s+/).filter(function(w) { return w.length > 0; });
+  for (var i = 0; i < words.length; i++) {
+    var span = document.createElement('span');
+    span.className = 'word';
+    span.textContent = words[i] + ' ';
+    tpContent.insertBefore(span, tpCursor);
+  }
+  tpPanel.scrollTop = tpPanel.scrollHeight;
+}
+
 function morphText(enhancedText) {
   if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
   tpMorphing = true;
@@ -1290,6 +1305,7 @@ export class HudWindow {
   private pendingAttention = false;
   private textPanelVisible = false;
   private textPanelResizeTimer: ReturnType<typeof setTimeout> | null = null;
+  private morphPromise: Promise<void> | null = null;
 
   show(alwaysShow: boolean, showOnHover: boolean, position: WidgetPosition = "bottom-center"): void {
     const wasOff = !this.alwaysShow;
@@ -1486,6 +1502,29 @@ export class HudWindow {
     this.setState("warning", customText);
   }
 
+  showTextPanelEmpty(): void {
+    if (!this.window || this.window.isDestroyed() || !this.contentReady) return;
+    if (this.textPanelResizeTimer) {
+      clearTimeout(this.textPanelResizeTimer);
+      this.textPanelResizeTimer = null;
+    }
+    this.textPanelVisible = true;
+    const bounds = this.window.getBounds();
+    this.window.setBounds({
+      x: bounds.x,
+      y: bounds.y,
+      width: bounds.width,
+      height: EXPANDED_WIN_HEIGHT,
+    });
+    this.execJs(`showTextPanel('')`);
+  }
+
+  updateTextPanel(text: string): void {
+    if (!this.window || this.window.isDestroyed() || !this.contentReady) return;
+    const escaped = JSON.stringify(text);
+    this.execJs(`updateTextPanel(${escaped})`);
+  }
+
   showTextPanel(text: string): void {
     if (!this.window || this.window.isDestroyed() || !this.contentReady) return;
     if (this.textPanelResizeTimer) {
@@ -1505,9 +1544,21 @@ export class HudWindow {
   }
 
   morphText(text: string): void {
-    if (!this.window || this.window.isDestroyed() || !this.contentReady) return;
+    if (!this.window || this.window.isDestroyed() || !this.contentReady) {
+      this.morphPromise = null;
+      return;
+    }
     const escaped = JSON.stringify(text);
     this.execJs(`morphText(${escaped})`);
+    // Estimate animation duration to match JS timers:
+    // blur phase: wordCount * 20ms + 200ms, morph-in phase: newWordCount * 40ms + 300ms
+    const wordCount = text.split(/\s+/).filter(Boolean).length;
+    const estimatedMs = (wordCount * 20) + 200 + (wordCount * 40) + 300;
+    this.morphPromise = new Promise(resolve => setTimeout(resolve, estimatedMs));
+  }
+
+  waitForMorph(): Promise<void> {
+    return this.morphPromise ?? Promise.resolve();
   }
 
   hideTextPanel(): void {

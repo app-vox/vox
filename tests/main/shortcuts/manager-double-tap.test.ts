@@ -79,8 +79,11 @@ vi.mock("../../../src/main/hud", () => {
       setShowActions = vi.fn();
       setPerformanceFlags = vi.fn();
       showTextPanel = vi.fn();
+      showTextPanelEmpty = vi.fn();
+      updateTextPanel = vi.fn();
       morphText = vi.fn();
       hideTextPanel = vi.fn();
+      waitForMorph = vi.fn().mockResolvedValue(undefined);
     },
   };
 });
@@ -108,6 +111,7 @@ function createMockPipeline() {
     stopAndProcess: vi.fn().mockResolvedValue("hello"),
     cancel: vi.fn().mockResolvedValue(undefined),
     playAudioCue: vi.fn().mockResolvedValue(undefined),
+    snapshotAndTranscribe: vi.fn().mockResolvedValue(null),
     gracefulCancel: vi.fn().mockReturnValue({ stage: "recording" }),
     confirmCancel: vi.fn(),
     undoCancel: vi.fn().mockResolvedValue("hello"),

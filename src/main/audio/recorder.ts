@@ -132,6 +132,33 @@ export class AudioRecorder {
     this.levelsInterval = lvl;
   }
 
+  async snapshot(): Promise<RecordingResult | null> {
+    if (!this.recording || !this.win || this.win.isDestroyed()) return null;
+    try {
+      const result: { audioBuffer: number[]; sampleRate: number } | null =
+        await this.win.webContents.executeJavaScript(`
+          (() => {
+            if (!window._recChunks || window._recChunks.length === 0) return null;
+            const totalLength = window._recChunks.reduce((sum, c) => sum + c.length, 0);
+            const merged = new Float32Array(totalLength);
+            let offset = 0;
+            for (const chunk of window._recChunks) {
+              merged.set(new Float32Array(chunk), offset);
+              offset += chunk.length;
+            }
+            return { audioBuffer: Array.from(merged), sampleRate: window._recCtx.sampleRate };
+          })()
+        `);
+      if (!result) return null;
+      return {
+        audioBuffer: new Float32Array(result.audioBuffer),
+        sampleRate: result.sampleRate,
+      };
+    } catch {
+      return null;
+    }
+  }
+
   async stop(): Promise<RecordingResult> {
     this.stopLevels();
     if (!this.recording || !this.win || this.win.isDestroyed()) {
