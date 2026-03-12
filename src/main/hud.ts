@@ -1131,7 +1131,7 @@ function showTextPanel(text) {
   document.body.style.alignItems = 'flex-start';
   document.body.style.paddingTop = '${(WIN_HEIGHT - CIRCLE_SIZE) / 2}px';
   tpPanel.className = 'text-panel visible';
-  var words = text.split(/[ \t\n\r\f]+/).filter(function(w) { return w.length > 0; });
+  var words = text.split(/\\s+/).filter(function(w) { return w.length > 0; });
   var i = 0;
   function typeNext() {
     if (i >= words.length) { tpTypingTimer = null; return; }
@@ -1168,7 +1168,7 @@ function replaceWithEnhanced(text) {
   tpContent.innerHTML = '';
   tpCursor.className = 'tp-cursor enhanced';
   tpContent.appendChild(tpCursor);
-  var words = text.split(/[ \t\n\r\f]+/).filter(function(w) { return w.length > 0; });
+  var words = text.split(/\\s+/).filter(function(w) { return w.length > 0; });
   var i = 0;
   function morphInNext() {
     if (i >= words.length) {
