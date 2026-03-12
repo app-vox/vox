@@ -112,6 +112,9 @@ export class ConfigManager {
           finishWithPeriod: saved.finishWithPeriod ?? defaults.finishWithPeriod,
           onboardingCompleted: saved.onboardingCompleted ?? true,
           audioRetentionCount: saved.audioRetentionCount ?? defaults.audioRetentionCount,
+          showInDock: saved.showInDock ?? defaults.showInDock,
+          showInTray: saved.showInTray ?? defaults.showInTray,
+          hideOnBlur: saved.hideOnBlur ?? defaults.hideOnBlur,
         };
       } catch {
         config = defaults;

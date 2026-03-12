@@ -101,6 +101,17 @@
   color: var(--color-text-secondary);
 }
 
+.visibilitySelector {
+  margin-top: var(--spacing-2);
+}
+
+.visibilityLabel {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-2);
+}
+
 .segmented {
   display: inline-flex;
   background: var(--color-bg-input);

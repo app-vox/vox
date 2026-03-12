@@ -109,6 +109,9 @@ export interface VoxConfig {
   llmConfigHash: string;
   customPrompt: string;
   launchAtLogin: boolean;
+  showInDock: boolean;
+  showInTray: boolean;
+  hideOnBlur: boolean;
   dictionary: string[];
   language: SupportedLanguage | "system";
   speechLanguages: string[];
@@ -155,6 +158,9 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     llmConfigHash: "",
     customPrompt: "",
     launchAtLogin: isProduction,
+    showInDock: true,
+    showInTray: true,
+    hideOnBlur: false,
     dictionary: [],
     language: "system",
     speechLanguages: [],

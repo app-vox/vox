@@ -62,6 +62,21 @@ describe("VoxConfig", () => {
     const config = createDefaultConfig();
     expect(config.audioRetentionCount).toBe(5);
   });
+
+  it("should have showInDock defaulting to true", () => {
+    const config = createDefaultConfig();
+    expect(config.showInDock).toBe(true);
+  });
+
+  it("should have showInTray defaulting to true", () => {
+    const config = createDefaultConfig();
+    expect(config.showInTray).toBe(true);
+  });
+
+  it("should have hideOnBlur defaulting to false", () => {
+    const config = createDefaultConfig();
+    expect(config.hideOnBlur).toBe(false);
+  });
 });
 
 describe("createDefaultLlmFlat", () => {
