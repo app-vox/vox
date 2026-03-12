@@ -191,7 +191,7 @@ function reloadConfig(): void {
 }
 
 app.whenReady().then(async () => {
-  await app.dock?.show();
+  app.dock?.hide();
 
   session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
     callback(permission === "media");
