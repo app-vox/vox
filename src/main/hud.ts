@@ -496,10 +496,7 @@ function buildHudHtml(): string {
   /* Text panel */
   .text-panel {
     display: none;
-    position: absolute;
-    top: ${(WIN_HEIGHT + CIRCLE_SIZE) / 2 + TEXT_PANEL_GAP}px;
-    left: 50%;
-    transform: translateX(-50%);
+    margin-top: ${TEXT_PANEL_GAP}px;
     background: rgba(20,20,35,0.95);
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 12px;
@@ -510,8 +507,7 @@ function buildHudHtml(): string {
     opacity: 0;
     transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1),
                 opacity 0.3s ease,
-                border-color 0.4s ease,
-                transform 0.3s ease;
+                border-color 0.4s ease;
     box-shadow: 0 8px 32px rgba(0,0,0,0.4);
     -webkit-backdrop-filter: blur(20px);
     backdrop-filter: blur(20px);
@@ -531,7 +527,7 @@ function buildHudHtml(): string {
     opacity: 0;
     max-height: 0;
     padding: 0;
-    transform: translateX(-50%) translateY(-8px);
+    transform: translateY(-8px);
     transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1),
                 opacity 0.3s ease,
                 padding 0.3s ease,
@@ -644,10 +640,10 @@ function buildHudHtml(): string {
     <div class="countdown-track"><div class="countdown-fill" id="countdown-fill"></div></div>
     <button class="undo-btn" id="undo-btn" onclick="event.stopPropagation(); window.electronAPI?.undoCancelRecording()"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M2 2l4 4M6 2l-4 4" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></svg><span id="undo-label">Undo</span></button>
   </div>
-</div>
-<div class="text-panel" id="text-panel">
-  <div class="text-content" id="text-content"></div>
-  <span class="tp-cursor hidden" id="tp-cursor"></span>
+  <div class="text-panel" id="text-panel">
+    <div class="text-content" id="text-content"></div>
+    <span class="tp-cursor hidden" id="tp-cursor"></span>
+  </div>
 </div>
 <script>
 var currentState = 'idle';
@@ -1131,6 +1127,9 @@ function showTextPanel(text) {
   tpContent.appendChild(tpCursor);
   document.documentElement.style.height = '${EXPANDED_WIN_HEIGHT}px';
   document.body.style.height = '${EXPANDED_WIN_HEIGHT}px';
+  document.body.style.overflow = 'visible';
+  document.body.style.alignItems = 'flex-start';
+  document.body.style.paddingTop = '${(WIN_HEIGHT - CIRCLE_SIZE) / 2}px';
   tpPanel.className = 'text-panel visible';
   var words = text.split(/[ \t\n\r\f]+/).filter(function(w) { return w.length > 0; });
   var i = 0;
@@ -1203,6 +1202,9 @@ function hideTextPanel() {
     tpContent.appendChild(tpCursor);
     document.documentElement.style.height = '${WIN_HEIGHT}px';
     document.body.style.height = '${WIN_HEIGHT}px';
+    document.body.style.overflow = 'hidden';
+    document.body.style.alignItems = 'center';
+    document.body.style.paddingTop = '0';
   }, 450);
 }
 
