@@ -12,7 +12,7 @@ const WIN_WIDTH = MAX_PILL_WIDTH + 40;
 const WIN_HEIGHT = 120;
 const DOCK_MARGIN = 24;
 const MIN_SCALE = 0.55;
-const TEXT_PANEL_GAP = 10;
+const TEXT_PANEL_GAP = 4;
 const TEXT_PANEL_MAX_HEIGHT = 120;
 const EXPANDED_WIN_HEIGHT = WIN_HEIGHT + TEXT_PANEL_GAP + TEXT_PANEL_MAX_HEIGHT + 20;
 
@@ -447,9 +447,11 @@ function buildHudHtml(): string {
   /* Undo bar (below widget during graceful cancel) */
   .undo-bar {
     display: flex; align-items: center; gap: 0;
-    margin-top: 6px;
+    margin-top: 0;
+    height: 0;
+    overflow: hidden;
     opacity: 0; pointer-events: none;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.2s ease, height 0.2s ease, margin-top 0.2s ease;
     flex-shrink: 0;
     background: rgba(25, 25, 25, 0.92);
     backdrop-filter: blur(20px);
@@ -459,7 +461,7 @@ function buildHudHtml(): string {
     padding: 4px 4px 4px 10px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2);
   }
-  .undo-bar.visible { opacity: 1; pointer-events: auto; }
+  .undo-bar.visible { opacity: 1; pointer-events: auto; height: auto; margin-top: 6px; overflow: visible; }
   .undo-bar .countdown-track {
     width: 96px; height: 3px;
     background: rgba(255,255,255,0.08);
@@ -661,7 +663,7 @@ var circleContent = document.getElementById('circle-content');
 var pillContent = document.getElementById('pill-content');
 var recentDragEnd = false;
 
-var interactiveEls = document.querySelectorAll('.widget, .hover-btn, .pill-cancel, .pill-copy, .pill-stop, .circle-cancel, .undo-bar, .undo-btn');
+var interactiveEls = document.querySelectorAll('.widget, .hover-btn, .pill-cancel, .pill-copy, .pill-stop, .circle-cancel, .undo-bar, .undo-btn, .text-panel');
 var ignoreDisabled = false;
 interactiveEls.forEach(function(el) {
   el.addEventListener('mouseenter', function() {
@@ -1119,9 +1121,13 @@ var tpContent = document.getElementById('text-content');
 var tpCursor = document.getElementById('tp-cursor');
 var tpTypingTimer = null;
 var tpMorphTimer = null;
+var tpMorphing = false;
+var tpHidePending = false;
 
 function showTextPanel(text) {
   clearTextPanelTimers();
+  tpMorphing = false;
+  tpHidePending = false;
   tpContent.innerHTML = '';
   tpCursor.className = 'tp-cursor';
   tpContent.appendChild(tpCursor);
@@ -1147,19 +1153,20 @@ function showTextPanel(text) {
 }
 
 function morphText(enhancedText) {
-  clearTextPanelTimers();
+  if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
+  tpMorphing = true;
   tpCursor.className = 'tp-cursor enhanced';
   tpPanel.classList.add('morph-border');
   var oldWords = tpContent.querySelectorAll('.word');
   var idx = 0;
   function blurNext() {
     if (idx >= oldWords.length) {
-      tpMorphTimer = setTimeout(function() { replaceWithEnhanced(enhancedText); }, 300);
+      tpMorphTimer = setTimeout(function() { replaceWithEnhanced(enhancedText); }, 200);
       return;
     }
     oldWords[idx].classList.add('morphing-out');
     idx++;
-    tpMorphTimer = setTimeout(blurNext, 25);
+    tpMorphTimer = setTimeout(blurNext, 20);
   }
   blurNext();
 }
@@ -1176,7 +1183,9 @@ function replaceWithEnhanced(text) {
         tpContent.querySelectorAll('.word').forEach(function(w) { w.className = 'word morphed'; });
         tpCursor.className = 'tp-cursor hidden';
         tpMorphTimer = null;
-      }, 400);
+        tpMorphing = false;
+        if (tpHidePending) { tpHidePending = false; doHideTextPanel(); }
+      }, 300);
       return;
     }
     var span = document.createElement('span');
@@ -1185,13 +1194,21 @@ function replaceWithEnhanced(text) {
     tpContent.insertBefore(span, tpCursor);
     tpPanel.scrollTop = tpPanel.scrollHeight;
     i++;
-    tpMorphTimer = setTimeout(morphInNext, 50);
+    tpMorphTimer = setTimeout(morphInNext, 40);
   }
   morphInNext();
 }
 
 function hideTextPanel() {
+  if (tpMorphing) { tpHidePending = true; return; }
+  if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
+  doHideTextPanel();
+}
+
+function doHideTextPanel() {
   clearTextPanelTimers();
+  tpMorphing = false;
+  tpHidePending = false;
   tpPanel.classList.remove('visible');
   tpPanel.classList.remove('morph-border');
   tpPanel.classList.add('fade-out');
@@ -1370,6 +1387,11 @@ export class HudWindow {
     this.stopHoverTracking();
     this.clearFlashTimer();
     this.clearHideTimer();
+    if (this.textPanelResizeTimer) {
+      clearTimeout(this.textPanelResizeTimer);
+      this.textPanelResizeTimer = null;
+    }
+    this.textPanelVisible = false;
     if (this.window && !this.window.isDestroyed()) {
       this.window.destroy();
     }
