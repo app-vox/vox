@@ -186,13 +186,43 @@ function reloadConfig(): void {
   refreshAppMenu();
   analytics.setEnabled(config.analyticsEnabled);
 
-  const setupChecker = new SetupChecker(modelManager);
-  setTrayModelState(setupChecker.hasAnyModel());
+  if (config.showInDock) {
+    app.dock?.show();
+  } else {
+    app.dock?.hide();
+  }
+
+  if (config.showInTray) {
+    if (!getTrayState().trayActive) {
+      setupTray({
+        onOpenHome: () => openHome(reloadConfig),
+        onOpenHistory: () => openHome(reloadConfig, "transcriptions"),
+        onStartListening: () => shortcutManager?.triggerToggle(),
+        onStopListening: () => shortcutManager?.stopAndProcess(),
+        onCancelListening: () => shortcutManager?.cancelRecording(),
+        onToggleHud: () => {
+          const cfg = configManager.load();
+          cfg.showHud = !cfg.showHud;
+          if (!cfg.showHud) cfg.hudShowOnHover = false;
+          configManager.save(cfg);
+          shortcutManager?.updateHud();
+          updateTrayConfig(cfg);
+          refreshAppMenu();
+          for (const win of BrowserWindow.getAllWindows()) {
+            win.webContents.send("config:changed");
+          }
+        },
+      });
+    }
+    updateTrayConfig(config);
+    const setupChecker = new SetupChecker(modelManager);
+    setTrayModelState(setupChecker.hasAnyModel());
+  } else {
+    destroyTray();
+  }
 }
 
 app.whenReady().then(async () => {
-  await app.dock?.show();
-
   session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
     callback(permission === "media");
   });
@@ -202,6 +232,10 @@ app.whenReady().then(async () => {
 
   const initialConfig = configManager.load();
   nativeTheme.themeSource = initialConfig.theme;
+
+  if (!initialConfig.showInDock) {
+    app.dock?.hide();
+  }
 
   const systemLocale = app.getLocale();
   const lang = initialConfig.language === "system"
@@ -334,27 +368,29 @@ app.whenReady().then(async () => {
   });
 
   const setupChecker = new SetupChecker(modelManager);
-  setupTray({
-    onOpenHome: () => openHome(reloadConfig),
-    onOpenHistory: () => openHome(reloadConfig, "transcriptions"),
-    onStartListening: () => shortcutManager?.triggerToggle(),
-    onStopListening: () => shortcutManager?.stopAndProcess(),
-    onCancelListening: () => shortcutManager?.cancelRecording(),
-    onToggleHud: () => {
-      const cfg = configManager.load();
-      cfg.showHud = !cfg.showHud;
-      if (!cfg.showHud) cfg.hudShowOnHover = false;
-      configManager.save(cfg);
-      shortcutManager?.updateHud();
-      updateTrayConfig(cfg);
-      refreshAppMenu();
-      for (const win of BrowserWindow.getAllWindows()) {
-        win.webContents.send("config:changed");
-      }
-    },
-  });
-  setTrayModelState(setupChecker.hasAnyModel());
-  updateTrayConfig(configManager.load());
+  if (initialConfig.showInTray) {
+    setupTray({
+      onOpenHome: () => openHome(reloadConfig),
+      onOpenHistory: () => openHome(reloadConfig, "transcriptions"),
+      onStartListening: () => shortcutManager?.triggerToggle(),
+      onStopListening: () => shortcutManager?.stopAndProcess(),
+      onCancelListening: () => shortcutManager?.cancelRecording(),
+      onToggleHud: () => {
+        const cfg = configManager.load();
+        cfg.showHud = !cfg.showHud;
+        if (!cfg.showHud) cfg.hudShowOnHover = false;
+        configManager.save(cfg);
+        shortcutManager?.updateHud();
+        updateTrayConfig(cfg);
+        refreshAppMenu();
+        for (const win of BrowserWindow.getAllWindows()) {
+          win.webContents.send("config:changed");
+        }
+      },
+    });
+    setTrayModelState(setupChecker.hasAnyModel());
+    updateTrayConfig(configManager.load());
+  }
 
   initAutoUpdater(() => updateTrayMenu());
 
