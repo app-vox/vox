@@ -85,7 +85,7 @@ vi.mock("electron-log/main", () => ({
   },
 }));
 
-import { openHome } from "../../../src/main/windows/home";
+import { openHome, setHideOnBlur } from "../../../src/main/windows/home";
 
 describe("home window macOS close behavior", () => {
   const onClosed = vi.fn();
@@ -132,6 +132,7 @@ describe("home window macOS close behavior", () => {
   });
 
   it("hides on blur after grace period expires", () => {
+    setHideOnBlur(true);
     openHome(onClosed);
     mockIsDestroyed.mockReturnValue(false);
     mockHide.mockClear();
@@ -146,6 +147,7 @@ describe("home window macOS close behavior", () => {
   });
 
   it("resets grace period on each show", () => {
+    setHideOnBlur(true);
     openHome(onClosed);
     mockIsDestroyed.mockReturnValue(false);
     mockHide.mockClear();

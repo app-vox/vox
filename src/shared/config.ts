@@ -111,6 +111,7 @@ export interface VoxConfig {
   launchAtLogin: boolean;
   showInDock: boolean;
   showInTray: boolean;
+  hideOnBlur: boolean;
   dictionary: string[];
   language: SupportedLanguage | "system";
   speechLanguages: string[];
@@ -159,6 +160,7 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     launchAtLogin: isProduction,
     showInDock: true,
     showInTray: true,
+    hideOnBlur: false,
     dictionary: [],
     language: "system",
     speechLanguages: [],

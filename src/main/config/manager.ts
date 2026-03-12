@@ -114,6 +114,7 @@ export class ConfigManager {
           audioRetentionCount: saved.audioRetentionCount ?? defaults.audioRetentionCount,
           showInDock: saved.showInDock ?? defaults.showInDock,
           showInTray: saved.showInTray ?? defaults.showInTray,
+          hideOnBlur: saved.hideOnBlur ?? defaults.hideOnBlur,
         };
       } catch {
         config = defaults;

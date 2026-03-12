@@ -13,7 +13,7 @@ import { ShortcutManager } from "./shortcuts/manager";
 import { setupTray, setTrayModelState, updateTrayConfig, updateTrayMenu, getTrayState, destroyTray } from "./tray";
 import { initAutoUpdater } from "./updater";
 import { isUpdating } from "./update-state";
-import { openHome, setAppMenuCallbacks, refreshAppMenu, suppressBlur } from "./windows/home";
+import { openHome, setAppMenuCallbacks, refreshAppMenu, suppressBlur, setHideOnBlur } from "./windows/home";
 import { registerIpcHandlers } from "./ipc";
 import { isAccessibilityGranted, applyCase, stripTrailingPeriod } from "./input/paster";
 import { SetupChecker } from "./setup/checker";
@@ -185,6 +185,7 @@ function reloadConfig(): void {
   updateTrayConfig(config);
   refreshAppMenu();
   analytics.setEnabled(config.analyticsEnabled);
+  setHideOnBlur(config.hideOnBlur);
 
   suppressBlur();
 
@@ -238,6 +239,7 @@ app.whenReady().then(async () => {
   if (!initialConfig.showInDock) {
     app.dock?.hide();
   }
+  setHideOnBlur(initialConfig.hideOnBlur);
 
   const systemLocale = app.getLocale();
   const lang = initialConfig.language === "system"

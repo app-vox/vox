@@ -72,6 +72,11 @@ describe("VoxConfig", () => {
     const config = createDefaultConfig();
     expect(config.showInTray).toBe(true);
   });
+
+  it("should have hideOnBlur defaulting to false", () => {
+    const config = createDefaultConfig();
+    expect(config.hideOnBlur).toBe(false);
+  });
 });
 
 describe("createDefaultLlmFlat", () => {
