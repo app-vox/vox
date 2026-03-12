@@ -465,7 +465,7 @@ export function registerIpcHandlers(
   ipcMain.handle("tts:has-selected-text", async () => {
     const config = configManager.load();
     if (!config.ttsEnabled || !config.elevenLabsApiKey) return false;
-    return ttsManager?.hasSelectedText() ?? false;
+    return (await ttsManager?.hasSelectedText()) ?? false;
   });
 
   ipcMain.handle("tts:test", async (_event, apiKey: string, voiceId: string) => {
