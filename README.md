@@ -5,7 +5,7 @@ Open-source voice-to-text app with local Whisper transcription and AI-powered co
 [![CI](https://github.com/app-vox/vox/actions/workflows/ci.yml/badge.svg)](https://github.com/app-vox/vox/actions/workflows/ci.yml)
 [![Release](https://github.com/app-vox/vox/actions/workflows/release.yml/badge.svg)](https://github.com/app-vox/vox/actions/workflows/release.yml)
 [![codecov](https://codecov.io/gh/app-vox/vox/graph/badge.svg)](https://codecov.io/gh/app-vox/vox)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: FSL-1.1-ALv2](https://img.shields.io/badge/License-FSL--1.1--ALv2-blue.svg)](LICENSE)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/rodrigoluizs)
 
 Hold a keyboard shortcut, speak, and Vox transcribes your voice locally using [whisper.cpp](https://github.com/ggerganov/whisper.cpp), optionally corrects it with AI, and pastes the text into your active app.
@@ -150,4 +150,8 @@ Contributions welcome! To contribute:
 
 ## License
 
-[MIT](LICENSE)
+This project is licensed under the [Functional Source License, Version 1.1, ALv2 Future License](LICENSE).
+
+You can use, modify, and redistribute the code for any purpose **except** building a competing commercial product or service. After two years, each release automatically converts to the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+
+See [LICENSE](LICENSE) for full details.
