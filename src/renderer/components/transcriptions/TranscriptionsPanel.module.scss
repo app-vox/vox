@@ -178,7 +178,7 @@
   background: var(--color-bg-root);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-base);
-  box-shadow: 0 4px 12px rgb(0 0 0 / 10%);
+  box-shadow: 0 4px 12px var(--color-shadow);
 }
 
 .overflowItem {
@@ -207,7 +207,7 @@
 
 .overflowItemDanger {
   &:hover {
-    color: var(--color-danger, #ef4444);
+    color: var(--color-error);
   }
 }
 
@@ -272,7 +272,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 6px;
+  padding: var(--spacing-1) var(--spacing-1-5);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-bg-root);
@@ -292,7 +292,7 @@
 }
 
 .pageSizeSelect {
-  padding: 3px 4px;
+  padding: var(--spacing-0-75) var(--spacing-1);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-bg-root);
@@ -326,8 +326,8 @@
   }
 
   &.confirmClear {
-    border-color: var(--color-danger, #ef4444);
-    color: var(--color-danger, #ef4444);
+    border-color: var(--color-error);
+    color: var(--color-error);
   }
 }
 
@@ -341,7 +341,7 @@
   padding-left: var(--spacing-3);
 }
 
-@keyframes retryPulse {
+@keyframes retry-pulse {
   0%,
   100% {
     opacity: 1;
@@ -353,7 +353,7 @@
 }
 
 .entryRetrying {
-  animation: retryPulse 1.5s ease-in-out infinite;
+  animation: retry-pulse 1.5s ease-in-out infinite;
   pointer-events: none;
 }
 

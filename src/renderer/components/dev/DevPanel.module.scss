@@ -23,8 +23,8 @@
     }
 
     &:checked {
-      background: #8b5cf6;
-      border-color: #8b5cf6;
+      background: var(--color-dev-accent);
+      border-color: var(--color-dev-accent);
 
       &::after {
         content: "";
@@ -49,11 +49,11 @@
 }
 
 .clearAllBtn {
-  padding: 4px 10px;
+  padding: var(--spacing-1) var(--spacing-2-5);
   background: none;
-  border: 1px solid #ef4444;
+  border: 1px solid var(--color-error);
   border-radius: var(--radius-md);
-  color: #ef4444;
+  color: var(--color-error);
   font-size: var(--font-size-xs, 12px);
   cursor: pointer;
   transition: all 150ms ease;
@@ -61,7 +61,7 @@
   flex-shrink: 0;
 
   &:hover {
-    background: #ef4444;
+    background: var(--color-error);
     color: white;
   }
 }
@@ -124,14 +124,14 @@
   font-size: var(--font-size-sm, 13px);
   font-family: inherit;
   min-width: 0;
-  padding: 2px 0;
+  padding: var(--spacing-half) 0;
 
   &::placeholder {
     color: var(--color-text-tertiary);
   }
 
   &:focus {
-    border-bottom-color: #8b5cf6;
+    border-bottom-color: var(--color-dev-accent);
   }
 }
 
@@ -140,8 +140,8 @@
   border: none;
   color: var(--color-text-tertiary);
   cursor: pointer;
-  font-size: 14px;
-  padding: 0 4px;
+  font-size: var(--font-size-md);
+  padding: 0 var(--spacing-1);
   line-height: 1;
 
   &:hover {
@@ -150,10 +150,10 @@
 }
 
 .highlight {
-  background: color-mix(in srgb, #8b5cf6 25%, transparent);
+  background: color-mix(in srgb, var(--color-dev-accent) 25%, transparent);
   color: inherit;
   border-radius: 2px;
-  padding: 0 2px;
+  padding: 0 var(--spacing-half);
 }
 
 /* ── Presets ─────────────────────────────────────────────────────── */
@@ -175,7 +175,7 @@
 }
 
 .presetBtn {
-  padding: 3px 10px;
+  padding: var(--spacing-0-75) var(--spacing-2-5);
   background: none;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -186,19 +186,19 @@
   white-space: nowrap;
 
   &:hover {
-    border-color: #8b5cf6;
-    color: #8b5cf6;
-    background: color-mix(in srgb, #8b5cf6 8%, transparent);
+    border-color: var(--color-dev-accent);
+    color: var(--color-dev-accent);
+    background: color-mix(in srgb, var(--color-dev-accent) 8%, transparent);
   }
 }
 
 .presetBtnActive {
-  border-color: #8b5cf6;
-  color: #8b5cf6;
-  background: color-mix(in srgb, #8b5cf6 12%, transparent);
+  border-color: var(--color-dev-accent);
+  color: var(--color-dev-accent);
+  background: color-mix(in srgb, var(--color-dev-accent) 12%, transparent);
 
   &:hover {
-    background: color-mix(in srgb, #8b5cf6 6%, transparent);
+    background: color-mix(in srgb, var(--color-dev-accent) 6%, transparent);
   }
 }
 
@@ -217,7 +217,7 @@
 }
 
 .cardOverridden {
-  border-color: color-mix(in srgb, #8b5cf6 35%, var(--color-border));
+  border-color: color-mix(in srgb, var(--color-dev-accent) 35%, var(--color-border));
 }
 
 .cardFullWidth {
@@ -245,9 +245,9 @@
   flex-shrink: 0;
 
   &:hover {
-    border-color: #8b5cf6;
-    color: #8b5cf6;
-    background: color-mix(in srgb, #8b5cf6 8%, transparent);
+    border-color: var(--color-dev-accent);
+    color: var(--color-dev-accent);
+    background: color-mix(in srgb, var(--color-dev-accent) 8%, transparent);
   }
 }
 
@@ -257,7 +257,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 0;
+  padding: var(--spacing-1-5) 0;
   font-size: var(--font-size-base, 14px);
   border-bottom: 1px solid var(--color-border);
   min-height: 34px;
@@ -273,7 +273,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #8b5cf6;
+  background: var(--color-dev-accent);
   margin-right: 6px;
   flex-shrink: 0;
   vertical-align: middle;
@@ -307,7 +307,7 @@
 }
 
 .pathValue {
-  font-size: 10px;
+  font-size: var(--font-size-2xs);
   opacity: 0.7;
   word-break: break-all;
 }
@@ -322,10 +322,10 @@
   flex-shrink: 0;
 }
 
-.green { background: #22c55e; }
-.yellow { background: #eab308; }
-.red { background: #ef4444; }
-.gray { background: #6b7280; }
+.green { background: var(--color-success); }
+.yellow { background: var(--color-status-yellow); }
+.red { background: var(--color-error); }
+.gray { background: var(--color-status-gray); }
 
 .refreshBtn {
   display: flex;
@@ -355,8 +355,8 @@
 
 .overrideSelect {
   appearance: none;
-  padding: 4px 18px 4px 6px;
-  font-size: 11px;
+  padding: var(--spacing-1) calc(var(--spacing-3) + var(--spacing-1-5)) var(--spacing-1) var(--spacing-1-5);
+  font-size: var(--font-size-xs);
   font-family: var(--font-mono, monospace);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -380,10 +380,10 @@
 }
 
 .overrideActive {
-  border-color: #8b5cf6;
-  background-color: color-mix(in srgb, #8b5cf6 12%, var(--color-bg-input));
+  border-color: var(--color-dev-accent);
+  background-color: color-mix(in srgb, var(--color-dev-accent) 12%, var(--color-bg-input));
   color: var(--color-text-primary);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .rangeRow {
@@ -394,11 +394,11 @@
 
 .overrideRange {
   width: 80px;
-  accent-color: #8b5cf6;
+  accent-color: var(--color-dev-accent);
 }
 
 .rangeValue {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-family: var(--font-mono, monospace);
   color: var(--color-text-primary);
   min-width: 32px;
@@ -410,14 +410,14 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   color: var(--color-text-tertiary);
-  font-size: 10px;
-  padding: 0 4px;
+  font-size: var(--font-size-2xs);
+  padding: 0 var(--spacing-1);
   cursor: pointer;
   line-height: 1.4;
 
   &:hover {
-    border-color: #ef4444;
-    color: #ef4444;
+    border-color: var(--color-error);
+    color: var(--color-error);
   }
 }
 
@@ -426,8 +426,8 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   color: var(--color-text-secondary);
-  font-size: 11px;
-  padding: 1px 8px;
+  font-size: var(--font-size-xs);
+  padding: 1px var(--spacing-2);
   cursor: pointer;
 
   &:hover {
@@ -441,7 +441,7 @@
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-family: var(--font-mono, monospace);
 
   input[type="checkbox"] {
@@ -461,14 +461,14 @@
     }
 
     &:checked {
-      background: #8b5cf6;
-      border-color: #8b5cf6;
+      background: var(--color-dev-accent);
+      border-color: var(--color-dev-accent);
 
       &::after {
         content: "";
         position: absolute;
         left: 3px;
-        top: 0px;
+        top: 0;
         width: 4px;
         height: 7px;
         border: solid white;
@@ -509,7 +509,7 @@
     font-family: var(--font-mono, monospace);
     font-style: normal;
     background: var(--color-bg-hover);
-    padding: 0 4px;
+    padding: 0 var(--spacing-1);
     border-radius: 3px;
   }
 }

@@ -108,7 +108,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 6px;
+  padding: var(--spacing-1) var(--spacing-1-5);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-bg-root);
@@ -128,7 +128,7 @@
 }
 
 .pageSizeSelect {
-  padding: 3px 4px;
+  padding: var(--spacing-0-75) var(--spacing-1);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-bg-root);
