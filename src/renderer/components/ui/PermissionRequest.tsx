@@ -42,28 +42,18 @@ export function PermissionRequest({
           <span className={`${styles.badge} ${styles.granted}`}>
             {t("permissions.granted")}
           </span>
+        ) : buttonText && onRequest ? (
+          <button
+            onClick={onRequest}
+            disabled={requesting}
+            className={`${btn.btn} ${btn.secondary} ${btn.sm}`}
+          >
+            {requesting ? t("permissions.requesting") : buttonText}
+          </button>
         ) : (
-          <>
-            {statusText && (
-              <span className={`${styles.badge} ${styles.missing}`}>
-                {statusText}
-              </span>
-            )}
-            {!statusText && (
-              <span className={`${styles.badge} ${styles.missing}`}>
-                {t("permissions.notGranted")}
-              </span>
-            )}
-            {buttonText && onRequest && (
-              <button
-                onClick={onRequest}
-                disabled={requesting}
-                className={`${btn.btn} ${btn.secondary} ${btn.sm}`}
-              >
-                {requesting ? t("permissions.requesting") : buttonText}
-              </button>
-            )}
-          </>
+          <span className={`${styles.badge} ${styles.missing}`}>
+            {statusText ?? t("permissions.notGranted")}
+          </span>
         )}
       </div>
     </div>
