@@ -419,6 +419,9 @@ app.whenReady().then(async () => {
   shortcutManager.updateHud();
 
   await app.dock?.show();
+  if (!app.isPackaged) {
+    app.dock?.setIcon(path.join(app.getAppPath(), "build", "icon-dev.icns"));
+  }
   if (!initialConfig.showInDock) {
     app.dock?.hide();
   }
