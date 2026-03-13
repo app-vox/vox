@@ -13,8 +13,21 @@ const WIN_HEIGHT = 120;
 const DOCK_MARGIN = 24;
 const MIN_SCALE = 0.55;
 const TEXT_PANEL_GAP = 4;
-const TEXT_PANEL_MAX_HEIGHT = 120;
-const EXPANDED_WIN_HEIGHT = WIN_HEIGHT + TEXT_PANEL_GAP + TEXT_PANEL_MAX_HEIGHT + 20;
+const TEXT_PANEL_MAX_HEIGHT = 160;
+
+function getPreviewPanelWidth(): number {
+  const display = screen.getPrimaryDisplay();
+  return Math.round(display.workArea.width * 0.4);
+}
+
+function getExpandedWinWidth(): number {
+  const panelW = getPreviewPanelWidth();
+  return Math.max(WIN_WIDTH, panelW + 40);
+}
+
+function getExpandedWinHeight(): number {
+  return WIN_HEIGHT + TEXT_PANEL_GAP + TEXT_PANEL_MAX_HEIGHT + 20;
+}
 
 export type HudState = "idle" | "initializing" | "listening" | "transcribing" | "enhancing" | "error" | "canceled" | "warning";
 
@@ -503,7 +516,6 @@ function buildHudHtml(): string {
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 12px;
     padding: 0;
-    width: 380px;
     max-height: 0;
     overflow: hidden;
     opacity: 0;
@@ -552,27 +564,10 @@ function buildHudHtml(): string {
   .text-content .word.appearing {
     animation: wordAppear 0.2s ease forwards;
   }
-  .text-content .word.morphing-out {
-    filter: blur(2px);
-    opacity: 0.15;
-    transform: translateY(-2px);
-  }
-  .text-content .word.morphing-in {
-    animation: wordMorphIn 0.35s ease forwards;
-    color: rgba(68,170,255,0.95);
-  }
-  .text-content .word.morphed {
-    color: rgba(255,255,255,0.95);
-  }
 
   @keyframes wordAppear {
     0% { opacity: 0; transform: translateY(4px); }
     100% { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes wordMorphIn {
-    0% { opacity: 0; filter: blur(3px); transform: translateY(2px); }
-    60% { opacity: 1; filter: blur(0); }
-    100% { opacity: 1; filter: blur(0); transform: translateY(0); }
   }
 
   .tp-cursor {
@@ -584,7 +579,6 @@ function buildHudHtml(): string {
     vertical-align: middle;
     animation: tpBlink 0.8s step-end infinite;
   }
-  .tp-cursor.enhanced { background: rgba(68,170,255,0.7); }
   .tp-cursor.hidden { display: none; }
 
   @keyframes tpBlink {
@@ -592,12 +586,20 @@ function buildHudHtml(): string {
     50% { opacity: 0; }
   }
 
-  .text-content.enhancing-pulse {
-    animation: enhancePulse 1.8s ease-in-out infinite;
+  .text-content.enhancing {
+    filter: blur(4px);
+    opacity: 0.5;
+    transition: filter 0.4s ease, opacity 0.4s ease;
   }
-  @keyframes enhancePulse {
-    0%, 100% { filter: blur(0); opacity: 0.85; }
-    50% { filter: blur(1.5px); opacity: 0.55; }
+  .text-content .word.shuffling {
+    display: inline-block;
+    animation: wordShuffle 1.2s ease-in-out infinite;
+  }
+  @keyframes wordShuffle {
+    0%, 100% { transform: translateY(0) translateX(0); }
+    25% { transform: translateY(-2px) translateX(1px); }
+    50% { transform: translateY(1px) translateX(-1px); }
+    75% { transform: translateY(-1px) translateX(2px); }
   }
 </style></head>
 <body>
@@ -1128,36 +1130,27 @@ var tpPanel = document.getElementById('text-panel');
 var tpContent = document.getElementById('text-content');
 var tpCursor = document.getElementById('tp-cursor');
 var tpTypingTimer = null;
-var tpMorphTimer = null;
-var tpMorphing = false;
-var tpHidePending = false;
 
 function showTextPanel(text) {
   clearTextPanelTimers();
-  tpMorphing = false;
-  tpHidePending = false;
   tpContent.innerHTML = '';
+  tpContent.classList.remove('enhancing');
   tpCursor.className = 'tp-cursor';
   tpContent.appendChild(tpCursor);
-  document.documentElement.style.height = '${EXPANDED_WIN_HEIGHT}px';
-  document.body.style.height = '${EXPANDED_WIN_HEIGHT}px';
+  document.documentElement.style.height = '${getExpandedWinHeight()}px';
+  document.body.style.height = '${getExpandedWinHeight()}px';
   document.body.style.overflow = 'visible';
   document.body.style.alignItems = 'flex-start';
   document.body.style.paddingTop = '${(WIN_HEIGHT - CIRCLE_SIZE) / 2}px';
   tpPanel.className = 'text-panel visible';
   var words = text.split(/\\s+/).filter(function(w) { return w.length > 0; });
-  var i = 0;
-  function typeNext() {
-    if (i >= words.length) { tpTypingTimer = null; return; }
+  for (var i = 0; i < words.length; i++) {
     var span = document.createElement('span');
-    span.className = 'word appearing';
+    span.className = 'word';
     span.textContent = words[i] + ' ';
     tpContent.insertBefore(span, tpCursor);
-    tpPanel.scrollTop = tpPanel.scrollHeight;
-    i++;
-    tpTypingTimer = setTimeout(typeNext, 60 + Math.random() * 40);
   }
-  typeNext();
+  tpPanel.scrollTop = tpPanel.scrollHeight;
 }
 
 function updateTextPanel(text) {
@@ -1175,79 +1168,49 @@ function updateTextPanel(text) {
   tpPanel.scrollTop = tpPanel.scrollHeight;
 }
 
+var tpShuffleTimer = null;
+
 function startEnhancingEffect() {
-  tpContent.classList.add('enhancing-pulse');
-  tpPanel.classList.add('morph-border');
   tpCursor.className = 'tp-cursor hidden';
+  tpPanel.classList.add('morph-border');
+  tpContent.classList.add('enhancing');
+  var wordEls = tpContent.querySelectorAll('.word');
+  var idx = 0;
+  function addShuffleNext() {
+    if (idx >= wordEls.length) return;
+    wordEls[idx].classList.add('shuffling');
+    wordEls[idx].style.animationDelay = (Math.random() * 0.6).toFixed(2) + 's';
+    idx++;
+    tpShuffleTimer = setTimeout(addShuffleNext, 30);
+  }
+  addShuffleNext();
 }
 
 function stopEnhancingEffect() {
-  tpContent.classList.remove('enhancing-pulse');
-}
-
-function morphText(enhancedText) {
-  if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
-  stopEnhancingEffect();
-  tpMorphing = true;
-  tpCursor.className = 'tp-cursor enhanced';
-  tpPanel.classList.add('morph-border');
-  var oldWords = tpContent.querySelectorAll('.word');
-  var idx = 0;
-  function blurNext() {
-    if (idx >= oldWords.length) {
-      tpMorphTimer = setTimeout(function() { replaceWithEnhanced(enhancedText); }, 80);
-      return;
-    }
-    oldWords[idx].classList.add('morphing-out');
-    idx++;
-    tpMorphTimer = setTimeout(blurNext, 15);
-  }
-  blurNext();
-}
-
-function replaceWithEnhanced(text) {
-  tpContent.innerHTML = '';
-  tpCursor.className = 'tp-cursor enhanced';
-  tpContent.appendChild(tpCursor);
-  var words = text.split(/\\s+/).filter(function(w) { return w.length > 0; });
-  var i = 0;
-  function morphInNext() {
-    if (i >= words.length) {
-      tpCursor.className = 'tp-cursor hidden';
-      tpMorphTimer = setTimeout(function() {
-        tpMorphTimer = null;
-        tpMorphing = false;
-        if (tpHidePending) { tpHidePending = false; doHideTextPanel(); }
-      }, 600);
-      return;
-    }
-    var span = document.createElement('span');
-    span.className = 'word morphing-in';
-    span.textContent = words[i] + ' ';
-    tpContent.insertBefore(span, tpCursor);
-    tpPanel.scrollTop = tpPanel.scrollHeight;
-    i++;
-    tpMorphTimer = setTimeout(morphInNext, 25);
-  }
-  morphInNext();
+  if (tpShuffleTimer) { clearTimeout(tpShuffleTimer); tpShuffleTimer = null; }
+  tpContent.classList.remove('enhancing');
+  tpContent.querySelectorAll('.word.shuffling').forEach(function(w) {
+    w.classList.remove('shuffling');
+    w.style.animationDelay = '';
+  });
+  tpPanel.classList.remove('morph-border');
 }
 
 function hideTextPanel() {
-  if (tpMorphing) { tpHidePending = true; return; }
   if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
   doHideTextPanel();
 }
 
 function doHideTextPanel() {
   clearTextPanelTimers();
-  tpMorphing = false;
-  tpHidePending = false;
+  stopEnhancingEffect();
   tpPanel.classList.remove('visible');
   tpPanel.classList.remove('morph-border');
   tpPanel.classList.add('fade-out');
   setTimeout(function() {
     tpPanel.className = 'text-panel';
     tpContent.innerHTML = '';
+    tpContent.classList.remove('enhancing');
     tpCursor.className = 'tp-cursor hidden';
     tpContent.appendChild(tpCursor);
     document.documentElement.style.height = '${WIN_HEIGHT}px';
@@ -1260,7 +1223,7 @@ function doHideTextPanel() {
 
 function clearTextPanelTimers() {
   if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
-  if (tpMorphTimer) { clearTimeout(tpMorphTimer); tpMorphTimer = null; }
+  if (tpShuffleTimer) { clearTimeout(tpShuffleTimer); tpShuffleTimer = null; }
 }
 </script>
 </body></html>`;
@@ -1323,7 +1286,6 @@ export class HudWindow {
   private pendingAttention = false;
   private textPanelVisible = false;
   private textPanelResizeTimer: ReturnType<typeof setTimeout> | null = null;
-  private morphPromise: Promise<void> | null = null;
 
   show(alwaysShow: boolean, showOnHover: boolean, position: WidgetPosition = "bottom-center"): void {
     const wasOff = !this.alwaysShow;
@@ -1527,14 +1489,17 @@ export class HudWindow {
       this.textPanelResizeTimer = null;
     }
     this.textPanelVisible = true;
+    const expandedW = getExpandedWinWidth();
+    const panelW = getPreviewPanelWidth();
     const bounds = this.window.getBounds();
+    const centerX = bounds.x + bounds.width / 2;
     this.window.setBounds({
-      x: bounds.x,
+      x: Math.round(centerX - expandedW / 2),
       y: bounds.y,
-      width: bounds.width,
-      height: EXPANDED_WIN_HEIGHT,
+      width: expandedW,
+      height: getExpandedWinHeight(),
     });
-    this.execJs(`showTextPanel('')`);
+    this.execJs(`showTextPanel(''); tpPanel.style.width = '${panelW}px'`);
   }
 
   updateTextPanel(text: string): void {
@@ -1550,15 +1515,18 @@ export class HudWindow {
       this.textPanelResizeTimer = null;
     }
     this.textPanelVisible = true;
+    const expandedW = getExpandedWinWidth();
+    const panelW = getPreviewPanelWidth();
     const bounds = this.window.getBounds();
+    const centerX = bounds.x + bounds.width / 2;
     this.window.setBounds({
-      x: bounds.x,
+      x: Math.round(centerX - expandedW / 2),
       y: bounds.y,
-      width: bounds.width,
-      height: EXPANDED_WIN_HEIGHT,
+      width: expandedW,
+      height: getExpandedWinHeight(),
     });
     const escaped = JSON.stringify(text);
-    this.execJs(`showTextPanel(${escaped})`);
+    this.execJs(`tpPanel.style.width = '${panelW}px'; showTextPanel(${escaped})`);
   }
 
   startEnhancingEffect(): void {
@@ -1567,24 +1535,6 @@ export class HudWindow {
 
   stopEnhancingEffect(): void {
     this.execJs("stopEnhancingEffect()");
-  }
-
-  morphText(text: string): void {
-    if (!this.window || this.window.isDestroyed() || !this.contentReady) {
-      this.morphPromise = null;
-      return;
-    }
-    const escaped = JSON.stringify(text);
-    this.execJs(`morphText(${escaped})`);
-    // Estimate animation duration to match JS timers:
-    // blur phase: wordCount * 15ms + 80ms, morph-in phase: wordCount * 25ms + 600ms blue hold
-    const wordCount = text.split(/\s+/).filter(Boolean).length;
-    const estimatedMs = (wordCount * 15) + 80 + (wordCount * 25) + 600;
-    this.morphPromise = new Promise(resolve => setTimeout(resolve, estimatedMs));
-  }
-
-  waitForMorph(): Promise<void> {
-    return this.morphPromise ?? Promise.resolve();
   }
 
   hideTextPanel(): void {
@@ -1599,10 +1549,11 @@ export class HudWindow {
       this.textPanelResizeTimer = null;
       if (!this.window || this.window.isDestroyed()) return;
       const bounds = this.window.getBounds();
+      const centerX = bounds.x + bounds.width / 2;
       this.window.setBounds({
-        x: bounds.x,
+        x: Math.round(centerX - WIN_WIDTH / 2),
         y: bounds.y,
-        width: bounds.width,
+        width: WIN_WIDTH,
         height: WIN_HEIGHT,
       });
     }, 450);

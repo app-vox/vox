@@ -98,9 +98,6 @@ function setupPipeline(): void {
           const finalText = applyCase(stripped, latestConfig.lowercaseStart);
 
         shortcutManager?.getHud().stopEnhancingEffect();
-        if (result.originalText !== result.text) {
-          shortcutManager?.getHud().morphText(finalText);
-        }
 
         const status = result.llmFailed ? "llm_failed" as const : "success" as const;
 

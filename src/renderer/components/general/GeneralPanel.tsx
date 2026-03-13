@@ -733,7 +733,7 @@ export function GeneralPanel() {
               onPreview={previewCue}
             />
           </div>
-          <label className={styles.checkboxRow}>
+          <label className={styles.checkboxRow} style={{ marginTop: 8 }}>
             <input
               type="checkbox"
               checked={config.showPreview ?? true}

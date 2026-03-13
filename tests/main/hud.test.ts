@@ -219,18 +219,6 @@ describe("HudWindow", () => {
       expect(mockWindow.setBounds).toHaveBeenCalled();
     });
 
-    it("should call morphText via executeJavaScript", () => {
-      const hud = createHudWithWindow();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (hud as any).contentReady = true;
-
-      hud.morphText("Enhanced text here.");
-
-      expect(mockWindow.webContents.executeJavaScript).toHaveBeenCalledWith(
-        expect.stringContaining("morphText(")
-      );
-    });
-
     it("should call hideTextPanel and restore window bounds after delay", () => {
       vi.useFakeTimers();
       const hud = createHudWithWindow();

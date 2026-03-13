@@ -374,6 +374,7 @@ export class ShortcutManager {
 
     this.hud.hideUndoBar();
     this.hud.setState("transcribing");
+    this.hud.showTextPanelEmpty();
     this.updateTrayState();
 
     pipeline.undoCancel().then((text) => {
@@ -383,6 +384,7 @@ export class ShortcutManager {
       }
 
       const trimmedText = text.trim();
+      this.hud.hideTextPanel();
       if (!trimmedText) {
         slog.info("No valid text after undo, showing error");
         const config = this.deps.configManager.load();
@@ -413,6 +415,7 @@ export class ShortcutManager {
     }).catch((err: unknown) => {
       if (gen !== this.recordingGeneration) return;
       slog.error("Undo pipeline failed", err);
+      this.hud.hideTextPanel();
       const config = this.deps.configManager.load();
       const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
       this.playCue(errorCueType);
@@ -1087,11 +1090,10 @@ export class ShortcutManager {
         hudEndState = "error";
       } else {
         slog.info("Valid text received, proceeding with paste");
-        // HUD pill goes idle; text panel stays for morph animation
+        this.hud.hideTextPanel();
         this.stateMachine.setIdle();
         this.hud.setState("idle");
         this.updateTrayState();
-        await this.hud.waitForMorph();
         const pasteConfig = this.deps.configManager.load();
         const forceCapitalize = this.isShiftHeld && this.shiftAlone && pasteConfig.shiftCapitalize && pasteConfig.lowercaseStart;
         const pasted = pasteText(trimmedText, pasteConfig.copyToClipboard, { lowercaseStart: pasteConfig.lowercaseStart, shiftCapitalize: forceCapitalize, finishWithPeriod: pasteConfig.finishWithPeriod });
