@@ -220,8 +220,8 @@ export class Pipeline {
   }
 
   async snapshotAndTranscribe(): Promise<string | null> {
-    // Only transcribe the last 12 seconds to keep Whisper fast
-    const snapshot = await this.deps.recorder.snapshot?.(12);
+    // Only transcribe the last 8 seconds to keep Whisper fast
+    const snapshot = await this.deps.recorder.snapshot?.(8);
     if (!snapshot || snapshot.audioBuffer.length === 0) return null;
     // Require at least 0.5s of audio for meaningful transcription
     const durationMs = (snapshot.audioBuffer.length / snapshot.sampleRate) * 1000;

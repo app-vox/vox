@@ -565,6 +565,11 @@ function buildHudHtml(): string {
     line-height: 1.6;
     color: rgba(255,255,255,0.85);
     font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    transition: filter 0.15s ease, opacity 0.15s ease;
+  }
+  .text-content.swapping {
+    filter: blur(3px);
+    opacity: 0.3;
   }
 
   .text-content .word {
@@ -1165,24 +1170,34 @@ function showTextPanel(text) {
     span.textContent = words[i] + ' ';
     tpContent.insertBefore(span, tpMic);
   }
-  tpPanel.scrollTop = tpPanel.scrollHeight;
+  requestAnimationFrame(function() { tpPanel.scrollTop = tpPanel.scrollHeight; });
 }
+
+var tpSwapTimer = null;
 
 function updateTextPanel(text) {
   if (text === tpLastText) return;
   tpLastText = text;
   if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
-  tpContent.innerHTML = '';
-  tpMic.className = tpReduceAnim ? 'tp-mic no-anim' : 'tp-mic';
-  tpContent.appendChild(tpMic);
-  var words = text.split(/\\s+/).filter(function(w) { return w.length > 0; });
-  for (var i = 0; i < words.length; i++) {
-    var span = document.createElement('span');
-    span.className = 'word';
-    span.textContent = words[i] + ' ';
-    tpContent.insertBefore(span, tpMic);
-  }
-  tpPanel.scrollTop = tpPanel.scrollHeight;
+  if (tpSwapTimer) { clearTimeout(tpSwapTimer); tpSwapTimer = null; }
+  tpContent.classList.add('swapping');
+  tpSwapTimer = setTimeout(function() {
+    tpSwapTimer = null;
+    tpContent.innerHTML = '';
+    tpMic.className = tpReduceAnim ? 'tp-mic no-anim' : 'tp-mic';
+    tpContent.appendChild(tpMic);
+    var words = text.split(/\\s+/).filter(function(w) { return w.length > 0; });
+    for (var i = 0; i < words.length; i++) {
+      var span = document.createElement('span');
+      span.className = 'word';
+      span.textContent = words[i] + ' ';
+      tpContent.insertBefore(span, tpMic);
+    }
+    tpContent.classList.remove('swapping');
+    requestAnimationFrame(function() {
+      tpPanel.scrollTop = tpPanel.scrollHeight;
+    });
+  }, 150);
 }
 
 var tpShuffleTimer = null;
@@ -1244,6 +1259,7 @@ function doHideTextPanel() {
 function clearTextPanelTimers() {
   if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
   if (tpShuffleTimer) { clearTimeout(tpShuffleTimer); tpShuffleTimer = null; }
+  if (tpSwapTimer) { clearTimeout(tpSwapTimer); tpSwapTimer = null; }
 }
 </script>
 </body></html>`;

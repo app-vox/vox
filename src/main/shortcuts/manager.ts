@@ -1177,8 +1177,8 @@ export class ShortcutManager {
       this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 800);
     };
 
-    // First snapshot after 1s of recording
-    this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 1000);
+    // First snapshot after 500ms of recording
+    this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 500);
   }
 
   private stopLiveTranscription(): void {
