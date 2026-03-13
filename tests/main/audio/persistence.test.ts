@@ -173,45 +173,47 @@ describe("AudioPersistence", () => {
   });
 
   describe("cleanupOrphanedAudioFiles", () => {
-    it("should remove files not in the valid IDs set", () => {
-      vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.readdirSync).mockReturnValue([
-        "keep-1.wav" as unknown as fs.Dirent,
-        "keep-2.wav" as unknown as fs.Dirent,
-        "orphan-1.wav" as unknown as fs.Dirent,
-        "orphan-2.wav" as unknown as fs.Dirent,
-      ]);
+    it("should remove files not in the valid IDs set", async () => {
+      vi.mocked(fs.promises.readdir).mockResolvedValue([
+        "keep-1.wav",
+        "keep-2.wav",
+        "orphan-1.wav",
+        "orphan-2.wav",
+      ] as unknown as string[]);
+      vi.mocked(fs.promises.access).mockResolvedValue(undefined);
 
       const validIds = new Set(["keep-1", "keep-2"]);
-      cleanupOrphanedAudioFiles(validIds);
+      await cleanupOrphanedAudioFiles(validIds);
 
-      expect(fs.unlinkSync).toHaveBeenCalledTimes(2);
-      expect(fs.unlinkSync).toHaveBeenCalledWith(
+      expect(fs.promises.unlink).toHaveBeenCalledTimes(2);
+      expect(fs.promises.unlink).toHaveBeenCalledWith(
         path.join("/mock/userData", "audio", "orphan-1.wav"),
       );
-      expect(fs.unlinkSync).toHaveBeenCalledWith(
+      expect(fs.promises.unlink).toHaveBeenCalledWith(
         path.join("/mock/userData", "audio", "orphan-2.wav"),
       );
     });
 
-    it("should do nothing when audio directory does not exist", () => {
-      vi.mocked(fs.existsSync).mockReturnValue(false);
+    it("should do nothing when audio directory does not exist", async () => {
+      vi.mocked(fs.promises.readdir).mockRejectedValue(
+        Object.assign(new Error("ENOENT"), { code: "ENOENT" }),
+      );
 
-      cleanupOrphanedAudioFiles(new Set(["id-1"]));
+      await cleanupOrphanedAudioFiles(new Set(["id-1"]));
 
-      expect(fs.readdirSync).not.toHaveBeenCalled();
+      expect(fs.promises.unlink).not.toHaveBeenCalled();
     });
 
-    it("should keep all files when all IDs are valid", () => {
-      vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.readdirSync).mockReturnValue([
-        "id-1.wav" as unknown as fs.Dirent,
-        "id-2.wav" as unknown as fs.Dirent,
-      ]);
+    it("should keep all files when all IDs are valid", async () => {
+      vi.mocked(fs.promises.readdir).mockResolvedValue([
+        "id-1.wav",
+        "id-2.wav",
+      ] as unknown as string[]);
+      vi.mocked(fs.promises.access).mockResolvedValue(undefined);
 
-      cleanupOrphanedAudioFiles(new Set(["id-1", "id-2"]));
+      await cleanupOrphanedAudioFiles(new Set(["id-1", "id-2"]));
 
-      expect(fs.unlinkSync).not.toHaveBeenCalled();
+      expect(fs.promises.unlink).not.toHaveBeenCalled();
     });
   });
 });

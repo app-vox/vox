@@ -60,15 +60,18 @@ export function decodeWavFile(filePath: string): RecordingResult {
   return { audioBuffer, sampleRate };
 }
 
-export function cleanupOrphanedAudioFiles(validIds: Set<string>): void {
+export async function cleanupOrphanedAudioFiles(validIds: Set<string>): Promise<void> {
   const dir = getAudioDir();
-  if (!fs.existsSync(dir)) return;
-
-  const files = fs.readdirSync(dir);
+  let files: string[];
+  try {
+    files = (await fs.promises.readdir(dir)) as string[];
+  } catch {
+    return;
+  }
   for (const file of files) {
     const id = path.basename(file, ".wav");
     if (!validIds.has(id)) {
-      deleteAudioFile(path.join(dir, file));
+      await deleteAudioFile(path.join(dir, file));
     }
   }
 }
