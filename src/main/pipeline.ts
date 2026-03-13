@@ -240,7 +240,7 @@ export class Pipeline {
         .replace(/\*[^*]*\*/g, "")
         .replace(/\s{2,}/g, " ")
         .trim();
-      if (!text || isGarbageTranscription(text)) return null;
+      if (!text || !!detectGarbage(text)) return null;
       return text;
     } catch {
       return null;
@@ -287,7 +287,7 @@ export class Pipeline {
     }
 
     const rawText = hintText.trim();
-    if (!rawText || isGarbageTranscription(rawText)) {
+    if (!rawText || !!detectGarbage(rawText)) {
       slog.info("Preview hint empty or garbage — falling back to Whisper");
       return this.processFromRecording(recording, gen);
     }
