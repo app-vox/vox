@@ -328,15 +328,15 @@ export class Pipeline {
   private async runTranscription(
     recording: RecordingResult,
     gen: number,
-    temperature?: number,
+    opts?: { temperature?: number; skipPrompt?: boolean },
   ): Promise<TranscriptionResult> {
     const transcription = await this.deps.transcribe(
       recording.audioBuffer,
       recording.sampleRate,
       this.deps.modelPath,
-      this.deps.dictionary ?? [],
-      this.deps.speechLanguages ?? [],
-      temperature
+      opts?.skipPrompt ? [] : (this.deps.dictionary ?? []),
+      opts?.skipPrompt ? [] : (this.deps.speechLanguages ?? []),
+      opts?.temperature
     );
 
     if (this.canceled || gen !== this.generation) {
@@ -451,26 +451,31 @@ export class Pipeline {
     for (let i = 0; i < LOOP_RETRY_TEMPERATURES.length; i++) {
       const temp = LOOP_RETRY_TEMPERATURES[i];
       const attempt = i + 2;
-      slog.info("Retrying transcription with higher temperature to break hallucination loop", {
-        attempt, temperature: temp,
+      // Last attempt: drop dictionary/language prompt entirely to avoid
+      // prompt-anchored loops (e.g. "Transcribe" in the base prompt leaking
+      // into the hallucination as "Transcribe em estático" repeated)
+      const skipPrompt = i === LOOP_RETRY_TEMPERATURES.length - 1;
+      slog.info("Retrying transcription to break hallucination loop", {
+        attempt, temperature: temp, skipPrompt,
       });
       this.deps.analytics?.track("transcription_loop_retry", {
         whisper_model: this.whisperModelName,
         attempt,
         temperature: temp,
+        skip_prompt: skipPrompt,
       });
 
       try {
-        const retryResult = await this.runTranscription(recording, gen, temp);
+        const retryResult = await this.runTranscription(recording, gen, { temperature: temp, skipPrompt });
         const retryText = retryResult.text.trim();
 
         if (!retryText) continue;
         const retryReason = detectGarbage(retryText);
 
         if (!retryReason) {
-          slog.info("Retry succeeded", { attempt, temperature: temp });
+          slog.info("Retry succeeded", { attempt, temperature: temp, skipPrompt });
           this.deps.analytics?.track("transcription_loop_retry_succeeded", {
-            attempt, temperature: temp,
+            attempt, temperature: temp, skip_prompt: skipPrompt,
           });
           this.heldTranscription = retryText;
           return retryText;
