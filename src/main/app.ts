@@ -25,7 +25,7 @@ import { getLlmModelName } from "../shared/llm-utils";
 import { AnalyticsService } from "./analytics/service";
 import { setupAnalyticsErrorCapture } from "./logger";
 import log from "./logger";
-import { saveAudioFile, cleanupOrphanedAudioFiles } from "./audio/persistence";
+import { saveAudioFile, cleanupOrphanedAudioFiles, getAudioFilePath } from "./audio/persistence";
 
 log.initialize();
 const slog = log.scope("Vox");
@@ -104,16 +104,10 @@ function setupPipeline(): void {
         });
 
         if (latestConfig.audioRetentionCount > 0) {
-          try {
-            const audioFilePath = saveAudioFile(
-              result.recording.audioBuffer,
-              result.recording.sampleRate,
-              entry.id,
-            );
-            historyManager.updateEntry(entry.id, { audioFilePath });
-          } catch (err) {
-            slog.warn("Failed to save audio file", err);
-          }
+          const audioFilePath = getAudioFilePath(entry.id);
+          historyManager.updateEntry(entry.id, { audioFilePath });
+          saveAudioFile(result.recording.audioBuffer, result.recording.sampleRate, entry.id)
+            .catch((err) => slog.warn("Failed to save audio file", err));
         }
 
         historyManager.enforceAudioRetention(latestConfig.audioRetentionCount);
@@ -143,16 +137,10 @@ function setupPipeline(): void {
         });
 
         if (latestConfig.audioRetentionCount > 0) {
-          try {
-            const audioFilePath = saveAudioFile(
-              result.recording.audioBuffer,
-              result.recording.sampleRate,
-              entry.id,
-            );
-            historyManager.updateEntry(entry.id, { audioFilePath });
-          } catch (err) {
-            slog.warn("Failed to save audio file for failed transcription", err);
-          }
+          const audioFilePath = getAudioFilePath(entry.id);
+          historyManager.updateEntry(entry.id, { audioFilePath });
+          saveAudioFile(result.recording.audioBuffer, result.recording.sampleRate, entry.id)
+            .catch((err) => slog.warn("Failed to save audio file for failed transcription", err));
         }
 
         historyManager.enforceAudioRetention(latestConfig.audioRetentionCount);
