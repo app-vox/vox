@@ -11,6 +11,7 @@ import { createLlmProvider } from "./llm/factory";
 import { Pipeline } from "./pipeline";
 import { ShortcutManager } from "./shortcuts/manager";
 import { setupTray, setTrayModelState, updateTrayConfig, updateTrayMenu, getTrayState, destroyTray } from "./tray";
+import { getResourcePath } from "./resources";
 import { initAutoUpdater } from "./updater";
 import { isUpdating } from "./update-state";
 import { openHome, setAppMenuCallbacks, refreshAppMenu, suppressBlur, setHideOnBlur } from "./windows/home";
@@ -420,9 +421,12 @@ app.whenReady().then(async () => {
 
   await app.dock?.show();
   if (!app.isPackaged) {
-    const devDockIcon = nativeImage.createFromPath(join(app.getAppPath(), "resources", "dockIcon-dev.png"));
+    const devDockIcon = nativeImage.createFromPath(getResourcePath("dockIcon-dev.png"));
     if (!devDockIcon.isEmpty()) {
       app.dock?.setIcon(devDockIcon);
+      slog.info("Dev dock icon applied");
+    } else {
+      slog.warn("Dev dock icon not found at", getResourcePath("dockIcon-dev.png"));
     }
   }
   if (!initialConfig.showInDock) {
