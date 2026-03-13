@@ -15,18 +15,18 @@ export function getAudioFilePath(entryId: string): string {
   return path.join(getAudioDir(), `${entryId}.wav`);
 }
 
-export function saveAudioFile(
+export async function saveAudioFile(
   audioBuffer: Float32Array,
   sampleRate: number,
   entryId: string,
-): string {
+): Promise<string> {
   const dir = getAudioDir();
-  fs.mkdirSync(dir, { recursive: true });
+  await fs.promises.mkdir(dir, { recursive: true });
 
-  const filePath = path.join(dir, `${entryId}.wav`);
+  const filePath = getAudioFilePath(entryId);
   const normalized = normalizeAudio(audioBuffer);
   const wavBuffer = encodeWav(normalized, sampleRate);
-  fs.writeFileSync(filePath, wavBuffer);
+  await fs.promises.writeFile(filePath, wavBuffer);
 
   slog.info("Audio saved", { filePath, samples: audioBuffer.length, sampleRate });
   return filePath;

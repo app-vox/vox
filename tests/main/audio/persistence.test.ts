@@ -30,12 +30,19 @@ vi.mock("fs", async () => {
   const actual = await vi.importActual<typeof import("fs")>("fs");
   return {
     ...actual,
-    mkdirSync: vi.fn(),
-    writeFileSync: vi.fn(),
     existsSync: vi.fn().mockReturnValue(false),
     unlinkSync: vi.fn(),
     readFileSync: vi.fn(),
     readdirSync: vi.fn().mockReturnValue([]),
+    promises: {
+      mkdir: vi.fn().mockResolvedValue(undefined),
+      writeFile: vi.fn().mockResolvedValue(undefined),
+      access: vi.fn().mockRejectedValue(
+        Object.assign(new Error("ENOENT"), { code: "ENOENT" }),
+      ),
+      unlink: vi.fn().mockResolvedValue(undefined),
+      readdir: vi.fn().mockResolvedValue([]),
+    },
   };
 });
 
@@ -52,12 +59,17 @@ import { encodeWav } from "../../../src/main/audio/whisper";
 
 describe("AudioPersistence", () => {
   beforeEach(() => {
-    vi.mocked(fs.mkdirSync).mockReset();
-    vi.mocked(fs.writeFileSync).mockReset();
     vi.mocked(fs.existsSync).mockReset().mockReturnValue(false);
     vi.mocked(fs.unlinkSync).mockReset();
     vi.mocked(fs.readFileSync).mockReset();
     vi.mocked(fs.readdirSync).mockReset().mockReturnValue([]);
+    vi.mocked(fs.promises.mkdir).mockReset().mockResolvedValue(undefined);
+    vi.mocked(fs.promises.writeFile).mockReset().mockResolvedValue(undefined);
+    vi.mocked(fs.promises.access)
+      .mockReset()
+      .mockRejectedValue(Object.assign(new Error("ENOENT"), { code: "ENOENT" }));
+    vi.mocked(fs.promises.unlink).mockReset().mockResolvedValue(undefined);
+    vi.mocked(fs.promises.readdir).mockReset().mockResolvedValue([]);
   });
 
   describe("getAudioDir", () => {
@@ -75,22 +87,30 @@ describe("AudioPersistence", () => {
   });
 
   describe("saveAudioFile", () => {
-    it("should create directory and write WAV file", () => {
+    it("should create directory and write WAV file", async () => {
       const audioBuffer = new Float32Array([0.1, -0.2, 0.3, -0.4]);
       const sampleRate = 16000;
       const entryId = "test-entry-123";
 
-      const result = saveAudioFile(audioBuffer, sampleRate, entryId);
+      const result = await saveAudioFile(audioBuffer, sampleRate, entryId);
 
-      expect(fs.mkdirSync).toHaveBeenCalledWith(
+      expect(fs.promises.mkdir).toHaveBeenCalledWith(
         path.join("/mock/userData", "audio"),
         { recursive: true },
       );
-      expect(fs.writeFileSync).toHaveBeenCalledWith(
+      expect(fs.promises.writeFile).toHaveBeenCalledWith(
         path.join("/mock/userData", "audio", "test-entry-123.wav"),
         expect.any(Buffer),
       );
       expect(result).toBe(path.join("/mock/userData", "audio", "test-entry-123.wav"));
+    });
+
+    it("should reject when writeFile fails", async () => {
+      vi.mocked(fs.promises.writeFile).mockRejectedValue(new Error("disk full"));
+
+      await expect(
+        saveAudioFile(new Float32Array([0.1]), 16000, "fail-entry"),
+      ).rejects.toThrow("disk full");
     });
   });
 
