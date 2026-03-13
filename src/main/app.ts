@@ -236,9 +236,6 @@ app.whenReady().then(async () => {
   const initialConfig = configManager.load();
   nativeTheme.themeSource = initialConfig.theme;
 
-  if (!initialConfig.showInDock) {
-    app.dock?.hide();
-  }
   setHideOnBlur(initialConfig.hideOnBlur);
 
   const systemLocale = app.getLocale();
@@ -423,6 +420,12 @@ app.whenReady().then(async () => {
   });
 
   shortcutManager.updateHud();
+
+  await app.dock?.show();
+  if (!initialConfig.showInDock) {
+    app.dock?.hide();
+  }
+
   openHome(reloadConfig);
 }).catch((err) => {
   slog.error("Fatal error during app initialization", err);
