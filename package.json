@@ -10,7 +10,7 @@
   "scripts": {
     "build": "electron-vite build",
     "start": "electron-vite preview",
-    "dev": "electron-vite dev -- --js-flags=--max_old_space_size=4096",
+    "dev": "ELECTRON_CLI_ARGS='[\"--max-old-space-size=4096\"]' electron-vite dev",
     "build:legacy": "tsc",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "lint": "eslint .",
