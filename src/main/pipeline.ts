@@ -9,8 +9,11 @@ import log from "electron-log/main";
 const slog = log.scope("Pipeline");
 
 const GARBAGE_AUDIO_THRESHOLD_MS = 5000;
+const LOOP_RETRY_TEMPERATURES = [0.4, 0.8];
 
 export type PipelineStage = "transcribing" | "enhancing";
+
+export type GarbageReason = "short" | "hallucination" | "description" | "char-frequency" | "char-diversity" | "loop";
 
 export interface PipelineDeps {
   recorder: {
@@ -24,7 +27,8 @@ export interface PipelineDeps {
     sampleRate: number,
     modelPath: string,
     dictionary?: string[],
-    speechLanguages?: string[]
+    speechLanguages?: string[],
+    temperature?: number
   ): Promise<TranscriptionResult>;
   llmProvider: LlmProvider;
   modelPath: string;
@@ -87,6 +91,8 @@ const COMMON_HALLUCINATIONS = [
 
 /**
  * Detect non-speech Whisper output caused by background noise.
+ * Returns a reason string if garbage, or null if the text looks legitimate.
+ *
  * Whisper hallucinates in several ways with noise:
  * 1. Repetitive characters/tokens (e.g. "ლლლლლლ")
  * 2. Sound descriptions in brackets/parens (e.g. "(drill whirring)", "[BLANK_AUDIO]")
@@ -94,50 +100,41 @@ const COMMON_HALLUCINATIONS = [
  * 4. Very short transcriptions (likely noise, not speech)
  * 5. Hallucination loops — the same sentence or phrase repeated many times
  */
-export function isGarbageTranscription(text: string): boolean {
+export function detectGarbage(text: string): GarbageReason | null {
   const normalized = text.toLowerCase().trim();
 
-  // Reject very short transcriptions (likely noise)
-  if (normalized.length < 5) return true;
+  if (normalized.length < 5) return "short";
 
-  // Check against common hallucinations
   if (COMMON_HALLUCINATIONS.includes(normalized)) {
     slog.info("Rejected Whisper hallucination", text);
-    return true;
+    return "hallucination";
   }
 
-  // Strip bracketed/parenthesized sound descriptions that Whisper generates
-  // for non-speech audio, e.g. "(machine whirring)", "[BLANK_AUDIO]", "*music*"
   const withoutDescriptions = text
     .replace(/\([^)]*\)/g, "")
     .replace(/\[[^\]]*\]/g, "")
     .replace(/\*[^*]*\*/g, "")
     .trim();
 
-  if (!withoutDescriptions) return true;
+  if (!withoutDescriptions) return "description";
 
-  // Count frequency of each character (ignoring spaces)
   const chars = withoutDescriptions.replace(/\s/g, "");
-  if (chars.length === 0) return true;
+  if (chars.length === 0) return "description";
 
   const freq = new Map<string, number>();
   for (const ch of chars) {
     freq.set(ch, (freq.get(ch) ?? 0) + 1);
   }
 
-  // If a single character makes up >50% of the text, it's garbage
   const maxFreq = Math.max(...freq.values());
-  if (maxFreq / chars.length > 0.5) return true;
+  if (maxFreq / chars.length > 0.5) return "char-frequency";
 
-  // Very low character diversity relative to length — real speech in any
-  // language produces many distinct characters even in short sentences.
-  // Whisper noise hallucinations repeat a tiny set of chars/glyphs.
-  if (chars.length >= 10 && freq.size <= 2) return true;
-  if (chars.length >= 20 && freq.size <= 6) return true;
+  if (chars.length >= 10 && freq.size <= 2) return "char-diversity";
+  if (chars.length >= 20 && freq.size <= 6) return "char-diversity";
 
-  if (hasRepetitivePattern(normalized)) return true;
+  if (hasRepetitivePattern(normalized)) return "loop";
 
-  return false;
+  return null;
 }
 
 const MIN_SENTENCE_REPEATS = 3;
@@ -146,7 +143,6 @@ const NGRAM_DOMINANCE_RATIO = 0.5;
 
 function hasRepetitivePattern(text: string): boolean {
   // Layer 1: Sentence-level repetition detection
-  // Split on sentence-ending punctuation (. ! ?) and normalize
   const sentences = text
     .split(/[.!?]+/)
     .map((s) => s.trim())
@@ -168,10 +164,6 @@ function hasRepetitivePattern(text: string): boolean {
   }
 
   // Layer 2: N-gram repetition detection
-  // Catches partial loops where sentence boundaries don't align cleanly.
-  // In a hallucination loop, very few unique n-grams exist relative to the
-  // total count — e.g. "hello world test" repeated produces only 3 unique
-  // trigrams cycling endlessly.
   const words = text.split(/\s+/).filter((w) => w.length > 0);
   if (words.length < MIN_NGRAM_SIZE * MIN_SENTENCE_REPEATS) return false;
 
@@ -187,9 +179,6 @@ function hasRepetitivePattern(text: string): boolean {
     const uniqueNgrams = ngramFreq.size;
     const maxNgramRepeats = Math.max(...ngramFreq.values());
 
-    // Very few unique n-grams means the text is highly repetitive
-    // Natural speech with 20+ words produces many distinct n-grams;
-    // a loop over K words produces at most K unique n-grams
     if (
       totalNgrams >= MIN_NGRAM_SIZE * MIN_SENTENCE_REPEATS &&
       maxNgramRepeats >= MIN_SENTENCE_REPEATS &&
@@ -336,6 +325,27 @@ export class Pipeline {
     return this.cancelingStage !== null;
   }
 
+  private async runTranscription(
+    recording: RecordingResult,
+    gen: number,
+    temperature?: number,
+  ): Promise<TranscriptionResult> {
+    const transcription = await this.deps.transcribe(
+      recording.audioBuffer,
+      recording.sampleRate,
+      this.deps.modelPath,
+      this.deps.dictionary ?? [],
+      this.deps.speechLanguages ?? [],
+      temperature
+    );
+
+    if (this.canceled || gen !== this.generation) {
+      throw new CanceledError();
+    }
+
+    return transcription;
+  }
+
   private async processFromRecording(
     recording: RecordingResult,
     gen: number
@@ -355,14 +365,9 @@ export class Pipeline {
     this.deps.onStage?.("transcribing");
     let transcription: TranscriptionResult;
     try {
-      transcription = await this.deps.transcribe(
-        recording.audioBuffer,
-        recording.sampleRate,
-        this.deps.modelPath,
-        this.deps.dictionary ?? [],
-        this.deps.speechLanguages ?? []
-      );
+      transcription = await this.runTranscription(recording, gen);
     } catch (err: unknown) {
+      if (err instanceof CanceledError) throw err;
       this.deps.analytics?.track("transcription_failed", {
         whisper_model: this.whisperModelName,
         error_type: err instanceof Error ? err.name : "unknown",
@@ -375,10 +380,6 @@ export class Pipeline {
         audioDurationMs,
       });
       throw err;
-    }
-
-    if (this.canceled || gen !== this.generation) {
-      throw new CanceledError();
     }
 
     const rawText = transcription.text.trim();
@@ -408,10 +409,21 @@ export class Pipeline {
     }
 
     slog.info("Checking for garbage transcription");
-    if (!rawText || isGarbageTranscription(rawText)) {
-      slog.info("Transcription rejected as empty or garbage");
+    const garbageReason = rawText ? detectGarbage(rawText) : "short";
+
+    if (garbageReason) {
+      // For hallucination loops, retry with increasing temperature to break the loop
+      if (garbageReason === "loop") {
+        const retried = await this.retryWithTemperature(recording, gen);
+        if (retried !== null) {
+          return this.processFromTranscription(retried, recording, gen);
+        }
+      }
+
+      slog.info("Transcription rejected as garbage", { reason: garbageReason });
       this.deps.analytics?.track("transcription_garbage_detected", {
         whisper_model: this.whisperModelName,
+        reason: garbageReason,
       });
       if (audioDurationMs > GARBAGE_AUDIO_THRESHOLD_MS) {
         this.deps.onFailure?.({
@@ -430,6 +442,49 @@ export class Pipeline {
     }
 
     return this.processFromTranscription(rawText, recording, gen);
+  }
+
+  private async retryWithTemperature(
+    recording: RecordingResult,
+    gen: number,
+  ): Promise<string | null> {
+    for (let i = 0; i < LOOP_RETRY_TEMPERATURES.length; i++) {
+      const temp = LOOP_RETRY_TEMPERATURES[i];
+      const attempt = i + 2;
+      slog.info("Retrying transcription with higher temperature to break hallucination loop", {
+        attempt, temperature: temp,
+      });
+      this.deps.analytics?.track("transcription_loop_retry", {
+        whisper_model: this.whisperModelName,
+        attempt,
+        temperature: temp,
+      });
+
+      try {
+        const retryResult = await this.runTranscription(recording, gen, temp);
+        const retryText = retryResult.text.trim();
+
+        if (!retryText) continue;
+        const retryReason = detectGarbage(retryText);
+
+        if (!retryReason) {
+          slog.info("Retry succeeded", { attempt, temperature: temp });
+          this.deps.analytics?.track("transcription_loop_retry_succeeded", {
+            attempt, temperature: temp,
+          });
+          this.heldTranscription = retryText;
+          return retryText;
+        }
+
+        slog.info("Retry still garbage", { attempt, temperature: temp, reason: retryReason });
+      } catch (err: unknown) {
+        if (err instanceof CanceledError) throw err;
+        slog.warn("Retry transcription failed", { attempt, error: err instanceof Error ? err.message : err });
+      }
+    }
+
+    slog.info("All retry attempts failed, giving up");
+    return null;
   }
 
   private async processFromTranscription(

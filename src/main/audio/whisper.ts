@@ -21,7 +21,8 @@ export async function transcribe(
   sampleRate: number,
   modelPath: string,
   dictionary: string[] = [],
-  speechLanguages: string[] = []
+  speechLanguages: string[] = [],
+  temperature?: number
 ): Promise<TranscriptionResult> {
   const tempPath = path.join(os.tmpdir(), `vox-recording-${crypto.randomUUID()}.wav`);
 
@@ -32,7 +33,7 @@ export async function transcribe(
 
     const whisperArgs = buildWhisperArgs(speechLanguages);
     const prompt = buildWhisperPrompt(dictionary, whisperArgs.promptPrefix);
-    const stdout = await runWhisper(modelPath, tempPath, prompt, whisperArgs.language);
+    const stdout = await runWhisper(modelPath, tempPath, prompt, whisperArgs.language, temperature);
     const text = parseWhisperOutput(stdout);
 
     return { text };
@@ -43,19 +44,23 @@ export async function transcribe(
   }
 }
 
-function runWhisper(modelPath: string, filePath: string, prompt: string, language = "auto"): Promise<string> {
+function runWhisper(modelPath: string, filePath: string, prompt: string, language = "auto", temperature?: number): Promise<string> {
+  const args = [
+    "-l", language,
+    "-m", modelPath,
+    "-f", filePath,
+    "--best-of", "5",         // Greedy default (whisper.cpp max decoders = 8)
+    "--beam-size", "5",       // Enable beam search (greedy is the CLI default)
+    "--entropy-thold", "2.0", // Lower threshold = more conservative (default: 2.4)
+    "--prompt", prompt,
+  ];
+  if (temperature !== undefined) {
+    args.push("--temperature", String(temperature));
+  }
   return new Promise((resolve, reject) => {
     execFile(
       WHISPER_BIN,
-      [
-        "-l", language,
-        "-m", modelPath,
-        "-f", filePath,
-        "--best-of", "5",         // Greedy default (whisper.cpp max decoders = 8)
-        "--beam-size", "5",       // Enable beam search (greedy is the CLI default)
-        "--entropy-thold", "2.0", // Lower threshold = more conservative (default: 2.4)
-        "--prompt", prompt,
-      ],
+      args,
       { cwd: WHISPER_CPP_DIR, timeout: 30000 },
       (error, stdout, stderr) => {
         if (error) {

@@ -30,7 +30,9 @@ describe("Pipeline garbage/hallucination detection", () => {
     correct: vi.fn().mockResolvedValue("corrected"),
   };
 
-  function createPipeline(transcriptionText: string) {
+  function createPipeline(transcriptionText: string | string[]) {
+    const texts = Array.isArray(transcriptionText) ? transcriptionText : [transcriptionText];
+    let callIndex = 0;
     return new Pipeline({
       recorder: {
         start: vi.fn(),
@@ -39,7 +41,10 @@ describe("Pipeline garbage/hallucination detection", () => {
           sampleRate: 16000,
         }),
       },
-      transcribe: vi.fn().mockResolvedValue({ text: transcriptionText }),
+      transcribe: vi.fn().mockImplementation(() => {
+        const text = texts[Math.min(callIndex++, texts.length - 1)];
+        return Promise.resolve({ text });
+      }),
       llmProvider: mockProvider,
       modelPath: "/models/ggml-small.bin",
     });
@@ -131,7 +136,7 @@ describe("Pipeline garbage/hallucination detection", () => {
 
   describe("hallucination loop detection", () => {
     it("should reject sentence-level repetition loops", async () => {
-      const repeated = "Transcribe em estático. ".repeat(28).trim();
+      const repeated = "Please subscribe to our channel. ".repeat(28).trim();
       const pipeline = createPipeline(repeated);
       await pipeline.startRecording();
       const result = await pipeline.stopAndProcess();
@@ -151,7 +156,6 @@ describe("Pipeline garbage/hallucination detection", () => {
     });
 
     it("should reject n-gram repetition loops (partial sentence loops)", async () => {
-      // Words repeat without clean sentence boundaries
       const repeated = "hello world test hello world test hello world test hello world test hello world test hello world test hello world test hello world test";
       const pipeline = createPipeline(repeated);
       await pipeline.startRecording();
@@ -181,6 +185,95 @@ describe("Pipeline garbage/hallucination detection", () => {
 
       expect(result).toBe("corrected");
       expect(mockProvider.correct).toHaveBeenCalled();
+    });
+  });
+
+  describe("hallucination loop retry with temperature", () => {
+    it("should retry with higher temperature when loop detected, and succeed on retry", async () => {
+      const loopText = "Please subscribe to our channel. ".repeat(10).trim();
+      const goodText = "I need to schedule a meeting for tomorrow";
+      // First call returns loop, second call (retry with temp 0.4) returns good text
+      const pipeline = createPipeline([loopText, goodText]);
+      await pipeline.startRecording();
+      const result = await pipeline.stopAndProcess();
+
+      expect(result).toBe("corrected");
+      expect(mockProvider.correct).toHaveBeenCalledWith(goodText);
+    });
+
+    it("should retry up to 2 times with increasing temperature", async () => {
+      const loopText = "Please subscribe to our channel. ".repeat(10).trim();
+      const goodText = "The meeting is at three PM in the conference room";
+      // First call: loop, second call (temp 0.4): still loop, third call (temp 0.8): success
+      const pipeline = createPipeline([loopText, loopText, goodText]);
+      await pipeline.startRecording();
+      const result = await pipeline.stopAndProcess();
+
+      expect(result).toBe("corrected");
+      expect(mockProvider.correct).toHaveBeenCalledWith(goodText);
+    });
+
+    it("should give up after all retries fail and return empty", async () => {
+      const loopText = "Please subscribe to our channel. ".repeat(10).trim();
+      // All 3 calls (original + 2 retries) return garbage
+      const pipeline = createPipeline([loopText, loopText, loopText]);
+      await pipeline.startRecording();
+      const result = await pipeline.stopAndProcess();
+
+      expect(result).toBe("");
+      expect(mockProvider.correct).not.toHaveBeenCalled();
+    });
+
+    it("should not retry for non-loop garbage types", async () => {
+      const transcribeFn = vi.fn().mockResolvedValue({ text: "thank you" });
+      const pipeline = new Pipeline({
+        recorder: {
+          start: vi.fn(),
+          stop: vi.fn().mockResolvedValue({
+            audioBuffer: new Float32Array([0.1, 0.2, 0.3]),
+            sampleRate: 16000,
+          }),
+        },
+        transcribe: transcribeFn,
+        llmProvider: mockProvider,
+        modelPath: "/models/ggml-small.bin",
+      });
+      await pipeline.startRecording();
+      await pipeline.stopAndProcess();
+
+      // Should only be called once (no retries for known hallucinations)
+      expect(transcribeFn).toHaveBeenCalledTimes(1);
+    });
+
+    it("should track analytics for retry attempts", async () => {
+      const loopText = "Please subscribe to our channel. ".repeat(10).trim();
+      const goodText = "I need to schedule a meeting for tomorrow";
+      const mockAnalytics = { track: vi.fn() };
+      let callIndex = 0;
+      const texts = [loopText, goodText];
+      const pipeline = new Pipeline({
+        recorder: {
+          start: vi.fn(),
+          stop: vi.fn().mockResolvedValue({
+            audioBuffer: new Float32Array([0.1, 0.2, 0.3]),
+            sampleRate: 16000,
+          }),
+        },
+        transcribe: vi.fn().mockImplementation(() => {
+          const text = texts[Math.min(callIndex++, texts.length - 1)];
+          return Promise.resolve({ text });
+        }),
+        llmProvider: mockProvider,
+        modelPath: "/models/ggml-small.bin",
+        analytics: mockAnalytics,
+      });
+
+      await pipeline.startRecording();
+      await pipeline.stopAndProcess();
+
+      const events = mockAnalytics.track.mock.calls.map((c) => c[0]);
+      expect(events).toContain("transcription_loop_retry");
+      expect(events).toContain("transcription_loop_retry_succeeded");
     });
   });
 
