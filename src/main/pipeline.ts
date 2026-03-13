@@ -20,7 +20,7 @@ export interface PipelineDeps {
     start(): Promise<void>;
     stop(): Promise<RecordingResult>;
     cancel(): Promise<void>;
-    snapshot?(): Promise<RecordingResult | null>;
+    snapshot?(maxSeconds?: number): Promise<RecordingResult | null>;
     playAudioCue?(samples: number[], sampleRate?: number): Promise<void>;
   };
   transcribe(
@@ -220,7 +220,8 @@ export class Pipeline {
   }
 
   async snapshotAndTranscribe(): Promise<string | null> {
-    const snapshot = await this.deps.recorder.snapshot?.();
+    // Only transcribe the last 12 seconds to keep Whisper fast
+    const snapshot = await this.deps.recorder.snapshot?.(12);
     if (!snapshot || snapshot.audioBuffer.length === 0) return null;
     // Require at least 0.5s of audio for meaningful transcription
     const durationMs = (snapshot.audioBuffer.length / snapshot.sampleRate) * 1000;

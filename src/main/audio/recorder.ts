@@ -132,21 +132,32 @@ export class AudioRecorder {
     this.levelsInterval = lvl;
   }
 
-  async snapshot(): Promise<RecordingResult | null> {
+  async snapshot(maxSeconds?: number): Promise<RecordingResult | null> {
     if (!this.recording || !this.win || this.win.isDestroyed()) return null;
     try {
+      const maxSec = maxSeconds ?? 0;
       const result: { audioBuffer: number[]; sampleRate: number } | null =
         await this.win.webContents.executeJavaScript(`
           (() => {
             if (!window._recChunks || window._recChunks.length === 0) return null;
-            const totalLength = window._recChunks.reduce((sum, c) => sum + c.length, 0);
-            const merged = new Float32Array(totalLength);
-            let offset = 0;
-            for (const chunk of window._recChunks) {
-              merged.set(new Float32Array(chunk), offset);
-              offset += chunk.length;
+            var sr = window._recCtx.sampleRate;
+            var totalLength = window._recChunks.reduce((sum, c) => sum + c.length, 0);
+            var maxSamples = ${maxSec} > 0 ? Math.round(${maxSec} * sr) : totalLength;
+            if (maxSamples >= totalLength) {
+              var merged = new Float32Array(totalLength);
+              var off = 0;
+              for (var c of window._recChunks) { merged.set(new Float32Array(c), off); off += c.length; }
+              return { audioBuffer: Array.from(merged), sampleRate: sr };
             }
-            return { audioBuffer: Array.from(merged), sampleRate: window._recCtx.sampleRate };
+            var tail = new Float32Array(maxSamples);
+            var pos = maxSamples;
+            for (var i = window._recChunks.length - 1; i >= 0 && pos > 0; i--) {
+              var chunk = new Float32Array(window._recChunks[i]);
+              var take = Math.min(chunk.length, pos);
+              tail.set(chunk.subarray(chunk.length - take), pos - take);
+              pos -= take;
+            }
+            return { audioBuffer: Array.from(tail), sampleRate: sr };
           })()
         `);
       if (!result) return null;
