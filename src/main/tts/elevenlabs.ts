@@ -36,18 +36,35 @@ export async function synthesize(opts: SynthesizeOptions): Promise<ArrayBuffer> 
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(
-      `ElevenLabs TTS request failed: ${response.status} ${response.statusText} — ${body}`,
-    );
+
+    // Parse error details if JSON
+    let errorMessage = `${response.status} ${response.statusText}`;
+    try {
+      const errorData = JSON.parse(body);
+      if (errorData.detail?.message) {
+        errorMessage = errorData.detail.message;
+      } else if (errorData.detail?.type === "payment_required") {
+        errorMessage = "Free accounts cannot use library voices via API. Upgrade your ElevenLabs subscription or create a custom voice.";
+      }
+    } catch {
+      // Not JSON, use raw body
+      if (body) errorMessage += ` — ${body}`;
+    }
+
+    throw new Error(`ElevenLabs: ${errorMessage}`);
   }
 
   return response.arrayBuffer();
 }
 
-export async function testConnection(apiKey: string, voiceId: string): Promise<ArrayBuffer | null> {
+export async function testConnection(apiKey: string, voiceId: string): Promise<{ success: boolean; audio?: ArrayBuffer; error?: string }> {
   try {
-    return await synthesize({ text: "Hello! Text to speech is working.", apiKey, voiceId });
-  } catch {
-    return null;
+    const audio = await synthesize({ text: "Hello! Text to speech is working.", apiKey, voiceId });
+    return { success: true, audio };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
   }
 }

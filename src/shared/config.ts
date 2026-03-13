@@ -136,6 +136,11 @@ export interface VoxConfig {
   finishWithPeriod: boolean;
   onboardingCompleted: boolean;
   audioRetentionCount: number;
+  ttsEnabled: boolean;
+  ttsConnectionTested: boolean;
+  ttsConfigHash: string;
+  elevenLabsApiKey: string;
+  elevenLabsVoiceId: string;
 }
 
 export function createDefaultConfig(isProduction = false): VoxConfig {
@@ -187,6 +192,11 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     finishWithPeriod: true,
     onboardingCompleted: false,
     audioRetentionCount: 5,
+    ttsEnabled: false,
+    ttsConnectionTested: false,
+    ttsConfigHash: "",
+    elevenLabsApiKey: "",
+    elevenLabsVoiceId: "21m00Tcm4TlvDq8ikWAM",
   };
 }
 

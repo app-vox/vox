@@ -517,6 +517,8 @@ export function DevPanel() {
       title: "Text to Speech",
       rows: [
         { label: "TTS Enabled", render: () => <>{boolDot(config?.ttsEnabled)}</> },
+        { label: "Connection Tested", render: () => <>{boolDot(config?.ttsConnectionTested)}</> },
+        { label: "Config Hash", render: () => <>{config?.ttsConfigHash || "(none)"}</> },
         { label: "API Key", render: () => <>{config?.elevenLabsApiKey ? "configured" : "not set"}</> },
         { label: "Voice ID", render: () => <>{config?.elevenLabsVoiceId || "(none)"}</> },
       ],

@@ -521,6 +521,10 @@ function buildHudHtml(): string {
   .hover-btn.tts-btn:not(.tts-available) { opacity: 0 !important; pointer-events: none !important; }
   .hover-btn.tts-btn:hover { background: rgba(34, 197, 94, 0.8); }
   .hover-btn.tts-btn.loading { pointer-events: none; }
+  .hover-btn.tts-btn.playing {
+    width: 24px; height: 24px;
+    margin-top: -12px; margin-left: -12px;
+  }
   .hover-btn.tts-btn.playing:hover { background: var(--hud-error-hover); }
 
   /* Cancel button (below widget during idle+listening transition) */
@@ -976,7 +980,9 @@ function startTtsPolling() {
       window.electronAPI.hudCheckSelectedText().then(function(hasText) {
         var ttsBtn = document.getElementById('tts-btn');
         if (!ttsBtn) return;
-        if (hasText) {
+        var state = ttsBtn.dataset.state;
+        // Keep button visible if playing/loading, even without selected text
+        if (hasText || state === 'playing' || state === 'loading') {
           ttsBtn.classList.add('tts-available');
         } else {
           ttsBtn.classList.remove('tts-available');
@@ -1002,9 +1008,13 @@ function showSideButtons() {
     window.electronAPI.hudCheckSelectedText().then(function(hasText) {
       if (!buttonsVisible) return;
       var ttsBtn = document.getElementById('tts-btn');
-      if (ttsBtn && hasText) {
-        ttsBtn.classList.add('tts-available');
-        ttsBtn.classList.add('visible');
+      if (ttsBtn) {
+        var state = ttsBtn.dataset.state;
+        // Show button if has text OR if playing/loading
+        if (hasText || state === 'playing' || state === 'loading') {
+          ttsBtn.classList.add('tts-available');
+          ttsBtn.classList.add('visible');
+        }
       }
       startTtsPolling();
     });
@@ -1342,7 +1352,14 @@ if (window.electronAPI?.onTtsStateChanged) {
     var isVisible = btn.classList.contains('visible');
     var isTtsAvailable = btn.classList.contains('tts-available');
     btn.className = 'hover-btn tts-btn' + (state !== 'idle' ? ' ' + state : '');
-    if (isTtsAvailable) btn.classList.add('tts-available');
+
+    // Keep button visible and available during playing/loading
+    if (state === 'playing' || state === 'loading') {
+      btn.classList.add('tts-available');
+      if (buttonsVisible) btn.classList.add('visible');
+    } else {
+      if (isTtsAvailable) btn.classList.add('tts-available');
+    }
     if (isVisible) btn.classList.add('visible');
 
     if (state === 'loading') {

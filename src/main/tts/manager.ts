@@ -100,13 +100,16 @@ export class TtsManager {
     this.setState("idle");
   }
 
-  async testAndPlay(apiKey: string, voiceId: string): Promise<boolean> {
-    const buffer = await testConnection(apiKey, voiceId);
-    const success = buffer !== null;
-    this.deps.analytics?.track("tts_test_connection", { success });
-    if (!buffer) return false;
-    await this.deps.playAudio(buffer);
-    return true;
+  async testAndPlay(apiKey: string, voiceId: string): Promise<{ success: boolean; error?: string }> {
+    const result = await testConnection(apiKey, voiceId);
+    this.deps.analytics?.track("tts_test_connection", { success: result.success });
+    if (!result.success) {
+      return { success: false, error: result.error };
+    }
+    if (result.audio) {
+      await this.deps.playAudio(result.audio);
+    }
+    return { success: true };
   }
 
   async hasSelectedText(): Promise<boolean> {

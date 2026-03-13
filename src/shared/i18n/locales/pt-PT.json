@@ -522,6 +522,8 @@
   "tts.testError": "Falha ao ligar ao ElevenLabs. Verifique a sua chave de API.",
   "tts.testPlaying": "A reproduzir áudio de teste...",
   "tts.learnMore": "Obtenha a sua chave de API em elevenlabs.io",
+  "tts.testRequired": "Teste a ligação antes de activar Text-to-Speech",
+  "tts.hudWillBeEnabled": "Activar TTS habilitará o HUD (sempre visível no ecrã) para mostrar o botão de reprodução",
   "tts.playing": "A ler em voz alta…",
   "tts.error": "Falha na conversão de texto para fala"
 }

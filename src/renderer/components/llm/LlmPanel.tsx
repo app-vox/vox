@@ -15,7 +15,7 @@ import { NewDot } from "../ui/NewDot";
 import { CustomSelect } from "../ui/CustomSelect";
 import { ExternalLinkIcon, CheckCircleIcon, InfoCircleAltIcon, CopyIcon, SparkleIcon, PlayIcon, VolumeIcon } from "../../../shared/icons";
 import type { LlmProviderType, LlmConfig } from "../../../shared/config";
-import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
+import { computeLlmConfigHash, computeTtsConfigHash } from "../../../shared/llm-config-hash";
 import card from "../shared/card.module.scss";
 import form from "../shared/forms.module.scss";
 import buttons from "../shared/buttons.module.scss";
@@ -59,6 +59,7 @@ export function LlmPanel() {
   const [hasPickedProvider, setHasPickedProvider] = useState(false);
   const [ttsTesting, setTtsTesting] = useState(false);
   const [ttsTestStatus, setTtsTestStatus] = useState<{ text: string; type: "info" | "success" | "error" } | null>(null);
+  const [ttsShake, setTtsShake] = useState(false);
   const testSectionRef = useRef<HTMLDivElement>(null);
 
   const configHash = config ? computeLlmConfigHash(config) : "";
@@ -69,6 +70,25 @@ export function LlmPanel() {
     }
     prevHashRef.current = configHash;
   }, [configHash]);
+
+  // Track TTS config changes and clear test status when key/voice changes
+  const ttsConfigHashValue = config ? computeTtsConfigHash(config) : "";
+  const prevTtsHashRef = useRef(ttsConfigHashValue);
+  useEffect(() => {
+    if (prevTtsHashRef.current && prevTtsHashRef.current !== ttsConfigHashValue) {
+      setTtsTestStatus({ text: "", type: "info" });
+      // Disable toggle and clear test state when config changes
+      if (config?.ttsEnabled) {
+        updateConfig({
+          ttsEnabled: false,
+          ttsConnectionTested: false,
+          ttsConfigHash: ""
+        });
+        saveConfig(false);
+      }
+    }
+    prevTtsHashRef.current = ttsConfigHashValue;
+  }, [ttsConfigHashValue, config?.ttsEnabled, updateConfig, saveConfig]);
 
   // Dev overrides (gated — tree-shaken in production)
   const setupComplete = import.meta.env.DEV
@@ -101,18 +121,19 @@ export function LlmPanel() {
 
   const effectiveEnhancement = devLlmEnhancement ?? config?.enableLlmEnhancement;
 
-  useEffect(() => {
-    if (!effectiveEnhancement && activeTab !== "tts") {
-      setActiveTab("tts");
-    }
-  }, [effectiveEnhancement, activeTab]);
-
   if (!config) return null;
 
   const effectiveTested = devLlmTested ?? config.llmConnectionTested;
 
   const needsTest = effectiveEnhancement
     && (!effectiveTested || computeLlmConfigHash(config) !== config.llmConfigHash);
+
+  // TTS gating logic - similar to LLM enhancement
+  const ttsConfigHash = computeTtsConfigHash(config);
+  const ttsEverTested = config.ttsConnectionTested || config.ttsConfigHash !== "";
+  const ttsConfigChanged = ttsEverTested && ttsConfigHash !== config.ttsConfigHash;
+  const needsTtsTest = !ttsEverTested || ttsConfigChanged;
+  const ttsConfigured = config.elevenLabsApiKey !== "";
 
   const providerConfigured = devLlmConfigured ?? isProviderConfigured(config.llm.provider, config.llm);
   const providerEverTested = effectiveTested || config.llmConfigHash !== "";
@@ -390,19 +411,67 @@ export function LlmPanel() {
 
         {activeTab === "tts" && (
           <>
+            {needsTtsTest && (
+              <div className={card.warningBanner}>
+                <span>{t("tts.testRequired")}</span>
+              </div>
+            )}
+
+            {!config.showHud && !needsTtsTest && ttsConfigured && (
+              <div className={card.infoBanner}>
+                <InfoCircleAltIcon width={16} height={16} />
+                <span>{t("tts.hudWillBeEnabled")}</span>
+              </div>
+            )}
+
             <div
-              className={`${styles.enhanceToggle} ${config.ttsEnabled ? styles.active : ""}`}
+              className={`${styles.enhanceToggle} ${config.ttsEnabled ? styles.active : ""} ${needsTtsTest ? styles.disabled : ""} ${ttsShake ? styles.shake : ""}`}
               role="switch"
               aria-checked={config.ttsEnabled}
-              tabIndex={0}
+              tabIndex={needsTtsTest ? -1 : 0}
               onClick={() => {
-                updateConfig({ ttsEnabled: !config.ttsEnabled });
+                if (needsTtsTest) {
+                  // Shake animation when trying to enable without testing
+                  if (!config.reduceAnimations) {
+                    setTtsShake(true);
+                    setTimeout(() => setTtsShake(false), 400);
+                  }
+                  // Show error status
+                  setTtsTestStatus({ text: t("tts.testRequired"), type: "error" });
+                  return;
+                }
+                const newEnabled = !config.ttsEnabled;
+                const updates: Partial<typeof config> = { ttsEnabled: newEnabled };
+                // Auto-enable HUD when TTS is enabled
+                if (newEnabled && !config.showHud) {
+                  updates.showHud = true;
+                }
+                updateConfig(updates);
                 saveConfig(true);
               }}
               onKeyDown={(e) => {
+                if (needsTtsTest) {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    // Shake animation when trying to enable without testing
+                    if (!config.reduceAnimations) {
+                      setTtsShake(true);
+                      setTimeout(() => setTtsShake(false), 400);
+                    }
+                    // Show error status
+                    setTtsTestStatus({ text: t("tts.testRequired"), type: "error" });
+                  }
+                  return;
+                }
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  updateConfig({ ttsEnabled: !config.ttsEnabled });
+                  const newEnabled = !config.ttsEnabled;
+                  const updates: Partial<typeof config> = { ttsEnabled: newEnabled };
+                  // Auto-enable HUD when TTS is enabled
+                  if (newEnabled && !config.showHud) {
+                    updates.showHud = true;
+                  }
+                  updateConfig(updates);
                   saveConfig(true);
                 }
               }}
@@ -417,61 +486,72 @@ export function LlmPanel() {
               <div className={`${styles.toggle} ${config.ttsEnabled ? styles.toggleOn : ""}`} />
             </div>
 
-            {config.ttsEnabled && (
-              <>
-                <div className={form.field}>
-                  <label htmlFor="tts-api-key">{t("tts.apiKey")}</label>
-                  <SecretInput
-                    id="tts-api-key"
-                    value={config.elevenLabsApiKey}
-                    onChange={(v) => {
-                      updateConfig({ elevenLabsApiKey: v });
-                      debouncedSave();
-                    }}
-                    placeholder={t("tts.apiKeyPlaceholder")}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => window.voxApi.shell.openExternal("https://elevenlabs.io/app/settings/api-keys")}
-                    className={card.learnMore}
-                  >
-                    {t("tts.learnMore")}
-                    <ExternalLinkIcon width={12} height={12} />
-                  </button>
-                </div>
+            <div className={form.field}>
+              <label htmlFor="tts-api-key">{t("tts.apiKey")}</label>
+              <SecretInput
+                id="tts-api-key"
+                value={config.elevenLabsApiKey}
+                onChange={(v) => {
+                  updateConfig({ elevenLabsApiKey: v });
+                  debouncedSave();
+                }}
+                placeholder={t("tts.apiKeyPlaceholder")}
+              />
+              <div style={{ display: "flex", alignItems: "flex-end", gap: "var(--spacing-2)", flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  onClick={() => window.voxApi.shell.openExternal("https://elevenlabs.io/app/settings/api-keys")}
+                  className={card.learnMore}
+                >
+                  {t("tts.learnMore")}
+                  <ExternalLinkIcon width={12} height={12} />
+                </button>
+                <span style={{ color: "var(--color-text-muted)", fontSize: "var(--font-size-sm)" }}>
+                  •
+                </span>
+                <span style={{ color: "var(--color-text-muted)", fontSize: "var(--font-size-sm)" }}>
+                  {t("tts.voiceDefault")}
+                </span>
+              </div>
+            </div>
 
-                <p className={form.hint}>{t("tts.voiceDefault")}</p>
-
-                <div className={form.testSection}>
-                  <button
-                    onClick={async () => {
-                      setTtsTesting(true);
-                      setTtsTestStatus({ text: t("tts.testPlaying"), type: "info" });
-                      try {
-                        const ok = await window.voxApi.tts.test(
-                          config.elevenLabsApiKey,
-                          config.elevenLabsVoiceId,
-                        );
-                        setTtsTestStatus(ok
-                          ? { text: t("tts.testSuccess"), type: "success" }
-                          : { text: t("tts.testError"), type: "error" },
-                        );
-                      } catch {
-                        setTtsTestStatus({ text: t("tts.testError"), type: "error" });
-                      } finally {
-                        setTtsTesting(false);
-                      }
-                    }}
-                    disabled={ttsTesting || !config.elevenLabsApiKey}
-                    className={`${buttons.btn} ${buttons.primary}`}
-                  >
-                    <PlayIcon width={14} height={14} />
-                    {t("tts.test")}
-                  </button>
-                  {ttsTestStatus && <StatusBox text={ttsTestStatus.text} type={ttsTestStatus.type} />}
-                </div>
-              </>
-            )}
+            <div className={form.testSection}>
+              <button
+                onClick={async () => {
+                  setTtsTesting(true);
+                  setTtsTestStatus({ text: t("tts.testPlaying"), type: "info" });
+                  try {
+                    const result = await window.voxApi.tts.test(
+                      config.elevenLabsApiKey,
+                      config.elevenLabsVoiceId,
+                    );
+                    if (result.success) {
+                      setTtsTestStatus({ text: t("tts.testSuccess"), type: "success" });
+                      // Update only TTS-related fields without reloading entire config (which can change tabs)
+                      const freshConfig = await window.voxApi.config.load();
+                      updateConfig({
+                        ttsConnectionTested: freshConfig.ttsConnectionTested,
+                        ttsConfigHash: freshConfig.ttsConfigHash,
+                      });
+                    } else {
+                      const errorMsg = result.error || t("tts.testError");
+                      setTtsTestStatus({ text: errorMsg, type: "error" });
+                    }
+                  } catch (err: unknown) {
+                    const errorMsg = err instanceof Error ? err.message : t("tts.testError");
+                    setTtsTestStatus({ text: errorMsg, type: "error" });
+                  } finally {
+                    setTtsTesting(false);
+                  }
+                }}
+                disabled={ttsTesting || !config.elevenLabsApiKey}
+                className={`${buttons.btn} ${buttons.primary}`}
+              >
+                <PlayIcon width={14} height={14} />
+                {t("tts.test")}
+              </button>
+              {ttsTestStatus && <StatusBox text={ttsTestStatus.text} type={ttsTestStatus.type} />}
+            </div>
           </>
         )}
       </div>

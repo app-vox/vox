@@ -522,6 +522,8 @@
   "tts.testError": "Nie udało się połączyć z ElevenLabs. Sprawdź klucz API.",
   "tts.testPlaying": "Odtwarzanie testowego dźwięku...",
   "tts.learnMore": "Uzyskaj klucz API na elevenlabs.io",
+  "tts.testRequired": "Przetestuj połączenie przed włączeniem Text-to-Speech",
+  "tts.hudWillBeEnabled": "Włączenie TTS włączy HUD (zawsze widoczny na ekranie), aby pokazać przycisk odtwarzania",
   "tts.playing": "Czytanie na głos…",
   "tts.error": "Synteza mowy nie powiodła się"
 }
