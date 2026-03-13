@@ -9,8 +9,11 @@ import log from "electron-log/main";
 const slog = log.scope("Pipeline");
 
 const GARBAGE_AUDIO_THRESHOLD_MS = 5000;
+const LOOP_RETRY_TEMPERATURES = [0.4, 0.8];
 
 export type PipelineStage = "transcribing" | "enhancing";
+
+export type GarbageReason = "short" | "hallucination" | "description" | "char-frequency" | "char-diversity" | "loop";
 
 export interface PipelineDeps {
   recorder: {
@@ -24,7 +27,8 @@ export interface PipelineDeps {
     sampleRate: number,
     modelPath: string,
     dictionary?: string[],
-    speechLanguages?: string[]
+    speechLanguages?: string[],
+    temperature?: number
   ): Promise<TranscriptionResult>;
   llmProvider: LlmProvider;
   modelPath: string;
@@ -53,86 +57,115 @@ export interface PipelineDeps {
   }) => void;
 }
 
-/**
- * Common hallucinations that Whisper generates with silence or noise.
- * These are phrases Whisper "hears" when there's no actual speech.
- */
 const COMMON_HALLUCINATIONS = [
-  // English
   "thank you", "thanks for watching", "thank you for watching",
   "bye", "goodbye", "see you", "see you next time",
   "subscribe", "like and subscribe",
-  // Short filler noise
   "you", "uh", "um", "hmm", "ah", "oh",
-  // Common YouTube outro phrases
   "thanks", "bye bye",
-  // Well-known whisper.cpp silence hallucinations
   "thank you so much", "thank you very much",
   "thanks for listening", "thanks for watching this video",
   "please subscribe", "please like and subscribe",
   "i'll see you in the next video", "see you in the next one",
   "i hope you enjoyed", "i hope you enjoyed this video",
   "the end", "...",
-  // Whisper.cpp noise artifacts
   "so", "okay", "ok", "yeah", "yes", "no", "right",
   "well", "like", "just", "actually",
-  // Chinese/Japanese common hallucinations
   "\u5b57\u5e55\u7f51", "\u5b57\u5e55\u7ec4", "\u5b57\u5e55\u7531",
   "\u00e0 bient\u00f4t", "merci",
-  // Subtitle watermarks
   "amara.org", "subtitles by",
   "subtitles by the amara.org community",
   "copyright", "all rights reserved",
 ];
 
-/**
- * Detect non-speech Whisper output caused by background noise.
- * Whisper hallucinates in several ways with noise:
- * 1. Repetitive characters/tokens (e.g. "ლლლლლლ")
- * 2. Sound descriptions in brackets/parens (e.g. "(drill whirring)", "[BLANK_AUDIO]")
- * 3. Common phrases it "hears" in silence (e.g. "thank you", "bye")
- * 4. Very short transcriptions (likely noise, not speech)
- */
-function isGarbageTranscription(text: string): boolean {
+export function detectGarbage(text: string): GarbageReason | null {
   const normalized = text.toLowerCase().trim();
 
-  // Reject very short transcriptions (likely noise)
-  if (normalized.length < 5) return true;
+  if (normalized.length < 5) return "short";
 
-  // Check against common hallucinations
   if (COMMON_HALLUCINATIONS.includes(normalized)) {
     slog.info("Rejected Whisper hallucination", text);
-    return true;
+    return "hallucination";
   }
 
-  // Strip bracketed/parenthesized sound descriptions that Whisper generates
-  // for non-speech audio, e.g. "(machine whirring)", "[BLANK_AUDIO]", "*music*"
   const withoutDescriptions = text
     .replace(/\([^)]*\)/g, "")
     .replace(/\[[^\]]*\]/g, "")
     .replace(/\*[^*]*\*/g, "")
     .trim();
 
-  if (!withoutDescriptions) return true;
+  if (!withoutDescriptions) return "description";
 
-  // Count frequency of each character (ignoring spaces)
   const chars = withoutDescriptions.replace(/\s/g, "");
-  if (chars.length === 0) return true;
+  if (chars.length === 0) return "description";
 
   const freq = new Map<string, number>();
   for (const ch of chars) {
     freq.set(ch, (freq.get(ch) ?? 0) + 1);
   }
 
-  // If a single character makes up >50% of the text, it's garbage
   const maxFreq = Math.max(...freq.values());
-  if (maxFreq / chars.length > 0.5) return true;
+  if (maxFreq / chars.length > 0.5) return "char-frequency";
 
-  // Very low character diversity relative to length — real speech in any
-  // language produces many distinct characters even in short sentences.
-  // Whisper noise hallucinations repeat a tiny set of chars/glyphs.
-  if (chars.length >= 10 && freq.size <= 2) return true;
-  if (chars.length >= 20 && freq.size <= 6) return true;
+  if (chars.length >= 10 && freq.size <= 2) return "char-diversity";
+  if (chars.length >= 20 && freq.size <= 6) return "char-diversity";
+
+  if (hasRepetitivePattern(normalized)) return "loop";
+
+  return null;
+}
+
+const MIN_SENTENCE_REPEATS = 3;
+const MIN_NGRAM_SIZE = 3;
+const NGRAM_DOMINANCE_RATIO = 0.5;
+
+function hasRepetitivePattern(text: string): boolean {
+  const sentences = text
+    .split(/[.!?]+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+
+  if (sentences.length >= MIN_SENTENCE_REPEATS) {
+    const sentenceFreq = new Map<string, number>();
+    for (const s of sentences) {
+      sentenceFreq.set(s, (sentenceFreq.get(s) ?? 0) + 1);
+    }
+
+    const maxRepeats = Math.max(...sentenceFreq.values());
+    if (maxRepeats >= MIN_SENTENCE_REPEATS && maxRepeats / sentences.length >= NGRAM_DOMINANCE_RATIO) {
+      slog.info("Rejected hallucination loop (sentence repetition)", {
+        repeats: maxRepeats, total: sentences.length,
+      });
+      return true;
+    }
+  }
+
+  const words = text.split(/\s+/).filter((w) => w.length > 0);
+  if (words.length < MIN_NGRAM_SIZE * MIN_SENTENCE_REPEATS) return false;
+
+  for (const n of [MIN_NGRAM_SIZE, 4, 5]) {
+    if (words.length < n * MIN_SENTENCE_REPEATS) continue;
+    const ngramFreq = new Map<string, number>();
+    for (let i = 0; i <= words.length - n; i++) {
+      const ngram = words.slice(i, i + n).join(" ");
+      ngramFreq.set(ngram, (ngramFreq.get(ngram) ?? 0) + 1);
+    }
+
+    const totalNgrams = words.length - n + 1;
+    const uniqueNgrams = ngramFreq.size;
+    const maxNgramRepeats = Math.max(...ngramFreq.values());
+
+    if (
+      totalNgrams >= MIN_NGRAM_SIZE * MIN_SENTENCE_REPEATS &&
+      maxNgramRepeats >= MIN_SENTENCE_REPEATS &&
+      uniqueNgrams / totalNgrams <= 0.2
+    ) {
+      slog.info("Rejected hallucination loop (n-gram repetition)", {
+        n, unique: uniqueNgrams, total: totalNgrams, maxRepeats: maxNgramRepeats,
+      });
+      return true;
+    }
+  }
 
   return false;
 }
@@ -268,6 +301,27 @@ export class Pipeline {
     return this.cancelingStage !== null;
   }
 
+  private async runTranscription(
+    recording: RecordingResult,
+    gen: number,
+    opts?: { temperature?: number; skipPrompt?: boolean },
+  ): Promise<TranscriptionResult> {
+    const transcription = await this.deps.transcribe(
+      recording.audioBuffer,
+      recording.sampleRate,
+      this.deps.modelPath,
+      opts?.skipPrompt ? [] : (this.deps.dictionary ?? []),
+      opts?.skipPrompt ? [] : (this.deps.speechLanguages ?? []),
+      opts?.temperature
+    );
+
+    if (this.canceled || gen !== this.generation) {
+      throw new CanceledError();
+    }
+
+    return transcription;
+  }
+
   private async processFromRecording(
     recording: RecordingResult,
     gen: number
@@ -287,14 +341,9 @@ export class Pipeline {
     this.deps.onStage?.("transcribing");
     let transcription: TranscriptionResult;
     try {
-      transcription = await this.deps.transcribe(
-        recording.audioBuffer,
-        recording.sampleRate,
-        this.deps.modelPath,
-        this.deps.dictionary ?? [],
-        this.deps.speechLanguages ?? []
-      );
+      transcription = await this.runTranscription(recording, gen);
     } catch (err: unknown) {
+      if (err instanceof CanceledError) throw err;
       this.deps.analytics?.track("transcription_failed", {
         whisper_model: this.whisperModelName,
         error_type: err instanceof Error ? err.name : "unknown",
@@ -307,10 +356,6 @@ export class Pipeline {
         audioDurationMs,
       });
       throw err;
-    }
-
-    if (this.canceled || gen !== this.generation) {
-      throw new CanceledError();
     }
 
     const rawText = transcription.text.trim();
@@ -328,7 +373,6 @@ export class Pipeline {
       llmProviderType: this.deps.llmProvider.constructor.name,
     });
 
-    // Skip garbage detection when LLM enhancement is disabled (Whisper-only mode)
     if (this.deps.llmProvider instanceof NoopProvider) {
       const processingTimeMs = Number((performance.now() - processingStartTime).toFixed(1));
       slog.info("LLM enhancement disabled", { processingTimeMs });
@@ -340,10 +384,20 @@ export class Pipeline {
     }
 
     slog.info("Checking for garbage transcription");
-    if (!rawText || isGarbageTranscription(rawText)) {
-      slog.info("Transcription rejected as empty or garbage");
+    const garbageReason = rawText ? detectGarbage(rawText) : "short";
+
+    if (garbageReason) {
+      if (garbageReason === "loop") {
+        const retried = await this.retryWithTemperature(recording, gen);
+        if (retried !== null) {
+          return this.processFromTranscription(retried, recording, gen);
+        }
+      }
+
+      slog.info("Transcription rejected as garbage", { reason: garbageReason });
       this.deps.analytics?.track("transcription_garbage_detected", {
         whisper_model: this.whisperModelName,
+        reason: garbageReason,
       });
       if (audioDurationMs > GARBAGE_AUDIO_THRESHOLD_MS) {
         this.deps.onFailure?.({
@@ -362,6 +416,51 @@ export class Pipeline {
     }
 
     return this.processFromTranscription(rawText, recording, gen);
+  }
+
+  private async retryWithTemperature(
+    recording: RecordingResult,
+    gen: number,
+  ): Promise<string | null> {
+    for (let i = 0; i < LOOP_RETRY_TEMPERATURES.length; i++) {
+      const temp = LOOP_RETRY_TEMPERATURES[i];
+      const attempt = i + 2;
+      const skipPrompt = i === LOOP_RETRY_TEMPERATURES.length - 1;
+      slog.info("Retrying transcription to break hallucination loop", {
+        attempt, temperature: temp, skipPrompt,
+      });
+      this.deps.analytics?.track("transcription_loop_retry", {
+        whisper_model: this.whisperModelName,
+        attempt,
+        temperature: temp,
+        skip_prompt: skipPrompt,
+      });
+
+      try {
+        const retryResult = await this.runTranscription(recording, gen, { temperature: temp, skipPrompt });
+        const retryText = retryResult.text.trim();
+
+        if (!retryText) continue;
+        const retryReason = detectGarbage(retryText);
+
+        if (!retryReason) {
+          slog.info("Retry succeeded", { attempt, temperature: temp, skipPrompt });
+          this.deps.analytics?.track("transcription_loop_retry_succeeded", {
+            attempt, temperature: temp, skip_prompt: skipPrompt,
+          });
+          this.heldTranscription = retryText;
+          return retryText;
+        }
+
+        slog.info("Retry still garbage", { attempt, temperature: temp, reason: retryReason });
+      } catch (err: unknown) {
+        if (err instanceof CanceledError) throw err;
+        slog.warn("Retry transcription failed", { attempt, error: err instanceof Error ? err.message : err });
+      }
+    }
+
+    slog.info("All retry attempts failed, giving up");
+    return null;
   }
 
   private async processFromTranscription(
