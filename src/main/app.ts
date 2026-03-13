@@ -236,9 +236,8 @@ app.whenReady().then(async () => {
   const initialConfig = configManager.load();
   nativeTheme.themeSource = initialConfig.theme;
 
-  if (initialConfig.showInDock) {
-    await app.dock?.show();
-  } else {
+  await app.dock?.show();
+  if (!initialConfig.showInDock) {
     app.dock?.hide();
   }
   setHideOnBlur(initialConfig.hideOnBlur);

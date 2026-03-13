@@ -210,6 +210,10 @@
       border-color: var(--color-border);
       background: var(--color-bg-input);
 
+      &:checked::after {
+        display: none;
+      }
+
       &:hover {
         border-color: var(--color-border);
         background: var(--color-bg-input);
