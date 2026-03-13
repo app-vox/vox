@@ -115,29 +115,29 @@ describe("AudioPersistence", () => {
   });
 
   describe("deleteAudioFile", () => {
-    it("should delete an existing file", () => {
-      vi.mocked(fs.existsSync).mockReturnValue(true);
+    it("should delete an existing file", async () => {
+      vi.mocked(fs.promises.access).mockResolvedValue(undefined);
 
-      deleteAudioFile("/mock/userData/audio/test.wav");
+      await deleteAudioFile("/mock/userData/audio/test.wav");
 
-      expect(fs.unlinkSync).toHaveBeenCalledWith("/mock/userData/audio/test.wav");
+      expect(fs.promises.unlink).toHaveBeenCalledWith("/mock/userData/audio/test.wav");
     });
 
-    it("should not attempt to delete a missing file", () => {
-      vi.mocked(fs.existsSync).mockReturnValue(false);
+    it("should not attempt to delete a missing file", async () => {
+      vi.mocked(fs.promises.access).mockRejectedValue(
+        Object.assign(new Error("ENOENT"), { code: "ENOENT" }),
+      );
 
-      deleteAudioFile("/mock/userData/audio/missing.wav");
+      await deleteAudioFile("/mock/userData/audio/missing.wav");
 
-      expect(fs.unlinkSync).not.toHaveBeenCalled();
+      expect(fs.promises.unlink).not.toHaveBeenCalled();
     });
 
-    it("should not throw when unlinkSync fails", () => {
-      vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.unlinkSync).mockImplementation(() => {
-        throw new Error("permission denied");
-      });
+    it("should not throw when unlink fails", async () => {
+      vi.mocked(fs.promises.access).mockResolvedValue(undefined);
+      vi.mocked(fs.promises.unlink).mockRejectedValue(new Error("permission denied"));
 
-      expect(() => deleteAudioFile("/mock/userData/audio/test.wav")).not.toThrow();
+      await expect(deleteAudioFile("/mock/userData/audio/test.wav")).resolves.toBeUndefined();
     });
   });
 

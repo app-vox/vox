@@ -32,14 +32,15 @@ export async function saveAudioFile(
   return filePath;
 }
 
-export function deleteAudioFile(filePath: string): void {
+export async function deleteAudioFile(filePath: string): Promise<void> {
   try {
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-      slog.info("Audio deleted", { filePath });
-    }
+    await fs.promises.access(filePath);
+    await fs.promises.unlink(filePath);
+    slog.info("Audio deleted", { filePath });
   } catch (err) {
-    slog.warn("Failed to delete audio file", { filePath, error: err });
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") {
+      slog.warn("Failed to delete audio file", { filePath, error: err });
+    }
   }
 }
 
