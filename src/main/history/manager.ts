@@ -119,7 +119,18 @@ export class HistoryManager {
 
   private getAllEntries(): TranscriptionEntry[] {
     if (this._cache === null) {
-      this._cache = this.store.get("entries", []);
+      const raw = this.store.get("entries", []) as Array<TranscriptionEntry & { recording?: unknown }>;
+      let needsCleanup = false;
+      for (const e of raw) {
+        if ("recording" in e) {
+          delete (e as unknown as Record<string, unknown>).recording;
+          needsCleanup = true;
+        }
+      }
+      this._cache = raw as TranscriptionEntry[];
+      if (needsCleanup) {
+        this.store.set("entries", this._cache);
+      }
     }
     return this._cache;
   }

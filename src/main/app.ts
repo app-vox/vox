@@ -2,7 +2,6 @@ import { app, BrowserWindow, ipcMain, nativeTheme, session, dialog, shell } from
 import * as path from "path";
 import { readFileSync } from "fs";
 import { join } from "path";
-import v8 from "v8";
 import { ConfigManager } from "./config/manager";
 import { createSecretStore } from "./config/secrets";
 import { ModelManager } from "./models/manager";
@@ -27,11 +26,6 @@ import { AnalyticsService } from "./analytics/service";
 import { setupAnalyticsErrorCapture } from "./logger";
 import log from "./logger";
 import { saveAudioFile, cleanupOrphanedAudioFiles, getAudioFilePath } from "./audio/persistence";
-
-// Raise V8 old-generation heap limit before any large allocations.
-// The default (~1.5 GB) is too small for dev mode; setFlagsFromString
-// updates the limit at runtime and takes effect on the next GC cycle.
-v8.setFlagsFromString("--max_old_space_size=4096");
 
 log.initialize();
 const slog = log.scope("Vox");
@@ -100,8 +94,9 @@ function setupPipeline(): void {
           const status = result.llmFailed ? "llm_failed" as const : "success" as const;
 
           const entry = historyManager.add({
-            ...result,
             text: finalText,
+            originalText: result.originalText,
+            audioDurationMs: result.audioDurationMs,
             wordCount: finalText.split(/\s+/).filter(Boolean).length,
             whisperModel: config.whisper.model || "unknown",
             llmEnhanced: config.enableLlmEnhancement,
