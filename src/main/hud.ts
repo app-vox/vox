@@ -17,7 +17,7 @@ const TEXT_PANEL_MAX_HEIGHT = 160;
 
 function getPreviewPanelWidth(): number {
   const display = screen.getPrimaryDisplay();
-  return Math.round(display.workArea.width * 0.4);
+  return Math.round(display.workArea.width * 0.35);
 }
 
 function getExpandedWinWidth(): number {
@@ -27,6 +27,15 @@ function getExpandedWinWidth(): number {
 
 function getExpandedWinHeight(): number {
   return WIN_HEIGHT + TEXT_PANEL_GAP + TEXT_PANEL_MAX_HEIGHT + 20;
+}
+
+/** Clamp x so the window stays within the work area */
+function clampX(x: number, width: number): number {
+  const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+  const workArea = display.workArea;
+  const minX = workArea.x;
+  const maxX = workArea.x + workArea.width - width;
+  return Math.max(minX, Math.min(x, maxX));
 }
 
 export type HudState = "idle" | "initializing" | "listening" | "transcribing" | "enhancing" | "error" | "canceled" | "warning";
@@ -1494,7 +1503,7 @@ export class HudWindow {
     const bounds = this.window.getBounds();
     const centerX = bounds.x + bounds.width / 2;
     this.window.setBounds({
-      x: Math.round(centerX - expandedW / 2),
+      x: clampX(Math.round(centerX - expandedW / 2), expandedW),
       y: bounds.y,
       width: expandedW,
       height: getExpandedWinHeight(),
@@ -1520,7 +1529,7 @@ export class HudWindow {
     const bounds = this.window.getBounds();
     const centerX = bounds.x + bounds.width / 2;
     this.window.setBounds({
-      x: Math.round(centerX - expandedW / 2),
+      x: clampX(Math.round(centerX - expandedW / 2), expandedW),
       y: bounds.y,
       width: expandedW,
       height: getExpandedWinHeight(),
