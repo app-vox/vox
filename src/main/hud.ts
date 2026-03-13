@@ -17,7 +17,7 @@ const TEXT_PANEL_MAX_HEIGHT = 160;
 
 function getPreviewPanelWidth(): number {
   const display = screen.getPrimaryDisplay();
-  return Math.round(display.workArea.width * 0.35);
+  return Math.round(display.workArea.width * 0.3);
 }
 
 function getExpandedWinWidth(): number {
@@ -29,12 +29,13 @@ function getExpandedWinHeight(): number {
   return WIN_HEIGHT + TEXT_PANEL_GAP + TEXT_PANEL_MAX_HEIGHT + 20;
 }
 
-/** Clamp x so the window stays within the work area */
+/** Clamp x so the window (including shadow) stays within the work area */
 function clampX(x: number, width: number): number {
   const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
   const workArea = display.workArea;
-  const minX = workArea.x;
-  const maxX = workArea.x + workArea.width - width;
+  const shadowMargin = 16;
+  const minX = workArea.x + shadowMargin;
+  const maxX = workArea.x + workArea.width - width - shadowMargin;
   return Math.max(minX, Math.min(x, maxX));
 }
 
@@ -579,20 +580,21 @@ function buildHudHtml(): string {
     100% { opacity: 1; transform: translateY(0); }
   }
 
-  .tp-cursor {
-    display: inline-block;
-    width: 1.5px;
-    height: 13px;
-    background: rgba(255,170,0,0.7);
-    margin-left: 1px;
+  .tp-mic {
+    display: inline-flex;
+    align-items: center;
     vertical-align: middle;
-    animation: tpBlink 0.8s step-end infinite;
+    margin-left: 3px;
+    opacity: 0.6;
+    animation: micBreathe 1.6s ease-in-out infinite;
   }
-  .tp-cursor.hidden { display: none; }
+  .tp-mic.hidden { display: none; }
+  .tp-mic.no-anim { animation: none; }
+  .tp-mic svg { width: 11px; height: 11px; }
 
-  @keyframes tpBlink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
+  @keyframes micBreathe {
+    0%, 100% { opacity: 0.4; transform: scale(0.92); }
+    50% { opacity: 0.75; transform: scale(1.05); }
   }
 
   .text-content.enhancing {
@@ -663,7 +665,7 @@ function buildHudHtml(): string {
   </div>
   <div class="text-panel" id="text-panel">
     <div class="text-content" id="text-content"></div>
-    <span class="tp-cursor hidden" id="tp-cursor"></span>
+    <span class="tp-mic hidden" id="tp-mic"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></span>
   </div>
 </div>
 <script>
@@ -1114,6 +1116,7 @@ function playAttention() {
 }
 
 function setPerformanceFlags(reduceAnimations, reduceEffects) {
+  tpReduceAnim = reduceAnimations;
   var id = 'perf-overrides';
   var existing = document.getElementById(id);
   if (existing) existing.remove();
@@ -1137,15 +1140,18 @@ function setPerformanceFlags(reduceAnimations, reduceEffects) {
 // --- Text Panel ---
 var tpPanel = document.getElementById('text-panel');
 var tpContent = document.getElementById('text-content');
-var tpCursor = document.getElementById('tp-cursor');
+var tpMic = document.getElementById('tp-mic');
 var tpTypingTimer = null;
+var tpLastText = '';
+var tpReduceAnim = false;
 
 function showTextPanel(text) {
   clearTextPanelTimers();
+  tpLastText = text;
   tpContent.innerHTML = '';
   tpContent.classList.remove('enhancing');
-  tpCursor.className = 'tp-cursor';
-  tpContent.appendChild(tpCursor);
+  tpMic.className = tpReduceAnim ? 'tp-mic no-anim' : 'tp-mic';
+  tpContent.appendChild(tpMic);
   document.documentElement.style.height = '${getExpandedWinHeight()}px';
   document.body.style.height = '${getExpandedWinHeight()}px';
   document.body.style.overflow = 'visible';
@@ -1157,22 +1163,24 @@ function showTextPanel(text) {
     var span = document.createElement('span');
     span.className = 'word';
     span.textContent = words[i] + ' ';
-    tpContent.insertBefore(span, tpCursor);
+    tpContent.insertBefore(span, tpMic);
   }
   tpPanel.scrollTop = tpPanel.scrollHeight;
 }
 
 function updateTextPanel(text) {
+  if (text === tpLastText) return;
+  tpLastText = text;
   if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
   tpContent.innerHTML = '';
-  tpCursor.className = 'tp-cursor';
-  tpContent.appendChild(tpCursor);
+  tpMic.className = tpReduceAnim ? 'tp-mic no-anim' : 'tp-mic';
+  tpContent.appendChild(tpMic);
   var words = text.split(/\\s+/).filter(function(w) { return w.length > 0; });
   for (var i = 0; i < words.length; i++) {
     var span = document.createElement('span');
     span.className = 'word';
     span.textContent = words[i] + ' ';
-    tpContent.insertBefore(span, tpCursor);
+    tpContent.insertBefore(span, tpMic);
   }
   tpPanel.scrollTop = tpPanel.scrollHeight;
 }
@@ -1180,19 +1188,21 @@ function updateTextPanel(text) {
 var tpShuffleTimer = null;
 
 function startEnhancingEffect() {
-  tpCursor.className = 'tp-cursor hidden';
+  tpMic.className = 'tp-mic hidden';
   tpPanel.classList.add('morph-border');
   tpContent.classList.add('enhancing');
-  var wordEls = tpContent.querySelectorAll('.word');
-  var idx = 0;
-  function addShuffleNext() {
-    if (idx >= wordEls.length) return;
-    wordEls[idx].classList.add('shuffling');
-    wordEls[idx].style.animationDelay = (Math.random() * 0.6).toFixed(2) + 's';
-    idx++;
-    tpShuffleTimer = setTimeout(addShuffleNext, 30);
+  if (!tpReduceAnim) {
+    var wordEls = tpContent.querySelectorAll('.word');
+    var idx = 0;
+    function addShuffleNext() {
+      if (idx >= wordEls.length) return;
+      wordEls[idx].classList.add('shuffling');
+      wordEls[idx].style.animationDelay = (Math.random() * 0.6).toFixed(2) + 's';
+      idx++;
+      tpShuffleTimer = setTimeout(addShuffleNext, 30);
+    }
+    addShuffleNext();
   }
-  addShuffleNext();
 }
 
 function stopEnhancingEffect() {
@@ -1207,6 +1217,7 @@ function stopEnhancingEffect() {
 
 function hideTextPanel() {
   if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
+  tpLastText = '';
   doHideTextPanel();
 }
 
@@ -1220,8 +1231,8 @@ function doHideTextPanel() {
     tpPanel.className = 'text-panel';
     tpContent.innerHTML = '';
     tpContent.classList.remove('enhancing');
-    tpCursor.className = 'tp-cursor hidden';
-    tpContent.appendChild(tpCursor);
+    tpMic.className = 'tp-mic hidden';
+    tpContent.appendChild(tpMic);
     document.documentElement.style.height = '${WIN_HEIGHT}px';
     document.body.style.height = '${WIN_HEIGHT}px';
     document.body.style.overflow = 'hidden';
