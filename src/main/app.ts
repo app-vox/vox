@@ -269,13 +269,13 @@ app.whenReady().then(async () => {
   historyManager.cleanup();
 
   // Clean up orphaned audio files
-  const allEntries = historyManager.get(0, 999999).entries;
   const validIds = new Set(
-    allEntries
-      .filter((e) => e.audioFilePath)
-      .map((e) => e.id)
+    historyManager.getAllEntryIds().filter((id) => {
+      const entry = historyManager.getEntry(id);
+      return !!entry?.audioFilePath;
+    }),
   );
-  cleanupOrphanedAudioFiles(validIds);
+  await cleanupOrphanedAudioFiles(validIds);
 
   const hasAccessibility = isAccessibilityGranted();
   if (!hasAccessibility && initialConfig.onboardingCompleted) {
