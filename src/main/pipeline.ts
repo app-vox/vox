@@ -57,49 +57,27 @@ export interface PipelineDeps {
   }) => void;
 }
 
-/**
- * Common hallucinations that Whisper generates with silence or noise.
- * These are phrases Whisper "hears" when there's no actual speech.
- */
 const COMMON_HALLUCINATIONS = [
-  // English
   "thank you", "thanks for watching", "thank you for watching",
   "bye", "goodbye", "see you", "see you next time",
   "subscribe", "like and subscribe",
-  // Short filler noise
   "you", "uh", "um", "hmm", "ah", "oh",
-  // Common YouTube outro phrases
   "thanks", "bye bye",
-  // Well-known whisper.cpp silence hallucinations
   "thank you so much", "thank you very much",
   "thanks for listening", "thanks for watching this video",
   "please subscribe", "please like and subscribe",
   "i'll see you in the next video", "see you in the next one",
   "i hope you enjoyed", "i hope you enjoyed this video",
   "the end", "...",
-  // Whisper.cpp noise artifacts
   "so", "okay", "ok", "yeah", "yes", "no", "right",
   "well", "like", "just", "actually",
-  // Chinese/Japanese common hallucinations
   "\u5b57\u5e55\u7f51", "\u5b57\u5e55\u7ec4", "\u5b57\u5e55\u7531",
   "\u00e0 bient\u00f4t", "merci",
-  // Subtitle watermarks
   "amara.org", "subtitles by",
   "subtitles by the amara.org community",
   "copyright", "all rights reserved",
 ];
 
-/**
- * Detect non-speech Whisper output caused by background noise.
- * Returns a reason string if garbage, or null if the text looks legitimate.
- *
- * Whisper hallucinates in several ways with noise:
- * 1. Repetitive characters/tokens (e.g. "ლლლლლლ")
- * 2. Sound descriptions in brackets/parens (e.g. "(drill whirring)", "[BLANK_AUDIO]")
- * 3. Common phrases it "hears" in silence (e.g. "thank you", "bye")
- * 4. Very short transcriptions (likely noise, not speech)
- * 5. Hallucination loops — the same sentence or phrase repeated many times
- */
 export function detectGarbage(text: string): GarbageReason | null {
   const normalized = text.toLowerCase().trim();
 
@@ -142,7 +120,6 @@ const MIN_NGRAM_SIZE = 3;
 const NGRAM_DOMINANCE_RATIO = 0.5;
 
 function hasRepetitivePattern(text: string): boolean {
-  // Layer 1: Sentence-level repetition detection
   const sentences = text
     .split(/[.!?]+/)
     .map((s) => s.trim())
@@ -163,7 +140,6 @@ function hasRepetitivePattern(text: string): boolean {
     }
   }
 
-  // Layer 2: N-gram repetition detection
   const words = text.split(/\s+/).filter((w) => w.length > 0);
   if (words.length < MIN_NGRAM_SIZE * MIN_SENTENCE_REPEATS) return false;
 
@@ -397,7 +373,6 @@ export class Pipeline {
       llmProviderType: this.deps.llmProvider.constructor.name,
     });
 
-    // Skip garbage detection when LLM enhancement is disabled (Whisper-only mode)
     if (this.deps.llmProvider instanceof NoopProvider) {
       const processingTimeMs = Number((performance.now() - processingStartTime).toFixed(1));
       slog.info("LLM enhancement disabled", { processingTimeMs });
@@ -412,7 +387,6 @@ export class Pipeline {
     const garbageReason = rawText ? detectGarbage(rawText) : "short";
 
     if (garbageReason) {
-      // For hallucination loops, retry with increasing temperature to break the loop
       if (garbageReason === "loop") {
         const retried = await this.retryWithTemperature(recording, gen);
         if (retried !== null) {
@@ -451,9 +425,6 @@ export class Pipeline {
     for (let i = 0; i < LOOP_RETRY_TEMPERATURES.length; i++) {
       const temp = LOOP_RETRY_TEMPERATURES[i];
       const attempt = i + 2;
-      // Last attempt: drop dictionary/language prompt entirely to avoid
-      // prompt-anchored loops (e.g. "Transcribe" in the base prompt leaking
-      // into the hallucination as "Transcribe em estático" repeated)
       const skipPrompt = i === LOOP_RETRY_TEMPERATURES.length - 1;
       slog.info("Retrying transcription to break hallucination loop", {
         attempt, temperature: temp, skipPrompt,

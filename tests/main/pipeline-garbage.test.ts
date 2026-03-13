@@ -17,14 +17,6 @@ vi.mock("fs", () => ({
   existsSync: vi.fn().mockReturnValue(true),
 }));
 
-/**
- * Tests for the garbage/hallucination detection logic in Pipeline.
- *
- * Whisper commonly hallucinates phrases when fed silence or background noise.
- * The pipeline filters these out before sending to the LLM provider.
- * These tests ensure the filter works correctly without being coupled to
- * implementation details — they test through the public stopAndProcess API.
- */
 describe("Pipeline garbage/hallucination detection", () => {
   const mockProvider: LlmProvider = {
     correct: vi.fn().mockResolvedValue("corrected"),
@@ -125,7 +117,6 @@ describe("Pipeline garbage/hallucination detection", () => {
     });
 
     it("should reject long text with very low character diversity", async () => {
-      // 20+ chars but only 2 distinct characters
       const pipeline = createPipeline("ababababababababababab");
       await pipeline.startRecording();
       const result = await pipeline.stopAndProcess();
@@ -192,7 +183,6 @@ describe("Pipeline garbage/hallucination detection", () => {
     it("should retry with higher temperature when loop detected, and succeed on retry", async () => {
       const loopText = "Please subscribe to our channel. ".repeat(10).trim();
       const goodText = "I need to schedule a meeting for tomorrow";
-      // First call returns loop, second call (retry with temp 0.4) returns good text
       const pipeline = createPipeline([loopText, goodText]);
       await pipeline.startRecording();
       const result = await pipeline.stopAndProcess();
@@ -204,7 +194,6 @@ describe("Pipeline garbage/hallucination detection", () => {
     it("should retry up to 2 times with increasing temperature", async () => {
       const loopText = "Please subscribe to our channel. ".repeat(10).trim();
       const goodText = "The meeting is at three PM in the conference room";
-      // First call: loop, second call (temp 0.4): still loop, third call (temp 0.8): success
       const pipeline = createPipeline([loopText, loopText, goodText]);
       await pipeline.startRecording();
       const result = await pipeline.stopAndProcess();
@@ -215,7 +204,6 @@ describe("Pipeline garbage/hallucination detection", () => {
 
     it("should give up after all retries fail and return empty", async () => {
       const loopText = "Please subscribe to our channel. ".repeat(10).trim();
-      // All 3 calls (original + 2 retries) return garbage
       const pipeline = createPipeline([loopText, loopText, loopText]);
       await pipeline.startRecording();
       const result = await pipeline.stopAndProcess();
@@ -241,7 +229,6 @@ describe("Pipeline garbage/hallucination detection", () => {
       await pipeline.startRecording();
       await pipeline.stopAndProcess();
 
-      // Should only be called once (no retries for known hallucinations)
       expect(transcribeFn).toHaveBeenCalledTimes(1);
     });
 
@@ -279,8 +266,6 @@ describe("Pipeline garbage/hallucination detection", () => {
 
   describe("real-world regression cases", () => {
     it("should catch the exact Whisper output from the 81-second hallucination loop", async () => {
-      // Real output from whisper.cpp medium model on an 81-second Portuguese audio
-      // recording. The model latched onto "Transcribe" from the prompt and looped.
       const realWhisperOutput = "Transcribe em estático. ".repeat(28).trim();
       const pipeline = createPipeline(realWhisperOutput);
       await pipeline.startRecording();
