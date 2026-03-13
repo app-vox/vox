@@ -167,7 +167,7 @@ export interface VoxAPI {
     track(event: string, properties?: Record<string, unknown>): Promise<void>;
   };
   tts: {
-    test(apiKey: string, voiceId: string): Promise<boolean>;
+    test(apiKey: string, voiceId: string): Promise<{ success: boolean; error?: string }>;
   };
 }
 

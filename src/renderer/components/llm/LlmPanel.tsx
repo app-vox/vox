@@ -507,6 +507,7 @@ export function LlmPanel() {
                   {t("tts.learnMore")}
                   <ExternalLinkIcon width={12} height={12} />
                 </button>
+                {/* eslint-disable-next-line i18next/no-literal-string */}
                 <span style={{ color: "var(--color-text-muted)", fontSize: "var(--font-size-sm)" }}>
                   •
                 </span>
