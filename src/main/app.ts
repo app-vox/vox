@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeTheme, session, dialog, shell } from "electron";
+import { app, BrowserWindow, ipcMain, nativeImage, nativeTheme, session, dialog, shell } from "electron";
 import * as path from "path";
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -420,7 +420,10 @@ app.whenReady().then(async () => {
 
   await app.dock?.show();
   if (!app.isPackaged) {
-    app.dock?.setIcon(path.join(app.getAppPath(), "build", "icon-dev.icns"));
+    const devDockIcon = nativeImage.createFromPath(join(app.getAppPath(), "resources", "dockIcon-dev.png"));
+    if (!devDockIcon.isEmpty()) {
+      app.dock?.setIcon(devDockIcon);
+    }
   }
   if (!initialConfig.showInDock) {
     app.dock?.hide();

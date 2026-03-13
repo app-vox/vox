@@ -112,6 +112,7 @@
       "out{,/**/*}",
       "resources{,/**/*}",
       "!resources/trayIcon-dev.png",
+      "!resources/dockIcon-dev.png",
       "node_modules/**/*",
       "!node_modules/*/{CHANGELOG.md,README.md,readme.md}"
     ],
@@ -122,7 +123,8 @@
     ],
     "extraResources": [
       "resources{,/**/*}",
-      "!resources/trayIcon-dev.png"
+      "!resources/trayIcon-dev.png",
+      "!resources/dockIcon-dev.png"
     ],
     "publish": {
       "provider": "github",
