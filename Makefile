@@ -24,4 +24,4 @@ run:
 
 dev:
 	npm install
-	NODE_OPTIONS="--max-old-space-size=4096" npm run dev
+	npm run dev

@@ -25,7 +25,7 @@ import { getLlmModelName } from "../shared/llm-utils";
 import { AnalyticsService } from "./analytics/service";
 import { setupAnalyticsErrorCapture } from "./logger";
 import log from "./logger";
-import { saveAudioFileInWorker, cleanupOrphanedAudioFiles, getAudioFilePath } from "./audio/persistence";
+import { saveAudioFile, cleanupOrphanedAudioFiles, getAudioFilePath } from "./audio/persistence";
 
 log.initialize();
 const slog = log.scope("Vox");
@@ -109,7 +109,9 @@ function setupPipeline(): void {
           if (latestConfig.audioRetentionCount > 0) {
             const audioFilePath = getAudioFilePath(entry.id);
             historyManager.updateEntry(entry.id, { audioFilePath });
-            saveAudioFileInWorker(result.recording.audioBuffer, result.recording.sampleRate, entry.id);
+            saveAudioFile(result.recording.audioBuffer, result.recording.sampleRate, entry.id).catch((err) =>
+              slog.warn("Failed to save audio file", err),
+            );
           }
 
           historyManager.enforceAudioRetention(latestConfig.audioRetentionCount);
@@ -143,7 +145,9 @@ function setupPipeline(): void {
           if (latestConfig.audioRetentionCount > 0) {
             const audioFilePath = getAudioFilePath(entry.id);
             historyManager.updateEntry(entry.id, { audioFilePath });
-            saveAudioFileInWorker(result.recording.audioBuffer, result.recording.sampleRate, entry.id);
+            saveAudioFile(result.recording.audioBuffer, result.recording.sampleRate, entry.id).catch((err) =>
+              slog.warn("Failed to save audio file", err),
+            );
           }
 
           historyManager.enforceAudioRetention(latestConfig.audioRetentionCount);
