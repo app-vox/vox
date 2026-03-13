@@ -118,8 +118,9 @@ export class ShortcutManager {
   private devModelOverride: boolean | null = null;
   private lastUnpastedText: string | null = null;
   private liveTranscriptionTimer: ReturnType<typeof setTimeout> | null = null;
-  private livePreviewText = "";
   private lastSnapshotText = "";
+  // How often to re-transcribe the full audio buffer during live preview
+  private static readonly LIVE_PREVIEW_INTERVAL_MS = 3000;
   private isShiftHeld = false;
   private shiftAlone = false;
   private shiftTrackingActive = false;
@@ -1073,7 +1074,7 @@ export class ShortcutManager {
 
     let hudEndState: "idle" | "error" | "canceled" | "warning" = "idle";
     try {
-      const hint = this.livePreviewText;
+      const hint = this.lastSnapshotText;
       const text = hint
         ? await pipeline.stopAndProcessWithHint(hint)
         : await pipeline.stopAndProcess();
@@ -1156,7 +1157,6 @@ export class ShortcutManager {
 
   private startLiveTranscription(pipeline: Pipeline, gen: number): void {
     this.stopLiveTranscription();
-    this.livePreviewText = "";
     this.lastSnapshotText = "";
     let running = false;
     this.hud.showTextPanelEmpty();
@@ -1164,6 +1164,7 @@ export class ShortcutManager {
     const tick = async (): Promise<void> => {
       if (gen !== this.recordingGeneration) return;
       if (running) {
+        // Previous transcription still in progress — retry shortly
         this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 300);
         return;
       }
@@ -1172,17 +1173,8 @@ export class ShortcutManager {
         const text = await pipeline.snapshotAndTranscribe();
         if (gen !== this.recordingGeneration) return;
         if (text) {
-          const newWords = this.extractNewPreviewWords(text, this.lastSnapshotText);
           this.lastSnapshotText = text;
-          if (newWords) {
-            this.livePreviewText = this.livePreviewText
-              ? `${this.livePreviewText} ${newWords}`
-              : newWords;
-            this.hud.updateTextPanel(this.livePreviewText);
-          } else if (!this.livePreviewText) {
-            this.livePreviewText = text;
-            this.hud.updateTextPanel(this.livePreviewText);
-          }
+          this.hud.updateTextPanel(text);
         }
       } catch {
         // Ignore errors during live transcription
@@ -1190,30 +1182,17 @@ export class ShortcutManager {
         running = false;
       }
       if (gen !== this.recordingGeneration) return;
-      this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 800);
+      this.liveTranscriptionTimer = setTimeout(
+        () => { tick(); },
+        ShortcutManager.LIVE_PREVIEW_INTERVAL_MS,
+      );
     };
 
-    // First snapshot after 500ms of recording
-    this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 500);
-  }
-
-  /**
-   * Find the words at the end of `newText` that weren't in `prevText`.
-   * Since both are transcriptions of an overlapping audio window, the new
-   * portion is the suffix of newText after the longest shared overlap.
-   */
-  private extractNewPreviewWords(newText: string, prevText: string): string {
-    if (!prevText) return newText;
-    const newWords = newText.trim().split(/\s+/).filter(Boolean);
-    const prevWords = prevText.trim().split(/\s+/).filter(Boolean);
-    let bestOverlap = 0;
-    const minLen = Math.min(prevWords.length, newWords.length);
-    for (let i = 1; i <= minLen; i++) {
-      const prevSuffix = prevWords.slice(prevWords.length - i).join(" ").toLowerCase();
-      const newPrefix = newWords.slice(0, i).join(" ").toLowerCase();
-      if (prevSuffix === newPrefix) bestOverlap = i;
-    }
-    return newWords.slice(bestOverlap).join(" ");
+    // First snapshot after half the interval so the first result is faster
+    this.liveTranscriptionTimer = setTimeout(
+      () => { tick(); },
+      Math.round(ShortcutManager.LIVE_PREVIEW_INTERVAL_MS / 2),
+    );
   }
 
   private stopLiveTranscription(): void {
@@ -1221,7 +1200,6 @@ export class ShortcutManager {
       clearTimeout(this.liveTranscriptionTimer);
       this.liveTranscriptionTimer = null;
     }
-    this.livePreviewText = "";
     this.lastSnapshotText = "";
   }
 }
