@@ -1077,7 +1077,7 @@ export class ShortcutManager {
         this.playCue(errorCueType);
         hudEndState = "error";
       } else {
-        slog.info("Valid text received, proceeding with paste");
+        slog.info("Valid text received, proceeding with %s", config.copyToClipboard ? "paste" : "injection");
         await new Promise((r) => setTimeout(r, 200));
         const pasteConfig = this.deps.configManager.load();
         const forceCapitalize = this.isShiftHeld && this.shiftAlone && pasteConfig.shiftCapitalize && pasteConfig.lowercaseStart;

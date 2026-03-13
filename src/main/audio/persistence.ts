@@ -99,14 +99,23 @@ export function saveAudioFileInWorker(
     eval: true,
     workerData: { sampleBuf: transferable, sampleRate, dir, filePath, normTarget: NORM_TARGET },
     transferList: [transferable as ArrayBuffer],
+    // Strip --inspect flags inherited from the parent so each worker doesn't
+    // spin up its own V8 inspector session (saves ~50 MB per recording in dev).
+    execArgv: [],
+    // Hard cap on the worker's heap so a large recording can't balloon unbounded.
+    resourceLimits: { maxOldGenerationSizeMb: 128 },
   });
 
-  worker.on("message", (msg: unknown) => {
+  // Use once() + explicit terminate() so the worker's V8 isolate is freed
+  // immediately after it reports completion, not left to GC timing.
+  worker.once("message", (msg: unknown) => {
+    void worker.terminate();
     if (msg && typeof msg === "object" && "error" in msg) {
       slog.warn("Worker audio save failed", { filePath, error: (msg as { error: string }).error });
     }
   });
-  worker.on("error", (err: Error) => {
+  worker.once("error", (err: Error) => {
+    void worker.terminate();
     slog.warn("Worker audio save failed", { filePath, error: err.message });
   });
 }
