@@ -277,6 +277,20 @@ describe("Pipeline garbage/hallucination detection", () => {
     });
   });
 
+  describe("real-world regression cases", () => {
+    it("should catch the exact Whisper output from the 81-second hallucination loop", async () => {
+      // Real output from whisper.cpp medium model on an 81-second Portuguese audio
+      // recording. The model latched onto "Transcribe" from the prompt and looped.
+      const realWhisperOutput = "Transcribe em estático. ".repeat(28).trim();
+      const pipeline = createPipeline(realWhisperOutput);
+      await pipeline.startRecording();
+      const result = await pipeline.stopAndProcess();
+
+      expect(result).toBe("");
+      expect(mockProvider.correct).not.toHaveBeenCalled();
+    });
+  });
+
   describe("valid transcriptions should pass", () => {
     it("should allow normal speech through to LLM", async () => {
       const pipeline = createPipeline("I need to schedule a meeting for tomorrow");

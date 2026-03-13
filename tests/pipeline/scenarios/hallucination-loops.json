@@ -1,0 +1,10 @@
+[
+  {
+    "id": "hallucination-loops-001",
+    "description": "81-second Portuguese audio that triggers a repetitive hallucination loop on the medium model",
+    "spokenText": "Já que você já está mostrando o texto, conforme for falando, na hora de transcrever, ele tem que ficar estático, sabe? Você pode ir fazendo uma mudança ou outra, mas ele não tem que mudar muito do que eu falei, sabe? É meio que é isso. E na hora de fazer o enhancing, se você puder fazer o enhancing antes de mostrar a apresentação para a pessoa, tipo, sem alterar nada do display, tá? Tipo assim, você pode até voltar para o estado idle, né, do heads-up display, sem problemas, mas a caixa de texto tem que fazer o morfado primeiro, né, o morfil, sei lá, como é que fala. E depois ele ingeta. Mas assim, coisa rápida assim também. Você pode até, inclusive, na hora de trocar para o enhancing, você pode meio fazer um efeito de ativar e desativar o blur lentamente para a pessoa entender que já está melhorando aquele texto, sabe? Tipo isso, porque transcrever já não dá mais, porque acabou a possibilidade de transcrever nessa parte do processo, certo? Então não precisa mais. E se o escape acontecer, no caso de cancelar a operação, daí não precisa de mais nada mesmo, né? É só cancelar e foda-se. Mas é só isso mesmo, beleza? Vamos lá, bora.",
+    "audioFile": "hallucination-loops/001.wav",
+    "expectedBehavior": "garbage_detected",
+    "notes": "Whisper medium model produces 'Transcribe em estático.' repeated 28 times instead of actual transcription. The detectGarbage function should catch the repetition pattern."
+  }
+]
