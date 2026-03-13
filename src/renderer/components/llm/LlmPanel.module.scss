@@ -25,6 +25,35 @@
       background: color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-input));
     }
   }
+
+  &.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+
+    &:hover {
+      border-color: var(--color-border);
+      background: var(--color-bg-input);
+    }
+  }
+
+  &.shake {
+    animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+  }
+}
+
+@keyframes shake {
+  10%, 90% {
+    transform: translateX(-1px);
+  }
+  20%, 80% {
+    transform: translateX(2px);
+  }
+  30%, 50%, 70% {
+    transform: translateX(-3px);
+  }
+  40%, 60% {
+    transform: translateX(3px);
+  }
 }
 
 .enhanceIcon {

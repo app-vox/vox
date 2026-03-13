@@ -8,7 +8,7 @@ import { AnalyticsService } from "./analytics/service";
 import { AudioRecorder } from "./audio/recorder";
 import { transcribe } from "./audio/whisper";
 import { createLlmProvider } from "./llm/factory";
-import { computeLlmConfigHash } from "../shared/llm-config-hash";
+import { computeLlmConfigHash, computeTtsConfigHash } from "../shared/llm-config-hash";
 import { type VoxConfig, type LlmProviderType, type WhisperModelSize } from "../shared/config";
 import { getResourcePath } from "./resources";
 import { SetupChecker } from "./setup/checker";
@@ -469,10 +469,30 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle("tts:test", async (_event, apiKey: string, voiceId: string) => {
-    if (ttsManager) {
-      return ttsManager.testAndPlay(apiKey, voiceId);
+    try {
+      let result: { success: boolean; error?: string };
+
+      if (ttsManager) {
+        result = await ttsManager.testAndPlay(apiKey, voiceId);
+      } else {
+        const { testConnection } = await import("./tts/elevenlabs");
+        result = await testConnection(apiKey, voiceId);
+      }
+
+      if (result.success) {
+        const config = configManager.load();
+        config.elevenLabsApiKey = apiKey;
+        config.elevenLabsVoiceId = voiceId;
+        config.ttsConnectionTested = true;
+        config.ttsConfigHash = computeTtsConfigHash(config);
+        configManager.save(config);
+        onConfigChange?.();
+      }
+
+      return result;
+    } catch (err: unknown) {
+      log.warn("TTS test failed:", err);
+      return { success: false, error: err instanceof Error ? err.message : "Unknown error" };
     }
-    const { testConnection } = await import("./tts/elevenlabs");
-    return (await testConnection(apiKey, voiceId)) !== null;
   });
 }

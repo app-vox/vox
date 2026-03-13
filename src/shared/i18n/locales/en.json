@@ -532,6 +532,8 @@
   "tts.testError": "Failed to connect to ElevenLabs. Check your API key.",
   "tts.testPlaying": "Playing test audio...",
   "tts.learnMore": "Get your API key at elevenlabs.io",
+  "tts.testRequired": "Test connection before enabling Text-to-Speech",
+  "tts.hudWillBeEnabled": "Enabling TTS will turn on the HUD (always visible on screen) to show the play button",
   "tts.playing": "Reading aloud…",
   "tts.error": "Text-to-speech failed"
 }
