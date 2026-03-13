@@ -118,6 +118,8 @@ export class ShortcutManager {
   private devModelOverride: boolean | null = null;
   private lastUnpastedText: string | null = null;
   private liveTranscriptionTimer: ReturnType<typeof setTimeout> | null = null;
+  private livePreviewText = "";
+  private lastSnapshotText = "";
   private isShiftHeld = false;
   private shiftAlone = false;
   private shiftTrackingActive = false;
@@ -1151,13 +1153,14 @@ export class ShortcutManager {
 
   private startLiveTranscription(pipeline: Pipeline, gen: number): void {
     this.stopLiveTranscription();
+    this.livePreviewText = "";
+    this.lastSnapshotText = "";
     let running = false;
     this.hud.showTextPanelEmpty();
 
     const tick = async (): Promise<void> => {
       if (gen !== this.recordingGeneration) return;
       if (running) {
-        // Previous transcription still in progress, retry soon
         this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 300);
         return;
       }
@@ -1166,7 +1169,17 @@ export class ShortcutManager {
         const text = await pipeline.snapshotAndTranscribe();
         if (gen !== this.recordingGeneration) return;
         if (text) {
-          this.hud.updateTextPanel(text);
+          const newWords = this.extractNewPreviewWords(text, this.lastSnapshotText);
+          this.lastSnapshotText = text;
+          if (newWords) {
+            this.livePreviewText = this.livePreviewText
+              ? `${this.livePreviewText} ${newWords}`
+              : newWords;
+            this.hud.updateTextPanel(this.livePreviewText);
+          } else if (!this.livePreviewText) {
+            this.livePreviewText = text;
+            this.hud.updateTextPanel(this.livePreviewText);
+          }
         }
       } catch {
         // Ignore errors during live transcription
@@ -1181,10 +1194,31 @@ export class ShortcutManager {
     this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 500);
   }
 
+  /**
+   * Find the words at the end of `newText` that weren't in `prevText`.
+   * Since both are transcriptions of an overlapping audio window, the new
+   * portion is the suffix of newText after the longest shared overlap.
+   */
+  private extractNewPreviewWords(newText: string, prevText: string): string {
+    if (!prevText) return newText;
+    const newWords = newText.trim().split(/\s+/).filter(Boolean);
+    const prevWords = prevText.trim().split(/\s+/).filter(Boolean);
+    let bestOverlap = 0;
+    const minLen = Math.min(prevWords.length, newWords.length);
+    for (let i = 1; i <= minLen; i++) {
+      const prevSuffix = prevWords.slice(prevWords.length - i).join(" ").toLowerCase();
+      const newPrefix = newWords.slice(0, i).join(" ").toLowerCase();
+      if (prevSuffix === newPrefix) bestOverlap = i;
+    }
+    return newWords.slice(bestOverlap).join(" ");
+  }
+
   private stopLiveTranscription(): void {
     if (this.liveTranscriptionTimer) {
       clearTimeout(this.liveTranscriptionTimer);
       this.liveTranscriptionTimer = null;
     }
+    this.livePreviewText = "";
+    this.lastSnapshotText = "";
   }
 }

@@ -13,7 +13,8 @@ const WIN_HEIGHT = 120;
 const DOCK_MARGIN = 24;
 const MIN_SCALE = 0.55;
 const TEXT_PANEL_GAP = 4;
-const TEXT_PANEL_MAX_HEIGHT = 160;
+// 3 lines at 11px/1.5 line-height + 24px vertical padding
+const TEXT_PANEL_MAX_HEIGHT = 74;
 
 function getPreviewPanelWidth(): number {
   const display = screen.getPrimaryDisplay();
@@ -561,11 +562,11 @@ function buildHudHtml(): string {
   .text-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
 
   .text-content {
-    font-size: 12px;
-    line-height: 1.6;
+    font-size: 11px;
+    line-height: 1.5;
     color: rgba(255,255,255,0.85);
     font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-    transition: filter 0.15s ease, opacity 0.15s ease;
+    transition: filter 0.25s ease, opacity 0.25s ease;
   }
   .text-content.swapping {
     filter: blur(3px);
@@ -1181,7 +1182,7 @@ function updateTextPanel(text) {
   if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
   if (tpSwapTimer) { clearTimeout(tpSwapTimer); tpSwapTimer = null; }
   tpContent.classList.add('swapping');
-  tpSwapTimer = setTimeout(function() {
+  tpSwapTimer = setTimeout(function() { // wait for blur-out transition
     tpSwapTimer = null;
     tpContent.innerHTML = '';
     tpMic.className = tpReduceAnim ? 'tp-mic no-anim' : 'tp-mic';
@@ -1197,7 +1198,7 @@ function updateTextPanel(text) {
     requestAnimationFrame(function() {
       tpPanel.scrollTop = tpPanel.scrollHeight;
     });
-  }, 150);
+  }, 250);
 }
 
 var tpShuffleTimer = null;
