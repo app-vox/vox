@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { t, setLanguage, getLanguage, SUPPORTED_LANGUAGES, resolveSystemLanguage } from "../../src/shared/i18n";
+import { t, setLanguage, getLanguage, SUPPORTED_LANGUAGES, resolveSystemLanguage, getDocsUrl } from "../../src/shared/i18n";
 import en from "../../src/shared/i18n/locales/en.json";
 import ptBR from "../../src/shared/i18n/locales/pt-BR.json";
 import ptPT from "../../src/shared/i18n/locales/pt-PT.json";
@@ -79,5 +79,40 @@ describe("i18n", () => {
         expect(value, `${lang}.${key} is empty`).not.toBe("");
       }
     }
+  });
+
+  describe("getDocsUrl", () => {
+    it("returns base docs URL for English", () => {
+      expect(getDocsUrl("en")).toBe("https://usevox.app/docs/");
+    });
+
+    it("returns locale-prefixed URL for pt-BR", () => {
+      expect(getDocsUrl("pt-BR")).toBe("https://usevox.app/docs/pt/");
+    });
+
+    it("returns locale-prefixed URL for pt-PT", () => {
+      expect(getDocsUrl("pt-PT")).toBe("https://usevox.app/docs/pt/");
+    });
+
+    it("returns locale-prefixed URL for other supported locales", () => {
+      expect(getDocsUrl("es")).toBe("https://usevox.app/docs/es/");
+      expect(getDocsUrl("fr")).toBe("https://usevox.app/docs/fr/");
+      expect(getDocsUrl("de")).toBe("https://usevox.app/docs/de/");
+      expect(getDocsUrl("it")).toBe("https://usevox.app/docs/it/");
+      expect(getDocsUrl("ru")).toBe("https://usevox.app/docs/ru/");
+      expect(getDocsUrl("tr")).toBe("https://usevox.app/docs/tr/");
+    });
+
+    it("falls back to English for Polish (no Polish docs)", () => {
+      expect(getDocsUrl("pl")).toBe("https://usevox.app/docs/");
+    });
+
+    it("appends path correctly with locale prefix", () => {
+      expect(getDocsUrl("pt-BR", "dictionary")).toBe("https://usevox.app/docs/pt/dictionary");
+    });
+
+    it("appends path correctly without locale prefix", () => {
+      expect(getDocsUrl("en", "dictionary")).toBe("https://usevox.app/docs/dictionary");
+    });
   });
 });
