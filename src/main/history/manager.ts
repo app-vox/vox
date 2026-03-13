@@ -13,6 +13,7 @@ interface HistoryStore {
 
 export class HistoryManager {
   private readonly store: HistoryStore;
+  private _cache: TranscriptionEntry[] | null = null;
 
   constructor() {
     this.store = new Store({
@@ -32,7 +33,7 @@ export class HistoryManager {
     entries.unshift(entry);
 
     const pruned = this.prune(entries);
-    this.store.set("entries", pruned);
+    this.saveEntries(pruned);
 
     return entry;
   }
@@ -57,7 +58,7 @@ export class HistoryManager {
     const index = entries.findIndex((e) => e.id === id);
     if (index === -1) throw new Error(`Entry not found: ${id}`);
     entries[index] = { ...entries[index], ...updates };
-    this.store.set("entries", entries);
+    this.saveEntries(entries);
     return entries[index];
   }
 
@@ -81,7 +82,7 @@ export class HistoryManager {
     if (entry?.audioFilePath) {
       deleteAudioFile(entry.audioFilePath);
     }
-    this.store.set("entries", entries.filter((e) => e.id !== id));
+    this.saveEntries(entries.filter((e) => e.id !== id));
   }
 
   clear(): void {
@@ -89,13 +90,13 @@ export class HistoryManager {
     for (const entry of entries) {
       if (entry.audioFilePath) deleteAudioFile(entry.audioFilePath);
     }
-    this.store.set("entries", []);
+    this.saveEntries([]);
   }
 
   cleanup(): void {
     const entries = this.getAllEntries();
     const pruned = this.prune(entries);
-    this.store.set("entries", pruned);
+    this.saveEntries(pruned);
   }
 
   enforceAudioRetention(limit: number): void {
@@ -113,11 +114,23 @@ export class HistoryManager {
       entry.audioFilePath = undefined;
     }
 
-    this.store.set("entries", entries);
+    this.saveEntries(entries);
   }
 
   private getAllEntries(): TranscriptionEntry[] {
-    return this.store.get("entries", []);
+    if (this._cache === null) {
+      this._cache = this.store.get("entries", []);
+    }
+    return this._cache;
+  }
+
+  private saveEntries(entries: TranscriptionEntry[]): void {
+    this._cache = entries;
+    this.store.set("entries", entries);
+  }
+
+  public getAllEntryIds(): string[] {
+    return this.getAllEntries().map((e) => e.id);
   }
 
   private prune(entries: TranscriptionEntry[]): TranscriptionEntry[] {
