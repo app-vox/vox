@@ -92,8 +92,9 @@ const COMMON_HALLUCINATIONS = [
  * 2. Sound descriptions in brackets/parens (e.g. "(drill whirring)", "[BLANK_AUDIO]")
  * 3. Common phrases it "hears" in silence (e.g. "thank you", "bye")
  * 4. Very short transcriptions (likely noise, not speech)
+ * 5. Hallucination loops — the same sentence or phrase repeated many times
  */
-function isGarbageTranscription(text: string): boolean {
+export function isGarbageTranscription(text: string): boolean {
   const normalized = text.toLowerCase().trim();
 
   // Reject very short transcriptions (likely noise)
@@ -133,6 +134,73 @@ function isGarbageTranscription(text: string): boolean {
   // Whisper noise hallucinations repeat a tiny set of chars/glyphs.
   if (chars.length >= 10 && freq.size <= 2) return true;
   if (chars.length >= 20 && freq.size <= 6) return true;
+
+  if (hasRepetitivePattern(normalized)) return true;
+
+  return false;
+}
+
+const MIN_SENTENCE_REPEATS = 3;
+const MIN_NGRAM_SIZE = 3;
+const NGRAM_DOMINANCE_RATIO = 0.5;
+
+function hasRepetitivePattern(text: string): boolean {
+  // Layer 1: Sentence-level repetition detection
+  // Split on sentence-ending punctuation (. ! ?) and normalize
+  const sentences = text
+    .split(/[.!?]+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+
+  if (sentences.length >= MIN_SENTENCE_REPEATS) {
+    const sentenceFreq = new Map<string, number>();
+    for (const s of sentences) {
+      sentenceFreq.set(s, (sentenceFreq.get(s) ?? 0) + 1);
+    }
+
+    const maxRepeats = Math.max(...sentenceFreq.values());
+    if (maxRepeats >= MIN_SENTENCE_REPEATS && maxRepeats / sentences.length >= NGRAM_DOMINANCE_RATIO) {
+      slog.info("Rejected hallucination loop (sentence repetition)", {
+        repeats: maxRepeats, total: sentences.length,
+      });
+      return true;
+    }
+  }
+
+  // Layer 2: N-gram repetition detection
+  // Catches partial loops where sentence boundaries don't align cleanly.
+  // In a hallucination loop, very few unique n-grams exist relative to the
+  // total count — e.g. "hello world test" repeated produces only 3 unique
+  // trigrams cycling endlessly.
+  const words = text.split(/\s+/).filter((w) => w.length > 0);
+  if (words.length < MIN_NGRAM_SIZE * MIN_SENTENCE_REPEATS) return false;
+
+  for (const n of [MIN_NGRAM_SIZE, 4, 5]) {
+    if (words.length < n * MIN_SENTENCE_REPEATS) continue;
+    const ngramFreq = new Map<string, number>();
+    for (let i = 0; i <= words.length - n; i++) {
+      const ngram = words.slice(i, i + n).join(" ");
+      ngramFreq.set(ngram, (ngramFreq.get(ngram) ?? 0) + 1);
+    }
+
+    const totalNgrams = words.length - n + 1;
+    const uniqueNgrams = ngramFreq.size;
+    const maxNgramRepeats = Math.max(...ngramFreq.values());
+
+    // Very few unique n-grams means the text is highly repetitive
+    // Natural speech with 20+ words produces many distinct n-grams;
+    // a loop over K words produces at most K unique n-grams
+    if (
+      totalNgrams >= MIN_NGRAM_SIZE * MIN_SENTENCE_REPEATS &&
+      maxNgramRepeats >= MIN_SENTENCE_REPEATS &&
+      uniqueNgrams / totalNgrams <= 0.2
+    ) {
+      slog.info("Rejected hallucination loop (n-gram repetition)", {
+        n, unique: uniqueNgrams, total: totalNgrams, maxRepeats: maxNgramRepeats,
+      });
+      return true;
+    }
+  }
 
   return false;
 }

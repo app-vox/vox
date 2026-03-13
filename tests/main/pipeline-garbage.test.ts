@@ -129,6 +129,61 @@ describe("Pipeline garbage/hallucination detection", () => {
     });
   });
 
+  describe("hallucination loop detection", () => {
+    it("should reject sentence-level repetition loops", async () => {
+      const repeated = "Transcribe em estático. ".repeat(28).trim();
+      const pipeline = createPipeline(repeated);
+      await pipeline.startRecording();
+      const result = await pipeline.stopAndProcess();
+
+      expect(result).toBe("");
+      expect(mockProvider.correct).not.toHaveBeenCalled();
+    });
+
+    it("should reject repetition loops without trailing punctuation", async () => {
+      const repeated = Array(10).fill("Thank you for watching").join(". ");
+      const pipeline = createPipeline(repeated);
+      await pipeline.startRecording();
+      const result = await pipeline.stopAndProcess();
+
+      expect(result).toBe("");
+      expect(mockProvider.correct).not.toHaveBeenCalled();
+    });
+
+    it("should reject n-gram repetition loops (partial sentence loops)", async () => {
+      // Words repeat without clean sentence boundaries
+      const repeated = "hello world test hello world test hello world test hello world test hello world test hello world test hello world test hello world test";
+      const pipeline = createPipeline(repeated);
+      await pipeline.startRecording();
+      const result = await pipeline.stopAndProcess();
+
+      expect(result).toBe("");
+      expect(mockProvider.correct).not.toHaveBeenCalled();
+    });
+
+    it("should allow text with some natural repetition", async () => {
+      const pipeline = createPipeline(
+        "I went to the store. The store was closed. Then I went to the other store and it was open."
+      );
+      await pipeline.startRecording();
+      const result = await pipeline.stopAndProcess();
+
+      expect(result).toBe("corrected");
+      expect(mockProvider.correct).toHaveBeenCalled();
+    });
+
+    it("should allow two repeated sentences (below threshold)", async () => {
+      const pipeline = createPipeline(
+        "Testing one two three. Testing one two three. But then something different happened."
+      );
+      await pipeline.startRecording();
+      const result = await pipeline.stopAndProcess();
+
+      expect(result).toBe("corrected");
+      expect(mockProvider.correct).toHaveBeenCalled();
+    });
+  });
+
   describe("valid transcriptions should pass", () => {
     it("should allow normal speech through to LLM", async () => {
       const pipeline = createPipeline("I need to schedule a meeting for tomorrow");
