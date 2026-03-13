@@ -90,17 +90,17 @@ describe("elevenlabs", () => {
   });
 
   describe("testConnection", () => {
-    it("returns audio buffer on successful synthesis", async () => {
+    it("returns success with audio buffer on successful synthesis", async () => {
       const fakeAudio = new ArrayBuffer(50);
       mockFetch.mockResolvedValueOnce({
         ok: true,
         arrayBuffer: () => Promise.resolve(fakeAudio),
       });
       const result = await testConnection("test-key", "21m00Tcm4TlvDq8ikWAM");
-      expect(result).toEqual(fakeAudio);
+      expect(result).toEqual({ success: true, audio: fakeAudio });
     });
 
-    it("returns null on failure", async () => {
+    it("returns success false with error message on failure", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 401,
@@ -108,7 +108,8 @@ describe("elevenlabs", () => {
         text: () => Promise.resolve("bad key"),
       });
       const result = await testConnection("bad-key", "21m00Tcm4TlvDq8ikWAM");
-      expect(result).toBeNull();
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
   });
 });
