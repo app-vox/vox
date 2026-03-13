@@ -271,4 +271,84 @@ describe("HistoryManager", () => {
       expect(result.entries[0].audioFilePath).toBeUndefined();
     });
   });
+
+  describe("cache", () => {
+    it("reads from store only once across multiple get() calls", () => {
+      const storeSpy = vi.spyOn(
+        (manager as unknown as { store: { get: () => TranscriptionEntry[] } }).store,
+        "get",
+      );
+
+      manager.get(0, 10);
+      manager.get(0, 10);
+      manager.get(0, 10);
+
+      expect(storeSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("cache reflects updates after add()", () => {
+      manager.add({ text: "A", originalText: "a", wordCount: 1, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false, status: "success" });
+
+      const storeSpy = vi.spyOn(
+        (manager as unknown as { store: { get: () => TranscriptionEntry[] } }).store,
+        "get",
+      );
+      manager.add({ text: "B", originalText: "b", wordCount: 1, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false, status: "success" });
+
+      expect(storeSpy).not.toHaveBeenCalled();
+      expect(manager.get(0, 10).total).toBe(2);
+    });
+
+    it("cache reflects updates after deleteEntry()", () => {
+      const entry = manager.add({ text: "X", originalText: "x", wordCount: 1, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false, status: "success" });
+      manager.deleteEntry(entry.id);
+
+      expect(manager.get(0, 10).total).toBe(0);
+    });
+
+    it("cache reflects updates after updateEntry()", () => {
+      const entry = manager.add({ text: "original", originalText: "original", wordCount: 1, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false, status: "success" });
+      manager.updateEntry(entry.id, { text: "updated" });
+
+      expect(manager.getEntry(entry.id)?.text).toBe("updated");
+    });
+
+    it("cache reflects updates after enforceAudioRetention()", () => {
+      for (let i = 0; i < 3; i++) {
+        manager.add({ text: `E${i}`, originalText: `e${i}`, wordCount: 1, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false, status: "success", audioFilePath: `/audio/e${i}.wav` });
+      }
+      manager.enforceAudioRetention(1);
+
+      const result = manager.get(0, 10);
+      const withAudio = result.entries.filter((e) => e.audioFilePath);
+      expect(withAudio).toHaveLength(1);
+    });
+
+    it("cache reflects updates after clear()", () => {
+      manager.add({ text: "X", originalText: "x", wordCount: 1, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false, status: "success" });
+      manager.clear();
+
+      expect(manager.get(0, 10).total).toBe(0);
+    });
+  });
+
+  describe("getAllEntryIds", () => {
+    it("returns all entry IDs", () => {
+      vi.mocked(crypto.randomUUID)
+        .mockReturnValueOnce("id-1" as ReturnType<typeof crypto.randomUUID>)
+        .mockReturnValueOnce("id-2" as ReturnType<typeof crypto.randomUUID>);
+
+      manager.add({ text: "A", originalText: "a", wordCount: 1, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false, status: "success" });
+      manager.add({ text: "B", originalText: "b", wordCount: 1, audioDurationMs: 1000, whisperModel: "small", llmEnhanced: false, status: "success" });
+
+      const ids = manager.getAllEntryIds();
+      expect(ids).toContain("id-1");
+      expect(ids).toContain("id-2");
+      expect(ids).toHaveLength(2);
+    });
+
+    it("returns empty array when no entries", () => {
+      expect(manager.getAllEntryIds()).toEqual([]);
+    });
+  });
 });

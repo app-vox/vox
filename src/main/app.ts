@@ -25,7 +25,7 @@ import { getLlmModelName } from "../shared/llm-utils";
 import { AnalyticsService } from "./analytics/service";
 import { setupAnalyticsErrorCapture } from "./logger";
 import log from "./logger";
-import { saveAudioFile, cleanupOrphanedAudioFiles } from "./audio/persistence";
+import { saveAudioFile, cleanupOrphanedAudioFiles, getAudioFilePath } from "./audio/persistence";
 
 log.initialize();
 const slog = log.scope("Vox");
@@ -83,86 +83,83 @@ function setupPipeline(): void {
       }
     },
     onComplete: (result) => {
-      try {
-        const latestConfig = configManager.load();
-        const stripped = latestConfig.finishWithPeriod ? result.text : stripTrailingPeriod(result.text);
-        const finalText = applyCase(stripped, latestConfig.lowercaseStart);
+      // Defer all side effects so the pipeline can return finalText immediately
+      // and the paste happens without waiting for history/IPC/disk operations.
+      setImmediate(() => {
+        try {
+          const latestConfig = configManager.load();
+          const stripped = latestConfig.finishWithPeriod ? result.text : stripTrailingPeriod(result.text);
+          const finalText = applyCase(stripped, latestConfig.lowercaseStart);
 
-        const status = result.llmFailed ? "llm_failed" as const : "success" as const;
+          const status = result.llmFailed ? "llm_failed" as const : "success" as const;
 
-        const entry = historyManager.add({
-          ...result,
-          text: finalText,
-          wordCount: finalText.split(/\s+/).filter(Boolean).length,
-          whisperModel: config.whisper.model || "unknown",
-          llmEnhanced: config.enableLlmEnhancement,
-          llmProvider: config.enableLlmEnhancement ? config.llm.provider : undefined,
-          llmModel: config.enableLlmEnhancement ? getLlmModelName(config.llm) : undefined,
-          status,
-          errorMessage: result.errorMessage,
-          failedStep: result.llmFailed ? "llm" : undefined,
-        });
+          const entry = historyManager.add({
+            text: finalText,
+            originalText: result.originalText,
+            audioDurationMs: result.audioDurationMs,
+            wordCount: finalText.split(/\s+/).filter(Boolean).length,
+            whisperModel: config.whisper.model || "unknown",
+            llmEnhanced: config.enableLlmEnhancement,
+            llmProvider: config.enableLlmEnhancement ? config.llm.provider : undefined,
+            llmModel: config.enableLlmEnhancement ? getLlmModelName(config.llm) : undefined,
+            status,
+            errorMessage: result.errorMessage,
+            failedStep: result.llmFailed ? "llm" : undefined,
+          });
 
-        if (latestConfig.audioRetentionCount > 0) {
-          try {
-            const audioFilePath = saveAudioFile(
-              result.recording.audioBuffer,
-              result.recording.sampleRate,
-              entry.id,
-            );
+          if (latestConfig.audioRetentionCount > 0) {
+            const audioFilePath = getAudioFilePath(entry.id);
             historyManager.updateEntry(entry.id, { audioFilePath });
-          } catch (err) {
-            slog.warn("Failed to save audio file", err);
+            saveAudioFile(result.recording.audioBuffer, result.recording.sampleRate, entry.id).catch((err) =>
+              slog.warn("Failed to save audio file", err),
+            );
           }
-        }
 
-        historyManager.enforceAudioRetention(latestConfig.audioRetentionCount);
+          historyManager.enforceAudioRetention(latestConfig.audioRetentionCount);
 
-        for (const win of BrowserWindow.getAllWindows()) {
-          win.webContents.send("history:entry-added");
-          win.webContents.send("pipeline:result", finalText);
+          for (const win of BrowserWindow.getAllWindows()) {
+            win.webContents.send("history:entry-added");
+            win.webContents.send("pipeline:result", finalText);
+          }
+        } catch (err) {
+          slog.error("Failed to save transcription to history", err);
         }
-      } catch (err) {
-        slog.error("Failed to save transcription to history", err);
-      }
+      });
     },
     onFailure: (result) => {
-      try {
-        const latestConfig = configManager.load();
+      setImmediate(() => {
+        try {
+          const latestConfig = configManager.load();
 
-        const entry = historyManager.add({
-          text: "",
-          originalText: "",
-          wordCount: 0,
-          audioDurationMs: result.audioDurationMs,
-          whisperModel: config.whisper.model || "unknown",
-          llmEnhanced: false,
-          status: "whisper_failed",
-          errorMessage: result.error.message,
-          failedStep: "whisper",
-        });
+          const entry = historyManager.add({
+            text: "",
+            originalText: "",
+            wordCount: 0,
+            audioDurationMs: result.audioDurationMs,
+            whisperModel: config.whisper.model || "unknown",
+            llmEnhanced: false,
+            status: "whisper_failed",
+            errorMessage: result.error.message,
+            failedStep: "whisper",
+          });
 
-        if (latestConfig.audioRetentionCount > 0) {
-          try {
-            const audioFilePath = saveAudioFile(
-              result.recording.audioBuffer,
-              result.recording.sampleRate,
-              entry.id,
-            );
+          if (latestConfig.audioRetentionCount > 0) {
+            const audioFilePath = getAudioFilePath(entry.id);
             historyManager.updateEntry(entry.id, { audioFilePath });
-          } catch (err) {
-            slog.warn("Failed to save audio file for failed transcription", err);
+            saveAudioFile(result.recording.audioBuffer, result.recording.sampleRate, entry.id).catch((err) =>
+              slog.warn("Failed to save audio file", err),
+            );
           }
-        }
 
-        historyManager.enforceAudioRetention(latestConfig.audioRetentionCount);
+          historyManager.enforceAudioRetention(latestConfig.audioRetentionCount);
 
-        for (const win of BrowserWindow.getAllWindows()) {
-          win.webContents.send("history:entry-added");
+          for (const win of BrowserWindow.getAllWindows()) {
+            win.webContents.send("history:entry-added");
+          }
+        } catch (err) {
+          slog.error("Failed to save failed transcription to history", err);
         }
-      } catch (err) {
-        slog.error("Failed to save failed transcription to history", err);
-      }
+      });
     },
   });
 }
@@ -278,13 +275,13 @@ app.whenReady().then(async () => {
   historyManager.cleanup();
 
   // Clean up orphaned audio files
-  const allEntries = historyManager.get(0, 999999).entries;
   const validIds = new Set(
-    allEntries
-      .filter((e) => e.audioFilePath)
-      .map((e) => e.id)
+    historyManager.getAllEntryIds().filter((id) => {
+      const entry = historyManager.getEntry(id);
+      return !!entry?.audioFilePath;
+    }),
   );
-  cleanupOrphanedAudioFiles(validIds);
+  await cleanupOrphanedAudioFiles(validIds);
 
   const hasAccessibility = isAccessibilityGranted();
   if (!hasAccessibility && initialConfig.onboardingCompleted) {

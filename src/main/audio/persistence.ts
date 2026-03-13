@@ -11,31 +11,36 @@ export function getAudioDir(): string {
   return path.join(app.getPath("userData"), "audio");
 }
 
-export function saveAudioFile(
+export function getAudioFilePath(entryId: string): string {
+  return path.join(getAudioDir(), `${entryId}.wav`);
+}
+
+export async function saveAudioFile(
   audioBuffer: Float32Array,
   sampleRate: number,
   entryId: string,
-): string {
+): Promise<string> {
   const dir = getAudioDir();
-  fs.mkdirSync(dir, { recursive: true });
+  await fs.promises.mkdir(dir, { recursive: true });
 
-  const filePath = path.join(dir, `${entryId}.wav`);
+  const filePath = getAudioFilePath(entryId);
   const normalized = normalizeAudio(audioBuffer);
   const wavBuffer = encodeWav(normalized, sampleRate);
-  fs.writeFileSync(filePath, wavBuffer);
+  await fs.promises.writeFile(filePath, wavBuffer);
 
   slog.info("Audio saved", { filePath, samples: audioBuffer.length, sampleRate });
   return filePath;
 }
 
-export function deleteAudioFile(filePath: string): void {
+export async function deleteAudioFile(filePath: string): Promise<void> {
   try {
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-      slog.info("Audio deleted", { filePath });
-    }
+    await fs.promises.access(filePath);
+    await fs.promises.unlink(filePath);
+    slog.info("Audio deleted", { filePath });
   } catch (err) {
-    slog.warn("Failed to delete audio file", { filePath, error: err });
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") {
+      slog.warn("Failed to delete audio file", { filePath, error: err });
+    }
   }
 }
 
@@ -55,15 +60,18 @@ export function decodeWavFile(filePath: string): RecordingResult {
   return { audioBuffer, sampleRate };
 }
 
-export function cleanupOrphanedAudioFiles(validIds: Set<string>): void {
+export async function cleanupOrphanedAudioFiles(validIds: Set<string>): Promise<void> {
   const dir = getAudioDir();
-  if (!fs.existsSync(dir)) return;
-
-  const files = fs.readdirSync(dir);
+  let files: string[];
+  try {
+    files = (await fs.promises.readdir(dir)) as string[];
+  } catch {
+    return;
+  }
   for (const file of files) {
     const id = path.basename(file, ".wav");
     if (!validIds.has(id)) {
-      deleteAudioFile(path.join(dir, file));
+      await deleteAudioFile(path.join(dir, file));
     }
   }
 }
