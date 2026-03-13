@@ -367,6 +367,8 @@
   "general.recordingFeedback.sound.error": "Error",
   "general.recordingFeedback.classic": "Klasyczne",
   "general.recordingFeedback.errorSound": "Dźwięk alertu",
+  "general.recordingFeedback.showPreview": "Pokaż podgląd podczas mówienia",
+  "general.recordingFeedback.showPreviewHint": "Wyświetla podgląd transkrypcji na żywo pod HUD podczas mówienia.",
   "general.textProcessing.title": "Preferencje transkrypcji",
   "general.textProcessing.description": "Dostosuj formatowanie transkrybowanego tekstu.",
   "indicator.initializing": "Uruchamianie...",

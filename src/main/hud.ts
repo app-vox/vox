@@ -1213,13 +1213,12 @@ function replaceWithEnhanced(text) {
   var i = 0;
   function morphInNext() {
     if (i >= words.length) {
+      tpCursor.className = 'tp-cursor hidden';
       tpMorphTimer = setTimeout(function() {
-        tpContent.querySelectorAll('.word').forEach(function(w) { w.className = 'word morphed'; });
-        tpCursor.className = 'tp-cursor hidden';
         tpMorphTimer = null;
         tpMorphing = false;
         if (tpHidePending) { tpHidePending = false; doHideTextPanel(); }
-      }, 150);
+      }, 600);
       return;
     }
     var span = document.createElement('span');
@@ -1578,9 +1577,9 @@ export class HudWindow {
     const escaped = JSON.stringify(text);
     this.execJs(`morphText(${escaped})`);
     // Estimate animation duration to match JS timers:
-    // blur phase: wordCount * 15ms + 80ms, morph-in phase: wordCount * 25ms + 150ms
+    // blur phase: wordCount * 15ms + 80ms, morph-in phase: wordCount * 25ms + 600ms blue hold
     const wordCount = text.split(/\s+/).filter(Boolean).length;
-    const estimatedMs = (wordCount * 15) + 80 + (wordCount * 25) + 150;
+    const estimatedMs = (wordCount * 15) + 80 + (wordCount * 25) + 600;
     this.morphPromise = new Promise(resolve => setTimeout(resolve, estimatedMs));
   }
 

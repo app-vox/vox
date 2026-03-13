@@ -384,6 +384,8 @@
   "general.recordingFeedback.sound.error": "Error",
   "general.recordingFeedback.classic": "Classico",
   "general.recordingFeedback.errorSound": "Suono di avviso",
+  "general.recordingFeedback.showPreview": "Mostra anteprima mentre parli",
+  "general.recordingFeedback.showPreviewHint": "Mostra un'anteprima della trascrizione in tempo reale sotto il HUD mentre parli.",
   "general.textProcessing.title": "Preferenze di trascrizione",
   "general.textProcessing.description": "Regola come viene formattato il testo trascritto.",
   "indicator.initializing": "Avvio...",

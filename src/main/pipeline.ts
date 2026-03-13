@@ -233,7 +233,12 @@ export class Pipeline {
         this.deps.dictionary,
         this.deps.speechLanguages,
       );
-      const text = result.text.trim();
+      const text = result.text
+        .replace(/\[[^\]]*\]/g, "")
+        .replace(/\([^)]*\)/g, "")
+        .replace(/\*[^*]*\*/g, "")
+        .replace(/\s{2,}/g, " ")
+        .trim();
       if (!text || isGarbageTranscription(text)) return null;
       return text;
     } catch {

@@ -1004,7 +1004,9 @@ export class ShortcutManager {
       }
 
       this.hud.setState("listening");
-      this.startLiveTranscription(pipeline, gen);
+      if (config.showPreview !== false) {
+        this.startLiveTranscription(pipeline, gen);
+      }
     }).catch((err: Error) => {
       if (gen !== this.recordingGeneration) {
         slog.info("Stale recording error (gen=%d, current=%d) — discarding", gen, this.recordingGeneration);
@@ -1154,7 +1156,7 @@ export class ShortcutManager {
       if (gen !== this.recordingGeneration) return;
       if (running) {
         // Previous transcription still in progress, retry soon
-        this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 500);
+        this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 300);
         return;
       }
       running = true;
@@ -1170,11 +1172,11 @@ export class ShortcutManager {
         running = false;
       }
       if (gen !== this.recordingGeneration) return;
-      this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 1000);
+      this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 800);
     };
 
-    // First snapshot after 1.5s of recording
-    this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 1500);
+    // First snapshot after 1s of recording
+    this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 1000);
   }
 
   private stopLiveTranscription(): void {

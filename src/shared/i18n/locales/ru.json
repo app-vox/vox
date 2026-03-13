@@ -384,6 +384,8 @@
   "general.recordingFeedback.sound.error": "Error",
   "general.recordingFeedback.classic": "Классические",
   "general.recordingFeedback.errorSound": "Звук оповещения",
+  "general.recordingFeedback.showPreview": "Показывать превью при разговоре",
+  "general.recordingFeedback.showPreviewHint": "Отображает предварительный просмотр транскрипции в реальном времени под HUD во время разговора.",
   "general.textProcessing.title": "Настройки транскрипции",
   "general.textProcessing.description": "Настройте форматирование транскрибированного текста.",
   "indicator.initializing": "Запуск...",

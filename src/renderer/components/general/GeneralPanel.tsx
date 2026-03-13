@@ -733,6 +733,21 @@ export function GeneralPanel() {
               onPreview={previewCue}
             />
           </div>
+          <label className={styles.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={config.showPreview ?? true}
+              onChange={async () => {
+                updateConfig({ showPreview: !config.showPreview });
+                await saveConfig(false);
+                triggerToast();
+              }}
+            />
+            <div>
+              <div className={styles.checkboxLabel}>{t("general.recordingFeedback.showPreview")}</div>
+              <div className={styles.checkboxDesc}>{t("general.recordingFeedback.showPreviewHint")}</div>
+            </div>
+          </label>
         </div>
       </details>
 
