@@ -11,6 +11,10 @@ export function getAudioDir(): string {
   return path.join(app.getPath("userData"), "audio");
 }
 
+export function getAudioFilePath(entryId: string): string {
+  return path.join(getAudioDir(), `${entryId}.wav`);
+}
+
 export function saveAudioFile(
   audioBuffer: Float32Array,
   sampleRate: number,

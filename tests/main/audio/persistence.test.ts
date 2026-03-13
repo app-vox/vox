@@ -42,6 +42,7 @@ vi.mock("fs", async () => {
 import * as fs from "fs";
 import {
   getAudioDir,
+  getAudioFilePath,
   saveAudioFile,
   deleteAudioFile,
   decodeWavFile,
@@ -63,6 +64,13 @@ describe("AudioPersistence", () => {
     it("should return the audio directory path under userData", () => {
       const result = getAudioDir();
       expect(result).toBe(path.join("/mock/userData", "audio"));
+    });
+  });
+
+  describe("getAudioFilePath", () => {
+    it("should return the deterministic WAV path without I/O", () => {
+      const result = getAudioFilePath("my-entry-id");
+      expect(result).toBe(path.join("/mock/userData", "audio", "my-entry-id.wav"));
     });
   });
 
