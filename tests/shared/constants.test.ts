@@ -93,20 +93,25 @@ describe("buildSystemPrompt", () => {
     const result = buildSystemPrompt("Be formal", ["Kubernetes"]);
     expect(result).toContain("DICTIONARY");
     expect(result).toContain('"Kubernetes"');
-    expect(result).toContain("Be formal");
+    expect(result).toContain("<custom-instructions>\nBe formal\n</custom-instructions>");
   });
 
   it("should place dictionary before custom prompt", () => {
     const result = buildSystemPrompt("Be formal", ["Kubernetes"]);
     const dictIndex = result.indexOf("DICTIONARY");
-    const customIndex = result.indexOf("Be formal");
+    const customIndex = result.indexOf("<custom-instructions>");
     expect(dictIndex).toBeLessThan(customIndex);
+  });
+
+  it("should wrap custom prompt in XML tags", () => {
+    const result = buildSystemPrompt("Always respond in bullet points", []);
+    expect(result).toContain("<custom-instructions>\nAlways respond in bullet points\n</custom-instructions>");
   });
 
   it("should not include dictionary section when array is empty", () => {
     const result = buildSystemPrompt("Be formal", []);
     expect(result).not.toContain("DICTIONARY");
-    expect(result).toContain("Be formal");
+    expect(result).toContain("<custom-instructions>\nBe formal\n</custom-instructions>");
   });
 
   it("should include language context when speechLanguages provided", () => {

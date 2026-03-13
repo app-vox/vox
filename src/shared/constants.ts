@@ -145,7 +145,7 @@ export function buildSystemPrompt(customPrompt: string, dictionary: string[] = [
     return prompt;
   }
 
-  return `${prompt}\n\n${"*".repeat(70)}\nEXTREMELY IMPORTANT - YOU MUST FOLLOW THESE CUSTOM INSTRUCTIONS\n${"*".repeat(70)}\n\nThe user has provided specific custom instructions below. It is of CRITICAL importance that you consider and apply these instructions. These custom rules take ABSOLUTE PRIORITY over default behavior:\n\n${customPrompt}`;
+  return `${prompt}\n\n${"*".repeat(70)}\nEXTREMELY IMPORTANT - YOU MUST FOLLOW THESE CUSTOM INSTRUCTIONS\n${"*".repeat(70)}\n\nThe user has provided specific custom instructions below. It is of CRITICAL importance that you consider and apply these instructions. These custom rules take ABSOLUTE PRIORITY over default behavior:\n\n<custom-instructions>\n${customPrompt}\n</custom-instructions>`;
 }
 
 export interface WhisperLanguage {
