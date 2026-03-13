@@ -72,9 +72,12 @@ function setupPipeline(): void {
     analytics,
     onStage: (stage) => {
       shortcutManager?.getHud().setState(stage);
+      if (stage === "enhancing") {
+        shortcutManager?.getHud().startEnhancingEffect();
+      }
     },
     onTranscriptionComplete: (rawText) => {
-      shortcutManager?.getHud().showTextPanel(rawText);
+      shortcutManager?.getHud().updateTextPanel(rawText);
     },
     onLlmFailed: () => {
       const cfg = configManager.load();
@@ -94,6 +97,7 @@ function setupPipeline(): void {
           const stripped = latestConfig.finishWithPeriod ? result.text : stripTrailingPeriod(result.text);
           const finalText = applyCase(stripped, latestConfig.lowercaseStart);
 
+        shortcutManager?.getHud().stopEnhancingEffect();
         if (result.originalText !== result.text) {
           shortcutManager?.getHud().morphText(finalText);
         }

@@ -84,6 +84,8 @@ vi.mock("../../../src/main/hud", () => {
       morphText = vi.fn();
       hideTextPanel = vi.fn();
       waitForMorph = vi.fn().mockResolvedValue(undefined);
+      startEnhancingEffect = vi.fn();
+      stopEnhancingEffect = vi.fn();
     },
   };
 });

@@ -1085,6 +1085,10 @@ export class ShortcutManager {
         hudEndState = "error";
       } else {
         slog.info("Valid text received, proceeding with paste");
+        // HUD pill goes idle; text panel stays for morph animation
+        this.stateMachine.setIdle();
+        this.hud.setState("idle");
+        this.updateTrayState();
         await this.hud.waitForMorph();
         const pasteConfig = this.deps.configManager.load();
         const forceCapitalize = this.isShiftHeld && this.shiftAlone && pasteConfig.shiftCapitalize && pasteConfig.lowercaseStart;
@@ -1130,9 +1134,12 @@ export class ShortcutManager {
       this.hud.setShiftHeld(false);
       // Only update state if this is still the current generation
       if (gen === this.recordingGeneration) {
-        this.stateMachine.setIdle();
-        this.hud.setState(hudEndState);
-        this.updateTrayState();
+        if (hudEndState !== "idle") {
+          // Error/cancel/warning paths haven't set idle yet
+          this.stateMachine.setIdle();
+          this.hud.setState(hudEndState);
+          this.updateTrayState();
+        }
         slog.info("Ready for next recording");
       }
     }
@@ -1146,8 +1153,8 @@ export class ShortcutManager {
     const tick = async (): Promise<void> => {
       if (gen !== this.recordingGeneration) return;
       if (running) {
-        // Previous transcription still in progress, schedule next tick
-        this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 1000);
+        // Previous transcription still in progress, retry soon
+        this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 500);
         return;
       }
       running = true;
@@ -1163,11 +1170,11 @@ export class ShortcutManager {
         running = false;
       }
       if (gen !== this.recordingGeneration) return;
-      this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 2000);
+      this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 1000);
     };
 
-    // First snapshot after 2s of recording
-    this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 2000);
+    // First snapshot after 1.5s of recording
+    this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 1500);
   }
 
   private stopLiveTranscription(): void {

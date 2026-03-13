@@ -76,6 +76,8 @@ vi.mock("../../../src/main/hud", () => {
       morphText = vi.fn();
       hideTextPanel = vi.fn();
       waitForMorph = vi.fn().mockResolvedValue(undefined);
+      startEnhancingEffect = vi.fn();
+      stopEnhancingEffect = vi.fn();
     },
   };
 });
@@ -139,6 +141,8 @@ describe("ShortcutManager — recording start flow", () => {
       showTextPanelEmpty: vi.fn(),
       updateTextPanel: vi.fn(),
       hideTextPanel: vi.fn(),
+      startEnhancingEffect: vi.fn(),
+      stopEnhancingEffect: vi.fn(),
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- access private member for testing
     (manager as any).hud = mockHud;

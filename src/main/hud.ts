@@ -591,6 +591,14 @@ function buildHudHtml(): string {
     0%, 100% { opacity: 1; }
     50% { opacity: 0; }
   }
+
+  .text-content.enhancing-pulse {
+    animation: enhancePulse 1.8s ease-in-out infinite;
+  }
+  @keyframes enhancePulse {
+    0%, 100% { filter: blur(0); opacity: 0.85; }
+    50% { filter: blur(1.5px); opacity: 0.55; }
+  }
 </style></head>
 <body>
 <div class="scale-wrapper" id="scale-wrapper">
@@ -1167,8 +1175,19 @@ function updateTextPanel(text) {
   tpPanel.scrollTop = tpPanel.scrollHeight;
 }
 
+function startEnhancingEffect() {
+  tpContent.classList.add('enhancing-pulse');
+  tpPanel.classList.add('morph-border');
+  tpCursor.className = 'tp-cursor hidden';
+}
+
+function stopEnhancingEffect() {
+  tpContent.classList.remove('enhancing-pulse');
+}
+
 function morphText(enhancedText) {
   if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
+  stopEnhancingEffect();
   tpMorphing = true;
   tpCursor.className = 'tp-cursor enhanced';
   tpPanel.classList.add('morph-border');
@@ -1176,12 +1195,12 @@ function morphText(enhancedText) {
   var idx = 0;
   function blurNext() {
     if (idx >= oldWords.length) {
-      tpMorphTimer = setTimeout(function() { replaceWithEnhanced(enhancedText); }, 200);
+      tpMorphTimer = setTimeout(function() { replaceWithEnhanced(enhancedText); }, 80);
       return;
     }
     oldWords[idx].classList.add('morphing-out');
     idx++;
-    tpMorphTimer = setTimeout(blurNext, 20);
+    tpMorphTimer = setTimeout(blurNext, 15);
   }
   blurNext();
 }
@@ -1200,7 +1219,7 @@ function replaceWithEnhanced(text) {
         tpMorphTimer = null;
         tpMorphing = false;
         if (tpHidePending) { tpHidePending = false; doHideTextPanel(); }
-      }, 300);
+      }, 150);
       return;
     }
     var span = document.createElement('span');
@@ -1209,7 +1228,7 @@ function replaceWithEnhanced(text) {
     tpContent.insertBefore(span, tpCursor);
     tpPanel.scrollTop = tpPanel.scrollHeight;
     i++;
-    tpMorphTimer = setTimeout(morphInNext, 40);
+    tpMorphTimer = setTimeout(morphInNext, 25);
   }
   morphInNext();
 }
@@ -1543,6 +1562,14 @@ export class HudWindow {
     this.execJs(`showTextPanel(${escaped})`);
   }
 
+  startEnhancingEffect(): void {
+    this.execJs("startEnhancingEffect()");
+  }
+
+  stopEnhancingEffect(): void {
+    this.execJs("stopEnhancingEffect()");
+  }
+
   morphText(text: string): void {
     if (!this.window || this.window.isDestroyed() || !this.contentReady) {
       this.morphPromise = null;
@@ -1551,9 +1578,9 @@ export class HudWindow {
     const escaped = JSON.stringify(text);
     this.execJs(`morphText(${escaped})`);
     // Estimate animation duration to match JS timers:
-    // blur phase: wordCount * 20ms + 200ms, morph-in phase: newWordCount * 40ms + 300ms
+    // blur phase: wordCount * 15ms + 80ms, morph-in phase: wordCount * 25ms + 150ms
     const wordCount = text.split(/\s+/).filter(Boolean).length;
-    const estimatedMs = (wordCount * 20) + 200 + (wordCount * 40) + 300;
+    const estimatedMs = (wordCount * 15) + 80 + (wordCount * 25) + 150;
     this.morphPromise = new Promise(resolve => setTimeout(resolve, estimatedMs));
   }
 
