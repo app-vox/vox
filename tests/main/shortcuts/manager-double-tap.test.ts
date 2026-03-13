@@ -109,6 +109,7 @@ function createMockPipeline() {
   return {
     startRecording: vi.fn().mockResolvedValue(undefined),
     stopAndProcess: vi.fn().mockResolvedValue("hello"),
+    stopAndProcessWithHint: vi.fn().mockResolvedValue("hello"),
     cancel: vi.fn().mockResolvedValue(undefined),
     playAudioCue: vi.fn().mockResolvedValue(undefined),
     snapshotAndTranscribe: vi.fn().mockResolvedValue(null),

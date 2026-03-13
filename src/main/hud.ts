@@ -1150,10 +1150,22 @@ var tpMic = document.getElementById('tp-mic');
 var tpTypingTimer = null;
 var tpLastText = '';
 var tpReduceAnim = false;
+var tpUserScrolled = false;
+
+tpPanel.addEventListener('scroll', function() {
+  var atBottom = tpPanel.scrollHeight - tpPanel.scrollTop - tpPanel.clientHeight < 12;
+  tpUserScrolled = !atBottom;
+});
+
+function tpScrollToBottom() {
+  if (tpUserScrolled) return;
+  requestAnimationFrame(function() { tpPanel.scrollTop = tpPanel.scrollHeight; });
+}
 
 function showTextPanel(text) {
   clearTextPanelTimers();
   tpLastText = text;
+  tpUserScrolled = false;
   tpContent.innerHTML = '';
   tpContent.classList.remove('enhancing');
   tpMic.className = tpReduceAnim ? 'tp-mic no-anim' : 'tp-mic';
@@ -1171,18 +1183,19 @@ function showTextPanel(text) {
     span.textContent = words[i] + ' ';
     tpContent.insertBefore(span, tpMic);
   }
-  requestAnimationFrame(function() { tpPanel.scrollTop = tpPanel.scrollHeight; });
+  tpScrollToBottom();
 }
 
 var tpSwapTimer = null;
 
 function updateTextPanel(text) {
   if (text === tpLastText) return;
+  var prevWordCount = tpLastText.split(/\\s+/).filter(function(w) { return w.length > 0; }).length;
   tpLastText = text;
   if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
   if (tpSwapTimer) { clearTimeout(tpSwapTimer); tpSwapTimer = null; }
   tpContent.classList.add('swapping');
-  tpSwapTimer = setTimeout(function() { // wait for blur-out transition
+  tpSwapTimer = setTimeout(function() {
     tpSwapTimer = null;
     tpContent.innerHTML = '';
     tpMic.className = tpReduceAnim ? 'tp-mic no-anim' : 'tp-mic';
@@ -1190,14 +1203,12 @@ function updateTextPanel(text) {
     var words = text.split(/\\s+/).filter(function(w) { return w.length > 0; });
     for (var i = 0; i < words.length; i++) {
       var span = document.createElement('span');
-      span.className = 'word';
+      span.className = (!tpReduceAnim && i >= prevWordCount) ? 'word appearing' : 'word';
       span.textContent = words[i] + ' ';
       tpContent.insertBefore(span, tpMic);
     }
     tpContent.classList.remove('swapping');
-    requestAnimationFrame(function() {
-      tpPanel.scrollTop = tpPanel.scrollHeight;
-    });
+    tpScrollToBottom();
   }, 250);
 }
 
@@ -1234,6 +1245,7 @@ function stopEnhancingEffect() {
 function hideTextPanel() {
   if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
   tpLastText = '';
+  tpUserScrolled = false;
   doHideTextPanel();
 }
 

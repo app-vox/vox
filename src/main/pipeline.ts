@@ -272,6 +272,37 @@ export class Pipeline {
     return this.processFromRecording(recording, gen);
   }
 
+  /**
+   * Stop recording and process using pre-accumulated live preview text,
+   * skipping the Whisper transcription step entirely. Falls back to full
+   * Whisper transcription if the hint is empty or detected as garbage.
+   */
+  async stopAndProcessWithHint(hintText: string): Promise<string> {
+    const gen = this.generation;
+    const recording = await this.deps.recorder.stop();
+    this.heldRecording = recording;
+
+    if (this.canceled || gen !== this.generation) {
+      throw new CanceledError();
+    }
+
+    const rawText = hintText.trim();
+    if (!rawText || isGarbageTranscription(rawText)) {
+      slog.info("Preview hint empty or garbage — falling back to Whisper");
+      return this.processFromRecording(recording, gen);
+    }
+
+    slog.info("Using live preview as transcript, skipping Whisper: %s", rawText.slice(0, 80));
+    this.heldTranscription = rawText;
+    this.deps.onTranscriptionComplete?.(rawText);
+
+    if (this.canceled || gen !== this.generation) {
+      throw new CanceledError();
+    }
+
+    return this.processFromTranscription(rawText, recording, gen);
+  }
+
   gracefulCancel(): { stage: PipelineStage | "listening" } {
     const stage = this.currentStage ?? "listening";
     this.cancelingStage = stage;

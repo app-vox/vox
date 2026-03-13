@@ -1073,7 +1073,10 @@ export class ShortcutManager {
 
     let hudEndState: "idle" | "error" | "canceled" | "warning" = "idle";
     try {
-      const text = await pipeline.stopAndProcess();
+      const hint = this.livePreviewText;
+      const text = hint
+        ? await pipeline.stopAndProcessWithHint(hint)
+        : await pipeline.stopAndProcess();
 
       // If generation changed, a restart/cancel happened — abandon this result
       if (gen !== this.recordingGeneration) {
