@@ -28,12 +28,6 @@ export const WHISPER_MODELS: Record<string, WhisperModelInfo> = {
     description: "Good balance of speed and accuracy (~460MB)",
     label: "Balanced",
   },
-  turbo: {
-    url: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin",
-    sizeBytes: 809_000_000,
-    description: "Best speed/accuracy ratio (~809MB)",
-    label: "Recommended",
-  },
   medium: {
     url: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin",
     sizeBytes: 1_500_000_000,
