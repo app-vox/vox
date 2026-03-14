@@ -71,16 +71,26 @@ export function AboutPanel() {
             {currentVersion ? `Vox v${currentVersion}` : t("general.about.versionInfo")}
           </p>
         </div>
-        {logoUrl && (
-          <img
-            src={logoUrl}
-            alt="Vox"
-            className={styles.aboutLogo}
-            draggable={false}
-            onClick={() => window.voxApi.shell.openExternal("https://usevox.app/")}
-            title={t("sidebar.visitWebsite")}
-          />
-        )}
+        <div className={styles.headerRight}>
+          <button
+            className={card.learnMore}
+            onClick={() => window.voxApi.shell.openExternal(getDocsUrl(language))}
+          >
+            <BookIcon width={12} height={12} />
+            {t("general.about.documentation")}
+            <ExternalLinkIcon width={12} height={12} />
+          </button>
+          {logoUrl && (
+            <img
+              src={logoUrl}
+              alt="Vox"
+              className={styles.aboutLogo}
+              draggable={false}
+              onClick={() => window.voxApi.shell.openExternal("https://usevox.app/")}
+              title={t("sidebar.visitWebsite")}
+            />
+          )}
+        </div>
       </div>
       <div className={card.body}>
         {showUpdateBanner ? (
@@ -177,14 +187,6 @@ export function AboutPanel() {
               <button onClick={openIssueTracker} className={styles.aboutButton}>
                 <InfoCircleAltIcon width={16} height={16} />
                 <span>{t("general.about.reportIssue")}</span>
-                <ExternalLinkIcon width={14} height={14} />
-              </button>
-              <button
-                onClick={() => window.voxApi.shell.openExternal(getDocsUrl(language))}
-                className={styles.aboutButton}
-              >
-                <BookIcon width={16} height={16} />
-                <span>{t("general.about.documentation")}</span>
                 <ExternalLinkIcon width={14} height={14} />
               </button>
             </div>

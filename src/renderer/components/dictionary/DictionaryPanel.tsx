@@ -139,18 +139,20 @@ export function DictionaryPanel() {
   return (
     <div className={card.card}>
       <div className={card.header}>
-        <h2>{t("dictionary.title")}</h2>
+        <div className={styles.titleRow}>
+          <h2>{t("dictionary.title")}</h2>
+          <button
+            className={card.learnMore}
+            onClick={() => window.voxApi.shell.openExternal(getDocsUrl(language, "dictionary"))}
+          >
+            <BookIcon width={12} height={12} />
+            {t("dictionary.howToUse")}
+            <ExternalLinkIcon width={12} height={12} />
+          </button>
+        </div>
         <p className={card.description}>
           {t("dictionary.description")}
         </p>
-        <button
-          className={card.learnMore}
-          onClick={() => window.voxApi.shell.openExternal(getDocsUrl(language, "dictionary"))}
-        >
-          <BookIcon width={12} height={12} />
-          {t("dictionary.howToUse")}
-          <ExternalLinkIcon width={12} height={12} />
-        </button>
       </div>
 
       {showInfoBanner && (
