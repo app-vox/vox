@@ -14,7 +14,7 @@ export interface TranscriptionEntry {
   status: TranscriptionStatus;
   audioFilePath?: string;
   errorMessage?: string;
-  failedStep?: "whisper" | "llm";
+  failedStep?: "whisper" | "llm" | "garbage";
 }
 
 export interface PaginatedResult<T> {
