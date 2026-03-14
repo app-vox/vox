@@ -48,7 +48,7 @@ vi.mock("net", () => {
 
 // Mock http for probe and inference
 let httpGetHandler: ((res: EventEmitter) => void) | null = null;
-let httpRequestHandler: ((res: EventEmitter) => void) | null = null;
+let _httpRequestHandler: ((res: EventEmitter) => void) | null = null;
 
 vi.mock("http", () => {
   const createMockReq = () => {
@@ -78,7 +78,7 @@ vi.mock("http", () => {
       return req;
     }),
     request: vi.fn((_opts: unknown, cb: (res: EventEmitter) => void) => {
-      httpRequestHandler = cb;
+      _httpRequestHandler = cb;
       const req = createMockReq();
       return req;
     }),
@@ -95,7 +95,7 @@ describe("WhisperServer", () => {
     vi.clearAllMocks();
     server = new WhisperServer();
     httpGetHandler = null;
-    httpRequestHandler = null;
+    _httpRequestHandler = null;
   });
 
   describe("start", () => {

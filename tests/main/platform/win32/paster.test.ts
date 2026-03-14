@@ -41,8 +41,13 @@ describe("win32 paster", () => {
     expect(clipboard.writeText).toHaveBeenCalledWith("hello");
   });
 
-  it("strips trailing period from short text", () => {
-    pasteText("OK.", true);
+  it("strips trailing period from short text when finishWithPeriod is false", () => {
+    pasteText("OK.", true, { finishWithPeriod: false });
     expect(clipboard.writeText).toHaveBeenCalledWith("OK");
+  });
+
+  it("keeps trailing period when finishWithPeriod is true (default)", () => {
+    pasteText("OK.", true);
+    expect(clipboard.writeText).toHaveBeenCalledWith("OK.");
   });
 });
