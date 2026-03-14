@@ -380,6 +380,16 @@ export function registerIpcHandlers(
 
     try {
       const text = await retryPipeline.retryFromRecording(recording);
+
+      if (!text.trim()) {
+        historyManager.updateEntry(entryId, {
+          status: "whisper_failed",
+          errorMessage: "No speech detected",
+          failedStep: "garbage",
+        });
+        return historyManager.getEntry(entryId);
+      }
+
       const finalText = applyCase(stripTrailingPeriod(text), config.lowercaseStart);
 
       historyManager.updateEntry(entryId, {
