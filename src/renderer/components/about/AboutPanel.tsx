@@ -72,14 +72,6 @@ export function AboutPanel() {
           </p>
         </div>
         <div className={styles.headerRight}>
-          <button
-            className={card.learnMore}
-            onClick={() => window.voxApi.shell.openExternal(getDocsUrl(language))}
-          >
-            <BookIcon width={12} height={12} />
-            {t("general.about.documentation")}
-            <ExternalLinkIcon width={12} height={12} />
-          </button>
           {logoUrl && (
             <img
               src={logoUrl}
@@ -90,6 +82,14 @@ export function AboutPanel() {
               title={t("sidebar.visitWebsite")}
             />
           )}
+          <button
+            className={card.learnMore}
+            onClick={() => window.voxApi.shell.openExternal(getDocsUrl(language))}
+          >
+            <BookIcon width={12} height={12} />
+            {t("general.about.documentation")}
+            <ExternalLinkIcon width={12} height={12} />
+          </button>
         </div>
       </div>
       <div className={card.body}>
