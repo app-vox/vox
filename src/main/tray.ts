@@ -86,7 +86,8 @@ function simplifyModelName(fullName: string): string {
 export function setupTray(trayCallbacks: TrayCallbacks): void {
   callbacks = trayCallbacks;
 
-  const iconPath = getResourcePath("trayIcon.png");
+  const iconFile = app.isPackaged ? "trayIcon.png" : "trayIcon-dev.png";
+  const iconPath = getResourcePath(iconFile);
   if (!existsSync(iconPath)) {
     slog.error("Tray icon not found at", iconPath);
   }

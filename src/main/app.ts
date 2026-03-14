@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeTheme, session, dialog, shell } from "electron";
+import { app, BrowserWindow, ipcMain, nativeImage, nativeTheme, session, dialog, shell } from "electron";
 import * as path from "path";
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -11,6 +11,7 @@ import { createLlmProvider } from "./llm/factory";
 import { Pipeline } from "./pipeline";
 import { ShortcutManager } from "./shortcuts/manager";
 import { setupTray, setTrayModelState, updateTrayConfig, updateTrayMenu, getTrayState, destroyTray } from "./tray";
+import { getResourcePath } from "./resources";
 import { initAutoUpdater } from "./updater";
 import { isUpdating } from "./update-state";
 import { openHome, setAppMenuCallbacks, refreshAppMenu, suppressBlur, setHideOnBlur } from "./windows/home";
@@ -419,6 +420,15 @@ app.whenReady().then(async () => {
   shortcutManager.updateHud();
 
   await app.dock?.show();
+  if (!app.isPackaged) {
+    const devDockIcon = nativeImage.createFromPath(getResourcePath("dockIcon-dev.png"));
+    if (!devDockIcon.isEmpty()) {
+      app.dock?.setIcon(devDockIcon);
+      slog.info("Dev dock icon applied");
+    } else {
+      slog.warn("Dev dock icon not found at", getResourcePath("dockIcon-dev.png"));
+    }
+  }
   if (!initialConfig.showInDock) {
     app.dock?.hide();
   }
