@@ -387,6 +387,8 @@
   "general.recordingFeedback.sound.error": "Error",
   "general.recordingFeedback.classic": "Klassisch",
   "general.recordingFeedback.errorSound": "Warnton",
+  "general.recordingFeedback.showPreview": "Vorschau beim Sprechen anzeigen",
+  "general.recordingFeedback.showPreviewHint": "Zeigt eine Live-Transkriptionsvorschau unter dem HUD an, während Sie sprechen.",
   "general.textProcessing.title": "Transkriptionseinstellungen",
   "general.textProcessing.description": "Passen Sie die Formatierung des transkribierten Texts an.",
   "indicator.initializing": "Starten...",

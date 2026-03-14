@@ -12,6 +12,33 @@ const WIN_WIDTH = MAX_PILL_WIDTH + 40;
 const WIN_HEIGHT = 120;
 const DOCK_MARGIN = 24;
 const MIN_SCALE = 0.55;
+const TEXT_PANEL_GAP = 4;
+// 3 lines at 11px/1.5 line-height + 24px vertical padding
+const TEXT_PANEL_MAX_HEIGHT = 74;
+
+function getPreviewPanelWidth(): number {
+  const display = screen.getPrimaryDisplay();
+  return Math.round(display.workArea.width * 0.3);
+}
+
+function getExpandedWinWidth(): number {
+  const panelW = getPreviewPanelWidth();
+  return Math.max(WIN_WIDTH, panelW + 40);
+}
+
+function getExpandedWinHeight(): number {
+  return WIN_HEIGHT + TEXT_PANEL_GAP + TEXT_PANEL_MAX_HEIGHT + 20;
+}
+
+/** Clamp x so the window (including shadow) stays within the work area */
+function clampX(x: number, width: number): number {
+  const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+  const workArea = display.workArea;
+  const shadowMargin = 16;
+  const minX = workArea.x + shadowMargin;
+  const maxX = workArea.x + workArea.width - width - shadowMargin;
+  return Math.max(minX, Math.min(x, maxX));
+}
 
 export type HudState = "idle" | "initializing" | "listening" | "transcribing" | "enhancing" | "error" | "canceled" | "warning";
 
@@ -444,9 +471,11 @@ function buildHudHtml(): string {
   /* Undo bar (below widget during graceful cancel) */
   .undo-bar {
     display: flex; align-items: center; gap: 0;
-    margin-top: 6px;
+    margin-top: 0;
+    height: 0;
+    overflow: hidden;
     opacity: 0; pointer-events: none;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.2s ease, height 0.2s ease, margin-top 0.2s ease;
     flex-shrink: 0;
     background: rgba(25, 25, 25, 0.92);
     backdrop-filter: blur(20px);
@@ -456,7 +485,7 @@ function buildHudHtml(): string {
     padding: 4px 4px 4px 10px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2);
   }
-  .undo-bar.visible { opacity: 1; pointer-events: auto; }
+  .undo-bar.visible { opacity: 1; pointer-events: auto; height: auto; margin-top: 6px; overflow: visible; }
   .undo-bar .countdown-track {
     width: 96px; height: 3px;
     background: rgba(255,255,255,0.08);
@@ -489,6 +518,106 @@ function buildHudHtml(): string {
   .undo-bar .undo-btn:hover { background: rgba(255,255,255,0.16); color: white; }
   .undo-bar .undo-btn:active { transform: scale(0.95); }
   .undo-bar .undo-btn svg { flex-shrink: 0; }
+
+  /* Text panel */
+  .text-panel {
+    display: none;
+    margin-top: ${TEXT_PANEL_GAP}px;
+    background: rgba(20,20,35,0.95);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 0;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1),
+                opacity 0.3s ease,
+                border-color 0.4s ease;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+  }
+  .text-panel.visible {
+    display: block;
+    padding: 12px 16px;
+    max-height: ${TEXT_PANEL_MAX_HEIGHT}px;
+    opacity: 1;
+    overflow-y: auto;
+  }
+  .text-panel.morph-border {
+    border-color: rgba(68,170,255,0.3);
+  }
+  .text-panel.fade-out {
+    display: block;
+    opacity: 0;
+    max-height: 0;
+    padding: 0;
+    transform: translateY(-8px);
+    transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1),
+                opacity 0.3s ease,
+                padding 0.3s ease,
+                transform 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+  .text-panel::-webkit-scrollbar { width: 3px; }
+  .text-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+  .text-content {
+    font-size: 11px;
+    line-height: 1.5;
+    color: rgba(255,255,255,0.85);
+    font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    transition: filter 0.25s ease, opacity 0.25s ease;
+  }
+  .text-content.swapping {
+    filter: blur(3px);
+    opacity: 0.3;
+  }
+
+  .text-content .word {
+    display: inline;
+    transition: opacity 0.3s ease, filter 0.3s ease, transform 0.3s ease, color 0.5s ease;
+  }
+  .text-content .word.appearing {
+    animation: wordAppear 0.2s ease forwards;
+  }
+
+  @keyframes wordAppear {
+    0% { opacity: 0; transform: translateY(4px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  .tp-mic {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    margin-left: 3px;
+    opacity: 0.6;
+    animation: micBreathe 1.6s ease-in-out infinite;
+  }
+  .tp-mic.hidden { display: none; }
+  .tp-mic.no-anim { animation: none; }
+  .tp-mic svg { width: 11px; height: 11px; }
+
+  @keyframes micBreathe {
+    0%, 100% { opacity: 0.4; transform: scale(0.92); }
+    50% { opacity: 0.75; transform: scale(1.05); }
+  }
+
+  .text-content.enhancing {
+    filter: blur(4px);
+    opacity: 0.5;
+    transition: filter 0.4s ease, opacity 0.4s ease;
+  }
+  .text-content .word.shuffling {
+    display: inline-block;
+    animation: wordShuffle 1.2s ease-in-out infinite;
+  }
+  @keyframes wordShuffle {
+    0%, 100% { transform: translateY(0) translateX(0); }
+    25% { transform: translateY(-2px) translateX(1px); }
+    50% { transform: translateY(1px) translateX(-1px); }
+    75% { transform: translateY(-1px) translateX(2px); }
+  }
 </style></head>
 <body>
 <div class="scale-wrapper" id="scale-wrapper">
@@ -540,6 +669,10 @@ function buildHudHtml(): string {
     <div class="countdown-track"><div class="countdown-fill" id="countdown-fill"></div></div>
     <button class="undo-btn" id="undo-btn" onclick="event.stopPropagation(); window.electronAPI?.undoCancelRecording()"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M2 2l4 4M6 2l-4 4" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></svg><span id="undo-label">Undo</span></button>
   </div>
+  <div class="text-panel" id="text-panel">
+    <div class="text-content" id="text-content"></div>
+    <span class="tp-mic hidden" id="tp-mic"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></span>
+  </div>
 </div>
 <script>
 var currentState = 'idle';
@@ -557,7 +690,7 @@ var circleContent = document.getElementById('circle-content');
 var pillContent = document.getElementById('pill-content');
 var recentDragEnd = false;
 
-var interactiveEls = document.querySelectorAll('.widget, .hover-btn, .pill-cancel, .pill-copy, .pill-stop, .circle-cancel, .undo-bar, .undo-btn');
+var interactiveEls = document.querySelectorAll('.widget, .hover-btn, .pill-cancel, .pill-copy, .pill-stop, .circle-cancel, .undo-bar, .undo-btn, .text-panel');
 var ignoreDisabled = false;
 interactiveEls.forEach(function(el) {
   el.addEventListener('mouseenter', function() {
@@ -989,6 +1122,7 @@ function playAttention() {
 }
 
 function setPerformanceFlags(reduceAnimations, reduceEffects) {
+  tpReduceAnim = reduceAnimations;
   var id = 'perf-overrides';
   var existing = document.getElementById(id);
   if (existing) existing.remove();
@@ -1007,6 +1141,138 @@ function setPerformanceFlags(reduceAnimations, reduceEffects) {
     style.textContent = rules.join(' ');
     document.head.appendChild(style);
   }
+}
+
+// --- Text Panel ---
+var tpPanel = document.getElementById('text-panel');
+var tpContent = document.getElementById('text-content');
+var tpMic = document.getElementById('tp-mic');
+var tpTypingTimer = null;
+var tpLastText = '';
+var tpReduceAnim = false;
+var tpUserScrolled = false;
+
+tpPanel.addEventListener('scroll', function() {
+  var atBottom = tpPanel.scrollHeight - tpPanel.scrollTop - tpPanel.clientHeight < 12;
+  tpUserScrolled = !atBottom;
+});
+
+function tpScrollToBottom() {
+  if (tpUserScrolled) return;
+  requestAnimationFrame(function() { tpPanel.scrollTop = tpPanel.scrollHeight; });
+}
+
+function showTextPanel(text) {
+  clearTextPanelTimers();
+  tpLastText = text;
+  tpUserScrolled = false;
+  tpContent.innerHTML = '';
+  tpContent.classList.remove('enhancing');
+  tpMic.className = tpReduceAnim ? 'tp-mic no-anim' : 'tp-mic';
+  tpContent.appendChild(tpMic);
+  document.documentElement.style.height = '${getExpandedWinHeight()}px';
+  document.body.style.height = '${getExpandedWinHeight()}px';
+  document.body.style.overflow = 'visible';
+  document.body.style.alignItems = 'flex-start';
+  document.body.style.paddingTop = '${(WIN_HEIGHT - CIRCLE_SIZE) / 2}px';
+  tpPanel.className = 'text-panel visible';
+  var words = text.split(/\\s+/).filter(function(w) { return w.length > 0; });
+  for (var i = 0; i < words.length; i++) {
+    var span = document.createElement('span');
+    span.className = 'word';
+    span.textContent = words[i] + ' ';
+    tpContent.insertBefore(span, tpMic);
+  }
+  tpScrollToBottom();
+}
+
+var tpSwapTimer = null;
+
+function updateTextPanel(text) {
+  if (text === tpLastText) return;
+  var prevWordCount = tpLastText.split(/\\s+/).filter(function(w) { return w.length > 0; }).length;
+  tpLastText = text;
+  if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
+  if (tpSwapTimer) { clearTimeout(tpSwapTimer); tpSwapTimer = null; }
+  tpContent.classList.add('swapping');
+  tpSwapTimer = setTimeout(function() {
+    tpSwapTimer = null;
+    tpContent.innerHTML = '';
+    tpMic.className = tpReduceAnim ? 'tp-mic no-anim' : 'tp-mic';
+    tpContent.appendChild(tpMic);
+    var words = text.split(/\\s+/).filter(function(w) { return w.length > 0; });
+    for (var i = 0; i < words.length; i++) {
+      var span = document.createElement('span');
+      span.className = (!tpReduceAnim && i >= prevWordCount) ? 'word appearing' : 'word';
+      span.textContent = words[i] + ' ';
+      tpContent.insertBefore(span, tpMic);
+    }
+    tpContent.classList.remove('swapping');
+    tpScrollToBottom();
+  }, 250);
+}
+
+var tpShuffleTimer = null;
+
+function startEnhancingEffect() {
+  tpMic.className = 'tp-mic hidden';
+  tpPanel.classList.add('morph-border');
+  tpContent.classList.add('enhancing');
+  if (!tpReduceAnim) {
+    var wordEls = tpContent.querySelectorAll('.word');
+    var idx = 0;
+    function addShuffleNext() {
+      if (idx >= wordEls.length) return;
+      wordEls[idx].classList.add('shuffling');
+      wordEls[idx].style.animationDelay = (Math.random() * 0.6).toFixed(2) + 's';
+      idx++;
+      tpShuffleTimer = setTimeout(addShuffleNext, 30);
+    }
+    addShuffleNext();
+  }
+}
+
+function stopEnhancingEffect() {
+  if (tpShuffleTimer) { clearTimeout(tpShuffleTimer); tpShuffleTimer = null; }
+  tpContent.classList.remove('enhancing');
+  tpContent.querySelectorAll('.word.shuffling').forEach(function(w) {
+    w.classList.remove('shuffling');
+    w.style.animationDelay = '';
+  });
+  tpPanel.classList.remove('morph-border');
+}
+
+function hideTextPanel() {
+  if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
+  tpLastText = '';
+  tpUserScrolled = false;
+  doHideTextPanel();
+}
+
+function doHideTextPanel() {
+  clearTextPanelTimers();
+  stopEnhancingEffect();
+  tpPanel.classList.remove('visible');
+  tpPanel.classList.remove('morph-border');
+  tpPanel.classList.add('fade-out');
+  setTimeout(function() {
+    tpPanel.className = 'text-panel';
+    tpContent.innerHTML = '';
+    tpContent.classList.remove('enhancing');
+    tpMic.className = 'tp-mic hidden';
+    tpContent.appendChild(tpMic);
+    document.documentElement.style.height = '${WIN_HEIGHT}px';
+    document.body.style.height = '${WIN_HEIGHT}px';
+    document.body.style.overflow = 'hidden';
+    document.body.style.alignItems = 'center';
+    document.body.style.paddingTop = '0';
+  }, 450);
+}
+
+function clearTextPanelTimers() {
+  if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
+  if (tpShuffleTimer) { clearTimeout(tpShuffleTimer); tpShuffleTimer = null; }
+  if (tpSwapTimer) { clearTimeout(tpSwapTimer); tpSwapTimer = null; }
 }
 </script>
 </body></html>`;
@@ -1067,6 +1333,8 @@ export class HudWindow {
   private flashPausedAt: number | null = null;
   private flashRemainingMs = 0;
   private pendingAttention = false;
+  private textPanelVisible = false;
+  private textPanelResizeTimer: ReturnType<typeof setTimeout> | null = null;
 
   show(alwaysShow: boolean, showOnHover: boolean, position: WidgetPosition = "bottom-center"): void {
     const wasOff = !this.alwaysShow;
@@ -1164,6 +1432,11 @@ export class HudWindow {
     this.stopHoverTracking();
     this.clearFlashTimer();
     this.clearHideTimer();
+    if (this.textPanelResizeTimer) {
+      clearTimeout(this.textPanelResizeTimer);
+      this.textPanelResizeTimer = null;
+    }
+    this.textPanelVisible = false;
     if (this.window && !this.window.isDestroyed()) {
       this.window.destroy();
     }
@@ -1256,6 +1529,83 @@ export class HudWindow {
 
   showWarning(customText?: string): void {
     this.setState("warning", customText);
+  }
+
+  showTextPanelEmpty(): void {
+    if (!this.window || this.window.isDestroyed() || !this.contentReady) return;
+    if (this.textPanelResizeTimer) {
+      clearTimeout(this.textPanelResizeTimer);
+      this.textPanelResizeTimer = null;
+    }
+    this.textPanelVisible = true;
+    const expandedW = getExpandedWinWidth();
+    const panelW = getPreviewPanelWidth();
+    const bounds = this.window.getBounds();
+    const centerX = bounds.x + bounds.width / 2;
+    this.window.setBounds({
+      x: clampX(Math.round(centerX - expandedW / 2), expandedW),
+      y: bounds.y,
+      width: expandedW,
+      height: getExpandedWinHeight(),
+    });
+    this.execJs(`showTextPanel(''); tpPanel.style.width = '${panelW}px'`);
+  }
+
+  updateTextPanel(text: string): void {
+    if (!this.window || this.window.isDestroyed() || !this.contentReady) return;
+    const escaped = JSON.stringify(text);
+    this.execJs(`updateTextPanel(${escaped})`);
+  }
+
+  showTextPanel(text: string): void {
+    if (!this.window || this.window.isDestroyed() || !this.contentReady) return;
+    if (this.textPanelResizeTimer) {
+      clearTimeout(this.textPanelResizeTimer);
+      this.textPanelResizeTimer = null;
+    }
+    this.textPanelVisible = true;
+    const expandedW = getExpandedWinWidth();
+    const panelW = getPreviewPanelWidth();
+    const bounds = this.window.getBounds();
+    const centerX = bounds.x + bounds.width / 2;
+    this.window.setBounds({
+      x: clampX(Math.round(centerX - expandedW / 2), expandedW),
+      y: bounds.y,
+      width: expandedW,
+      height: getExpandedWinHeight(),
+    });
+    const escaped = JSON.stringify(text);
+    this.execJs(`tpPanel.style.width = '${panelW}px'; showTextPanel(${escaped})`);
+  }
+
+  startEnhancingEffect(): void {
+    this.execJs("startEnhancingEffect()");
+  }
+
+  stopEnhancingEffect(): void {
+    this.execJs("stopEnhancingEffect()");
+  }
+
+  hideTextPanel(): void {
+    if (!this.window || this.window.isDestroyed() || !this.contentReady) return;
+    if (!this.textPanelVisible) return;
+    this.textPanelVisible = false;
+    this.execJs(`hideTextPanel()`);
+    if (this.textPanelResizeTimer) {
+      clearTimeout(this.textPanelResizeTimer);
+    }
+    this.textPanelResizeTimer = setTimeout(() => {
+      this.textPanelResizeTimer = null;
+      if (!this.window || this.window.isDestroyed()) return;
+      const bounds = this.window.getBounds();
+      const centerX = bounds.x + bounds.width / 2;
+      this.window.setBounds({
+        x: Math.round(centerX - WIN_WIDTH / 2),
+        y: bounds.y,
+        width: WIN_WIDTH,
+        height: WIN_HEIGHT,
+      });
+    }, 450);
   }
 
   pauseFlashTimer(): void {

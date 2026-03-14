@@ -20,6 +20,7 @@ export interface PipelineDeps {
     start(): Promise<void>;
     stop(): Promise<RecordingResult>;
     cancel(): Promise<void>;
+    snapshot?(maxSeconds?: number): Promise<RecordingResult | null>;
     playAudioCue?(samples: number[], sampleRate?: number): Promise<void>;
   };
   transcribe(
@@ -40,6 +41,7 @@ export interface PipelineDeps {
     track(event: string, properties?: Record<string, unknown>): void;
   };
   onStage?: (stage: PipelineStage) => void;
+  onTranscriptionComplete?: (rawText: string) => void;
   onComplete?: (result: {
     text: string;
     originalText: string;
@@ -217,6 +219,34 @@ export class Pipeline {
     await this.deps.recorder.playAudioCue?.(samples, sampleRate);
   }
 
+  async snapshotAndTranscribe(): Promise<string | null> {
+    // Full buffer — gives Whisper all context for the most accurate preview
+    const snapshot = await this.deps.recorder.snapshot?.();
+    if (!snapshot || snapshot.audioBuffer.length === 0) return null;
+    // Require at least 0.5s of audio for meaningful transcription
+    const durationMs = (snapshot.audioBuffer.length / snapshot.sampleRate) * 1000;
+    if (durationMs < 500) return null;
+    try {
+      const result = await this.deps.transcribe(
+        snapshot.audioBuffer,
+        snapshot.sampleRate,
+        this.deps.modelPath,
+        this.deps.dictionary,
+        this.deps.speechLanguages,
+      );
+      const text = result.text
+        .replace(/\[[^\]]*\]/g, "")
+        .replace(/\([^)]*\)/g, "")
+        .replace(/\*[^*]*\*/g, "")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+      if (!text || !!detectGarbage(text)) return null;
+      return text;
+    } catch {
+      return null;
+    }
+  }
+
   async startRecording(): Promise<void> {
     if (!existsSync(this.deps.modelPath)) {
       throw new NoModelError();
@@ -240,6 +270,37 @@ export class Pipeline {
     }
 
     return this.processFromRecording(recording, gen);
+  }
+
+  /**
+   * Stop recording and process using pre-accumulated live preview text,
+   * skipping the Whisper transcription step entirely. Falls back to full
+   * Whisper transcription if the hint is empty or detected as garbage.
+   */
+  async stopAndProcessWithHint(hintText: string): Promise<string> {
+    const gen = this.generation;
+    const recording = await this.deps.recorder.stop();
+    this.heldRecording = recording;
+
+    if (this.canceled || gen !== this.generation) {
+      throw new CanceledError();
+    }
+
+    const rawText = hintText.trim();
+    if (!rawText || !!detectGarbage(rawText)) {
+      slog.info("Preview hint empty or garbage — falling back to Whisper");
+      return this.processFromRecording(recording, gen);
+    }
+
+    slog.info("Using live preview as transcript, skipping Whisper: %s", rawText.slice(0, 80));
+    this.heldTranscription = rawText;
+    this.deps.onTranscriptionComplete?.(rawText);
+
+    if (this.canceled || gen !== this.generation) {
+      throw new CanceledError();
+    }
+
+    return this.processFromTranscription(rawText, recording, gen);
   }
 
   gracefulCancel(): { stage: PipelineStage | "listening" } {
@@ -378,6 +439,7 @@ export class Pipeline {
       slog.info("LLM enhancement disabled", { processingTimeMs });
       this.deps.analytics?.track("llm_enhancement_skipped");
       if (!rawText) return "";
+      this.deps.onTranscriptionComplete?.(rawText);
       this.currentStage = null;
       this.deps.onComplete?.({ text: rawText, originalText: rawText, audioDurationMs, recording });
       return rawText;
@@ -410,6 +472,7 @@ export class Pipeline {
       return "";
     }
     slog.info("Transcription passed, sending to LLM");
+    this.deps.onTranscriptionComplete?.(rawText);
 
     if (this.canceled || gen !== this.generation) {
       throw new CanceledError();

@@ -70,6 +70,12 @@ vi.mock("../../../src/main/hud", () => {
       show = vi.fn();
       destroy = vi.fn();
       setShiftHeld = vi.fn();
+      showTextPanel = vi.fn();
+      showTextPanelEmpty = vi.fn();
+      updateTextPanel = vi.fn();
+      hideTextPanel = vi.fn();
+      startEnhancingEffect = vi.fn();
+      stopEnhancingEffect = vi.fn();
     },
   };
 });
@@ -92,6 +98,7 @@ function createMockPipeline(overrides: Record<string, unknown> = {}) {
     stopRecording: vi.fn().mockResolvedValue({ text: "" }),
     cancel: vi.fn().mockResolvedValue(undefined),
     playAudioCue: vi.fn().mockResolvedValue(undefined),
+    snapshotAndTranscribe: vi.fn().mockResolvedValue(null),
     ...overrides,
   };
 }
@@ -129,6 +136,11 @@ describe("ShortcutManager — recording start flow", () => {
       showError: vi.fn(),
       hide: vi.fn(),
       setShiftHeld: vi.fn(),
+      showTextPanelEmpty: vi.fn(),
+      updateTextPanel: vi.fn(),
+      hideTextPanel: vi.fn(),
+      startEnhancingEffect: vi.fn(),
+      stopEnhancingEffect: vi.fn(),
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- access private member for testing
     (manager as any).hud = mockHud;

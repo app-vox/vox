@@ -404,4 +404,63 @@ describe("Pipeline", () => {
     expect(events).toContain("llm_enhancement_started");
     expect(events).toContain("llm_enhancement_failed");
   });
+
+  it("should call onTranscriptionComplete with raw text before LLM enhancement", async () => {
+    const callOrder: string[] = [];
+    const onTranscriptionComplete = vi.fn().mockImplementation(() => callOrder.push("transcriptionComplete"));
+    (mockProvider.correct as ReturnType<typeof vi.fn>).mockImplementation(async () => {
+      callOrder.push("llmCorrect");
+      return "corrected text";
+    });
+
+    const pipeline = new Pipeline({
+      recorder: mockRecorder,
+      transcribe: mockTranscribe,
+      llmProvider: mockProvider,
+      modelPath: "/models/ggml-small.bin",
+      onTranscriptionComplete,
+    });
+
+    await pipeline.startRecording();
+    await pipeline.stopAndProcess();
+
+    expect(onTranscriptionComplete).toHaveBeenCalledWith("raw transcription");
+    expect(callOrder).toEqual(["transcriptionComplete", "llmCorrect"]);
+  });
+
+  it("should call onTranscriptionComplete in Whisper-only mode (NoopProvider)", async () => {
+    const { NoopProvider: ActualNoopProvider } = await import("../../src/main/llm/noop");
+    const onTranscriptionComplete = vi.fn();
+
+    const pipeline = new Pipeline({
+      recorder: mockRecorder,
+      transcribe: mockTranscribe,
+      llmProvider: new ActualNoopProvider(),
+      modelPath: "/models/ggml-small.bin",
+      onTranscriptionComplete,
+    });
+
+    await pipeline.startRecording();
+    await pipeline.stopAndProcess();
+
+    expect(onTranscriptionComplete).toHaveBeenCalledWith("raw transcription");
+  });
+
+  it("should not call onTranscriptionComplete when transcription is garbage", async () => {
+    const onTranscriptionComplete = vi.fn();
+    const garbageTranscribe = vi.fn().mockResolvedValue({ text: "thank you" });
+
+    const pipeline = new Pipeline({
+      recorder: mockRecorder,
+      transcribe: garbageTranscribe,
+      llmProvider: mockProvider,
+      modelPath: "/models/ggml-small.bin",
+      onTranscriptionComplete,
+    });
+
+    await pipeline.startRecording();
+    await pipeline.stopAndProcess();
+
+    expect(onTranscriptionComplete).not.toHaveBeenCalled();
+  });
 });

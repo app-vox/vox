@@ -16,6 +16,8 @@ const {
     loadURL: vi.fn(),
     isDestroyed: vi.fn().mockReturnValue(false),
     setPosition: mockSetPosition,
+    setBounds: vi.fn(),
+    getBounds: vi.fn().mockReturnValue({ x: 100, y: 200, width: 520, height: 120 }),
     showInactive: vi.fn(),
     hide: vi.fn(),
     blur: vi.fn(),
@@ -199,6 +201,45 @@ describe("HudWindow", () => {
       );
 
       vi.advanceTimersByTime(1300);
+      vi.useRealTimers();
+    });
+  });
+
+  describe("text panel", () => {
+    it("should call showTextPanel via executeJavaScript and resize window", () => {
+      const hud = createHudWithWindow();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (hud as any).contentReady = true;
+
+      hud.showTextPanel("hello world test");
+
+      expect(mockWindow.webContents.executeJavaScript).toHaveBeenCalledWith(
+        expect.stringContaining("showTextPanel(")
+      );
+      expect(mockWindow.setBounds).toHaveBeenCalled();
+    });
+
+    it("should call hideTextPanel and restore window bounds after delay", () => {
+      vi.useFakeTimers();
+      const hud = createHudWithWindow();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (hud as any).contentReady = true;
+
+      hud.showTextPanel("some text");
+      mockWindow.setBounds.mockClear();
+      mockWindow.webContents.executeJavaScript.mockClear();
+
+      hud.hideTextPanel();
+
+      expect(mockWindow.webContents.executeJavaScript).toHaveBeenCalledWith(
+        expect.stringContaining("hideTextPanel()")
+      );
+
+      vi.advanceTimersByTime(500);
+
+      expect(mockWindow.setBounds).toHaveBeenCalledWith(
+        expect.objectContaining({ height: 120 })
+      );
       vi.useRealTimers();
     });
   });

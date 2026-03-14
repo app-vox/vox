@@ -73,6 +73,12 @@ function setupPipeline(): void {
     analytics,
     onStage: (stage) => {
       shortcutManager?.getHud().setState(stage);
+      if (stage === "enhancing") {
+        shortcutManager?.getHud().startEnhancingEffect();
+      }
+    },
+    onTranscriptionComplete: (rawText) => {
+      shortcutManager?.getHud().updateTextPanel(rawText);
     },
     onLlmFailed: () => {
       const cfg = configManager.load();
@@ -92,7 +98,9 @@ function setupPipeline(): void {
           const stripped = latestConfig.finishWithPeriod ? result.text : stripTrailingPeriod(result.text);
           const finalText = applyCase(stripped, latestConfig.lowercaseStart);
 
-          const status = result.llmFailed ? "llm_failed" as const : "success" as const;
+        shortcutManager?.getHud().stopEnhancingEffect();
+
+        const status = result.llmFailed ? "llm_failed" as const : "success" as const;
 
           const entry = historyManager.add({
             text: finalText,

@@ -117,6 +117,10 @@ export class ShortcutManager {
   private canceledAtStage: string | null = null;
   private devModelOverride: boolean | null = null;
   private lastUnpastedText: string | null = null;
+  private liveTranscriptionTimer: ReturnType<typeof setTimeout> | null = null;
+  private lastSnapshotText = "";
+  // How often to re-transcribe the full audio buffer during live preview
+  private static readonly LIVE_PREVIEW_INTERVAL_MS = 2000;
   private isShiftHeld = false;
   private shiftAlone = false;
   private shiftTrackingActive = false;
@@ -329,6 +333,7 @@ export class ShortcutManager {
     }
     if (state === RecordingState.Hold || state === RecordingState.Toggle || state === RecordingState.Processing) {
       slog.info("Graceful cancel requested");
+      this.stopLiveTranscription();
       this.micActiveAt = 0;
       this.recordingGeneration++;
       const pipeline = this.deps.getPipeline();
@@ -343,6 +348,7 @@ export class ShortcutManager {
 
       this.stateMachine.setCanceling();
       this.hud.setState("canceled", undefined, true);
+      this.hud.hideTextPanel();
       this.hud.showUndoBar(3000);
 
       this.cancelTimer = setTimeout(() => {
@@ -371,6 +377,7 @@ export class ShortcutManager {
 
     this.hud.hideUndoBar();
     this.hud.setState("transcribing");
+    this.hud.showTextPanelEmpty();
     this.updateTrayState();
 
     pipeline.undoCancel().then((text) => {
@@ -380,6 +387,7 @@ export class ShortcutManager {
       }
 
       const trimmedText = text.trim();
+      this.hud.hideTextPanel();
       if (!trimmedText) {
         slog.info("No valid text after undo, showing error");
         const config = this.deps.configManager.load();
@@ -410,6 +418,7 @@ export class ShortcutManager {
     }).catch((err: unknown) => {
       if (gen !== this.recordingGeneration) return;
       slog.error("Undo pipeline failed", err);
+      this.hud.hideTextPanel();
       const config = this.deps.configManager.load();
       const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
       this.playCue(errorCueType);
@@ -1001,6 +1010,9 @@ export class ShortcutManager {
       }
 
       this.hud.setState("listening");
+      if (config.showPreview !== false) {
+        this.startLiveTranscription(pipeline, gen);
+      }
     }).catch((err: Error) => {
       if (gen !== this.recordingGeneration) {
         slog.info("Stale recording error (gen=%d, current=%d) — discarding", gen, this.recordingGeneration);
@@ -1027,6 +1039,7 @@ export class ShortcutManager {
   }
 
   private async onRecordingStop(): Promise<void> {
+    this.stopLiveTranscription();
     const elapsed = this.micActiveAt > 0 ? Date.now() - this.micActiveAt : 0;
     if (this.micActiveAt === 0 || elapsed < ShortcutManager.MIN_RECORDING_MS) {
       slog.info("Recording too short (%dms) or mic not ready — canceling", elapsed);
@@ -1041,6 +1054,7 @@ export class ShortcutManager {
       this.playCue(errorCueType);
       this.stateMachine.setIdle();
       this.hud.setState("canceled");
+      this.hud.hideTextPanel();
       this.updateTrayState();
       return;
     }
@@ -1060,7 +1074,10 @@ export class ShortcutManager {
 
     let hudEndState: "idle" | "error" | "canceled" | "warning" = "idle";
     try {
-      const text = await pipeline.stopAndProcess();
+      const hint = this.lastSnapshotText;
+      const text = hint
+        ? await pipeline.stopAndProcessWithHint(hint)
+        : await pipeline.stopAndProcess();
 
       // If generation changed, a restart/cancel happened — abandon this result
       if (gen !== this.recordingGeneration) {
@@ -1075,10 +1092,14 @@ export class ShortcutManager {
         slog.info("No valid text to paste, showing error");
         const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
         this.playCue(errorCueType);
+        this.hud.hideTextPanel();
         hudEndState = "error";
       } else {
-        slog.info("Valid text received, proceeding with %s", config.copyToClipboard ? "paste" : "injection");
-        await new Promise((r) => setTimeout(r, 200));
+        slog.info("Valid text received, proceeding with paste");
+        this.hud.hideTextPanel();
+        this.stateMachine.setIdle();
+        this.hud.setState("idle");
+        this.updateTrayState();
         const pasteConfig = this.deps.configManager.load();
         const forceCapitalize = this.isShiftHeld && this.shiftAlone && pasteConfig.shiftCapitalize && pasteConfig.lowercaseStart;
         const pasted = pasteText(trimmedText, pasteConfig.copyToClipboard, { lowercaseStart: pasteConfig.lowercaseStart, shiftCapitalize: forceCapitalize, finishWithPeriod: pasteConfig.finishWithPeriod });
@@ -1088,9 +1109,11 @@ export class ShortcutManager {
           const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
           this.playCue(errorCueType);
           this.lastUnpastedText = trimmedText;
+          this.hud.hideTextPanel();
           hudEndState = "warning";
         } else {
           this.lastUnpastedText = null;
+          this.hud.hideTextPanel();
           this.deps.analytics?.track("paste_completed", { method: !pasted ? "onboarding" : "auto-paste" });
         }
       }
@@ -1104,6 +1127,7 @@ export class ShortcutManager {
         slog.info("Operation canceled by user");
         const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
         this.playCue(errorCueType);
+        this.hud.hideTextPanel();
         hudEndState = "canceled";
       } else {
         slog.error("Pipeline failed", err);
@@ -1112,6 +1136,7 @@ export class ShortcutManager {
         });
         const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
         this.playCue(errorCueType);
+        this.hud.hideTextPanel();
         hudEndState = "error";
       }
     } finally {
@@ -1119,11 +1144,59 @@ export class ShortcutManager {
       this.hud.setShiftHeld(false);
       // Only update state if this is still the current generation
       if (gen === this.recordingGeneration) {
-        this.stateMachine.setIdle();
-        this.hud.setState(hudEndState);
-        this.updateTrayState();
+        if (hudEndState !== "idle") {
+          // Error/cancel/warning paths haven't set idle yet
+          this.stateMachine.setIdle();
+          this.hud.setState(hudEndState);
+          this.updateTrayState();
+        }
         slog.info("Ready for next recording");
       }
     }
+  }
+
+  private startLiveTranscription(pipeline: Pipeline, gen: number): void {
+    this.stopLiveTranscription();
+    this.lastSnapshotText = "";
+    let running = false;
+    this.hud.showTextPanelEmpty();
+
+    const tick = async (): Promise<void> => {
+      if (gen !== this.recordingGeneration) return;
+      if (running) {
+        // Previous transcription still in progress — retry shortly
+        this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 300);
+        return;
+      }
+      running = true;
+      try {
+        const text = await pipeline.snapshotAndTranscribe();
+        if (gen !== this.recordingGeneration) return;
+        if (text) {
+          this.lastSnapshotText = text;
+          this.hud.updateTextPanel(text);
+        }
+      } catch {
+        // Ignore errors during live transcription
+      } finally {
+        running = false;
+      }
+      if (gen !== this.recordingGeneration) return;
+      this.liveTranscriptionTimer = setTimeout(
+        () => { tick(); },
+        ShortcutManager.LIVE_PREVIEW_INTERVAL_MS,
+      );
+    };
+
+    // First snapshot after 800ms regardless of interval
+    this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 800);
+  }
+
+  private stopLiveTranscription(): void {
+    if (this.liveTranscriptionTimer) {
+      clearTimeout(this.liveTranscriptionTimer);
+      this.liveTranscriptionTimer = null;
+    }
+    this.lastSnapshotText = "";
   }
 }

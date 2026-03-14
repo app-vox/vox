@@ -119,6 +119,7 @@ export interface VoxConfig {
   recordingAudioCue: AudioCueType;
   recordingStopAudioCue: AudioCueType;
   errorAudioCue: AudioCueType;
+  showPreview: boolean;
   showHud: boolean;
   hudShowOnHover: boolean;
   showHudActions: boolean;
@@ -168,6 +169,7 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     recordingAudioCue: "tap",
     recordingStopAudioCue: "pop",
     errorAudioCue: "error",
+    showPreview: true,
     showHud: false,
     hudShowOnHover: false,
     showHudActions: true,

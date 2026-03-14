@@ -132,6 +132,44 @@ export class AudioRecorder {
     this.levelsInterval = lvl;
   }
 
+  async snapshot(maxSeconds?: number): Promise<RecordingResult | null> {
+    if (!this.recording || !this.win || this.win.isDestroyed()) return null;
+    try {
+      const maxSec = maxSeconds ?? 0;
+      const result: { audioBuffer: number[]; sampleRate: number } | null =
+        await this.win.webContents.executeJavaScript(`
+          (() => {
+            if (!window._recChunks || window._recChunks.length === 0) return null;
+            var sr = window._recCtx.sampleRate;
+            var totalLength = window._recChunks.reduce((sum, c) => sum + c.length, 0);
+            var maxSamples = ${maxSec} > 0 ? Math.round(${maxSec} * sr) : totalLength;
+            if (maxSamples >= totalLength) {
+              var merged = new Float32Array(totalLength);
+              var off = 0;
+              for (var c of window._recChunks) { merged.set(new Float32Array(c), off); off += c.length; }
+              return { audioBuffer: Array.from(merged), sampleRate: sr };
+            }
+            var tail = new Float32Array(maxSamples);
+            var pos = maxSamples;
+            for (var i = window._recChunks.length - 1; i >= 0 && pos > 0; i--) {
+              var chunk = new Float32Array(window._recChunks[i]);
+              var take = Math.min(chunk.length, pos);
+              tail.set(chunk.subarray(chunk.length - take), pos - take);
+              pos -= take;
+            }
+            return { audioBuffer: Array.from(tail), sampleRate: sr };
+          })()
+        `);
+      if (!result) return null;
+      return {
+        audioBuffer: new Float32Array(result.audioBuffer),
+        sampleRate: result.sampleRate,
+      };
+    } catch {
+      return null;
+    }
+  }
+
   async stop(): Promise<RecordingResult> {
     this.stopLevels();
     if (!this.recording || !this.win || this.win.isDestroyed()) {

@@ -387,6 +387,8 @@
   "general.recordingFeedback.sound.error": "Error",
   "general.recordingFeedback.classic": "Klasik",
   "general.recordingFeedback.errorSound": "Uyarı sesi",
+  "general.recordingFeedback.showPreview": "Konuşurken önizleme göster",
+  "general.recordingFeedback.showPreviewHint": "Konuşurken HUD'un altında canlı transkripsiyon önizlemesi gösterir.",
   "general.textProcessing.title": "Transkripsiyon tercihleri",
   "general.textProcessing.description": "Transkript edilen metnin biçimlendirmesini ayarlayın.",
   "indicator.initializing": "Başlatılıyor...",
