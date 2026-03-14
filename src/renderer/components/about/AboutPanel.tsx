@@ -8,14 +8,17 @@ import {
   SpinnerIcon,
   RefreshIcon,
   InfoCircleAltIcon,
+  BookIcon,
 } from "../../../shared/icons";
 import { useDevOverrideValue } from "../../hooks/use-dev-override";
-import { useT } from "../../i18n-context";
+import { useT, useLanguage } from "../../i18n-context";
+import { getDocsUrl } from "../../../shared/i18n";
 import card from "../shared/card.module.scss";
 import styles from "./AboutPanel.module.scss";
 
 export function AboutPanel() {
   const t = useT();
+  const language = useLanguage();
   const [updateState, setUpdateState] = useState<UpdateState | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const [currentVersion, setCurrentVersion] = useState("");
@@ -174,6 +177,14 @@ export function AboutPanel() {
               <button onClick={openIssueTracker} className={styles.aboutButton}>
                 <InfoCircleAltIcon width={16} height={16} />
                 <span>{t("general.about.reportIssue")}</span>
+                <ExternalLinkIcon width={14} height={14} />
+              </button>
+              <button
+                onClick={() => window.voxApi.shell.openExternal(getDocsUrl(language))}
+                className={styles.aboutButton}
+              >
+                <BookIcon width={16} height={16} />
+                <span>{t("general.about.documentation")}</span>
                 <ExternalLinkIcon width={14} height={14} />
               </button>
             </div>
