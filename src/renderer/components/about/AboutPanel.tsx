@@ -8,14 +8,17 @@ import {
   SpinnerIcon,
   RefreshIcon,
   InfoCircleAltIcon,
+  BookIcon,
 } from "../../../shared/icons";
 import { useDevOverrideValue } from "../../hooks/use-dev-override";
-import { useT } from "../../i18n-context";
+import { useT, useLanguage } from "../../i18n-context";
+import { getDocsUrl } from "../../../shared/i18n";
 import card from "../shared/card.module.scss";
 import styles from "./AboutPanel.module.scss";
 
 export function AboutPanel() {
   const t = useT();
+  const language = useLanguage();
   const [updateState, setUpdateState] = useState<UpdateState | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const [currentVersion, setCurrentVersion] = useState("");
@@ -68,16 +71,26 @@ export function AboutPanel() {
             {currentVersion ? `Vox v${currentVersion}` : t("general.about.versionInfo")}
           </p>
         </div>
-        {logoUrl && (
-          <img
-            src={logoUrl}
-            alt="Vox"
-            className={styles.aboutLogo}
-            draggable={false}
-            onClick={() => window.voxApi.shell.openExternal("https://usevox.app/")}
-            title={t("sidebar.visitWebsite")}
-          />
-        )}
+        <div className={styles.headerRight}>
+          {logoUrl && (
+            <img
+              src={logoUrl}
+              alt="Vox"
+              className={styles.aboutLogo}
+              draggable={false}
+              onClick={() => window.voxApi.shell.openExternal("https://usevox.app/")}
+              title={t("sidebar.visitWebsite")}
+            />
+          )}
+          <button
+            className={card.learnMore}
+            onClick={() => window.voxApi.shell.openExternal(getDocsUrl(language))}
+          >
+            <BookIcon width={12} height={12} />
+            {t("general.about.documentation")}
+            <ExternalLinkIcon width={12} height={12} />
+          </button>
+        </div>
       </div>
       <div className={card.body}>
         {showUpdateBanner ? (

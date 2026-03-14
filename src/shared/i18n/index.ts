@@ -52,3 +52,20 @@ export function resolveSystemLanguage(locale: string): SupportedLanguage {
   if (LANGUAGE_MAPPING[base]) return LANGUAGE_MAPPING[base];
   return "en";
 }
+
+const DOCS_LOCALE_MAP: Partial<Record<SupportedLanguage, string>> = {
+  "pt-BR": "pt",
+  "pt-PT": "pt",
+  es: "es",
+  fr: "fr",
+  de: "de",
+  it: "it",
+  ru: "ru",
+  tr: "tr",
+};
+
+export function getDocsUrl(locale: SupportedLanguage, path?: string): string {
+  const seg = DOCS_LOCALE_MAP[locale];
+  const base = seg ? `https://usevox.app/docs/${seg}/` : "https://usevox.app/docs/";
+  return path ? `${base}${path}` : base;
+}

@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { useConfigStore } from "../../stores/config-store";
 import { useDevOverrideValue } from "../../hooks/use-dev-override";
-import { useT } from "../../i18n-context";
+import { useT, useLanguage } from "../../i18n-context";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
-import { XIcon, ChevronsLeftIcon, ChevronLeftIcon, ChevronRightIcon, ChevronsRightIcon, InfoCircleIcon } from "../../../shared/icons";
+import { getDocsUrl } from "../../../shared/i18n";
+import { XIcon, ChevronsLeftIcon, ChevronLeftIcon, ChevronRightIcon, ChevronsRightIcon, InfoCircleIcon, BookIcon, ExternalLinkIcon } from "../../../shared/icons";
 import { CustomSelect } from "../ui/CustomSelect";
 import card from "../shared/card.module.scss";
 import form from "../shared/forms.module.scss";
@@ -33,6 +34,7 @@ function getWhisperTermBudget(dictionary: string[]): { fits: number; total: numb
 
 export function DictionaryPanel() {
   const t = useT();
+  const language = useLanguage();
   const config = useConfigStore((s) => s.config);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const saveConfig = useConfigStore((s) => s.saveConfig);
@@ -137,7 +139,17 @@ export function DictionaryPanel() {
   return (
     <div className={card.card}>
       <div className={card.header}>
-        <h2>{t("dictionary.title")}</h2>
+        <div className={styles.titleRow}>
+          <h2>{t("dictionary.title")}</h2>
+          <button
+            className={card.learnMore}
+            onClick={() => window.voxApi.shell.openExternal(getDocsUrl(language, "dictionary"))}
+          >
+            <BookIcon width={12} height={12} />
+            {t("dictionary.howToUse")}
+            <ExternalLinkIcon width={12} height={12} />
+          </button>
+        </div>
         <p className={card.description}>
           {t("dictionary.description")}
         </p>

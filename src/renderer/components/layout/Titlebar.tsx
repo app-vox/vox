@@ -2,8 +2,9 @@ import { useState, useEffect, lazy, Suspense } from "react";
 import type { UpdateState } from "../../../preload/index";
 import { useConfigStore } from "../../stores/config-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
-import { useT } from "../../i18n-context";
-import { GearIcon, InfoCircleIcon, DownloadIcon } from "../../../shared/icons";
+import { useT, useLanguage } from "../../i18n-context";
+import { getDocsUrl } from "../../../shared/i18n";
+import { GearIcon, InfoCircleIcon, DownloadIcon, BookIcon } from "../../../shared/icons";
 import { SaveToast } from "../ui/SaveToast";
 import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import styles from "./Titlebar.module.scss";
@@ -15,6 +16,7 @@ const LazyDevOverrideBadge = import.meta.env.DEV
 
 export function Titlebar() {
   const t = useT();
+  const language = useLanguage();
   const activeTab = useConfigStore((s) => s.activeTab);
   const setActiveTab = useConfigStore((s) => s.setActiveTab);
   const showToast = useSaveToast((s) => s.show);
@@ -98,6 +100,14 @@ export function Titlebar() {
         </Suspense>
       )}
       {renderUpdateButton()}
+      <button
+        className={styles.docsBtn}
+        onClick={() => window.voxApi.shell.openExternal(getDocsUrl(language))}
+        title={t("titlebar.docs")}
+      >
+        <BookIcon width={14} height={14} />
+        {t("titlebar.docs")}
+      </button>
       <button
         className={`${styles.actionBtn} ${activeTab === "about" ? styles.actionBtnActive : ""}`}
         onClick={() => setActiveTab("about")}
