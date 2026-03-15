@@ -10,6 +10,7 @@
   "scripts": {
     "build": "electron-vite build",
     "start": "electron-vite preview",
+    "predev": "./scripts/set-dev-icon.sh",
     "dev": "electron-vite dev",
     "build:legacy": "tsc",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
