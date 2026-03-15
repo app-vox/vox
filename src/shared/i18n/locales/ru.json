@@ -108,7 +108,7 @@
   "whisper.model.large.label": "Лучшая",
   "whisper.model.large.description": "Наивысшая точность, значительные ресурсы (~3 ГБ)",
   "whisper.model.turbo.label": "Рекомендуемая",
-  "whisper.model.turbo.description": "Лучшее соотношение скорости и точности (~809 МБ)",
+  "whisper.model.turbo.description": "Лучшее соотношение скорости и точности (~1.6 ГБ)",
   "whisper.quality.tiny": "Самая быстрая",
   "whisper.quality.base": "Быстрая",
   "whisper.quality.small": "Сбалансированная",

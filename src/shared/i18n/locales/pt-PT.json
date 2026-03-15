@@ -108,7 +108,7 @@
   "whisper.model.large.label": "Melhor",
   "whisper.model.large.description": "Melhor precisão, recursos significativos (~3GB)",
   "whisper.model.turbo.label": "Recomendado",
-  "whisper.model.turbo.description": "Melhor relação velocidade/precisão (~809MB)",
+  "whisper.model.turbo.description": "Melhor relação velocidade/precisão (~1.6GB)",
   "whisper.quality.tiny": "Mais Rápido",
   "whisper.quality.base": "Rápido",
   "whisper.quality.small": "Equilibrado",
