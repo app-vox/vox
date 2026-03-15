@@ -13,7 +13,6 @@ jobs:
   check:
     name: Typecheck, Lint, Test & Build
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
@@ -47,11 +46,12 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: always() && steps.test.outcome == 'success'
-        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage/lcov.info
-          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: |
+          curl -Os https://cli.codecov.io/latest/linux/codecov
+          chmod +x codecov
+          ./codecov upload-process --file coverage/lcov.info || true
 
       - name: Build
         id: build
