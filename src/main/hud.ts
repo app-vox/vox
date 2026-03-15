@@ -66,8 +66,8 @@ function buildHudHtml(): string {
   html, body {
     background: transparent;
     overflow: hidden;
-    width: ${WIN_WIDTH}px;
-    height: ${WIN_HEIGHT}px;
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1379,7 +1379,7 @@ export class HudWindow {
       skipTaskbar: true,
       resizable: false,
       focusable: false,
-      type: "panel",
+      ...(process.platform === "darwin" ? { type: "panel" } : {}),
       acceptFirstMouse: true,
       show: false,
       webPreferences: {
