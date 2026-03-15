@@ -113,19 +113,21 @@
       "resources{,/**/*}",
       "!resources/trayIcon-dev.png",
       "!resources/dockIcon-dev.png",
-      "vendor{,/**/*}",
       "node_modules/**/*",
       "!node_modules/*/{CHANGELOG.md,README.md,readme.md}"
     ],
     "asarUnpack": [
-      "vendor/whisper.cpp/**/*",
       "node_modules/koffi/**/*",
       "node_modules/uiohook-napi/**/*"
     ],
     "extraResources": [
       "resources{,/**/*}",
       "!resources/trayIcon-dev.png",
-      "!resources/dockIcon-dev.png"
+      "!resources/dockIcon-dev.png",
+      {
+        "from": "vendor/whisper.cpp",
+        "to": "vendor/whisper.cpp"
+      }
     ],
     "publish": {
       "provider": "github",

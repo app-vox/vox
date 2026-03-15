@@ -10,10 +10,11 @@ export interface TranscriptionResult {
   text: string;
 }
 
-// In packaged builds, app.getAppPath() points inside app.asar but native
-// binaries are in app.asar.unpacked. Replace accordingly for the binary path.
-const appRoot = app.getAppPath().replace("app.asar", "app.asar.unpacked");
-const WHISPER_BIN = path.join(appRoot, "vendor/whisper.cpp/whisper-cli");
+// In packaged builds, native binaries are copied to extraResources via
+// electron-builder. In dev, they live in the project root.
+const WHISPER_BIN = app.isPackaged
+  ? path.join(process.resourcesPath, "vendor/whisper.cpp/whisper-cli")
+  : path.join(app.getAppPath(), "vendor/whisper.cpp/whisper-cli");
 
 export async function transcribe(
   audioBuffer: Float32Array,
