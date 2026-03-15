@@ -10,21 +10,25 @@ import * as win32Window from "./win32/window";
 
 const platformPasters: Record<string, PasterModule> = {
   darwin: darwinPaster,
+  linux: darwinPaster,
   win32: win32Paster,
 };
 
 const platformPermissions: Record<string, PermissionsModule> = {
   darwin: darwinPermissions,
+  linux: darwinPermissions,
   win32: win32Permissions,
 };
 
 const platformWhisper: Record<string, WhisperModule> = {
   darwin: darwinWhisper,
+  linux: darwinWhisper,
   win32: win32Whisper,
 };
 
 const displays: Record<string, DisplayModule> = {
   darwin: darwinWindow,
+  linux: darwinWindow,
   win32: win32Window,
 };
 
