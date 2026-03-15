@@ -592,6 +592,23 @@ export function GeneralPanel() {
               </div>
             </label>
 
+            <label className={`${styles.checkboxRow} ${!config.showHud || !setupComplete ? styles.disabled : ""}`}>
+              <input
+                type="checkbox"
+                checked={config.showPreview ?? true}
+                disabled={!config.showHud || !setupComplete}
+                onChange={async () => {
+                  updateConfig({ showPreview: !config.showPreview });
+                  await saveConfig(false);
+                  triggerToast();
+                }}
+              />
+              <div>
+                <div className={styles.checkboxLabel}>{t("general.hud.showPreview")}</div>
+                <div className={styles.checkboxDesc}>{t("general.hud.showPreviewDesc")}</div>
+              </div>
+            </label>
+
             <div className={styles.hudSettingsRow}>
               <div className={styles.hudSelectsCol}>
                 <div className={styles.selectFieldRow}>
@@ -733,21 +750,6 @@ export function GeneralPanel() {
               onPreview={previewCue}
             />
           </div>
-          <label className={styles.checkboxRow} style={{ marginTop: 8 }}>
-            <input
-              type="checkbox"
-              checked={config.showPreview ?? true}
-              onChange={async () => {
-                updateConfig({ showPreview: !config.showPreview });
-                await saveConfig(false);
-                triggerToast();
-              }}
-            />
-            <div>
-              <div className={styles.checkboxLabel}>{t("general.recordingFeedback.showPreview")}</div>
-              <div className={styles.checkboxDesc}>{t("general.recordingFeedback.showPreviewHint")}</div>
-            </div>
-          </label>
         </div>
       </details>
 

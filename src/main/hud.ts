@@ -523,13 +523,13 @@ function buildHudHtml(): string {
   .text-panel {
     display: none;
     margin-top: ${TEXT_PANEL_GAP}px;
-    background: rgba(20,20,35,0.95);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(38,18,68,0.93);
+    border: 1px solid rgba(99,102,241,0.22);
     border-radius: 12px;
     padding: 0;
     max-height: 0;
     overflow: hidden;
-    opacity: 0.78;
+    opacity: 0.88;
     transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1),
                 border-color 0.4s ease;
     box-shadow: 0 8px 32px rgba(0,0,0,0.4);
@@ -537,7 +537,7 @@ function buildHudHtml(): string {
     backdrop-filter: blur(20px);
     position: relative;
   }
-  .text-panel:hover { opacity: 1; }
+  .text-panel:hover { opacity: 0.58; }
   .text-panel.visible {
     display: block;
     padding: 12px 28px 12px 16px;
@@ -590,7 +590,7 @@ function buildHudHtml(): string {
 
   @keyframes tpAppear {
     from { opacity: 0; transform: translateY(4px); }
-    to   { opacity: 0.78; transform: translateY(0); }
+    to   { opacity: 0.88; transform: translateY(0); }
   }
 
   .tp-mic {
@@ -607,15 +607,20 @@ function buildHudHtml(): string {
 
   .tp-close {
     position: absolute;
-    top: 6px; right: 8px;
-    background: none; border: none; padding: 2px 4px;
-    font-size: 13px; line-height: 1;
-    color: rgba(255,255,255,0.3);
+    top: 7px; right: 7px;
+    background: none; border: none; padding: 5px 7px;
+    font-size: 16px; line-height: 1;
+    color: rgba(255,255,255,0.35);
     cursor: pointer;
-    transition: color 0.15s ease;
+    border-radius: 6px;
+    transition: color 0.15s ease, background 0.15s ease, transform 0.1s ease;
     z-index: 1;
   }
-  .tp-close:hover { color: rgba(255,255,255,0.75); }
+  .tp-close:hover {
+    color: rgba(255,255,255,0.9);
+    background: rgba(255,255,255,0.12);
+    transform: scale(1.12);
+  }
 
   @keyframes micBreathe {
     0%, 100% { opacity: 0.4; transform: scale(0.92); }
