@@ -5,10 +5,6 @@ import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
 import { buildWhisperPrompt, buildWhisperArgs } from "../../shared/constants";
-import { WhisperServer } from "./whisper-server";
-import log from "electron-log/main";
-
-const slog = log.scope("Whisper");
 
 export interface TranscriptionResult {
   text: string;
@@ -20,42 +16,6 @@ const WHISPER_CLI = process.platform === "win32" ? "whisper-cli.exe" : "whisper-
 const WHISPER_BIN = app.isPackaged
   ? path.join(process.resourcesPath, "vendor/whisper.cpp", WHISPER_CLI)
   : path.join(app.getAppPath(), "vendor/whisper.cpp", WHISPER_CLI);
-
-// On non-macOS platforms, use a persistent whisper-server process to avoid
-// the ~500ms cold-start (model loading) on every transcription.
-const USE_SERVER = process.platform !== "darwin";
-let server: WhisperServer | null = null;
-
-/**
- * Start the persistent whisper-server process (non-macOS only).
- * Call this once at app launch. No-ops on macOS.
- */
-export async function initWhisperServer(modelPath: string): Promise<void> {
-  if (!USE_SERVER) return;
-  if (!modelPath || !fs.existsSync(modelPath)) {
-    slog.warn("Skipping whisper-server start: no model", modelPath);
-    return;
-  }
-
-  try {
-    if (!server) server = new WhisperServer();
-    await server.start(modelPath);
-  } catch (err) {
-    slog.error("Failed to start whisper-server, falling back to CLI", err);
-    server = null;
-  }
-}
-
-/**
- * Stop the persistent whisper-server process.
- * Call this on app quit.
- */
-export async function shutdownWhisperServer(): Promise<void> {
-  if (server) {
-    await server.stop();
-    server = null;
-  }
-}
 
 export async function transcribe(
   audioBuffer: Float32Array,
@@ -85,14 +45,8 @@ export async function transcribe(
       ? speechLanguages[0]
       : whisperArgs.language;
 
-    let text: string;
-
-    if (USE_SERVER && server?.isReady()) {
-      text = await server.transcribe(tempPath, language, prompt);
-    } else {
-      const stdout = await runWhisperCli(modelPath, tempPath, prompt, language, temperature);
-      text = parseWhisperOutput(stdout);
-    }
+    const stdout = await runWhisperCli(modelPath, tempPath, prompt, language, temperature);
+    const text = parseWhisperOutput(stdout);
 
     return { text };
   } finally {
