@@ -1,8 +1,12 @@
-import type { PasterModule, PermissionsModule } from "./types";
+import type { PasterModule, PermissionsModule, WhisperModule, DisplayModule } from "./types";
 import * as darwinPaster from "./darwin/paster";
 import * as darwinPermissions from "./darwin/permissions";
+import * as darwinWhisper from "./darwin/whisper";
+import * as darwinWindow from "./darwin/window";
 import * as win32Paster from "./win32/paster";
 import * as win32Permissions from "./win32/permissions";
+import * as win32Whisper from "./win32/whisper";
+import * as win32Window from "./win32/window";
 
 const platformPasters: Record<string, PasterModule> = {
   darwin: darwinPaster,
@@ -14,8 +18,20 @@ const platformPermissions: Record<string, PermissionsModule> = {
   win32: win32Permissions,
 };
 
+const platformWhisper: Record<string, WhisperModule> = {
+  darwin: darwinWhisper,
+  win32: win32Whisper,
+};
+
+const displays: Record<string, DisplayModule> = {
+  darwin: darwinWindow,
+  win32: win32Window,
+};
+
 export const paster: PasterModule = platformPasters[process.platform]!;
 export const permissions: PermissionsModule = platformPermissions[process.platform]!;
+export const whisper: WhisperModule = platformWhisper[process.platform]!;
+export const display: DisplayModule = displays[process.platform]!;
 
 export { applyCase, stripTrailingPeriod } from "./utils";
-export type { PasteOptions, PasterModule, PermissionsModule } from "./types";
+export type { PasteOptions, PasterModule, PermissionsModule, WhisperModule, DisplayModule } from "./types";

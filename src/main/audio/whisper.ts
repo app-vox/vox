@@ -5,6 +5,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
 import { buildWhisperPrompt, buildWhisperArgs } from "../../shared/constants";
+import { whisper as whisperConfig } from "../platform";
 
 export interface TranscriptionResult {
   text: string;
@@ -12,10 +13,9 @@ export interface TranscriptionResult {
 
 // In packaged builds, native binaries are copied to extraResources via
 // electron-builder. In dev, they live in the project root.
-const WHISPER_CLI = process.platform === "win32" ? "whisper-cli.exe" : "whisper-cli";
 const WHISPER_BIN = app.isPackaged
-  ? path.join(process.resourcesPath, "vendor/whisper.cpp", WHISPER_CLI)
-  : path.join(app.getAppPath(), "vendor/whisper.cpp", WHISPER_CLI);
+  ? path.join(process.resourcesPath, "vendor/whisper.cpp", whisperConfig.binaryName)
+  : path.join(app.getAppPath(), "vendor/whisper.cpp", whisperConfig.binaryName);
 
 export async function transcribe(
   audioBuffer: Float32Array,
@@ -34,16 +34,7 @@ export async function transcribe(
 
     const whisperArgs = buildWhisperArgs(speechLanguages);
     const prompt = buildWhisperPrompt(dictionary, whisperArgs.promptPrefix);
-    // On CPU-only platforms (Windows/Linux), language auto-detection runs the
-    // encoder twice — once to detect, once to transcribe — doubling latency.
-    // Use the first configured language instead; the LLM correction layer
-    // handles any cross-language artifacts.  On macOS Metal GPU the overhead
-    // is negligible so we keep auto-detect for accuracy.
-    const language = whisperArgs.language === "auto"
-      && process.platform !== "darwin"
-      && speechLanguages.length > 0
-      ? speechLanguages[0]
-      : whisperArgs.language;
+    const language = whisperConfig.resolveLanguage(whisperArgs.language, speechLanguages);
 
     const stdout = await runWhisperCli(modelPath, tempPath, prompt, language, temperature);
     const text = parseWhisperOutput(stdout);
@@ -56,16 +47,9 @@ export async function transcribe(
   }
 }
 
-// On macOS Metal handles compute, so threads are less critical.
-// On Windows/Linux (CPU-only), using ~75% of cores gives the best throughput
-// without starving the OS.  Minimum 4 to avoid slowdowns on low-core machines.
-const WHISPER_THREADS = process.platform === "darwin"
-  ? 4
-  : Math.max(4, Math.floor(os.cpus().length * 0.75));
-
 function runWhisperCli(modelPath: string, filePath: string, prompt: string, language = "auto", temperature?: number): Promise<string> {
   const args = [
-    "-t", String(WHISPER_THREADS),
+    "-t", String(whisperConfig.threads),
     "-l", language,
     "-m", modelPath,
     "-f", filePath,
@@ -79,7 +63,7 @@ function runWhisperCli(modelPath: string, filePath: string, prompt: string, lang
     execFile(
       WHISPER_BIN,
       args,
-      { timeout: process.platform === "darwin" ? 30000 : 120000 },
+      { timeout: whisperConfig.timeout },
       (error, stdout, stderr) => {
         if (error) {
           reject(new Error(`Whisper failed: ${stderr || error.message}`));
