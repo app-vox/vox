@@ -529,20 +529,22 @@ function buildHudHtml(): string {
     padding: 0;
     max-height: 0;
     overflow: hidden;
-    opacity: 0;
+    opacity: 0.78;
     transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1),
-                opacity 0.3s ease,
                 border-color 0.4s ease;
     box-shadow: 0 8px 32px rgba(0,0,0,0.4);
     -webkit-backdrop-filter: blur(20px);
     backdrop-filter: blur(20px);
+    position: relative;
   }
+  .text-panel:hover { opacity: 1; }
   .text-panel.visible {
     display: block;
-    padding: 12px 16px;
+    padding: 12px 28px 12px 16px;
     max-height: ${TEXT_PANEL_MAX_HEIGHT}px;
-    opacity: 1;
     overflow-y: auto;
+    animation: tpAppear 250ms ease forwards;
+    transition: opacity 0.15s ease;
   }
   .text-panel.morph-border {
     border-color: rgba(68,170,255,0.3);
@@ -586,6 +588,11 @@ function buildHudHtml(): string {
     100% { opacity: 1; transform: translateY(0); }
   }
 
+  @keyframes tpAppear {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 0.78; transform: translateY(0); }
+  }
+
   .tp-mic {
     display: inline-flex;
     align-items: center;
@@ -597,6 +604,18 @@ function buildHudHtml(): string {
   .tp-mic.hidden { display: none; }
   .tp-mic.no-anim { animation: none; }
   .tp-mic svg { width: 11px; height: 11px; }
+
+  .tp-close {
+    position: absolute;
+    top: 6px; right: 8px;
+    background: none; border: none; padding: 2px 4px;
+    font-size: 13px; line-height: 1;
+    color: rgba(255,255,255,0.3);
+    cursor: pointer;
+    transition: color 0.15s ease;
+    z-index: 1;
+  }
+  .tp-close:hover { color: rgba(255,255,255,0.75); }
 
   @keyframes micBreathe {
     0%, 100% { opacity: 0.4; transform: scale(0.92); }
@@ -670,6 +689,7 @@ function buildHudHtml(): string {
     <button class="undo-btn" id="undo-btn" onclick="event.stopPropagation(); window.electronAPI?.undoCancelRecording()"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M2 2l4 4M6 2l-4 4" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></svg><span id="undo-label">Undo</span></button>
   </div>
   <div class="text-panel" id="text-panel">
+    <button class="tp-close" id="tp-close" onclick="event.stopPropagation(); window.electronAPI?.closePreview()">×</button>
     <div class="text-content" id="text-content"></div>
     <span class="tp-mic hidden" id="tp-mic"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></span>
   </div>

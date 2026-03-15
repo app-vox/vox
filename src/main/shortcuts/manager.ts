@@ -1207,7 +1207,7 @@ export class ShortcutManager {
     this.lastSnapshotText = "";
   }
 
-  closeLivePreview(): void {
+  private closeLivePreview(): void {
     this.livePreviewClosedForSession = true;
     this.stopLiveTranscription();
     this.hud.hideTextPanel();
