@@ -119,6 +119,7 @@ export class ShortcutManager {
   private lastUnpastedText: string | null = null;
   private liveTranscriptionTimer: ReturnType<typeof setTimeout> | null = null;
   private lastSnapshotText = "";
+  private livePreviewClosedForSession = false;
   // How often to re-transcribe the full audio buffer during live preview
   private static readonly LIVE_PREVIEW_INTERVAL_MS = 1000;
   // Delay before the first snapshot after recording starts
@@ -909,6 +910,9 @@ export class ShortcutManager {
       this.hud.resumeFlashTimer();
     });
 
+    ipcMain.handle("hud:close-preview", () => {
+      this.closeLivePreview();
+    });
   }
 
   private startAccessibilityWatchdog(): void {
@@ -979,6 +983,7 @@ export class ShortcutManager {
   private onRecordingStart(): void {
     const pipeline = this.deps.getPipeline();
     this.recordingGeneration++;
+    this.livePreviewClosedForSession = false;
     this.lastUnpastedText = null;
     this.shiftTrackingActive = false;
     this.hud.setShiftHeld(false);
@@ -1012,7 +1017,7 @@ export class ShortcutManager {
       }
 
       this.hud.setState("listening");
-      if (config.showPreview !== false) {
+      if (config.showPreview !== false && !this.livePreviewClosedForSession) {
         this.startLiveTranscription(pipeline, gen);
       }
     }).catch((err: Error) => {
@@ -1200,5 +1205,11 @@ export class ShortcutManager {
       this.liveTranscriptionTimer = null;
     }
     this.lastSnapshotText = "";
+  }
+
+  closeLivePreview(): void {
+    this.livePreviewClosedForSession = true;
+    this.stopLiveTranscription();
+    this.hud.hideTextPanel();
   }
 }

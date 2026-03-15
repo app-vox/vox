@@ -227,3 +227,106 @@ describe("ShortcutManager — recording start flow", () => {
     expect(mockPipeline.playAudioCue).not.toHaveBeenCalled();
   });
 });
+
+describe("ShortcutManager — live preview session close", () => {
+  let manager: ShortcutManager;
+  let mockPipeline: ReturnType<typeof createMockPipeline>;
+  let mockHud: {
+    setState: ReturnType<typeof vi.fn>;
+    showError: ReturnType<typeof vi.fn>;
+    hide: ReturnType<typeof vi.fn>;
+    showTextPanelEmpty: ReturnType<typeof vi.fn>;
+    updateTextPanel: ReturnType<typeof vi.fn>;
+    hideTextPanel: ReturnType<typeof vi.fn>;
+    startEnhancingEffect: ReturnType<typeof vi.fn>;
+    stopEnhancingEffect: ReturnType<typeof vi.fn>;
+    setShiftHeld: ReturnType<typeof vi.fn>;
+  };
+  let mockConfigManager: { load: ReturnType<typeof vi.fn> };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    mockPipeline = createMockPipeline();
+    mockConfigManager = {
+      load: vi.fn().mockReturnValue(createMockConfig({ showPreview: true })),
+    };
+    manager = new ShortcutManager({
+      configManager: mockConfigManager,
+      getPipeline: () => mockPipeline,
+    } as unknown as ShortcutManagerDeps);
+    mockHud = {
+      setState: vi.fn(),
+      showError: vi.fn(),
+      hide: vi.fn(),
+      showTextPanelEmpty: vi.fn(),
+      updateTextPanel: vi.fn(),
+      hideTextPanel: vi.fn(),
+      startEnhancingEffect: vi.fn(),
+      stopEnhancingEffect: vi.fn(),
+      setShiftHeld: vi.fn(),
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (manager as any).hud = mockHud;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (manager as any).stateMachine = {
+      setIdle: vi.fn(),
+      setProcessing: vi.fn(),
+      getState: vi.fn().mockReturnValue("hold"),
+    };
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it("closeLivePreview() sets session flag, stops live transcription, and hides text panel", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (manager as any).livePreviewClosedForSession = false;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (manager as any).liveTranscriptionTimer = setTimeout(() => {}, 10000);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (manager as any).closeLivePreview();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((manager as any).livePreviewClosedForSession).toBe(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((manager as any).liveTranscriptionTimer).toBeNull();
+    expect(mockHud.hideTextPanel).toHaveBeenCalledOnce();
+  });
+
+  it("onRecordingStart() resets livePreviewClosedForSession to false each time", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (manager as any).livePreviewClosedForSession = true;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (manager as any).onRecordingStart();
+    await mockPipeline.startRecording();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((manager as any).livePreviewClosedForSession).toBe(false);
+  });
+
+  it("after closeLivePreview(), new onRecordingStart() resets flag and re-enables live preview", async () => {
+    mockConfigManager.load.mockReturnValue(createMockConfig({ showPreview: true }));
+
+    // Simulate user having closed the preview mid-session
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (manager as any).livePreviewClosedForSession = true;
+
+    // New recording starts — flag must reset and showTextPanelEmpty must be called
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (manager as any).onRecordingStart();
+    await mockPipeline.startRecording();
+    await mockPipeline.playAudioCue?.();
+    // One extra microtask flush to let the async chain fully resolve
+    await vi.advanceTimersByTimeAsync(0);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((manager as any).livePreviewClosedForSession).toBe(false);
+    // showTextPanelEmpty is called by startLiveTranscription, confirming live preview restarted
+    expect(mockHud.showTextPanelEmpty).toHaveBeenCalled();
+  });
+});
