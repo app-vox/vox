@@ -228,7 +228,14 @@ export class ShortcutManager {
           this.confirmCancel();
         } else if (state === RecordingState.Hold || state === RecordingState.Toggle || state === RecordingState.Processing) {
           slog.info("Escape pressed, starting graceful cancel");
-          this.cancelRecording();
+          const cfg = this.deps.configManager.load();
+          if (cfg.showPreview !== false && !this.livePreviewClosedForSession && this.hud.isTextPanelVisible()) {
+            slog.info("Dismissing live preview before cancel");
+            this.closeLivePreview();
+            setTimeout(() => { this.cancelRecording(); }, 200);
+          } else {
+            this.cancelRecording();
+          }
         } else {
           this.dismissHud();
         }

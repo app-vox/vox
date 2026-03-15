@@ -523,13 +523,12 @@ function buildHudHtml(): string {
   .text-panel {
     display: none;
     margin-top: ${TEXT_PANEL_GAP}px;
-    background: rgba(38,18,68,0.93);
-    border: 1px solid rgba(99,102,241,0.22);
+    background: rgba(25, 25, 25, 0.92);
+    border: 1px solid rgba(255,255,255,0.08);
     border-radius: 12px;
     padding: 0;
     max-height: 0;
     overflow: hidden;
-    opacity: 0.88;
     transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1),
                 border-color 0.4s ease;
     box-shadow: 0 8px 32px rgba(0,0,0,0.4);
@@ -537,28 +536,15 @@ function buildHudHtml(): string {
     backdrop-filter: blur(20px);
     position: relative;
   }
-  .text-panel:hover { opacity: 0.58; }
   .text-panel.visible {
     display: block;
     padding: 12px 28px 12px 16px;
     max-height: ${TEXT_PANEL_MAX_HEIGHT}px;
     overflow-y: auto;
     animation: tpAppear 250ms ease forwards;
-    transition: opacity 0.15s ease;
   }
   .text-panel.morph-border {
     border-color: rgba(68,170,255,0.3);
-  }
-  .text-panel.fade-out {
-    display: block;
-    opacity: 0;
-    max-height: 0;
-    padding: 0;
-    transform: translateY(-8px);
-    transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1),
-                opacity 0.3s ease,
-                padding 0.3s ease,
-                transform 0.4s cubic-bezier(0.4,0,0.2,1);
   }
   .text-panel::-webkit-scrollbar { width: 3px; }
   .text-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
@@ -590,7 +576,20 @@ function buildHudHtml(): string {
 
   @keyframes tpAppear {
     from { opacity: 0; transform: translateY(4px); }
-    to   { opacity: 0.88; transform: translateY(0); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes tpHide {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(-48px); }
+  }
+  .text-panel.hiding {
+    display: block;
+    padding: 12px 28px 12px 16px;
+    max-height: ${TEXT_PANEL_MAX_HEIGHT}px;
+    overflow-y: hidden;
+    animation: tpHide 180ms ease forwards;
+    pointer-events: none;
   }
 
   .tp-mic {
@@ -694,7 +693,7 @@ function buildHudHtml(): string {
     <button class="undo-btn" id="undo-btn" onclick="event.stopPropagation(); window.electronAPI?.undoCancelRecording()"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M2 2l4 4M6 2l-4 4" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></svg><span id="undo-label">Undo</span></button>
   </div>
   <div class="text-panel" id="text-panel">
-    <button class="tp-close" id="tp-close" onclick="event.stopPropagation(); window.electronAPI?.closePreview()">×</button>
+    <button class="tp-close" id="tp-close" onclick="event.stopPropagation(); tpDismissForSession()">×</button>
     <div class="text-content" id="text-content"></div>
     <span class="tp-mic hidden" id="tp-mic"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></span>
   </div>
@@ -1274,12 +1273,21 @@ function hideTextPanel() {
   doHideTextPanel();
 }
 
+function tpDismissForSession() {
+  if (!tpPanel.classList.contains('visible') || tpPanel.classList.contains('hiding')) return;
+  tpPanel.classList.remove('visible');
+  tpPanel.classList.add('hiding');
+  setTimeout(function() { window.electronAPI?.closePreview(); }, 180);
+}
+
 function doHideTextPanel() {
   clearTextPanelTimers();
   stopEnhancingEffect();
-  tpPanel.classList.remove('visible');
-  tpPanel.classList.remove('morph-border');
-  tpPanel.classList.add('fade-out');
+  var wasHiding = tpPanel.classList.contains('hiding');
+  tpPanel.classList.remove('visible', 'morph-border');
+  if (!wasHiding) {
+    tpPanel.classList.add('hiding');
+  }
   setTimeout(function() {
     tpPanel.className = 'text-panel';
     tpContent.innerHTML = '';
@@ -1291,8 +1299,25 @@ function doHideTextPanel() {
     document.body.style.overflow = 'hidden';
     document.body.style.alignItems = 'center';
     document.body.style.paddingTop = '0';
-  }, 450);
+  }, wasHiding ? 0 : 200);
 }
+
+// Drag-up gesture on text panel to dismiss
+var tpDragStart = null;
+tpPanel.addEventListener('mousedown', function(e) {
+  if (e.target.closest('.tp-close')) return;
+  tpDragStart = { x: e.clientX, y: e.clientY };
+});
+document.addEventListener('mousemove', function(e) {
+  if (!tpDragStart) return;
+  var dy = e.clientY - tpDragStart.y;
+  var adx = Math.abs(e.clientX - tpDragStart.x);
+  if (dy < -40 && Math.abs(dy) > adx * 1.5) {
+    tpDragStart = null;
+    tpDismissForSession();
+  }
+});
+document.addEventListener('mouseup', function() { tpDragStart = null; });
 
 function clearTextPanelTimers() {
   if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
@@ -1630,7 +1655,7 @@ export class HudWindow {
         width: WIN_WIDTH,
         height: WIN_HEIGHT,
       });
-    }, 450);
+    }, 220);
   }
 
   pauseFlashTimer(): void {
@@ -1680,6 +1705,10 @@ export class HudWindow {
 
   isVisible(): boolean {
     return this.window !== null && !this.window.isDestroyed() && this.window.isVisible();
+  }
+
+  isTextPanelVisible(): boolean {
+    return this.textPanelVisible;
   }
 
   getState(): HudState {
