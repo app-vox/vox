@@ -174,18 +174,20 @@ If correction fails, raw transcription is used. If transcription is empty (silen
 
 ### Setup
 
+> Requires [cmake](https://cmake.org/download).
+
 ```bash
 git clone https://github.com/app-vox/vox.git
 cd vox
-npm install
+make install   # installs npm deps + builds whisper.cpp
 ```
 
 ### Run
 
 ```bash
-npm run dev     # Development with hot reload
-npm test        # Run tests
-npm run dist    # Build production app
+make dev        # development with hot reload
+npm test        # run tests
+npm run dist    # build production app
 ```
 
 Built with Electron, React, TypeScript, and whisper.cpp.

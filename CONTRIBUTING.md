@@ -4,11 +4,13 @@ Thanks for your interest in contributing to Vox! Here's how to get started.
 
 ## Development setup
 
+> **Requires:** [cmake](https://cmake.org/download) — needed to build the whisper.cpp binary on first install.
+
 ```bash
 git clone https://github.com/app-vox/vox.git
 cd vox
-npm install
-npm run dev
+make install   # installs npm deps + builds whisper.cpp
+make dev       # starts the dev server
 ```
 
 ## Before submitting a PR
