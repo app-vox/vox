@@ -1,6 +1,9 @@
 node_modules/
 dist/
 out/
+
+# Vendored native binaries (built from source by scripts/build-whisper.sh)
+vendor/
 *.dmg
 *.tsbuildinfo
 .DS_Store

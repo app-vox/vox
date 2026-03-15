@@ -23,7 +23,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "dist": "electron-vite build && electron-builder",
-    "postinstall": "make -C node_modules/whisper-node/lib/whisper.cpp main"
+    "postinstall": "./scripts/build-whisper.sh"
   },
   "author": "Rodrigo Silva (https://github.com/rodrigoluizs)",
   "license": "FSL-1.1-ALv2",
@@ -65,8 +65,7 @@
     "electron-updater": "^6.7.3",
     "koffi": "^2.15.1",
     "posthog-node": "^5.24.15",
-    "uiohook-napi": "^1.5.4",
-    "whisper-node": "^1.1.1"
+    "uiohook-napi": "^1.5.4"
   },
   "overrides": {
     "fast-xml-parser": "^5.3.6",
@@ -118,14 +117,17 @@
       "!node_modules/*/{CHANGELOG.md,README.md,readme.md}"
     ],
     "asarUnpack": [
-      "node_modules/whisper-node/**/*",
       "node_modules/koffi/**/*",
       "node_modules/uiohook-napi/**/*"
     ],
     "extraResources": [
       "resources{,/**/*}",
       "!resources/trayIcon-dev.png",
-      "!resources/dockIcon-dev.png"
+      "!resources/dockIcon-dev.png",
+      {
+        "from": "vendor/whisper.cpp",
+        "to": "vendor/whisper.cpp"
+      }
     ],
     "publish": {
       "provider": "github",

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createDefaultConfig, createDefaultLlmFlat, narrowLlmConfig, spreadLlmToFlat } from "../../src/shared/config";
+import { createDefaultConfig, createDefaultLlmFlat, narrowLlmConfig, spreadLlmToFlat, type WhisperModelSize } from "../../src/shared/config";
 
 describe("VoxConfig", () => {
   it("should create a default config with foundry provider shape", () => {
@@ -8,7 +8,7 @@ describe("VoxConfig", () => {
     expect(config.llm.endpoint).toBe("");
     expect(config.llm.apiKey).toBe("");
     expect(config.llm.model).toBe("gpt-4o");
-    expect(config.whisper.model).toBe("small");
+    expect(config.whisper.model).toBe("turbo");
     expect(config.shortcuts.hold).toBe("Alt+Space");
     expect(config.shortcuts.toggle).toBe("Alt+Shift+Space");
   });
@@ -76,6 +76,11 @@ describe("VoxConfig", () => {
   it("should have hideOnBlur defaulting to false", () => {
     const config = createDefaultConfig();
     expect(config.hideOnBlur).toBe(false);
+  });
+
+  it("should accept 'turbo' as a valid WhisperModelSize", () => {
+    const size: WhisperModelSize = "turbo";
+    expect(size).toBe("turbo");
   });
 });
 

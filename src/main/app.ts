@@ -370,7 +370,7 @@ app.whenReady().then(async () => {
       logsPath: app.getPath("logs"),
       logLevelFile: String(log.transports.file.level),
       logLevelConsole: String(log.transports.console.level),
-      whisperLib: "whisper-node (whisper.cpp)",
+      whisperLib: "whisper.cpp v1.8.3 (vendored)",
     };
   });
 
