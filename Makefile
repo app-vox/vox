@@ -1,6 +1,10 @@
-.PHONY: release run dev build build-dev install uninstall
+.PHONY: release run dev build build-dev install deploy uninstall
 
-release: build uninstall install
+release: build uninstall deploy
+
+install:
+	@which cmake > /dev/null 2>&1 || (echo "cmake is required. Install it with: brew install cmake"; exit 1)
+	npm install
 
 build:
 	npm run dist
@@ -9,7 +13,7 @@ build-dev:
 	npm run build && CSC_IDENTITY_AUTO_DISCOVERY=false SKIP_NOTARIZE=1 npx electron-builder --mac dir -c.mac.provisioningProfile=
 	@printf 'provider: github\nowner: app-vox\nrepo: vox\n' > dist/mac-arm64/Vox.app/Contents/Resources/app-update.yml
 
-install:
+deploy:
 	@APP=$$(find dist -maxdepth 2 -name 'Vox.app' -type d 2>/dev/null | head -1); \
 	if [ -z "$$APP" ]; then echo "Vox.app not found in dist/. Run 'make build' first."; exit 1; fi; \
 	cp -R "$$APP" /Applications/Vox.app; \
@@ -18,10 +22,8 @@ install:
 uninstall:
 	rm -rf /Applications/Vox.app
 
-run:
-	npm install
+run: install
 	npm run start
 
-dev:
-	npm install
+dev: install
 	npm run dev
