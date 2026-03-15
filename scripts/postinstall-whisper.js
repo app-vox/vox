@@ -4,9 +4,9 @@
 const path = require("path");
 
 const scripts = {
-  darwin: "build-whisper.sh",
-  linux: "build-whisper.sh",
-  win32: "postinstall-whisper-win32.js",
+  darwin: "build-whisper-darwin.sh",
+  linux: "build-whisper-darwin.sh",
+  win32: "build-whisper-win32.js",
 };
 
 const script = scripts[process.platform];
