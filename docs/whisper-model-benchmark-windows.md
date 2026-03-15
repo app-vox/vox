@@ -5,7 +5,7 @@
 **CPU:** 16 logical cores (12 threads used by whisper)
 **GPU:** None detected by whisper.cpp
 **whisper.cpp:** v1.8.3 (MSVC pre-built binary)
-**LLM:** Foundry / bonial-claude-sonnet-4-5
+**LLM:** Claude Sonnet 4.5
 **Audio:** 36.1s recording, same audio for all tests
 
 ## Results
