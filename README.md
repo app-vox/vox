@@ -174,7 +174,7 @@ If correction fails, raw transcription is used. If transcription is empty (silen
 
 ### Setup
 
-> Requires [cmake](https://cmake.org/) (`brew install cmake` on macOS).
+> Requires [cmake](https://cmake.org/download).
 
 ```bash
 git clone https://github.com/app-vox/vox.git

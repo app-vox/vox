@@ -3,7 +3,7 @@
 release: build uninstall deploy
 
 install:
-	@which cmake > /dev/null 2>&1 || (echo "cmake is required. Install it with: brew install cmake"; exit 1)
+	@which cmake > /dev/null 2>&1 || (echo "cmake is required. See https://cmake.org/download"; exit 1)
 	npm install
 
 build:

@@ -4,7 +4,7 @@ Thanks for your interest in contributing to Vox! Here's how to get started.
 
 ## Development setup
 
-> **Requires:** [cmake](https://cmake.org/) (`brew install cmake` on macOS) — needed to build the whisper.cpp binary on first install.
+> **Requires:** [cmake](https://cmake.org/download) — needed to build the whisper.cpp binary on first install.
 
 ```bash
 git clone https://github.com/app-vox/vox.git
