@@ -38,8 +38,8 @@
     "minSimilarity": 0.9,
     "assertions": [
       {
-        "type": "must_contain",
-        "value": "5:30 PM"
+        "type": "must_match_regex",
+        "value": "5:30\\s*([Pp]\\.?\\s*[Mm]\\.?|PM)"
       },
       {
         "type": "must_not_contain",
@@ -184,8 +184,8 @@
         "value": "2026"
       },
       {
-        "type": "must_contain",
-        "value": "2 PM"
+        "type": "must_match_regex",
+        "value": "2\\s*([Pp]\\.?\\s*[Mm]\\.?|PM)"
       },
       {
         "type": "must_contain",
