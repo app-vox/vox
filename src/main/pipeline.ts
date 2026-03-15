@@ -400,6 +400,7 @@ export class Pipeline {
 
     this.currentStage = "transcribing";
     this.deps.onStage?.("transcribing");
+    const whisperStartTime = performance.now();
     let transcription: TranscriptionResult;
     try {
       transcription = await this.runTranscription(recording, gen);
@@ -419,6 +420,7 @@ export class Pipeline {
       throw err;
     }
 
+    const whisperTimeMs = Number((performance.now() - whisperStartTime).toFixed(1));
     const rawText = transcription.text.trim();
     this.heldTranscription = rawText;
     const audioDurationMs = Math.round((recording.audioBuffer.length / recording.sampleRate) * 1000);
@@ -435,8 +437,8 @@ export class Pipeline {
     });
 
     if (this.deps.llmProvider instanceof NoopProvider) {
-      const processingTimeMs = Number((performance.now() - processingStartTime).toFixed(1));
-      slog.info("LLM enhancement disabled", { processingTimeMs });
+      const totalTimeMs = Number((performance.now() - processingStartTime).toFixed(1));
+      slog.info("Pipeline timing", { whisperModel: this.whisperModelName, audioDurationMs, whisperMs: whisperTimeMs, llmMs: 0, totalMs: totalTimeMs });
       this.deps.analytics?.track("llm_enhancement_skipped");
       if (!rawText) return "";
       this.deps.onTranscriptionComplete?.(rawText);
@@ -452,7 +454,7 @@ export class Pipeline {
       if (garbageReason === "loop") {
         const retried = await this.retryWithTemperature(recording, gen);
         if (retried !== null) {
-          return this.processFromTranscription(retried, recording, gen);
+          return this.processFromTranscription(retried, recording, gen, whisperTimeMs);
         }
       }
 
@@ -478,7 +480,7 @@ export class Pipeline {
       throw new CanceledError();
     }
 
-    return this.processFromTranscription(rawText, recording, gen);
+    return this.processFromTranscription(rawText, recording, gen, whisperTimeMs);
   }
 
   private async retryWithTemperature(
@@ -529,7 +531,8 @@ export class Pipeline {
   private async processFromTranscription(
     rawText: string,
     recording: RecordingResult,
-    gen: number
+    gen: number,
+    whisperTimeMs = 0
   ): Promise<string> {
     const processingStartTime = performance.now();
     const audioDurationMs = Math.round((recording.audioBuffer.length / recording.sampleRate) * 1000);
@@ -589,8 +592,9 @@ export class Pipeline {
         throw new CanceledError();
       }
 
+      const llmTimeMs = Number((performance.now() - llmStartTime).toFixed(1));
       const totalTimeMs = Number((performance.now() - processingStartTime).toFixed(1));
-      slog.info("Pipeline complete (LLM failed)", { totalTimeMs });
+      slog.info("Pipeline timing (LLM failed)", { whisperModel: this.whisperModelName, llmProvider: llmProviderName, llmModel: this.deps.llmModelName, audioDurationMs, whisperMs: whisperTimeMs, llmMs: llmTimeMs, totalMs: totalTimeMs });
       this.currentStage = null;
       this.deps.onComplete?.({
         text: finalText,
@@ -607,8 +611,9 @@ export class Pipeline {
       throw new CanceledError();
     }
 
+    const llmTimeMs = Number((performance.now() - llmStartTime).toFixed(1));
     const totalTimeMs = Number((performance.now() - processingStartTime).toFixed(1));
-    slog.info("Pipeline complete", { totalTimeMs });
+    slog.info("Pipeline timing", { whisperModel: this.whisperModelName, llmProvider: llmProviderName, llmModel: this.deps.llmModelName, audioDurationMs, whisperMs: whisperTimeMs, llmMs: llmTimeMs, totalMs: totalTimeMs });
     this.currentStage = null;
 
     this.deps.onComplete?.({ text: finalText, originalText: rawText, audioDurationMs, recording });

@@ -79,7 +79,7 @@ function runWhisperCli(modelPath: string, filePath: string, prompt: string, lang
     execFile(
       WHISPER_BIN,
       args,
-      { timeout: 30000 },
+      { timeout: process.platform === "darwin" ? 30000 : 120000 },
       (error, stdout, stderr) => {
         if (error) {
           reject(new Error(`Whisper failed: ${stderr || error.message}`));
