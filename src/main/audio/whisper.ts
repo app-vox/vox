@@ -13,8 +13,7 @@ export interface TranscriptionResult {
 // In packaged builds, app.getAppPath() points inside app.asar but native
 // binaries are in app.asar.unpacked. Replace accordingly for the binary path.
 const appRoot = app.getAppPath().replace("app.asar", "app.asar.unpacked");
-const WHISPER_CPP_DIR = path.join(appRoot, "node_modules/whisper-node/lib/whisper.cpp");
-const WHISPER_BIN = path.join(WHISPER_CPP_DIR, "main");
+const WHISPER_BIN = path.join(appRoot, "vendor/whisper.cpp/whisper-cli");
 
 export async function transcribe(
   audioBuffer: Float32Array,
@@ -61,7 +60,7 @@ function runWhisper(modelPath: string, filePath: string, prompt: string, languag
     execFile(
       WHISPER_BIN,
       args,
-      { cwd: WHISPER_CPP_DIR, timeout: 30000 },
+      { timeout: 30000 },
       (error, stdout, stderr) => {
         if (error) {
           reject(new Error(`Whisper failed: ${stderr || error.message}`));
