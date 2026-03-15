@@ -7,6 +7,7 @@ export interface OpenAICompatibleConfig {
   model: string;
   customPrompt: string;
   hasCustomPrompt: boolean;
+  providerType?: "openai" | "deepseek" | "glm" | "litellm";
 }
 
 interface ChatCompletionResponse {
@@ -14,18 +15,22 @@ interface ChatCompletionResponse {
 }
 
 export class OpenAICompatibleProvider extends BaseLlmProvider {
-  protected readonly providerName = "OpenAICompatible";
+  protected providerName: string = "OpenAICompatible";
   private readonly config: OpenAICompatibleConfig;
 
   constructor(config: OpenAICompatibleConfig) {
     super(config.customPrompt, config.hasCustomPrompt);
     this.config = config;
+    if (config.providerType) {
+      this.providerName = config.providerType.toUpperCase();
+    }
   }
 
   protected async enhance(rawText: string): Promise<string> {
     const slog = log.scope(this.providerName);
     const base = this.config.endpoint.replace(/\/+$/, "");
-    const url = `${base}/v1/chat/completions`;
+    const path = this.config.providerType === "glm" ? "/chat/completions" : "/v1/chat/completions";
+    const url = `${base}${path}`;
 
     const requestBody = {
       model: this.config.model,
