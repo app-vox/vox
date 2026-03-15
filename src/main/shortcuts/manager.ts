@@ -120,7 +120,9 @@ export class ShortcutManager {
   private liveTranscriptionTimer: ReturnType<typeof setTimeout> | null = null;
   private lastSnapshotText = "";
   // How often to re-transcribe the full audio buffer during live preview
-  private static readonly LIVE_PREVIEW_INTERVAL_MS = 2000;
+  private static readonly LIVE_PREVIEW_INTERVAL_MS = 1000;
+  // Delay before the first snapshot after recording starts
+  private static readonly LIVE_PREVIEW_FIRST_SNAPSHOT_MS = 400;
   private isShiftHeld = false;
   private shiftAlone = false;
   private shiftTrackingActive = false;
@@ -1188,8 +1190,8 @@ export class ShortcutManager {
       );
     };
 
-    // First snapshot after 800ms regardless of interval
-    this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 800);
+    // First snapshot
+    this.liveTranscriptionTimer = setTimeout(() => { tick(); }, ShortcutManager.LIVE_PREVIEW_FIRST_SNAPSHOT_MS);
   }
 
   private stopLiveTranscription(): void {
