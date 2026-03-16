@@ -24,6 +24,22 @@ deploy:
 
 uninstall:
 	rm -rf /Applications/Vox.app
+else ifeq ($(UNAME),Linux)
+build:
+	npm run dist
+
+build-dev:
+	npm run build && npx electron-builder --linux dir
+
+deploy:
+	@APP=$$(find dist -maxdepth 2 -name '*.AppImage' -type f 2>/dev/null | head -1); \
+	if [ -z "$$APP" ]; then echo "AppImage not found in dist/. Run 'make build' first."; exit 1; fi; \
+	chmod +x "$$APP"; \
+	echo "Starting $$APP"; \
+	"$$APP" &
+
+uninstall:
+	@echo "Remove the AppImage file and ~/.config/autostart/vox.desktop"
 else
 build:
 	-cmd //c "taskkill /F /IM Vox.exe /T" 2>/dev/null; sleep 1
