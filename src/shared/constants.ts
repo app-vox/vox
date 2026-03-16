@@ -26,7 +26,7 @@ export const WHISPER_MODELS: Record<string, WhisperModelInfo> = {
     url: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin",
     sizeBytes: 460_000_000,
     description: "Good balance of speed and accuracy (~460MB)",
-    label: "Balanced",
+    label: "Recommended",
   },
   medium: {
     url: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin",
@@ -38,7 +38,7 @@ export const WHISPER_MODELS: Record<string, WhisperModelInfo> = {
     url: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin",
     sizeBytes: 1_600_000_000,
     description: "Best speed/accuracy ratio (~1.6GB)",
-    label: "Recommended",
+    label: "Turbo",
   },
   large: {
     url: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin",

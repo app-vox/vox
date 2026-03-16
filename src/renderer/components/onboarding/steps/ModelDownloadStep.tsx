@@ -46,7 +46,7 @@ export function ModelDownloadStep() {
         onCancel={modelManager.cancelDownload}
         onDelete={modelManager.deleteModel}
         downloadDisabled={!online}
-        recommendedSize="turbo"
+        recommendedSize="small"
         className={styles.modelList}
       />
 
