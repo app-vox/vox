@@ -47,6 +47,8 @@ export interface DisplayModule {
   supportsHideOnClose: boolean;
   /** Platform-specific default shortcut keys */
   defaultShortcuts: DefaultShortcuts;
+  /** Whether setIgnoreMouseEvents(true, { forward: true }) works (macOS/Windows only) */
+  supportsMouseForward: boolean;
 }
 
 export interface AutostartModule {

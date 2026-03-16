@@ -11,6 +11,8 @@ export const appMenuPlatformItems: DisplayModule["appMenuPlatformItems"] = [];
 export const supportsHideOnClose: DisplayModule["supportsHideOnClose"] = false;
 
 export const defaultShortcuts: DisplayModule["defaultShortcuts"] = {
-  hold: "DoubleTap:Alt",
+  hold: "DoubleTap:Ctrl",
   toggle: "DoubleTap:Ctrl",
 };
+
+export const supportsMouseForward: DisplayModule["supportsMouseForward"] = false;

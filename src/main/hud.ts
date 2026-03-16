@@ -1670,7 +1670,9 @@ export class HudWindow {
     });
 
     this.window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-    this.window.setIgnoreMouseEvents(true, { forward: true });
+    if (display.supportsMouseForward) {
+      this.window.setIgnoreMouseEvents(true, { forward: true });
+    }
 
     this.positionWindow();
 
@@ -2166,6 +2168,7 @@ export class HudWindow {
 
   setIgnoreMouseEvents(ignore: boolean): void {
     if (!this.window || this.window.isDestroyed()) return;
+    if (!display.supportsMouseForward) return;
     if (ignore) {
       this.window.setIgnoreMouseEvents(true, { forward: true });
     } else {

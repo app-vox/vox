@@ -5,6 +5,7 @@ import {
   appMenuPlatformItems,
   supportsHideOnClose,
   defaultShortcuts,
+  supportsMouseForward,
 } from "../../../../src/main/platform/linux/window";
 
 describe("linux display", () => {
@@ -24,8 +25,12 @@ describe("linux display", () => {
     expect(supportsHideOnClose).toBe(false);
   });
 
-  it("uses DoubleTap shortcuts to avoid Linux desktop conflicts", () => {
-    expect(defaultShortcuts.hold).toBe("DoubleTap:Alt");
+  it("uses DoubleTap:Ctrl shortcuts to avoid GNOME Alt interception", () => {
+    expect(defaultShortcuts.hold).toBe("DoubleTap:Ctrl");
     expect(defaultShortcuts.toggle).toBe("DoubleTap:Ctrl");
+  });
+
+  it("does not support mouse forward (Linux limitation)", () => {
+    expect(supportsMouseForward).toBe(false);
   });
 });

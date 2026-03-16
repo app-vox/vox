@@ -23,3 +23,5 @@ export const defaultShortcuts: DisplayModule["defaultShortcuts"] = {
   hold: "Alt+Space",
   toggle: "Alt+Shift+Space",
 };
+
+export const supportsMouseForward: DisplayModule["supportsMouseForward"] = true;
