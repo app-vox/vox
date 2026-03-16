@@ -11,7 +11,7 @@
   "general.theme.light": "Светлая",
   "general.theme.dark": "Тёмная",
   "general.theme.system": "Системная",
-  "general.theme.invertHud": "Инвертировать цвета HUD",
+  "general.theme.invertHud": "Инвертировать тему HUD",
   "general.theme.invertHudDescription": "При включении HUD использует противоположную тему приложению",
   "general.languages.title": "Языки",
   "general.languages.description": "Язык интерфейса приложения и предпочитаемые языки речи для транскрипции.",
