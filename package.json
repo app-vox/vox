@@ -1,7 +1,7 @@
 {
   "name": "vox",
   "version": "0.16.0",
-  "description": "Open-source macOS voice-to-text with local Whisper transcription and LLM correction",
+  "description": "Open-source voice-to-text with local Whisper transcription and LLM correction",
   "main": "out/main/index.js",
   "engines": {
     "node": "25.*.*",
@@ -10,20 +10,20 @@
   "scripts": {
     "build": "electron-vite build",
     "start": "electron-vite preview",
-    "predev": "./scripts/set-dev-icon.sh",
+    "predev": "bash scripts/set-dev-icon.sh",
     "dev": "electron-vite dev",
     "build:legacy": "tsc",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "lint": "eslint .",
     "lint:css": "stylelint \"src/**/*.{css,scss}\"",
     "lint:css:fix": "stylelint \"src/**/*.{css,scss}\" --fix",
-    "check:tokens": "./scripts/check-css-tokens.sh",
+    "check:tokens": "bash scripts/check-css-tokens.sh",
     "test": "vitest run",
     "test:pipeline": "vitest run --config vitest.pipeline.config.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "dist": "electron-vite build && electron-builder",
-    "postinstall": "./scripts/build-whisper.sh"
+    "postinstall": "node scripts/postinstall-whisper.js"
   },
   "author": "Rodrigo Silva (https://github.com/rodrigoluizs)",
   "license": "FSL-1.1-ALv2",
@@ -92,6 +92,18 @@
         "NSMicrophoneUsageDescription": "Vox needs microphone access to record your voice for transcription.",
         "NSAccessibilityUsageDescription": "Vox needs accessibility access to paste transcribed text automatically."
       }
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
     },
     "dmg": {
       "title": "Vox",

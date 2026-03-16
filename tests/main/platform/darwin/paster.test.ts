@@ -5,7 +5,8 @@ vi.mock("electron", () => ({
   Notification: class { show() {} },
 }));
 
-import { pasteText, applyCase } from "../../../src/main/input/paster";
+import { pasteText } from "../../../../src/main/platform/darwin/paster";
+import { applyCase } from "../../../../src/main/platform/utils";
 import { clipboard } from "electron";
 
 describe("pasteText", () => {

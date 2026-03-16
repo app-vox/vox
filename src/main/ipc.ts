@@ -1,4 +1,4 @@
-import { app, BrowserWindow, clipboard, ipcMain, nativeImage, nativeTheme, safeStorage, session, systemPreferences, shell, screen } from "electron";
+import { app, BrowserWindow, clipboard, ipcMain, nativeImage, nativeTheme, safeStorage, session, shell, screen } from "electron";
 import * as fs from "fs";
 import log from "electron-log/main";
 import { ConfigManager } from "./config/manager";
@@ -18,7 +18,7 @@ import * as path from "path";
 import { decodeWavFile } from "./audio/persistence";
 import { Pipeline } from "./pipeline";
 import { getLlmModelName } from "../shared/llm-utils";
-import { applyCase, stripTrailingPeriod } from "./input/paster";
+import { paster, permissions, applyCase, stripTrailingPeriod } from "./platform";
 
 const testLog = log.scope("LlmTest");
 
@@ -61,8 +61,8 @@ export function registerIpcHandlers(
     }
     analytics?.track("config_changed");
 
-    // Apply launch at login setting (macOS only, packaged builds only)
-    if (process.platform === "darwin" && app.isPackaged) {
+    // Apply launch at login setting (packaged builds only)
+    if (app.isPackaged) {
       app.setLoginItemSettings({
         openAtLogin: config.launchAtLogin,
         openAsHidden: false,
@@ -220,21 +220,9 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle("permissions:status", () => {
-    // Use only native AXIsProcessTrusted via koffi — avoid Electron's
-    // isTrustedAccessibilityClient which can interfere with TCC on Sequoia.
-    let accessibility: boolean | string = false;
-    try {
-      const koffi = require("koffi");
-      const appServices = koffi.load("/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices");
-      const AXIsProcessTrusted = appServices.func("AXIsProcessTrusted", "bool", []);
-      accessibility = AXIsProcessTrusted();
-    } catch (err: unknown) {
-      accessibility = `error: ${err instanceof Error ? err.message : String(err)}`;
-    }
-
     return {
-      microphone: systemPreferences.getMediaAccessStatus("microphone"),
-      accessibility,
+      microphone: permissions.getMicrophoneStatus(),
+      accessibility: permissions.getAccessibilityStatus(),
       pid: process.pid,
       execPath: process.execPath,
       bundleId: app.name,
@@ -249,16 +237,11 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle("permissions:request-microphone", async () => {
-    app.focus({ steal: true });
-    const granted = await systemPreferences.askForMediaAccess("microphone");
-    return granted;
+    return permissions.requestMicrophoneAccess();
   });
 
   ipcMain.handle("permissions:request-accessibility", () => {
-    // Don't call isTrustedAccessibilityClient(true) — on Sequoia it can
-    // register the app incorrectly causing the toggle to bounce back.
-    // Instead, just open System Settings and let the user add the app via "+".
-    shell.openExternal("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility");
+    permissions.openAccessibilitySettings();
   });
 
   ipcMain.handle("theme:system-dark", () => {
@@ -273,18 +256,9 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle("permissions:test-paste", () => {
-    const { pasteText } = require("./input/paster");
-
-    // Check native accessibility status
-    let hasAccessibility = false;
+    const hasAccessibility = paster.isAccessibilityGranted();
     try {
-      const koffi = require("koffi");
-      const as = koffi.load("/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices");
-      hasAccessibility = as.func("AXIsProcessTrusted", "bool", [])();
-    } catch { /* ignore */ }
-
-    try {
-      pasteText("Vox paste test");
+      paster.pasteText("Vox paste test");
       return {
         ok: true,
         hasAccessibility,

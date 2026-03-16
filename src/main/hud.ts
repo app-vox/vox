@@ -3,6 +3,7 @@ import { getResourcePath } from "./resources";
 import { BrowserWindow, screen } from "electron";
 import { t } from "../shared/i18n";
 import type { WidgetPosition } from "../shared/config";
+import { display } from "./platform";
 
 const CIRCLE_SIZE = 42;
 const PILL_WIDTH = 360;
@@ -16,9 +17,11 @@ const TEXT_PANEL_GAP = 4;
 // 3 lines at 11px/1.5 line-height + 24px vertical padding
 const TEXT_PANEL_MAX_HEIGHT = 74;
 
+const MAX_PREVIEW_WIDTH = MAX_PILL_WIDTH;
+
 function getPreviewPanelWidth(): number {
   const display = screen.getPrimaryDisplay();
-  return Math.round(display.workArea.width * 0.3);
+  return Math.min(Math.round(display.workArea.width * 0.3), MAX_PREVIEW_WIDTH);
 }
 
 function getExpandedWinWidth(): number {
@@ -66,8 +69,8 @@ function buildHudHtml(): string {
   html, body {
     background: transparent;
     overflow: hidden;
-    width: ${WIN_WIDTH}px;
-    height: ${WIN_HEIGHT}px;
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1380,7 +1383,7 @@ export class HudWindow {
       skipTaskbar: true,
       resizable: false,
       focusable: false,
-      type: "panel",
+      ...display.hudWindowOptions,
       acceptFirstMouse: true,
       show: false,
       webPreferences: {

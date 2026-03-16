@@ -5,6 +5,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
 import { buildWhisperPrompt, buildWhisperArgs } from "../../shared/constants";
+import { whisper as whisperConfig } from "../platform";
 
 export interface TranscriptionResult {
   text: string;
@@ -13,8 +14,8 @@ export interface TranscriptionResult {
 // In packaged builds, native binaries are copied to extraResources via
 // electron-builder. In dev, they live in the project root.
 const WHISPER_BIN = app.isPackaged
-  ? path.join(process.resourcesPath, "vendor/whisper.cpp/whisper-cli")
-  : path.join(app.getAppPath(), "vendor/whisper.cpp/whisper-cli");
+  ? path.join(process.resourcesPath, "vendor/whisper.cpp", whisperConfig.binaryName)
+  : path.join(app.getAppPath(), "vendor/whisper.cpp", whisperConfig.binaryName);
 
 export async function transcribe(
   audioBuffer: Float32Array,
@@ -33,7 +34,9 @@ export async function transcribe(
 
     const whisperArgs = buildWhisperArgs(speechLanguages);
     const prompt = buildWhisperPrompt(dictionary, whisperArgs.promptPrefix);
-    const stdout = await runWhisper(modelPath, tempPath, prompt, whisperArgs.language, temperature);
+    const language = whisperConfig.resolveLanguage(whisperArgs.language, speechLanguages);
+
+    const stdout = await runWhisperCli(modelPath, tempPath, prompt, language, temperature);
     const text = parseWhisperOutput(stdout);
 
     return { text };
@@ -44,13 +47,12 @@ export async function transcribe(
   }
 }
 
-function runWhisper(modelPath: string, filePath: string, prompt: string, language = "auto", temperature?: number): Promise<string> {
+function runWhisperCli(modelPath: string, filePath: string, prompt: string, language = "auto", temperature?: number): Promise<string> {
   const args = [
+    "-t", String(whisperConfig.threads),
     "-l", language,
     "-m", modelPath,
     "-f", filePath,
-    "--best-of", "5",
-    "--beam-size", "5",
     "--entropy-thold", "2.0",
     "--prompt", prompt,
   ];
@@ -61,7 +63,7 @@ function runWhisper(modelPath: string, filePath: string, prompt: string, languag
     execFile(
       WHISPER_BIN,
       args,
-      { timeout: 30000 },
+      { timeout: whisperConfig.timeout },
       (error, stdout, stderr) => {
         if (error) {
           reject(new Error(`Whisper failed: ${stderr || error.message}`));

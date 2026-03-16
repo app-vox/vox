@@ -3,6 +3,7 @@ import * as path from "path";
 import log from "electron-log/main";
 import { t } from "../../shared/i18n";
 import { isUpdating } from "../update-state";
+import { display as platformDisplay } from "../platform";
 
 const slog = log.scope("Vox");
 
@@ -40,12 +41,7 @@ function buildAppMenu(): void {
           label: t("menu.visitOnboarding"),
           click: () => menuCallbacks?.onOnboarding(),
         },
-        { type: "separator" },
-        { role: "services" },
-        { type: "separator" },
-        { role: "hide" },
-        { role: "hideOthers" },
-        { role: "unhide" },
+        ...platformDisplay.appMenuPlatformItems,
         { type: "separator" },
         { role: "quit" },
       ],
@@ -114,9 +110,7 @@ let homeWindow: BrowserWindow | null = null;
 let forceQuit = false;
 let blurSuppressed = false;
 let hideOnBlurEnabled = false;
-const isMac = process.platform === "darwin";
-
-if (isMac) {
+if (platformDisplay.supportsHideOnClose) {
   app.on("before-quit", () => {
     forceQuit = true;
   });
@@ -156,7 +150,7 @@ export function openHome(onClosed: () => void, initialTab?: string): void {
     maximizable: false,
     fullscreenable: false,
     title: "Vox",
-    titleBarStyle: "hiddenInset",
+    ...platformDisplay.homeWindowOptions,
     backgroundColor: nativeTheme.shouldUseDarkColors ? "#0a0a0a" : "#ffffff",
     webPreferences: {
       nodeIntegration: false,
@@ -228,7 +222,7 @@ export function openHome(onClosed: () => void, initialTab?: string): void {
     }
   });
 
-  if (isMac) {
+  if (platformDisplay.supportsHideOnClose) {
     homeWindow.on("close", (event) => {
       if (!forceQuit && !isUpdating()) {
         event.preventDefault();

@@ -46,6 +46,18 @@ Sections: `general.`, `whisper.`, `llm.`, `permissions.`, `shortcuts.`, `tray.`,
 - Transcribed speech content
 - User-entered content (custom prompts)
 
+## Platform-Specific Code: Use the Platform Module
+
+All platform-specific logic MUST live in `src/main/platform/`. Never use `process.platform` checks (e.g., `if (process.platform === "darwin")`) scattered across the codebase. Instead, add the behavior to the appropriate platform module and consume it through the exported interface.
+
+Platform modules: `PasterModule`, `PermissionsModule`, `WhisperModule`, `DisplayModule` — each with `darwin/` and `win32/` implementations resolved automatically at `src/main/platform/index.ts`.
+
+To add platform-specific behavior:
+
+1. Add the property or method to the interface in `src/main/platform/types.ts`
+2. Implement it in `src/main/platform/darwin/` and `src/main/platform/win32/`
+3. Import and use the module from `src/main/platform` in the consumer
+
 ## Onboarding and Settings Consistency
 
 The onboarding wizard (`src/renderer/components/onboarding/`) and the settings panels (`src/renderer/components/`) share UI components via `src/renderer/components/shared/`, `src/renderer/components/permissions/`, and `src/renderer/components/whisper/`. When modifying settings panels (WhisperPanel, PermissionsPanel, etc.), always check whether the corresponding onboarding step needs the same update — and vice versa. Shared components like `PermissionRow`, `ModelRow`, `RadioGroup`, and the `useWhisperTest` hook exist to keep both surfaces in sync.

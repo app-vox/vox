@@ -52,8 +52,8 @@ jobs:
           echo "version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
           echo "Bumped $CURRENT -> $NEW_VERSION (${{ inputs.release_type }})"
 
-  build:
-    name: Build
+  build-mac:
+    name: Build (macOS)
     needs: version
     runs-on: macos-latest
 
@@ -153,9 +153,53 @@ jobs:
             dist/latest-mac.yml
           if-no-files-found: error
 
+  build-windows:
+    name: Build (Windows)
+    needs: version
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
+        with:
+          node-version: 25
+          cache: npm
+
+      - name: Apply version
+        run: npm version "${{ needs.version.outputs.version }}" --no-git-tag-version
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Windows icon from logo
+        shell: pwsh
+        run: |
+          # Convert logo.png to icon.ico using magick (pre-installed on windows-latest)
+          magick resources/logo.png -define icon:auto-resize=256,128,64,48,32,16 build/icon.ico
+
+      - name: Build app
+        run: npm run build
+
+      - name: Package (NSIS installer)
+        env:
+          CSC_LINK: ${{ secrets.WIN_CERTIFICATE_P12_BASE64 }}
+          CSC_KEY_PASSWORD: ${{ secrets.WIN_CERTIFICATE_PASSWORD }}
+        run: npx electron-builder --win nsis --x64 --publish never
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: vox-${{ needs.version.outputs.version }}-win-x64
+          path: |
+            dist/*.exe
+            dist/*.blockmap
+            dist/latest.yml
+          if-no-files-found: error
+
   release:
     name: Publish Release
-    needs: [version, build]
+    needs: [version, build-mac, build-windows]
     if: ${{ !inputs.dry_run }}
     runs-on: ubuntu-latest
 
@@ -180,7 +224,7 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           path: artifacts
-          pattern: vox-*-mac-*
+          pattern: vox-*
 
       - name: Prepare release assets
         run: |
@@ -188,13 +232,19 @@ jobs:
           mkdir -p release
 
           # Move all build artifacts to release directory
-          find artifacts -type f \( -name "*.dmg" -o -name "*.zip" -o -name "*.blockmap" -o -name "latest-mac.yml" \) -exec mv {} release/ \;
+          find artifacts -type f \( \
+            -name "*.dmg" -o -name "*.zip" -o -name "*.exe" -o \
+            -name "*.blockmap" -o -name "latest-mac.yml" -o -name "latest.yml" \
+          \) -exec mv {} release/ \;
 
           # Create stable-named copies for releases/latest/download URLs
           DMG=$(find release -name "*.dmg" ! -name "Vox-mac-arm64.dmg" | head -1)
           ZIP=$(find release -name "*-mac.zip" | head -1)
+          EXE=$(find release -name "*.exe" ! -name "Vox-win-x64.exe" | head -1)
+
           cp "$DMG" "release/Vox-mac-arm64.dmg"
           cp "$ZIP" "release/Vox-mac-arm64.zip"
+          cp "$EXE" "release/Vox-win-x64.exe"
 
           ls -lh release/
 
@@ -230,6 +280,10 @@ jobs:
             release/Vox-${VERSION}-arm64-mac.zip.blockmap \
             release/latest-mac.yml \
             release/Vox-mac-arm64.dmg \
-            release/Vox-mac-arm64.zip
+            release/Vox-mac-arm64.zip \
+            release/Vox-${VERSION}-x64.exe \
+            release/Vox-${VERSION}-x64.exe.blockmap \
+            release/latest.yml \
+            release/Vox-win-x64.exe
 
           echo "Release created: $TAG"
