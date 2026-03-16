@@ -87,7 +87,7 @@ When introducing a new piece of shared state (used across multiple components), 
 
 - **Dependency Dashboard**: A GitHub issue tracks all pending, rate-limited, and ignored updates.
 - **Automerge**: Patch updates and low-risk devDependency changes merge automatically when CI passes.
-- **Native modules** (`whisper-node`, `koffi`, `uiohook-napi`): These are never automerged and include a manual testing checklist — verify audio recording, shortcuts, and builds on both arm64 and x64 Mac.
+- **Native modules** (`whisper-node`, `koffi`, `uiohook-napi`): These are never automerged and include a manual testing checklist — verify audio recording, shortcuts, and builds on macOS (arm64 and x64) and Windows.
 - **Major updates**: Always require manual review and are separated into individual PRs.
 
 See `renovate.json` for the full configuration.
