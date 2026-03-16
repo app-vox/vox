@@ -717,6 +717,21 @@ export function GeneralPanel() {
               </button>
             ))}
           </div>
+          <label className={styles.checkboxRow} style={{ marginTop: 8 }}>
+            <input
+              type="checkbox"
+              checked={config.hudInvertColors ?? false}
+              onChange={async () => {
+                updateConfig({ hudInvertColors: !config.hudInvertColors });
+                await saveConfig(false);
+                triggerToast();
+              }}
+            />
+            <div>
+              <div className={styles.checkboxLabel}>{t("general.theme.invertHud")}</div>
+              <div className={styles.checkboxDesc}>{t("general.theme.invertHudDescription")}</div>
+            </div>
+          </label>
         </div>
       </div>
 

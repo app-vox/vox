@@ -100,6 +100,7 @@ export class ConfigManager {
           showHud: saved.showHud ?? defaults.showHud,
           hudShowOnHover: saved.hudShowOnHover ?? defaults.hudShowOnHover,
           showHudActions: saved.showHudActions ?? defaults.showHudActions,
+          hudInvertColors: saved.hudInvertColors ?? defaults.hudInvertColors,
           hudPosition: migrateHudPosition(saved.hudPosition ?? saved.overlayPosition),
           hudCustomX: saved.hudCustomX ?? saved.overlayCustomX ?? defaults.hudCustomX,
           hudCustomY: saved.hudCustomY ?? saved.overlayCustomY ?? defaults.hudCustomY,

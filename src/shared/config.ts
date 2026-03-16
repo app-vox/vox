@@ -123,6 +123,7 @@ export interface VoxConfig {
   showHud: boolean;
   hudShowOnHover: boolean;
   showHudActions: boolean;
+  hudInvertColors: boolean;
   hudPosition: WidgetPosition;
   hudCustomX: number;
   hudCustomY: number;
@@ -173,6 +174,7 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     showHud: false,
     hudShowOnHover: false,
     showHudActions: true,
+    hudInvertColors: false,
     hudPosition: "bottom-center",
     hudCustomX: 0.5,
     hudCustomY: 0.9,

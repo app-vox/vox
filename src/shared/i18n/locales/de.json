@@ -11,6 +11,8 @@
   "general.theme.light": "Hell",
   "general.theme.dark": "Dunkel",
   "general.theme.system": "System",
+  "general.theme.invertHud": "HUD-Farben umkehren",
+  "general.theme.invertHudDescription": "Bei Aktivierung verwendet das HUD das entgegengesetzte Thema der App",
   "general.languages.title": "Sprachen",
   "general.languages.description": "App-Anzeigesprache und bevorzugte Sprechsprachen für die Transkription.",
   "general.language.title": "Systemsprache",
