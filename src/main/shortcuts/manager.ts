@@ -860,7 +860,7 @@ export class ShortcutManager {
       }
     });
 
-    ipcMain.handle("hud:drag", (_event, dx: number, dy: number) => {
+    ipcMain.on("hud:drag", (_event, dx: number, dy: number) => {
       this.hud.drag(dx, dy);
     });
 

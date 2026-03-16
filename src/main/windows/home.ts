@@ -150,7 +150,7 @@ export function openHome(onClosed: () => void, initialTab?: string): void {
     maximizable: false,
     fullscreenable: false,
     title: "Vox",
-    titleBarStyle: platformDisplay.titleBarStyle,
+    ...platformDisplay.homeWindowOptions,
     backgroundColor: nativeTheme.shouldUseDarkColors ? "#0a0a0a" : "#ffffff",
     webPreferences: {
       nodeIntegration: false,

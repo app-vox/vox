@@ -701,6 +701,7 @@ interactiveEls.forEach(function(el) {
     window.electronAPI?.setIgnoreMouseEvents(false);
   });
   el.addEventListener('mouseleave', function() {
+    if (isDragging) return;
     if (currentState !== 'idle' && currentState !== 'transcribing' && currentState !== 'enhancing') return;
     ignoreDisabled = false;
     window.electronAPI?.setIgnoreMouseEvents(true);

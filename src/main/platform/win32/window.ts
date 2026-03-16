@@ -1,6 +1,8 @@
 import type { DisplayModule } from "../types";
 
-export const titleBarStyle: DisplayModule["titleBarStyle"] = "hidden";
+export const homeWindowOptions: DisplayModule["homeWindowOptions"] = {
+  frame: false,
+};
 
 export const hudWindowOptions: DisplayModule["hudWindowOptions"] = {};
 

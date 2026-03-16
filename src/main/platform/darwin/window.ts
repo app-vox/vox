@@ -1,6 +1,8 @@
 import type { DisplayModule } from "../types";
 
-export const titleBarStyle: DisplayModule["titleBarStyle"] = "hiddenInset";
+export const homeWindowOptions: DisplayModule["homeWindowOptions"] = {
+  titleBarStyle: "hiddenInset",
+};
 
 export const hudWindowOptions: DisplayModule["hudWindowOptions"] = {
   type: "panel",

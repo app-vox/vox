@@ -213,7 +213,7 @@ export function TranscriptionsPanel() {
   }, [fetchPage]);
 
   useEffect(() => {
-    window.voxApi.history.onEntryAdded(() => {
+    return window.voxApi.history.onEntryAdded(() => {
       fetchPage();
     });
   }, [fetchPage]);

@@ -32,8 +32,8 @@ export interface WhisperModule {
 }
 
 export interface DisplayModule {
-  /** titleBarStyle for the main settings window */
-  titleBarStyle: BrowserWindowConstructorOptions["titleBarStyle"];
+  /** Extra BrowserWindow options for the main settings window (titlebar, frame, etc.) */
+  homeWindowOptions: Partial<BrowserWindowConstructorOptions>;
   /** Extra BrowserWindow options for the HUD overlay */
   hudWindowOptions: Partial<BrowserWindowConstructorOptions>;
   /** macOS-specific app menu items (services, hide, etc.) */
