@@ -6,7 +6,7 @@ describe("constants", () => {
     expect(WHISPER_MODELS).toHaveProperty("tiny");
     expect(WHISPER_MODELS).toHaveProperty("base");
     expect(WHISPER_MODELS).toHaveProperty("small");
-    expect(WHISPER_MODELS).toHaveProperty("medium");
+    expect(WHISPER_MODELS).toHaveProperty("turbo");
     expect(WHISPER_MODELS).toHaveProperty("large");
 
     for (const model of Object.values(WHISPER_MODELS)) {
@@ -14,6 +14,13 @@ describe("constants", () => {
       expect(model).toHaveProperty("sizeBytes");
       expect(model.url).toMatch(/^https:\/\//);
       expect(model.sizeBytes).toBeGreaterThan(0);
+    }
+  });
+
+  it("should list models in ascending size order", () => {
+    const sizes = Object.values(WHISPER_MODELS).map((m) => m.sizeBytes);
+    for (let i = 1; i < sizes.length; i++) {
+      expect(sizes[i]).toBeGreaterThan(sizes[i - 1]);
     }
   });
 

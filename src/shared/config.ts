@@ -89,7 +89,7 @@ export interface WhisperConfig {
   model: WhisperModelSize | "";
 }
 
-export type WhisperModelSize = "tiny" | "base" | "small" | "medium" | "large";
+export type WhisperModelSize = "tiny" | "base" | "small" | "turbo" | "large";
 
 export type ShortcutMode = "hold" | "toggle" | "both";
 

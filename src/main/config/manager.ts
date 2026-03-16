@@ -122,6 +122,10 @@ export class ConfigManager {
       }
     }
 
+    if (config.whisper.model === ("medium" as string)) {
+      config.whisper.model = "small";
+    }
+
     if (config.speechLanguages.length === 0) {
       const resolved = resolveWhisperLanguage(app?.getLocale?.() ?? "");
       if (resolved) config.speechLanguages = [resolved];

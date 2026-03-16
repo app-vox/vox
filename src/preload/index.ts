@@ -40,7 +40,10 @@ export interface UpdateState {
   error: string;
 }
 
+export type VoxPlatform = "darwin" | "win32" | "linux";
+
 export interface VoxAPI {
+  platform: VoxPlatform;
   config: {
     load(): Promise<import("../shared/config").VoxConfig>;
     loadLlmForProvider(provider: import("../shared/config").LlmProviderType): Promise<import("../shared/config").LlmConfig>;
@@ -106,7 +109,7 @@ export interface VoxAPI {
     add(entry: { text: string; originalText: string; audioDurationMs: number; whisperModel: string; llmEnhanced: boolean }): Promise<void>;
     deleteEntry(id: string): Promise<void>;
     clear(): Promise<void>;
-    onEntryAdded(callback: () => void): void;
+    onEntryAdded(callback: () => void): () => void;
     retry(entryId: string): Promise<import("../shared/types").TranscriptionEntry>;
     downloadAudio(entryId: string): Promise<string>;
     getAudioPath(entryId: string): Promise<string | null>;
@@ -166,6 +169,7 @@ export interface VoxAPI {
 }
 
 const voxApi: VoxAPI = {
+  platform: process.platform as VoxPlatform,
   config: {
     load: () => ipcRenderer.invoke("config:load"),
     loadLlmForProvider: (provider) => ipcRenderer.invoke("config:load-llm-for-provider", provider),
@@ -254,7 +258,9 @@ const voxApi: VoxAPI = {
     deleteEntry: (id) => ipcRenderer.invoke("history:delete-entry", id),
     clear: () => ipcRenderer.invoke("history:clear"),
     onEntryAdded: (callback) => {
-      ipcRenderer.on("history:entry-added", () => callback());
+      const handler = () => callback();
+      ipcRenderer.on("history:entry-added", handler);
+      return () => { ipcRenderer.removeListener("history:entry-added", handler); };
     },
     retry: (entryId) => ipcRenderer.invoke("history:retry", entryId),
     downloadAudio: (entryId) => ipcRenderer.invoke("history:download-audio", entryId),
@@ -306,7 +312,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   hudOpenSettings: () => ipcRenderer.invoke("hud:open-settings"),
   hudOpenTranscriptions: () => ipcRenderer.invoke("hud:open-transcriptions"),
   hudDisable: () => ipcRenderer.invoke("hud:disable"),
-  hudDrag: (dx: number, dy: number) => ipcRenderer.invoke("hud:drag", dx, dy),
+  hudDrag: (dx: number, dy: number) => ipcRenderer.send("hud:drag", dx, dy),
   hudDragEnd: () => ipcRenderer.invoke("hud:drag-end"),
   setIgnoreMouseEvents: (ignore: boolean) => ipcRenderer.invoke("hud:set-ignore-mouse", ignore),
   hudCopyLatest: () => ipcRenderer.invoke("hud:copy-latest"),

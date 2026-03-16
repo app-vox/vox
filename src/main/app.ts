@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeImage, nativeTheme, session, dialog, shell } from "electron";
+import { app, BrowserWindow, ipcMain, nativeImage, nativeTheme, session, dialog } from "electron";
 import * as path from "path";
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -16,7 +16,7 @@ import { initAutoUpdater } from "./updater";
 import { isUpdating } from "./update-state";
 import { openHome, setAppMenuCallbacks, refreshAppMenu, suppressBlur, setHideOnBlur } from "./windows/home";
 import { registerIpcHandlers } from "./ipc";
-import { isAccessibilityGranted, applyCase, stripTrailingPeriod } from "./input/paster";
+import { paster, permissions, applyCase, stripTrailingPeriod } from "./platform";
 import { SetupChecker } from "./setup/checker";
 import { HistoryManager } from "./history/manager";
 import { type AudioCueType } from "../shared/config";
@@ -186,6 +186,7 @@ function reloadConfig(): void {
   if (!busy) {
     setupPipeline();
   }
+
   shortcutManager?.registerShortcutKeys();
   shortcutManager?.updateHud();
   updateTrayConfig(config);
@@ -281,6 +282,7 @@ app.whenReady().then(async () => {
   });
 
   setupPipeline();
+
   historyManager.cleanup();
 
   // Clean up orphaned audio files
@@ -292,7 +294,7 @@ app.whenReady().then(async () => {
   );
   await cleanupOrphanedAudioFiles(validIds);
 
-  const hasAccessibility = isAccessibilityGranted();
+  const hasAccessibility = paster.isAccessibilityGranted();
   if (!hasAccessibility && initialConfig.onboardingCompleted) {
     const response = await dialog.showMessageBox({
       type: "warning",
@@ -305,7 +307,7 @@ app.whenReady().then(async () => {
     });
 
     if (response.response === 0) {
-      shell.openExternal("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility");
+      permissions.openAccessibilitySettings();
       slog.info("Opening Accessibility settings");
     } else {
       slog.info("User chose to continue without Accessibility permission");
@@ -370,7 +372,7 @@ app.whenReady().then(async () => {
       logsPath: app.getPath("logs"),
       logLevelFile: String(log.transports.file.level),
       logLevelConsole: String(log.transports.console.level),
-      whisperLib: "whisper-node (whisper.cpp)",
+      whisperLib: "whisper.cpp v1.8.3 (vendored)",
     };
   });
 

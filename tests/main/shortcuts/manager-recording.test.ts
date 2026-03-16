@@ -86,9 +86,21 @@ vi.mock("../../../src/main/tray", () => ({
   updateTrayConfig: vi.fn(),
 }));
 
-vi.mock("../../../src/main/input/paster", () => ({
-  pasteText: vi.fn(),
-  isAccessibilityGranted: vi.fn().mockReturnValue(true),
+vi.mock("../../../src/main/platform", () => ({
+  paster: {
+    pasteText: vi.fn().mockReturnValue(true),
+    isAccessibilityGranted: vi.fn().mockReturnValue(true),
+    hasFocusedElement: vi.fn().mockReturnValue(true),
+    hasActiveTextField: vi.fn().mockReturnValue(true),
+  },
+  permissions: {
+    getAccessibilityStatus: vi.fn().mockReturnValue(true),
+    getMicrophoneStatus: vi.fn().mockReturnValue("granted"),
+    requestMicrophoneAccess: vi.fn().mockResolvedValue(true),
+    openAccessibilitySettings: vi.fn(),
+  },
+  applyCase: vi.fn((text: string) => text),
+  stripTrailingPeriod: vi.fn((text: string) => text),
 }));
 
 import { ShortcutManager, type ShortcutManagerDeps } from "../../../src/main/shortcuts/manager";

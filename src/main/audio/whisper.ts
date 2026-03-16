@@ -5,16 +5,17 @@ import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
 import { buildWhisperPrompt, buildWhisperArgs } from "../../shared/constants";
+import { whisper as whisperConfig } from "../platform";
 
 export interface TranscriptionResult {
   text: string;
 }
 
-// In packaged builds, app.getAppPath() points inside app.asar but native
-// binaries are in app.asar.unpacked. Replace accordingly for the binary path.
-const appRoot = app.getAppPath().replace("app.asar", "app.asar.unpacked");
-const WHISPER_CPP_DIR = path.join(appRoot, "node_modules/whisper-node/lib/whisper.cpp");
-const WHISPER_BIN = path.join(WHISPER_CPP_DIR, "main");
+// In packaged builds, native binaries are copied to extraResources via
+// electron-builder. In dev, they live in the project root.
+const WHISPER_BIN = app.isPackaged
+  ? path.join(process.resourcesPath, "vendor/whisper.cpp", whisperConfig.binaryName)
+  : path.join(app.getAppPath(), "vendor/whisper.cpp", whisperConfig.binaryName);
 
 export async function transcribe(
   audioBuffer: Float32Array,
@@ -33,7 +34,9 @@ export async function transcribe(
 
     const whisperArgs = buildWhisperArgs(speechLanguages);
     const prompt = buildWhisperPrompt(dictionary, whisperArgs.promptPrefix);
-    const stdout = await runWhisper(modelPath, tempPath, prompt, whisperArgs.language, temperature);
+    const language = whisperConfig.resolveLanguage(whisperArgs.language, speechLanguages);
+
+    const stdout = await runWhisperCli(modelPath, tempPath, prompt, language, temperature);
     const text = parseWhisperOutput(stdout);
 
     return { text };
@@ -44,13 +47,12 @@ export async function transcribe(
   }
 }
 
-function runWhisper(modelPath: string, filePath: string, prompt: string, language = "auto", temperature?: number): Promise<string> {
+function runWhisperCli(modelPath: string, filePath: string, prompt: string, language = "auto", temperature?: number): Promise<string> {
   const args = [
+    "-t", String(whisperConfig.threads),
     "-l", language,
     "-m", modelPath,
     "-f", filePath,
-    "--best-of", "5",
-    "--beam-size", "5",
     "--entropy-thold", "2.0",
     "--prompt", prompt,
   ];
@@ -61,7 +63,7 @@ function runWhisper(modelPath: string, filePath: string, prompt: string, languag
     execFile(
       WHISPER_BIN,
       args,
-      { cwd: WHISPER_CPP_DIR, timeout: 30000 },
+      { timeout: whisperConfig.timeout },
       (error, stdout, stderr) => {
         if (error) {
           reject(new Error(`Whisper failed: ${stderr || error.message}`));

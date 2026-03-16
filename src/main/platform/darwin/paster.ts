@@ -1,5 +1,7 @@
 import { clipboard, Notification } from "electron";
-import { t } from "../../shared/i18n";
+import { applyCase, stripTrailingPeriod } from "../utils";
+import type { PasteOptions } from "../types";
+import { t } from "../../../shared/i18n";
 
 const kCGEventSourceStateHIDSystemState = 1;
 const kCGEventFlagMaskCommand = 0x100000;
@@ -221,23 +223,6 @@ function injectViaClipboard(text: string): void {
   }, CLIPBOARD_RESTORE_DELAY_MS);
 }
 
-export interface PasteOptions {
-  lowercaseStart?: boolean;
-  shiftCapitalize?: boolean;
-  finishWithPeriod?: boolean;
-}
-
-export function applyCase(text: string, lowercaseStart: boolean, forceCapitalize = false): string {
-  if (!text) return text;
-  if (lowercaseStart && !forceCapitalize) return text[0].toLowerCase() + text.slice(1);
-  return text;
-}
-
-export function stripTrailingPeriod(text: string): string {
-  if (!text.endsWith(".")) return text;
-  return text.slice(0, -1);
-}
-
 const UNICODE_CHUNK_SIZE = 20;
 
 function typeText(text: string): void {
@@ -307,8 +292,6 @@ export function pasteText(text: string, copyToClipboard = true, options?: PasteO
         // CGEvent failed — fall through to clipboard fallback
       }
     } else if (hasFocusedElement()) {
-      // Focused element exists but is NOT a text field (e.g. System Preferences,
-      // blank web page) — signal failure so the caller can show a warning.
       return false;
     }
 
