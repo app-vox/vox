@@ -594,7 +594,7 @@
   align-items: center;
   justify-content: center;
   width: 120px;
-  height: 80px;
+  height: 116px;
 }
 
 .hudPreviewButton {
@@ -615,6 +615,21 @@
   right: 16px;
   bottom: 12px;
   animation: cursor-approach 3s ease-in-out infinite;
+}
+
+.hudTextPanelDemo {
+  position: absolute;
+  bottom: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgb(38 18 68 / 93%);
+  border: 1px solid rgb(99 102 241 / 22%);
+  border-radius: 8px;
+  padding: var(--spacing-1-5) var(--spacing-2);
+  font-size: var(--font-size-2xs);
+  color: rgb(255 255 255 / 70%);
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 30%);
 }
 
 @keyframes hud-float {

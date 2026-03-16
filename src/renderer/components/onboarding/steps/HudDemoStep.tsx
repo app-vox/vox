@@ -48,6 +48,10 @@ export function HudDemoStep() {
           <svg className={styles.hudPreviewCursor} width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path d="M5 3l14 8-6.5 1.5L11 19z" fill="var(--color-text-tertiary)" stroke="var(--color-text-primary)" strokeWidth="1.5"/>
           </svg>
+          <div className={styles.hudTextPanelDemo}>
+            {/* eslint-disable-next-line i18next/no-literal-string */}
+            <span>hello this is a live preview...</span>
+          </div>
         </div>
       </div>
 

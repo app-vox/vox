@@ -82,6 +82,7 @@ vi.mock("../../../src/main/hud", () => {
       showTextPanelEmpty = vi.fn();
       updateTextPanel = vi.fn();
       hideTextPanel = vi.fn();
+      resetPreviewSession = vi.fn();
       startEnhancingEffect = vi.fn();
       stopEnhancingEffect = vi.fn();
     },

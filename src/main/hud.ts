@@ -526,43 +526,37 @@ function buildHudHtml(): string {
   .text-panel {
     display: none;
     margin-top: ${TEXT_PANEL_GAP}px;
-    background: rgba(20,20,35,0.95);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(25, 25, 25, 0.92);
+    border: 1px solid rgba(255,255,255,0.08);
     border-radius: 12px;
     padding: 0;
     max-height: 0;
     overflow: hidden;
-    opacity: 0;
     transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1),
-                opacity 0.3s ease,
                 border-color 0.4s ease;
     box-shadow: 0 8px 32px rgba(0,0,0,0.4);
     -webkit-backdrop-filter: blur(20px);
     backdrop-filter: blur(20px);
+    position: relative;
   }
   .text-panel.visible {
-    display: block;
-    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    padding: 8px 0 12px 0;
     max-height: ${TEXT_PANEL_MAX_HEIGHT}px;
-    opacity: 1;
-    overflow-y: auto;
+    overflow: hidden;
+    animation: tpAppear 250ms ease forwards;
   }
   .text-panel.morph-border {
-    border-color: rgba(68,170,255,0.3);
+    border-color: rgba(99,102,241,0.4);
   }
-  .text-panel.fade-out {
-    display: block;
-    opacity: 0;
-    max-height: 0;
-    padding: 0;
-    transform: translateY(-8px);
-    transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1),
-                opacity 0.3s ease,
-                padding 0.3s ease,
-                transform 0.4s cubic-bezier(0.4,0,0.2,1);
+  .tp-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 38px 0 16px;
   }
-  .text-panel::-webkit-scrollbar { width: 3px; }
-  .text-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+  .tp-scroll::-webkit-scrollbar { width: 3px; }
+  .tp-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
 
   .text-content {
     font-size: 11px;
@@ -589,6 +583,25 @@ function buildHudHtml(): string {
     100% { opacity: 1; transform: translateY(0); }
   }
 
+  @keyframes tpAppear {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes tpHide {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(-48px); }
+  }
+  .text-panel.hiding {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 0 12px 0;
+    max-height: ${TEXT_PANEL_MAX_HEIGHT}px;
+    overflow: hidden;
+    animation: tpHide 180ms ease forwards;
+    pointer-events: none;
+  }
+
   .tp-mic {
     display: inline-flex;
     align-items: center;
@@ -600,6 +613,44 @@ function buildHudHtml(): string {
   .tp-mic.hidden { display: none; }
   .tp-mic.no-anim { animation: none; }
   .tp-mic svg { width: 11px; height: 11px; }
+
+  .tp-close {
+    position: absolute;
+    top: 7px; right: 7px;
+    background: none; border: none; padding: 5px 7px;
+    font-size: 16px; line-height: 1;
+    color: rgba(255,255,255,0.35);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+    z-index: 1;
+  }
+  .tp-close:hover {
+    color: rgba(255,255,255,0.9);
+    background: rgba(255,255,255,0.12);
+    transform: scale(1.12);
+  }
+  .tp-restore {
+    position: absolute;
+    left: -32px; top: 50%;
+    transform: translateY(-50%);
+    width: 22px; height: 22px;
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 50%;
+    color: rgba(255,255,255,0.7);
+    display: none;
+    align-items: center; justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+    z-index: 10;
+  }
+  .tp-restore.visible { display: flex; }
+  .tp-restore:hover { background: rgba(99,102,241, 0.8); color: white; transform: translateY(-50%) scale(1.1); }
+  .tp-restore:active { transform: translateY(-50%) scale(0.96); background: rgba(99,102,241, 0.8); color: white; border-color: rgba(99,102,241, 0.3); }
+  .tp-restore.active { background: rgba(99,102,241, 0.8); color: white; border-color: rgba(99,102,241, 0.3); }
+  .tp-restore.active:hover { background: rgba(99,102,241, 0.95); border-color: rgba(99,102,241, 0.4); }
 
   @keyframes micBreathe {
     0%, 100% { opacity: 0.4; transform: scale(0.92); }
@@ -653,7 +704,7 @@ function buildHudHtml(): string {
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M8 2L2 8M2 2L8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       </button>
     </div>
-
+    <button class="tp-restore" id="tp-restore" title="${t("hud.restorePreview")}" onclick="event.stopImmediatePropagation(); tpTogglePreview()"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="17" y2="12"/><line x1="3" y1="17" x2="13" y2="17"/></svg></button>
   </div>
   <!-- Satellite hover buttons (siblings of widget, inside scale-wrapper for z-index) -->
   <div class="hover-btn close-btn" id="close-btn" onclick="event.stopPropagation(); if (recentDragEnd || wasDragged) return; var sw = document.getElementById('scale-wrapper'); sw.classList.add('vanishing'); setTimeout(function() { window.electronAPI?.hudDisable(); }, 350);">
@@ -673,8 +724,11 @@ function buildHudHtml(): string {
     <button class="undo-btn" id="undo-btn" onclick="event.stopPropagation(); window.electronAPI?.undoCancelRecording()"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M2 2l4 4M6 2l-4 4" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></svg><span id="undo-label">Undo</span></button>
   </div>
   <div class="text-panel" id="text-panel">
-    <div class="text-content" id="text-content"></div>
-    <span class="tp-mic hidden" id="tp-mic"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></span>
+    <button class="tp-close" id="tp-close" title="${t("hud.closePreview")}" onclick="event.stopPropagation(); tpDismissForSession()">×</button>
+    <div class="tp-scroll" id="tp-scroll">
+      <div class="text-content" id="text-content"></div>
+      <span class="tp-mic hidden" id="tp-mic"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></span>
+    </div>
   </div>
 </div>
 <script>
@@ -693,7 +747,7 @@ var circleContent = document.getElementById('circle-content');
 var pillContent = document.getElementById('pill-content');
 var recentDragEnd = false;
 
-var interactiveEls = document.querySelectorAll('.widget, .hover-btn, .pill-cancel, .pill-copy, .pill-stop, .circle-cancel, .undo-bar, .undo-btn, .text-panel');
+var interactiveEls = document.querySelectorAll('.widget, .hover-btn, .pill-cancel, .pill-copy, .pill-stop, .circle-cancel, .undo-bar, .undo-btn, .text-panel, .tp-restore');
 var ignoreDisabled = false;
 interactiveEls.forEach(function(el) {
   el.addEventListener('mouseenter', function() {
@@ -724,7 +778,6 @@ widget.addEventListener('mousedown', function(e) {
   wasDragged = false;
   dragStartX = e.screenX;
   dragStartY = e.screenY;
-
   var onMove = function(ev) {
     var dx = ev.screenX - dragStartX;
     var dy = ev.screenY - dragStartY;
@@ -953,6 +1006,17 @@ function setState(newState, cfg) {
   stopCountdown();
   if (newState !== 'transcribing' && newState !== 'enhancing') setShiftHeld(false);
 
+  // Hide restore button and text panel when transitioning out of recording states
+  if (newState !== 'listening' && newState !== 'transcribing' && newState !== 'enhancing') {
+    hideRestoreBtn();
+    if (tpPanel.classList.contains('visible') || tpPanel.classList.contains('hiding')) {
+      doHideTextPanel(true);
+    }
+  } else {
+    // During recording states, show toggle button if panel is not visible
+    updatePreviewToggleState();
+  }
+
   var isIdle = newState === 'idle';
   var isPill = !isIdle;
   var wasInPill = prevState !== 'idle';
@@ -1149,21 +1213,26 @@ function setPerformanceFlags(reduceAnimations, reduceEffects) {
 
 // --- Text Panel ---
 var tpPanel = document.getElementById('text-panel');
+var tpScroll = document.getElementById('tp-scroll');
 var tpContent = document.getElementById('text-content');
 var tpMic = document.getElementById('tp-mic');
+var tpRestore = document.getElementById('tp-restore');
 var tpTypingTimer = null;
 var tpLastText = '';
 var tpReduceAnim = false;
 var tpUserScrolled = false;
+var tpSessionDismissed = false;
+var tpFlyingOut = false;
+var tpSavedText = '';
 
-tpPanel.addEventListener('scroll', function() {
-  var atBottom = tpPanel.scrollHeight - tpPanel.scrollTop - tpPanel.clientHeight < 12;
+tpScroll.addEventListener('scroll', function() {
+  var atBottom = tpScroll.scrollHeight - tpScroll.scrollTop - tpScroll.clientHeight < 12;
   tpUserScrolled = !atBottom;
 });
 
 function tpScrollToBottom() {
   if (tpUserScrolled) return;
-  requestAnimationFrame(function() { tpPanel.scrollTop = tpPanel.scrollHeight; });
+  requestAnimationFrame(function() { tpScroll.scrollTop = tpScroll.scrollHeight; });
 }
 
 function showTextPanel(text) {
@@ -1179,41 +1248,43 @@ function showTextPanel(text) {
   document.body.style.overflow = 'visible';
   document.body.style.alignItems = 'flex-start';
   document.body.style.paddingTop = '${(WIN_HEIGHT - CIRCLE_SIZE) / 2}px';
+  tpPanel.style.animation = '';
   tpPanel.className = 'text-panel visible';
   var words = text.split(/\\s+/).filter(function(w) { return w.length > 0; });
-  for (var i = 0; i < words.length; i++) {
+  function addWordCC(idx) {
+    if (idx >= words.length) return;
     var span = document.createElement('span');
-    span.className = 'word';
-    span.textContent = words[i] + ' ';
+    span.className = tpReduceAnim ? 'word' : 'word appearing';
+    span.textContent = words[idx] + ' ';
     tpContent.insertBefore(span, tpMic);
+    tpScrollToBottom();
+    tpTypingTimer = setTimeout(function() { addWordCC(idx + 1); }, 60);
   }
-  tpScrollToBottom();
+  addWordCC(0);
+  updatePreviewToggleState();
 }
 
 var tpSwapTimer = null;
 
 function updateTextPanel(text) {
   if (text === tpLastText) return;
-  var prevWordCount = tpLastText.split(/\\s+/).filter(function(w) { return w.length > 0; }).length;
-  tpLastText = text;
   if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
   if (tpSwapTimer) { clearTimeout(tpSwapTimer); tpSwapTimer = null; }
-  tpContent.classList.add('swapping');
-  tpSwapTimer = setTimeout(function() {
-    tpSwapTimer = null;
-    tpContent.innerHTML = '';
-    tpMic.className = tpReduceAnim ? 'tp-mic no-anim' : 'tp-mic';
-    tpContent.appendChild(tpMic);
-    var words = text.split(/\\s+/).filter(function(w) { return w.length > 0; });
-    for (var i = 0; i < words.length; i++) {
-      var span = document.createElement('span');
-      span.className = (!tpReduceAnim && i >= prevWordCount) ? 'word appearing' : 'word';
-      span.textContent = words[i] + ' ';
-      tpContent.insertBefore(span, tpMic);
-    }
-    tpContent.classList.remove('swapping');
+  var prevWordCount = tpLastText.split(/\\s+/).filter(function(w) { return w.length > 0; }).length;
+  tpLastText = text;
+  var newWords = text.split(/\\s+/).filter(function(w) { return w.length > 0; });
+  var wordsToAdd = newWords.slice(prevWordCount);
+  if (wordsToAdd.length === 0) return;
+  function addNextCC(idx) {
+    if (idx >= wordsToAdd.length) return;
+    var span = document.createElement('span');
+    span.className = tpReduceAnim ? 'word' : 'word appearing';
+    span.textContent = wordsToAdd[idx] + ' ';
+    tpContent.insertBefore(span, tpMic);
     tpScrollToBottom();
-  }, 250);
+    tpTypingTimer = setTimeout(function() { addNextCC(idx + 1); }, 60);
+  }
+  addNextCC(0);
 }
 
 var tpShuffleTimer = null;
@@ -1247,20 +1318,157 @@ function stopEnhancingEffect() {
 }
 
 function hideTextPanel() {
+  var flyingOut = tpFlyingOut;
+  tpFlyingOut = false;
+  tpPanel.style.animation = '';
+  tpPanel.style.transition = '';
+  tpPanel.style.pointerEvents = '';
+  if (!flyingOut) {
+    tpPanel.style.opacity = '';
+    tpPanel.style.transform = '';
+  }
   if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
+  tpSavedText = tpLastText;
   tpLastText = '';
   tpUserScrolled = false;
-  doHideTextPanel();
+  if (!tpSessionDismissed) {
+    hideRestoreBtn();
+  }
+  doHideTextPanel(flyingOut);
 }
 
-function doHideTextPanel() {
+function showTextPanelImmediate(text) {
+  if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
+  tpLastText = text;
+  tpUserScrolled = false;
+  tpPanel.style.animation = '';
+  tpPanel.style.transition = '';
+  tpPanel.style.opacity = '';
+  tpPanel.style.transform = '';
+  tpPanel.style.pointerEvents = '';
+  tpPanel.className = 'text-panel visible';
+  tpContent.innerHTML = '';
+  tpContent.classList.remove('enhancing');
+  tpMic.className = tpReduceAnim ? 'tp-mic no-anim' : 'tp-mic';
+  // Show all words instantly without animation
+  var words = text.split(/\\s+/).filter(function(w) { return w.length > 0; });
+  for (var i = 0; i < words.length; i++) {
+    var span = document.createElement('span');
+    span.className = 'word';
+    span.textContent = words[i] + ' ';
+    tpContent.insertBefore(span, tpMic);
+  }
+  tpContent.appendChild(tpMic);
+  document.documentElement.style.height = '${getExpandedWinHeight()}px';
+  document.body.style.height = '${getExpandedWinHeight()}px';
+  document.body.style.overflow = 'visible';
+  document.body.style.alignItems = 'flex-start';
+  document.body.style.paddingTop = '${(WIN_HEIGHT - CIRCLE_SIZE) / 2}px';
+  requestAnimationFrame(function() { tpScroll.scrollTop = tpScroll.scrollHeight; });
+  updatePreviewToggleState();
+}
+
+function showRestoreBtn() {
+  tpRestore.classList.add('visible');
+  widget.style.overflow = 'visible';
+}
+function hideRestoreBtn() {
+  tpRestore.classList.remove('visible');
+  widget.style.overflow = '';
+}
+function updatePreviewToggleState() {
+  // Toggle button is always visible during recording states
+  var isRecordingState = currentState === 'listening' || currentState === 'transcribing' || currentState === 'enhancing';
+  var panelVisible = tpPanel.classList.contains('visible');
+
+  if (isRecordingState) {
+    tpRestore.classList.add('visible');
+    widget.style.overflow = 'visible';
+    // Active state when panel is visible, inactive when hidden
+    if (panelVisible) {
+      tpRestore.classList.add('active');
+    } else {
+      tpRestore.classList.remove('active');
+    }
+  } else {
+    hideRestoreBtn();
+  }
+}
+function hideRestoreBtn() {
+  tpRestore.classList.remove('visible');
+  widget.style.overflow = '';
+}
+function resetSessionState() {
+  tpSessionDismissed = false;
+  hideRestoreBtn();
+}
+function tpDismissForSession() {
+  if (!tpPanel.classList.contains('visible') || tpPanel.classList.contains('hiding')) return;
+  tpSessionDismissed = true;
+  tpPanel.classList.remove('visible');
+  tpPanel.classList.add('hiding');
+  updatePreviewToggleState();
+  setTimeout(function() { window.electronAPI?.closePreview(); }, 180);
+}
+function tpRestoreForSession() {
+  tpSessionDismissed = false;
+  window.electronAPI?.restorePreview();
+}
+function tpTogglePreview() {
+  var panelVisible = tpPanel.classList.contains('visible');
+  if (panelVisible) {
+    // Hide preview
+    tpDismissForSession();
+  } else {
+    // Show preview
+    tpRestoreForSession();
+  }
+}
+// Called by main process when restoring with existing text
+function restoreTextPanel(text) {
+  if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
+  tpLastText = text || '';
+  tpUserScrolled = false;
+  tpPanel.style.animation = '';
+  tpPanel.style.transition = '';
+  tpPanel.style.opacity = '';
+  tpPanel.style.transform = '';
+  tpPanel.style.pointerEvents = '';
+  tpPanel.className = 'text-panel visible';
+  tpContent.innerHTML = '';
+  tpContent.classList.remove('enhancing');
+  tpMic.className = tpReduceAnim ? 'tp-mic no-anim' : 'tp-mic';
+  if (text && text.length > 0) {
+    var words = text.split(/\\s+/).filter(function(w) { return w.length > 0; });
+    for (var i = 0; i < words.length; i++) {
+      var span = document.createElement('span');
+      span.className = 'word';
+      span.textContent = words[i] + ' ';
+      tpContent.insertBefore(span, tpMic);
+    }
+  }
+  tpContent.appendChild(tpMic);
+  document.documentElement.style.height = '${getExpandedWinHeight()}px';
+  document.body.style.height = '${getExpandedWinHeight()}px';
+  document.body.style.overflow = 'visible';
+  document.body.style.alignItems = 'flex-start';
+  document.body.style.paddingTop = '${(WIN_HEIGHT - CIRCLE_SIZE) / 2}px';
+  requestAnimationFrame(function() { tpScroll.scrollTop = tpScroll.scrollHeight; });
+  updatePreviewToggleState();
+}
+
+function doHideTextPanel(skipAnim) {
   clearTextPanelTimers();
   stopEnhancingEffect();
-  tpPanel.classList.remove('visible');
-  tpPanel.classList.remove('morph-border');
-  tpPanel.classList.add('fade-out');
+  var wasHiding = skipAnim || tpPanel.classList.contains('hiding');
+  tpPanel.classList.remove('visible', 'morph-border');
+  if (!wasHiding) {
+    tpPanel.classList.add('hiding');
+  }
   setTimeout(function() {
     tpPanel.className = 'text-panel';
+    tpPanel.style.opacity = '';
+    tpPanel.style.transform = '';
     tpContent.innerHTML = '';
     tpContent.classList.remove('enhancing');
     tpMic.className = 'tp-mic hidden';
@@ -1270,8 +1478,76 @@ function doHideTextPanel() {
     document.body.style.overflow = 'hidden';
     document.body.style.alignItems = 'center';
     document.body.style.paddingTop = '0';
-  }, 450);
+  }, wasHiding ? 0 : 200);
 }
+
+// Drag-to-dismiss on text panel
+tpPanel.addEventListener('mousedown', function(e) {
+  if (e.target.closest('.tp-close')) return;
+  if (!tpPanel.classList.contains('visible') || tpPanel.classList.contains('hiding')) return;
+  var startY = e.clientY;
+  var panelDragging = false;
+  // Lock current animated state so we can cancel tpAppear without a visual jump
+  var cs = getComputedStyle(tpPanel);
+  tpPanel.style.opacity = cs.opacity;
+  tpPanel.style.transform = cs.transform;
+  tpPanel.style.animation = 'none';
+
+  function onPanelMove(ev) {
+    var dy = ev.clientY - startY;
+    if (!panelDragging && Math.abs(dy) > 3) {
+      panelDragging = true;
+      tpPanel.style.cursor = 'grabbing';
+    }
+    if (!panelDragging) return;
+    var rawDy = Math.min(0, dy);
+    var panelH = tpPanel.offsetHeight || 74;
+    var progress = Math.min(1, Math.abs(rawDy) / panelH);
+    // Stronger fade - cubic easing for more dramatic effect
+    var fadeOpacity = Math.max(0, 1 - Math.pow(progress, 1.5));
+    tpPanel.style.transition = 'none';
+    tpPanel.style.transform = 'translateY(' + rawDy + 'px) scale(' + (1 - progress * 0.1) + ')';
+    tpPanel.style.opacity = String(fadeOpacity.toFixed(3));
+  }
+
+  function onPanelUp(ev) {
+    document.removeEventListener('mousemove', onPanelMove);
+    document.removeEventListener('mouseup', onPanelUp);
+    tpPanel.style.cursor = '';
+    if (!panelDragging) {
+      tpPanel.style.opacity = '';
+      tpPanel.style.transform = '';
+      tpPanel.style.animation = '';
+      return;
+    }
+    panelDragging = false;
+    var dy = ev.clientY - startY;
+    var panelH = tpPanel.offsetHeight || 74;
+    if (dy < -(panelH * 0.9)) {
+      tpFlyingOut = true;
+      tpSessionDismissed = true;
+      showRestoreBtn();
+      updatePreviewToggleState();
+      tpPanel.style.transition = 'opacity 0.25s cubic-bezier(0.4, 0, 1, 1), transform 0.25s cubic-bezier(0.4, 0, 1, 1)';
+      tpPanel.style.opacity = '0';
+      tpPanel.style.transform = 'translateY(-' + (panelH + 20) + 'px)';
+      setTimeout(function() { window.electronAPI?.closePreview(); }, 280);
+    } else {
+      tpPanel.style.transition = 'opacity 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      tpPanel.style.opacity = '1';
+      tpPanel.style.transform = 'translateY(0)';
+      setTimeout(function() {
+        tpPanel.style.transition = '';
+        tpPanel.style.opacity = '';
+        tpPanel.style.transform = '';
+        tpPanel.style.animation = '';
+      }, 220);
+    }
+  }
+
+  document.addEventListener('mousemove', onPanelMove);
+  document.addEventListener('mouseup', onPanelUp);
+});
 
 function clearTextPanelTimers() {
   if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
@@ -1590,6 +1866,28 @@ export class HudWindow {
     this.execJs("stopEnhancingEffect()");
   }
 
+  resetPreviewSession(): void {
+    if (!this.window || this.window.isDestroyed() || !this.contentReady) return;
+    this.execJs(`resetSessionState()`);
+  }
+
+  restoreTextPanel(text: string): void {
+    if (!this.window || this.window.isDestroyed() || !this.contentReady) return;
+    this.textPanelVisible = true;
+    const expandedW = getExpandedWinWidth();
+    const panelW = getPreviewPanelWidth();
+    const bounds = this.window.getBounds();
+    const centerX = bounds.x + bounds.width / 2;
+    this.window.setBounds({
+      x: clampX(Math.round(centerX - expandedW / 2), expandedW),
+      y: bounds.y,
+      width: expandedW,
+      height: getExpandedWinHeight(),
+    });
+    const escaped = JSON.stringify(text);
+    this.execJs(`tpPanel.style.width = '${panelW}px'; restoreTextPanel(${escaped})`);
+  }
+
   hideTextPanel(): void {
     if (!this.window || this.window.isDestroyed() || !this.contentReady) return;
     if (!this.textPanelVisible) return;
@@ -1609,7 +1907,7 @@ export class HudWindow {
         width: WIN_WIDTH,
         height: WIN_HEIGHT,
       });
-    }, 450);
+    }, 220);
   }
 
   pauseFlashTimer(): void {
@@ -1659,6 +1957,10 @@ export class HudWindow {
 
   isVisible(): boolean {
     return this.window !== null && !this.window.isDestroyed() && this.window.isVisible();
+  }
+
+  isTextPanelVisible(): boolean {
+    return this.textPanelVisible;
   }
 
   getState(): HudState {

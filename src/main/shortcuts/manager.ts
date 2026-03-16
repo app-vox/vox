@@ -119,8 +119,13 @@ export class ShortcutManager {
   private lastUnpastedText: string | null = null;
   private liveTranscriptionTimer: ReturnType<typeof setTimeout> | null = null;
   private lastSnapshotText = "";
+  private livePreviewClosedForSession = false;
+  private activePipeline: Pipeline | null = null;
+  private activePipelineGen = 0;
   // How often to re-transcribe the full audio buffer during live preview
-  private static readonly LIVE_PREVIEW_INTERVAL_MS = 2000;
+  private static readonly LIVE_PREVIEW_INTERVAL_MS = 1000;
+  // Delay before the first snapshot after recording starts
+  private static readonly LIVE_PREVIEW_FIRST_SNAPSHOT_MS = 400;
   private isShiftHeld = false;
   private shiftAlone = false;
   private shiftTrackingActive = false;
@@ -225,7 +230,14 @@ export class ShortcutManager {
           this.confirmCancel();
         } else if (state === RecordingState.Hold || state === RecordingState.Toggle || state === RecordingState.Processing) {
           slog.info("Escape pressed, starting graceful cancel");
-          this.cancelRecording();
+          const cfg = this.deps.configManager.load();
+          if (cfg.alwaysShowPreview !== false && !this.livePreviewClosedForSession && this.hud.isTextPanelVisible()) {
+            slog.info("Dismissing live preview before cancel");
+            this.closeLivePreview();
+            setTimeout(() => { this.cancelRecording(); }, 200);
+          } else {
+            this.cancelRecording();
+          }
         } else {
           this.dismissHud();
         }
@@ -907,6 +919,14 @@ export class ShortcutManager {
       this.hud.resumeFlashTimer();
     });
 
+    ipcMain.handle("hud:close-preview", () => {
+      this.closeLivePreview();
+    });
+
+    ipcMain.handle("hud:restore-preview", () => {
+      this.restoreLivePreview();
+    });
+
   }
 
   private startAccessibilityWatchdog(): void {
@@ -977,6 +997,10 @@ export class ShortcutManager {
   private onRecordingStart(): void {
     const pipeline = this.deps.getPipeline();
     this.recordingGeneration++;
+    this.livePreviewClosedForSession = false;
+    this.activePipeline = null;
+    this.activePipelineGen = 0;
+    this.hud.resetPreviewSession();
     this.lastUnpastedText = null;
     this.shiftTrackingActive = false;
     this.hud.setShiftHeld(false);
@@ -1010,7 +1034,7 @@ export class ShortcutManager {
       }
 
       this.hud.setState("listening");
-      if (config.showPreview !== false) {
+      if (config.alwaysShowPreview !== false && !this.livePreviewClosedForSession) {
         this.startLiveTranscription(pipeline, gen);
       }
     }).catch((err: Error) => {
@@ -1157,6 +1181,8 @@ export class ShortcutManager {
 
   private startLiveTranscription(pipeline: Pipeline, gen: number): void {
     this.stopLiveTranscription();
+    this.activePipeline = pipeline;
+    this.activePipelineGen = gen;
     this.lastSnapshotText = "";
     let running = false;
     this.hud.showTextPanelEmpty();
@@ -1188,8 +1214,8 @@ export class ShortcutManager {
       );
     };
 
-    // First snapshot after 800ms regardless of interval
-    this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 800);
+    // First snapshot
+    this.liveTranscriptionTimer = setTimeout(() => { tick(); }, ShortcutManager.LIVE_PREVIEW_FIRST_SNAPSHOT_MS);
   }
 
   private stopLiveTranscription(): void {
@@ -1198,5 +1224,33 @@ export class ShortcutManager {
       this.liveTranscriptionTimer = null;
     }
     this.lastSnapshotText = "";
+  }
+
+  private closeLivePreview(): void {
+    this.livePreviewClosedForSession = true;
+    this.stopLiveTranscription();
+    this.hud.hideTextPanel();
+  }
+
+  private restoreLivePreview(): void {
+    // If we're in a recording state but no active pipeline, start one
+    const state = this.stateMachine.getState();
+    const isRecording = state === RecordingState.Hold || state === RecordingState.Toggle || state === RecordingState.Processing;
+
+    if (!this.activePipeline || this.activePipelineGen !== this.recordingGeneration) {
+      // No active pipeline - need to start live transcription if we're recording
+      if (isRecording && this.recordingGeneration > 0) {
+        const pipeline = this.deps.getPipeline();
+        this.livePreviewClosedForSession = false;
+        this.startLiveTranscription(pipeline, this.recordingGeneration);
+        return;
+      }
+      return;
+    }
+
+    this.livePreviewClosedForSession = false;
+    // Show existing text immediately without animation
+    this.hud.restoreTextPanel(this.lastSnapshotText);
+    this.startLiveTranscription(this.activePipeline, this.activePipelineGen);
   }
 }
