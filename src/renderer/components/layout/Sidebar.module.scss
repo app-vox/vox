@@ -99,6 +99,7 @@
   flex: 1;
   overflow-y: auto;
   padding: var(--spacing-1) var(--spacing-2);
+  -webkit-app-region: no-drag;
 
   &::-webkit-scrollbar {
     width: 4px;
