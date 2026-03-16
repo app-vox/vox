@@ -7,7 +7,6 @@ describe("constants", () => {
     expect(WHISPER_MODELS).toHaveProperty("base");
     expect(WHISPER_MODELS).toHaveProperty("small");
     expect(WHISPER_MODELS).toHaveProperty("turbo");
-    expect(WHISPER_MODELS).toHaveProperty("medium");
     expect(WHISPER_MODELS).toHaveProperty("large");
 
     for (const model of Object.values(WHISPER_MODELS)) {

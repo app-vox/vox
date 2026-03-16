@@ -89,7 +89,7 @@ export interface WhisperConfig {
   model: WhisperModelSize | "";
 }
 
-export type WhisperModelSize = "tiny" | "base" | "small" | "medium" | "turbo" | "large";
+export type WhisperModelSize = "tiny" | "base" | "small" | "turbo" | "large";
 
 export type ShortcutMode = "hold" | "toggle" | "both";
 
@@ -146,7 +146,7 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
       model: "gpt-4o",
     },
     whisper: {
-      model: "turbo",
+      model: "small",
     },
     shortcuts: {
       mode: "toggle",

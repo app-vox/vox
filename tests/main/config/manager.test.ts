@@ -60,13 +60,13 @@ describe("ConfigManager", () => {
   it("should save and load config", () => {
     const config = createDefaultConfig();
     config.llm = { provider: "foundry", endpoint: "https://my-foundry.example.com", apiKey: "", model: "gpt-4o" };
-    config.whisper.model = "medium";
+    config.whisper.model = "turbo";
 
     manager.save(config);
     const loaded = manager.load();
 
     expect(loaded.llm).toEqual({ provider: "foundry", endpoint: "https://my-foundry.example.com", apiKey: "", model: "gpt-4o" });
-    expect(loaded.whisper.model).toBe("medium");
+    expect(loaded.whisper.model).toBe("turbo");
   });
 
   it("should create config directory if it does not exist", () => {
@@ -94,7 +94,7 @@ describe("ConfigManager", () => {
     const loaded = manager.load();
 
     expect(loaded.llm).toEqual({ provider: "foundry", endpoint: "https://test.com", apiKey: "", model: "gpt-4o" });
-    expect(loaded.whisper.model).toBe("turbo");
+    expect(loaded.whisper.model).toBe("small");
     expect(loaded.shortcuts.hold).toBe("Alt+Space");
   });
 
@@ -375,6 +375,18 @@ describe("ConfigManager", () => {
     expect(saved.llm.provider).toBe("openai");
     expect(saved.llm.endpoint).toBe("https://foundry.com");
     expect(saved.llm.apiKey).toMatch(/^enc:/);
+  });
+
+  it("should migrate medium whisper model to small on load", () => {
+    const oldConfig = {
+      llm: { provider: "foundry", endpoint: "", apiKey: "", model: "gpt-4o" },
+      whisper: { model: "medium" },
+    };
+    fs.mkdirSync(testDir, { recursive: true });
+    fs.writeFileSync(path.join(testDir, "config.json"), JSON.stringify(oldConfig));
+
+    const loaded = manager.load();
+    expect(loaded.whisper.model).toBe("small");
   });
 
   it("should default shiftCapitalize to true when absent from saved config", () => {

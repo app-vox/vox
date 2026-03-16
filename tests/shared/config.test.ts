@@ -8,7 +8,7 @@ describe("VoxConfig", () => {
     expect(config.llm.endpoint).toBe("");
     expect(config.llm.apiKey).toBe("");
     expect(config.llm.model).toBe("gpt-4o");
-    expect(config.whisper.model).toBe("turbo");
+    expect(config.whisper.model).toBe("small");
     expect(config.shortcuts.hold).toBe("Alt+Space");
     expect(config.shortcuts.toggle).toBe("Alt+Shift+Space");
   });
