@@ -1,11 +1,8 @@
 import { clipboard, Notification } from "electron";
 import { execSync } from "child_process";
-import log from "electron-log/main";
 import { applyCase, stripTrailingPeriod } from "../utils";
 import type { PasteOptions } from "../types";
 import { t } from "../../../shared/i18n";
-
-const slog = log.scope("Paster");
 
 export function isAccessibilityGranted(): boolean {
   return true;
