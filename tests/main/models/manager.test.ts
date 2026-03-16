@@ -36,7 +36,7 @@ describe("ModelManager", () => {
     expect(sizes).toContain("tiny");
     expect(sizes).toContain("base");
     expect(sizes).toContain("small");
-    expect(sizes).toContain("medium");
+    expect(sizes).toContain("turbo");
     expect(sizes).toContain("large");
   });
 
