@@ -46,7 +46,7 @@ export function TryItStep() {
         text,
         originalText: result.rawText,
         audioDurationMs: 3000,
-        whisperModel: config?.whisper?.model || "turbo",
+        whisperModel: config?.whisper?.model || "small",
         llmEnhanced: !!result.correctedText,
       });
     }

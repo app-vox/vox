@@ -146,7 +146,7 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
       model: "gpt-4o",
     },
     whisper: {
-      model: "turbo",
+      model: "small",
     },
     shortcuts: {
       mode: "toggle",
