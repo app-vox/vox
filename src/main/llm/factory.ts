@@ -73,6 +73,7 @@ export function createLlmProvider(config: VoxConfig, options?: CreateLlmProvider
         model: config.llm.openaiModel,
         customPrompt: prompt,
         hasCustomPrompt,
+        providerType: config.llm.provider as "openai" | "deepseek" | "glm" | "litellm",
       });
 
     case "custom":
