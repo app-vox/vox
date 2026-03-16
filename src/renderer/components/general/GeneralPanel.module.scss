@@ -338,6 +338,10 @@
   font-size: var(--font-size-sm);
   color: var(--color-text-tertiary);
   line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: var(--font-weight-medium);
 }
 
 .linkButton {

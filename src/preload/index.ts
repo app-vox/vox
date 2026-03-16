@@ -314,4 +314,5 @@ contextBridge.exposeInMainWorld("electronAPI", {
   pauseFlashTimer: () => ipcRenderer.invoke("hud:pause-flash"),
   resumeFlashTimer: () => ipcRenderer.invoke("hud:resume-flash"),
   closePreview: () => ipcRenderer.invoke("hud:close-preview"),
+  restorePreview: () => ipcRenderer.invoke("hud:restore-preview"),
 });

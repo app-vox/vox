@@ -74,6 +74,7 @@ vi.mock("../../../src/main/hud", () => {
       showTextPanelEmpty = vi.fn();
       updateTextPanel = vi.fn();
       hideTextPanel = vi.fn();
+      resetPreviewSession = vi.fn();
       startEnhancingEffect = vi.fn();
       stopEnhancingEffect = vi.fn();
     },
@@ -139,6 +140,7 @@ describe("ShortcutManager — recording start flow", () => {
       showTextPanelEmpty: vi.fn(),
       updateTextPanel: vi.fn(),
       hideTextPanel: vi.fn(),
+      resetPreviewSession: vi.fn(),
       startEnhancingEffect: vi.fn(),
       stopEnhancingEffect: vi.fn(),
     };
@@ -238,6 +240,7 @@ describe("ShortcutManager — live preview session close", () => {
     showTextPanelEmpty: ReturnType<typeof vi.fn>;
     updateTextPanel: ReturnType<typeof vi.fn>;
     hideTextPanel: ReturnType<typeof vi.fn>;
+    resetPreviewSession: ReturnType<typeof vi.fn>;
     startEnhancingEffect: ReturnType<typeof vi.fn>;
     stopEnhancingEffect: ReturnType<typeof vi.fn>;
     setShiftHeld: ReturnType<typeof vi.fn>;
@@ -262,6 +265,7 @@ describe("ShortcutManager — live preview session close", () => {
       showTextPanelEmpty: vi.fn(),
       updateTextPanel: vi.fn(),
       hideTextPanel: vi.fn(),
+      resetPreviewSession: vi.fn(),
       startEnhancingEffect: vi.fn(),
       stopEnhancingEffect: vi.fn(),
       setShiftHeld: vi.fn(),
