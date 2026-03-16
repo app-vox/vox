@@ -554,6 +554,7 @@ export class ShortcutManager {
     this.hud.show(config.showHud, config.hudShowOnHover, config.hudPosition);
     this.hud.setShowActions(config.showHudActions);
     this.hud.setPerformanceFlags(config.reduceAnimations, config.reduceVisualEffects);
+    this.hud.setInvertColors(config.hudInvertColors ?? false);
   }
 
   getHud(): HudWindow {

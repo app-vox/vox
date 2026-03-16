@@ -78,6 +78,7 @@ vi.mock("../../../src/main/hud", () => {
       setCustomPosition = vi.fn();
       setShowActions = vi.fn();
       setPerformanceFlags = vi.fn();
+      setInvertColors = vi.fn();
       showTextPanel = vi.fn();
       showTextPanelEmpty = vi.fn();
       updateTextPanel = vi.fn();

@@ -1,6 +1,6 @@
 import { readFileSync } from "fs";
 import { getResourcePath } from "./resources";
-import { BrowserWindow, screen } from "electron";
+import { BrowserWindow, nativeTheme, screen } from "electron";
 import { t } from "../shared/i18n";
 import type { WidgetPosition } from "../shared/config";
 import { display } from "./platform";
@@ -56,6 +56,7 @@ function getLogoDataUrl(): string {
   }
 }
 
+
 function buildHudHtml(): string {
   const logoDataUrl = getLogoDataUrl();
   const bars = Array.from({ length: 12 }, (_, i) =>
@@ -64,7 +65,63 @@ function buildHudHtml(): string {
 
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><style>
-  :root { --state-color: #888; }
+  :root {
+    --state-color: #888;
+    /* Dark theme (default) */
+    --hud-bg: rgba(25, 25, 25, 0.92);
+    --hud-border: rgba(255, 255, 255, 0.08);
+    --hud-border-md: rgba(255, 255, 255, 0.10);
+    --hud-border-subtle: rgba(255, 255, 255, 0.05);
+    --hud-text: rgba(255, 255, 255, 0.95);
+    --hud-text-secondary: rgba(255, 255, 255, 0.55);
+    --hud-cancel-bg: rgba(50, 50, 50, 0.95);
+    --hud-cancel-border: rgba(255, 255, 255, 0.12);
+    --hud-cancel-hover: rgba(239, 68, 68, 0.8);
+    --hud-btn-bg: rgba(255, 255, 255, 0.12);
+    --hud-btn-bg-hover: rgba(255, 255, 255, 0.18);
+    --hud-hover-btn-bg: rgba(40, 40, 40, 0.95);
+    --hud-hover-btn-accent: rgba(99, 102, 241, 0.8);
+    --hud-error-hover: rgba(239, 68, 68, 0.8);
+    --hud-text-panel-bg: rgba(20, 20, 35, 0.95);
+    --hud-text-panel-border: rgba(255, 255, 255, 0.08);
+    --hud-text-panel-text: rgba(255, 255, 255, 0.9);
+    --hud-shadow: 0 2px 4px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.15);
+    --hud-spinner-track: rgba(255,255,255,0.2);
+    --hud-spinner-fill: rgba(255,255,255,0.85);
+    --hud-bar-bg: rgba(255,255,255,0.85);
+    --hud-bar-shadow: 0 0 4px rgba(255,255,255,0.5);
+    --hud-cancel-hover-bg: rgba(255,255,255,0.2);
+    --hud-countdown-track: rgba(255,255,255,0.08);
+    --hud-logo-filter: none;
+  }
+  :root.light {
+    /* Light theme overrides */
+    --hud-bg: rgba(252, 252, 252, 0.96);
+    --hud-border: rgba(0, 0, 0, 0.08);
+    --hud-border-md: rgba(0, 0, 0, 0.10);
+    --hud-border-subtle: rgba(0, 0, 0, 0.06);
+    --hud-text: rgba(23, 23, 23, 0.95);
+    --hud-text-secondary: rgba(82, 82, 82, 0.9);
+    --hud-cancel-bg: rgba(245, 245, 245, 0.98);
+    --hud-cancel-border: rgba(0, 0, 0, 0.12);
+    --hud-cancel-hover: rgba(239, 68, 68, 0.85);
+    --hud-btn-bg: rgba(0, 0, 0, 0.07);
+    --hud-btn-bg-hover: rgba(0, 0, 0, 0.12);
+    --hud-hover-btn-bg: rgba(245, 245, 245, 0.98);
+    --hud-hover-btn-accent: rgba(79, 70, 229, 0.85);
+    --hud-error-hover: rgba(239, 68, 68, 0.85);
+    --hud-text-panel-bg: rgba(255, 255, 255, 0.97);
+    --hud-text-panel-border: rgba(0, 0, 0, 0.08);
+    --hud-text-panel-text: rgba(23, 23, 23, 0.9);
+    --hud-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06), 0 8px 32px rgba(0,0,0,0.04);
+    --hud-spinner-track: rgba(0,0,0,0.12);
+    --hud-spinner-fill: rgba(0,0,0,0.7);
+    --hud-bar-bg: rgba(0,0,0,0.55);
+    --hud-bar-shadow: 0 0 2px rgba(0,0,0,0.15);
+    --hud-cancel-hover-bg: rgba(0,0,0,0.08);
+    --hud-countdown-track: rgba(0,0,0,0.08);
+    --hud-logo-filter: invert(1) brightness(0.85);
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
   html, body {
     background: transparent;
@@ -90,11 +147,11 @@ function buildHudHtml(): string {
     width: ${CIRCLE_SIZE}px;
     height: ${CIRCLE_SIZE}px;
     border-radius: ${CIRCLE_SIZE / 2}px;
-    background: rgba(25, 25, 25, 0.92);
+    background: var(--hud-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.15);
+    border: 1px solid var(--hud-border);
+    box-shadow: var(--hud-shadow);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -135,8 +192,8 @@ function buildHudHtml(): string {
   .widget.pill.dragging { cursor: grabbing; }
   .widget.pill.listening {
     min-width: 115px;
-    background: rgba(25, 25, 25, 0.92);
-    border-color: rgba(255,255,255,0.1);
+    background: var(--hud-bg);
+    border-color: var(--hud-border-md);
     box-shadow: 0 2px 4px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2);
     cursor: pointer;
     overflow: visible;
@@ -153,9 +210,9 @@ function buildHudHtml(): string {
     border-color: rgba(255,255,255,0.25);
     box-shadow: 0 2px 8px rgba(220,50,50,0.3), 0 4px 20px rgba(220,50,50,0.2);
   }
-  .widget.pill.listening .pill-stop { order: 10; color: rgba(255,255,255,0.9); }
+  .widget.pill.listening .pill-stop { order: 10; color: var(--hud-text); }
   .widget.pill.listening:active:not(.dragging) { transform: scale(0.94); }
-  .widget.pill.listening:hover .pill-stop { background: rgba(255,255,255,0.15); }
+  .widget.pill.listening:hover .pill-stop { background: rgba(255,255,255,0.15); color: #fff; }
   .widget.pill.listening .bar {
     background: rgba(255,68,68,0.85) !important;
     box-shadow: 0 0 4px rgba(255,68,68,0.5) !important;
@@ -172,12 +229,12 @@ function buildHudHtml(): string {
     transform: translateY(-50%);
     margin-left: 0;
     width: 22px; height: 22px;
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255,255,255,0.12);
-    color: rgba(255,255,255,0.8);
+    background: var(--hud-cancel-bg);
+    border: 1px solid var(--hud-cancel-border);
+    color: var(--hud-text);
   }
   .widget.pill.listening .pill-cancel:hover {
-    background: rgba(239, 68, 68, 0.8);
+    background: var(--hud-cancel-hover);
     color: white;
   }
   .widget.pill.listening .pill-cancel:active {
@@ -185,8 +242,8 @@ function buildHudHtml(): string {
   }
   .widget.pill.transcribing,
   .widget.pill.enhancing {
-    background: rgba(25, 25, 25, 0.92);
-    border-color: rgba(255,255,255,0.1);
+    background: var(--hud-bg);
+    border-color: var(--hud-border-md);
     box-shadow: 0 2px 4px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2);
     cursor: pointer;
     overflow: visible;
@@ -199,13 +256,13 @@ function buildHudHtml(): string {
     transform: translateY(-50%);
     margin-left: 0;
     width: 22px; height: 22px;
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255,255,255,0.12);
-    color: rgba(255,255,255,0.8);
+    background: var(--hud-cancel-bg);
+    border: 1px solid var(--hud-cancel-border);
+    color: var(--hud-text);
   }
   .widget.pill.transcribing .pill-cancel:hover,
   .widget.pill.enhancing .pill-cancel:hover {
-    background: rgba(239, 68, 68, 0.8);
+    background: var(--hud-cancel-hover);
     color: white;
   }
   .widget.pill.transcribing .pill-cancel:active,
@@ -213,15 +270,15 @@ function buildHudHtml(): string {
     transform: translateY(-50%) scale(0.92);
   }
   .widget.pill.error, .widget.pill.canceled {
-    background: rgba(25, 25, 25, 0.92);
-    border-color: rgba(255,255,255,0.1);
+    background: var(--hud-bg);
+    border-color: var(--hud-border-md);
     box-shadow: 0 2px 4px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2);
     cursor: pointer;
   }
   .widget.pill.initializing {
     min-width: 115px;
-    background: rgba(25, 25, 25, 0.92);
-    border-color: rgba(255,255,255,0.1);
+    background: var(--hud-bg);
+    border-color: var(--hud-border-md);
     cursor: pointer;
   }
   .widget.highlight {
@@ -246,7 +303,8 @@ function buildHudHtml(): string {
     filter: blur(0px);
   }
   .icon.off { opacity: 0; pointer-events: none; filter: blur(3px); transform: scale(0.85); }
-  .v-logo img { width: 18px; height: 18px; object-fit: contain; }
+  .v-logo img { width: 18px; height: 18px; object-fit: contain; filter: var(--hud-logo-filter); }
+  .mic-icon { color: var(--hud-text); }
   .mic-icon svg { width: 16px; height: 16px; }
   .mic-icon.off { filter: blur(3px); transform: scale(1.1); }
 
@@ -263,7 +321,7 @@ function buildHudHtml(): string {
     pointer-events: none;
     transition: opacity 0.15s ease 0.1s;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-    color: rgba(255,255,255,0.95);
+    color: var(--hud-text);
     font-size: 12px;
     font-weight: 500;
     letter-spacing: 0.1px;
@@ -274,7 +332,7 @@ function buildHudHtml(): string {
   .shift-icon {
     display: flex;
     align-items: center;
-    color: rgba(255,255,255,0.7);
+    color: var(--hud-text-secondary);
     flex-shrink: 0;
     width: 0;
     opacity: 0;
@@ -292,8 +350,8 @@ function buildHudHtml(): string {
   }
   .spinner {
     width: 12px; height: 12px;
-    border: 2px solid rgba(255,255,255,0.2);
-    border-top-color: rgba(255,255,255,0.85);
+    border: 2px solid var(--hud-spinner-track);
+    border-top-color: var(--hud-spinner-fill);
     border-radius: 50%;
     flex-shrink: 0;
     animation: spin 0.8s linear infinite;
@@ -309,8 +367,8 @@ function buildHudHtml(): string {
     min-height: 3px;
     height: 3px;
     border-radius: 1.5px;
-    background: rgba(255,255,255,0.85);
-    box-shadow: 0 0 4px rgba(255,255,255,0.5);
+    background: var(--hud-bar-bg);
+    box-shadow: var(--hud-bar-shadow);
     transition: height 0.05s ease;
   }
   .dot {
@@ -332,21 +390,21 @@ function buildHudHtml(): string {
     border-radius: 50%;
     border: none;
     background: transparent;
-    color: rgba(255,255,255,0.7);
+    color: var(--hud-text-secondary);
     cursor: pointer;
     transition: background 0.2s ease, color 0.2s ease;
     flex-shrink: 0;
     margin-left: 2px;
   }
-  .pill-cancel:hover { background: rgba(255,255,255,0.2); color: white; }
+  .pill-cancel:hover { background: var(--hud-cancel-hover-bg); color: var(--hud-text); }
   .pill-copy {
     pointer-events: auto;
     display: flex;
     align-items: center;
     gap: 4px;
     border: none;
-    background: rgba(255,255,255,0.12);
-    color: rgba(255,255,255,0.85);
+    background: var(--hud-btn-bg);
+    color: var(--hud-text);
     cursor: pointer;
     border-radius: 4px;
     padding: 2px 7px;
@@ -358,7 +416,7 @@ function buildHudHtml(): string {
     margin-left: 4px;
     transition: background 0.15s ease, color 0.15s ease;
   }
-  .pill-copy:hover { background: rgba(255,255,255,0.25); color: white; }
+  .pill-copy:hover { background: var(--hud-btn-bg-hover); color: var(--hud-text); }
   .pill-copy:active { transform: scale(0.95); }
   .pill-copy.hidden { display: none; }
   .pill-copy svg { flex-shrink: 0; }
@@ -424,8 +482,8 @@ function buildHudHtml(): string {
   .hover-btn {
     position: absolute;
     width: 18px; height: 18px; border-radius: 50%;
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255,255,255,0.12);
+    background: var(--hud-hover-btn-bg);
+    border: 1px solid var(--hud-cancel-border);
     display: flex; align-items: center; justify-content: center;
     cursor: pointer;
     opacity: 0; pointer-events: none;
@@ -439,18 +497,19 @@ function buildHudHtml(): string {
     transform: translate(var(--tx, 0), var(--ty, 0)) scale(1);
   }
   .hover-btn svg { width: 10px; height: 10px; }
+  .hover-btn { color: var(--hud-text); }
 
   /* Positions relative to widget center (top of scale-wrapper) */
   .settings-btn { --tx: 26px; --ty: -24px; top: ${CIRCLE_SIZE / 2}px; left: 50%; margin-top: -9px; margin-left: -9px; }
   .settings-btn.visible { transition-delay: 0ms; }
-  .settings-btn:hover { background: rgba(99, 102, 241, 0.8); }
+  .settings-btn:hover { background: var(--hud-hover-btn-accent); color: #fff; }
 
   .transcriptions-btn { --tx: -26px; --ty: 20px; top: ${CIRCLE_SIZE / 2}px; left: 50%; margin-top: -9px; margin-left: -9px; transition-delay: 0ms; }
   .transcriptions-btn.visible { transition-delay: 60ms; }
-  .transcriptions-btn:hover { background: rgba(99, 102, 241, 0.8); }
+  .transcriptions-btn:hover { background: var(--hud-hover-btn-accent); color: #fff; }
 
   .close-btn { --tx: 26px; --ty: 20px; top: ${CIRCLE_SIZE / 2}px; left: 50%; margin-top: -9px; margin-left: -9px; }
-  .close-btn:hover { background: rgba(239, 68, 68, 0.8); }
+  .close-btn:hover { background: var(--hud-error-hover); }
   .close-btn.visible { transition-delay: 120ms; }
 
   /* Cancel button (below widget during idle+listening transition) */
@@ -459,8 +518,8 @@ function buildHudHtml(): string {
     top: ${CIRCLE_SIZE + 6}px; left: 50%;
     margin-left: -11px;
     width: 22px; height: 22px; border-radius: 50%;
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255,255,255,0.12);
+    background: var(--hud-cancel-bg);
+    border: 1px solid var(--hud-cancel-border);
     display: flex; align-items: center; justify-content: center;
     cursor: pointer;
     transition: background 0.15s ease, opacity 0.15s ease;
@@ -468,6 +527,7 @@ function buildHudHtml(): string {
     z-index: 10;
   }
   .circle-cancel:hover { background: #ff4444; border-color: rgba(239,68,68,0.5); }
+  .circle-cancel { color: var(--hud-text); }
   .circle-cancel svg { width: 10px; height: 10px; }
   .circle-cancel.visible { opacity: 1; pointer-events: auto; }
 
@@ -480,18 +540,18 @@ function buildHudHtml(): string {
     opacity: 0; pointer-events: none;
     transition: opacity 0.2s ease, height 0.2s ease, margin-top 0.2s ease;
     flex-shrink: 0;
-    background: rgba(25, 25, 25, 0.92);
+    background: var(--hud-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid var(--hud-border);
     border-radius: 10px;
     padding: 4px 4px 4px 10px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2);
+    box-shadow: var(--hud-shadow);
   }
   .undo-bar.visible { opacity: 1; pointer-events: auto; height: auto; margin-top: 6px; overflow: visible; }
   .undo-bar .countdown-track {
     width: 96px; height: 3px;
-    background: rgba(255,255,255,0.08);
+    background: var(--hud-countdown-track);
     border-radius: 1px;
     overflow: hidden;
     flex-shrink: 0;
@@ -503,10 +563,10 @@ function buildHudHtml(): string {
   }
   .undo-bar .undo-btn {
     display: flex; align-items: center; gap: 3px;
-    background: rgba(255,255,255,0.08);
+    background: var(--hud-btn-bg);
     border: none;
     border-radius: 7px;
-    color: rgba(255,255,255,0.85);
+    color: var(--hud-text);
     font-size: 11px; font-weight: 500;
     padding: 3px 7px 3px 6px;
     margin-left: 6px;
@@ -518,7 +578,7 @@ function buildHudHtml(): string {
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .undo-bar .undo-btn:hover { background: rgba(255,255,255,0.16); color: white; }
+  .undo-bar .undo-btn:hover { background: var(--hud-btn-bg-hover); color: var(--hud-text); }
   .undo-bar .undo-btn:active { transform: scale(0.95); }
   .undo-bar .undo-btn svg { flex-shrink: 0; }
 
@@ -526,15 +586,15 @@ function buildHudHtml(): string {
   .text-panel {
     display: none;
     margin-top: ${TEXT_PANEL_GAP}px;
-    background: rgba(25, 25, 25, 0.92);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: var(--hud-text-panel-bg);
+    border: 1px solid var(--hud-text-panel-border);
     border-radius: 12px;
     padding: 0;
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1),
                 border-color 0.4s ease;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    box-shadow: var(--hud-shadow);
     -webkit-backdrop-filter: blur(20px);
     backdrop-filter: blur(20px);
     position: relative;
@@ -556,12 +616,12 @@ function buildHudHtml(): string {
     padding: 0 38px 0 16px;
   }
   .tp-scroll::-webkit-scrollbar { width: 3px; }
-  .tp-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+  .tp-scroll::-webkit-scrollbar-thumb { background: var(--hud-btn-bg); border-radius: 2px; }
 
   .text-content {
     font-size: 11px;
     line-height: 1.5;
-    color: rgba(255,255,255,0.85);
+    color: var(--hud-text-panel-text);
     font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     transition: filter 0.25s ease, opacity 0.25s ease;
   }
@@ -608,6 +668,7 @@ function buildHudHtml(): string {
     vertical-align: middle;
     margin-left: 3px;
     opacity: 0.6;
+    color: var(--hud-text-panel-text);
     animation: micBreathe 1.6s ease-in-out infinite;
   }
   .tp-mic.hidden { display: none; }
@@ -648,13 +709,37 @@ function buildHudHtml(): string {
   }
   .tp-restore.visible { display: flex; }
   .tp-restore:hover { background: rgba(99,102,241, 0.8); color: white; transform: translateY(-50%) scale(1.1); }
-  .tp-restore:active { transform: translateY(-50%) scale(0.96); background: rgba(99,102,241, 0.8); color: white; border-color: rgba(99,102,241, 0.3); }
-  .tp-restore.active { background: rgba(99,102,241, 0.8); color: white; border-color: rgba(99,102,241, 0.3); }
-  .tp-restore.active:hover { background: rgba(99,102,241, 0.95); border-color: rgba(99,102,241, 0.4); }
+  .tp-restore:active { transform: translateY(-50%) scale(0.96); background: rgba(79,70,229, 0.9); color: white; border-color: rgba(99,102,241, 0.4); }
+  .tp-restore.active { background: rgba(79,70,229, 0.9); color: white; border-color: rgba(99,102,241, 0.4); }
+  .tp-restore.active:hover { background: rgba(67,56,202, 0.95); border-color: rgba(99,102,241, 0.5); }
+  :root.light .tp-restore { background: rgba(240,240,245,0.95); border-color: rgba(0,0,0,0.12); color: rgba(0,0,0,0.6); }
+  :root.light .tp-restore:hover { background: rgba(99,102,241, 0.85); color: white; }
+  :root.light .tp-restore.active { background: rgba(79,70,229, 0.9); border-color: rgba(99,102,241,0.4); color: white; }
+  :root.light .tp-restore.active:hover { background: rgba(67,56,202, 0.95); }
 
   @keyframes micBreathe {
     0%, 100% { opacity: 0.4; transform: scale(0.92); }
     50% { opacity: 0.75; transform: scale(1.05); }
+  }
+
+  .tp-pen {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    margin-left: -3px;
+    opacity: 0.65;
+    color: var(--hud-text-panel-text);
+    animation: penWrite 0.55s ease-in-out infinite;
+    transform-origin: bottom center;
+  }
+  .tp-pen.hidden { display: none; }
+  .tp-pen.no-anim { animation: none; }
+  .tp-pen svg { width: 10px; height: 10px; }
+  @keyframes penWrite {
+    0%   { transform: rotate(-10deg) translate(0, 1px); }
+    40%  { transform: rotate(2deg) translate(1px, -1px); }
+    70%  { transform: rotate(-5deg) translate(0px, 0px); }
+    100% { transform: rotate(-10deg) translate(0, 1px); }
   }
 
   .text-content.enhancing {
@@ -680,7 +765,7 @@ function buildHudHtml(): string {
     <!-- Circle mode icons -->
     <div class="circle-content" id="circle-content">
       <div class="icon v-logo" id="v-logo"><img src="${logoDataUrl}" alt="Vox" draggable="false" /></div>
-      <div class="icon mic-icon off" id="mic-icon"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></div>
+      <div class="icon mic-icon off" id="mic-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></div>
     </div>
 
     <!-- Pill mode content -->
@@ -708,16 +793,16 @@ function buildHudHtml(): string {
   </div>
   <!-- Satellite hover buttons (siblings of widget, inside scale-wrapper for z-index) -->
   <div class="hover-btn close-btn" id="close-btn" onclick="event.stopPropagation(); if (recentDragEnd || wasDragged) return; var sw = document.getElementById('scale-wrapper'); sw.classList.add('vanishing'); setTimeout(function() { window.electronAPI?.hudDisable(); }, 350);">
-    <svg viewBox="0 0 10 10" fill="none"><path d="M2 3h6M3.5 3V2.2a.5.5 0 01.5-.5h2a.5.5 0 01.5.5V3" stroke="white" stroke-width="1.2" stroke-linecap="round"/><path d="M7.5 3.5l-.3 4.3a.8.8 0 01-.8.7h-2.8a.8.8 0 01-.8-.7L2.5 3.5" stroke="white" stroke-width="1.2" stroke-linecap="round"/></svg>
+    <svg viewBox="0 0 10 10" fill="none"><path d="M2 3h6M3.5 3V2.2a.5.5 0 01.5-.5h2a.5.5 0 01.5.5V3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M7.5 3.5l-.3 4.3a.8.8 0 01-.8.7h-2.8a.8.8 0 01-.8-.7L2.5 3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
   </div>
   <div class="hover-btn transcriptions-btn" id="transcriptions-btn" onclick="event.stopPropagation(); if (recentDragEnd || wasDragged) return; window.electronAPI?.hudOpenTranscriptions()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
   </div>
   <div class="hover-btn settings-btn" id="settings-btn" onclick="event.stopPropagation(); if (recentDragEnd || wasDragged) return; window.electronAPI?.hudOpenSettings()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </div>
   <div class="circle-cancel" id="circle-cancel" onclick="event.stopPropagation(); window.electronAPI?.cancelRecording()">
-    <svg viewBox="0 0 10 10" fill="none"><path d="M8 2L2 8M2 2L8 8" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+    <svg viewBox="0 0 10 10" fill="none"><path d="M8 2L2 8M2 2L8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
   </div>
   <div class="undo-bar" id="undo-bar">
     <div class="countdown-track"><div class="countdown-fill" id="countdown-fill"></div></div>
@@ -727,7 +812,8 @@ function buildHudHtml(): string {
     <button class="tp-close" id="tp-close" title="${t("hud.closePreview")}" onclick="event.stopPropagation(); tpDismissForSession()">×</button>
     <div class="tp-scroll" id="tp-scroll">
       <div class="text-content" id="text-content"></div>
-      <span class="tp-mic hidden" id="tp-mic"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></span>
+      <span class="tp-mic hidden" id="tp-mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></span>
+      <span class="tp-pen hidden" id="tp-pen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></span>
     </div>
   </div>
 </div>
@@ -924,8 +1010,8 @@ function setPillMode(cfg) {
     xi.className = 'x-icon hidden';
   }
 
-  var barColor = cfg.barColor || 'rgba(255,255,255,0.85)';
-  var barShadow = cfg.barShadow || '0 0 4px rgba(255,255,255,0.5)';
+  var barColor = cfg.barColor || '';
+  var barShadow = cfg.barShadow || '';
   document.querySelectorAll('.bar').forEach(function(bar) {
     bar.style.background = barColor;
     bar.style.boxShadow = barShadow;
@@ -1216,6 +1302,7 @@ var tpPanel = document.getElementById('text-panel');
 var tpScroll = document.getElementById('tp-scroll');
 var tpContent = document.getElementById('text-content');
 var tpMic = document.getElementById('tp-mic');
+var tpPen = document.getElementById('tp-pen');
 var tpRestore = document.getElementById('tp-restore');
 var tpTypingTimer = null;
 var tpLastText = '';
@@ -1241,8 +1328,9 @@ function showTextPanel(text) {
   tpUserScrolled = false;
   tpContent.innerHTML = '';
   tpContent.classList.remove('enhancing');
-  tpMic.className = tpReduceAnim ? 'tp-mic no-anim' : 'tp-mic';
-  tpContent.appendChild(tpMic);
+  tpMic.className = 'tp-mic hidden';
+  tpPen.className = tpReduceAnim ? 'tp-pen no-anim' : 'tp-pen';
+  tpContent.appendChild(tpPen);
   document.documentElement.style.height = '${getExpandedWinHeight()}px';
   document.body.style.height = '${getExpandedWinHeight()}px';
   document.body.style.overflow = 'visible';
@@ -1256,7 +1344,7 @@ function showTextPanel(text) {
     var span = document.createElement('span');
     span.className = tpReduceAnim ? 'word' : 'word appearing';
     span.textContent = words[idx] + ' ';
-    tpContent.insertBefore(span, tpMic);
+    tpContent.insertBefore(span, tpPen);
     tpScrollToBottom();
     tpTypingTimer = setTimeout(function() { addWordCC(idx + 1); }, 60);
   }
@@ -1280,7 +1368,7 @@ function updateTextPanel(text) {
     var span = document.createElement('span');
     span.className = tpReduceAnim ? 'word' : 'word appearing';
     span.textContent = wordsToAdd[idx] + ' ';
-    tpContent.insertBefore(span, tpMic);
+    tpContent.insertBefore(span, tpPen);
     tpScrollToBottom();
     tpTypingTimer = setTimeout(function() { addNextCC(idx + 1); }, 60);
   }
@@ -1291,6 +1379,7 @@ var tpShuffleTimer = null;
 
 function startEnhancingEffect() {
   tpMic.className = 'tp-mic hidden';
+  tpPen.className = 'tp-pen hidden';
   tpPanel.classList.add('morph-border');
   tpContent.classList.add('enhancing');
   if (!tpReduceAnim) {
@@ -1349,16 +1438,17 @@ function showTextPanelImmediate(text) {
   tpPanel.className = 'text-panel visible';
   tpContent.innerHTML = '';
   tpContent.classList.remove('enhancing');
-  tpMic.className = tpReduceAnim ? 'tp-mic no-anim' : 'tp-mic';
+  tpMic.className = 'tp-mic hidden';
+  tpPen.className = tpReduceAnim ? 'tp-pen no-anim' : 'tp-pen';
+  tpContent.appendChild(tpPen);
   // Show all words instantly without animation
   var words = text.split(/\\s+/).filter(function(w) { return w.length > 0; });
   for (var i = 0; i < words.length; i++) {
     var span = document.createElement('span');
     span.className = 'word';
     span.textContent = words[i] + ' ';
-    tpContent.insertBefore(span, tpMic);
+    tpContent.insertBefore(span, tpPen);
   }
-  tpContent.appendChild(tpMic);
   document.documentElement.style.height = '${getExpandedWinHeight()}px';
   document.body.style.height = '${getExpandedWinHeight()}px';
   document.body.style.overflow = 'visible';
@@ -1437,17 +1527,18 @@ function restoreTextPanel(text) {
   tpPanel.className = 'text-panel visible';
   tpContent.innerHTML = '';
   tpContent.classList.remove('enhancing');
-  tpMic.className = tpReduceAnim ? 'tp-mic no-anim' : 'tp-mic';
+  tpMic.className = 'tp-mic hidden';
+  tpPen.className = tpReduceAnim ? 'tp-pen no-anim' : 'tp-pen';
+  tpContent.appendChild(tpPen);
   if (text && text.length > 0) {
     var words = text.split(/\\s+/).filter(function(w) { return w.length > 0; });
     for (var i = 0; i < words.length; i++) {
       var span = document.createElement('span');
       span.className = 'word';
       span.textContent = words[i] + ' ';
-      tpContent.insertBefore(span, tpMic);
+      tpContent.insertBefore(span, tpPen);
     }
   }
-  tpContent.appendChild(tpMic);
   document.documentElement.style.height = '${getExpandedWinHeight()}px';
   document.body.style.height = '${getExpandedWinHeight()}px';
   document.body.style.overflow = 'visible';
@@ -1472,7 +1563,8 @@ function doHideTextPanel(skipAnim) {
     tpContent.innerHTML = '';
     tpContent.classList.remove('enhancing');
     tpMic.className = 'tp-mic hidden';
-    tpContent.appendChild(tpMic);
+    tpPen.className = 'tp-pen hidden';
+    tpContent.appendChild(tpPen);
     document.documentElement.style.height = '${WIN_HEIGHT}px';
     document.body.style.height = '${WIN_HEIGHT}px';
     document.body.style.overflow = 'hidden';
@@ -1558,6 +1650,7 @@ function clearTextPanelTimers() {
 </body></html>`;
 }
 
+
 interface PillModeConfig {
   color: string;
   icon: "spinner" | "waveform" | "dot" | "x-icon";
@@ -1615,6 +1708,9 @@ export class HudWindow {
   private pendingAttention = false;
   private textPanelVisible = false;
   private textPanelResizeTimer: ReturnType<typeof setTimeout> | null = null;
+  private isLight = false;
+  private invertColors = false;
+  private themeListener: (() => void) | null = null;
 
   show(alwaysShow: boolean, showOnHover: boolean, position: WidgetPosition = "bottom-center"): void {
     const wasOff = !this.alwaysShow;
@@ -1682,6 +1778,7 @@ export class HudWindow {
 
     this.window.webContents.on("did-finish-load", () => {
       this.contentReady = true;
+      this.applyTheme();
       this.execJs(`setAlwaysShow(${this.alwaysShow})`);
       this.sendTitles();
       this.execJs(`setPerformanceFlags(${this.reduceAnimations}, ${this.reduceVisualEffects})`);
@@ -1694,6 +1791,9 @@ export class HudWindow {
         this.pendingUpdate = null;
       }
     });
+
+    this.themeListener = () => { this.applyTheme(); };
+    nativeTheme.on("updated", this.themeListener);
 
     this.window.once("ready-to-show", () => {
       if (!alwaysShow) {
@@ -1717,6 +1817,10 @@ export class HudWindow {
       this.textPanelResizeTimer = null;
     }
     this.textPanelVisible = false;
+    if (this.themeListener) {
+      nativeTheme.off("updated", this.themeListener);
+      this.themeListener = null;
+    }
     if (this.window && !this.window.isDestroyed()) {
       this.window.destroy();
     }
@@ -2152,6 +2256,14 @@ export class HudWindow {
     return { nx, ny, displayId: display.id };
   }
 
+  private applyTheme(): void {
+    const systemIsLight = !nativeTheme.shouldUseDarkColors;
+    this.isLight = this.invertColors ? !systemIsLight : systemIsLight;
+    if (this.window && !this.window.isDestroyed()) {
+      this.execJs(`document.documentElement.classList.toggle('light', ${this.isLight})`);
+    }
+  }
+
   showHighlight(): void {
     this.execJs(`document.getElementById('widget').classList.add('highlight')`);
   }
@@ -2185,6 +2297,11 @@ export class HudWindow {
     this.reduceAnimations = reduceAnimations;
     this.reduceVisualEffects = reduceVisualEffects;
     this.execJs(`setPerformanceFlags(${reduceAnimations}, ${reduceVisualEffects})`);
+  }
+
+  setInvertColors(invert: boolean): void {
+    this.invertColors = invert;
+    this.applyTheme();
   }
 
   playAttentionAnimation(): void {

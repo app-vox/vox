@@ -11,6 +11,8 @@
   "general.theme.light": "Jasny",
   "general.theme.dark": "Ciemny",
   "general.theme.system": "Systemowy",
+  "general.theme.invertHud": "Odwróć motyw HUD",
+  "general.theme.invertHudDescription": "Po włączeniu HUD używa odwrotnego motywu niż aplikacja",
   "general.languages.title": "Języki",
   "general.languages.description": "Język wyświetlania aplikacji i preferowane języki mowy do transkrypcji.",
   "general.language.title": "Język systemu",

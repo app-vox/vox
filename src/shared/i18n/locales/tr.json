@@ -11,6 +11,8 @@
   "general.theme.light": "Açık",
   "general.theme.dark": "Koyu",
   "general.theme.system": "Sistem",
+  "general.theme.invertHud": "HUD temasını ters çevir",
+  "general.theme.invertHudDescription": "Etkinleştirildiğinde HUD, uygulamanın zıt temasını kullanır",
   "general.languages.title": "Diller",
   "general.languages.description": "Uygulama görüntüleme dili ve transkripsiyon için tercih edilen konuşma dilleri.",
   "general.language.title": "Sistem Dili",
