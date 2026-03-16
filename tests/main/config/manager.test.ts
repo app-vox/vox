@@ -94,7 +94,7 @@ describe("ConfigManager", () => {
     const loaded = manager.load();
 
     expect(loaded.llm).toEqual({ provider: "foundry", endpoint: "https://test.com", apiKey: "", model: "gpt-4o" });
-    expect(loaded.whisper.model).toBe("turbo");
+    expect(loaded.whisper.model).toBe("small");
     expect(loaded.shortcuts.hold).toBe("Alt+Space");
   });
 
