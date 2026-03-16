@@ -4,6 +4,7 @@ import {
   hudWindowOptions,
   appMenuPlatformItems,
   supportsHideOnClose,
+  defaultShortcuts,
 } from "../../../../src/main/platform/linux/window";
 
 describe("linux display", () => {
@@ -21,5 +22,10 @@ describe("linux display", () => {
 
   it("does not support hide-on-close", () => {
     expect(supportsHideOnClose).toBe(false);
+  });
+
+  it("uses DoubleTap shortcuts to avoid Linux desktop conflicts", () => {
+    expect(defaultShortcuts.hold).toBe("DoubleTap:Alt");
+    expect(defaultShortcuts.toggle).toBe("DoubleTap:Ctrl");
   });
 });

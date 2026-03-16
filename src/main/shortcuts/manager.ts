@@ -2,7 +2,7 @@ import { BrowserWindow, clipboard, globalShortcut, ipcMain, Notification, screen
 import { uIOhook, UiohookKey } from "uiohook-napi";
 import log from "electron-log/main";
 import { type ConfigManager } from "../config/manager";
-import { paster } from "../platform";
+import { paster, display } from "../platform";
 import { type Pipeline, CanceledError, NoModelError } from "../pipeline";
 import { ShortcutStateMachine, RecordingState } from "./listener";
 import { DoubleTapDetector } from "./double-tap";
@@ -761,7 +761,7 @@ export class ShortcutManager {
 
     if (!holdOk || !toggleOk) {
       const defaults = createDefaultConfig().shortcuts;
-      config.shortcuts = defaults;
+      config.shortcuts = { ...defaults, ...display.defaultShortcuts };
       this.deps.configManager.save(config);
       for (const win of BrowserWindow.getAllWindows()) {
         win.webContents.send("config:changed");

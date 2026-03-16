@@ -9,3 +9,8 @@ export const hudWindowOptions: DisplayModule["hudWindowOptions"] = {};
 export const appMenuPlatformItems: DisplayModule["appMenuPlatformItems"] = [];
 
 export const supportsHideOnClose: DisplayModule["supportsHideOnClose"] = false;
+
+export const defaultShortcuts: DisplayModule["defaultShortcuts"] = {
+  hold: "DoubleTap:Alt",
+  toggle: "DoubleTap:Ctrl",
+};

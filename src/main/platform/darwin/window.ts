@@ -18,3 +18,8 @@ export const appMenuPlatformItems: DisplayModule["appMenuPlatformItems"] = [
 ];
 
 export const supportsHideOnClose: DisplayModule["supportsHideOnClose"] = true;
+
+export const defaultShortcuts: DisplayModule["defaultShortcuts"] = {
+  hold: "Alt+Space",
+  toggle: "Alt+Shift+Space",
+};
