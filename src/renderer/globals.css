@@ -350,6 +350,7 @@ select {
   flex: 1;
   overflow-y: scroll;
   padding: 24px;
+  -webkit-app-region: no-drag;
 
   &::-webkit-scrollbar {
     width: 6px;
