@@ -619,10 +619,10 @@ function buildHudHtml(): string {
   .tp-scroll::-webkit-scrollbar-thumb { background: var(--hud-btn-bg); border-radius: 2px; }
 
   .text-content {
-    font-size: 12px;
-    line-height: 1.6;
+    font-size: 11px;
+    line-height: 1.5;
     color: var(--hud-text-panel-text);
-    font-family: "Bradley Hand", "Segoe Print", "Chalkboard SE", cursive;
+    font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     transition: filter 0.25s ease, opacity 0.25s ease;
   }
   .text-content.swapping {
@@ -709,9 +709,13 @@ function buildHudHtml(): string {
   }
   .tp-restore.visible { display: flex; }
   .tp-restore:hover { background: rgba(99,102,241, 0.8); color: white; transform: translateY(-50%) scale(1.1); }
-  .tp-restore:active { transform: translateY(-50%) scale(0.96); background: rgba(99,102,241, 0.8); color: white; border-color: rgba(99,102,241, 0.3); }
-  .tp-restore.active { background: rgba(99,102,241, 0.8); color: white; border-color: rgba(99,102,241, 0.3); }
-  .tp-restore.active:hover { background: rgba(99,102,241, 0.95); border-color: rgba(99,102,241, 0.4); }
+  .tp-restore:active { transform: translateY(-50%) scale(0.96); background: rgba(79,70,229, 0.9); color: white; border-color: rgba(99,102,241, 0.4); }
+  .tp-restore.active { background: rgba(79,70,229, 0.9); color: white; border-color: rgba(99,102,241, 0.4); }
+  .tp-restore.active:hover { background: rgba(67,56,202, 0.95); border-color: rgba(99,102,241, 0.5); }
+  :root.light .tp-restore { background: rgba(240,240,245,0.95); border-color: rgba(0,0,0,0.12); color: rgba(0,0,0,0.6); }
+  :root.light .tp-restore:hover { background: rgba(99,102,241, 0.85); color: white; }
+  :root.light .tp-restore.active { background: rgba(79,70,229, 0.9); border-color: rgba(99,102,241,0.4); color: white; }
+  :root.light .tp-restore.active:hover { background: rgba(67,56,202, 0.95); }
 
   @keyframes micBreathe {
     0%, 100% { opacity: 0.4; transform: scale(0.92); }
@@ -722,7 +726,7 @@ function buildHudHtml(): string {
     display: inline-flex;
     align-items: center;
     vertical-align: middle;
-    margin-left: 1px;
+    margin-left: -3px;
     opacity: 0.65;
     color: var(--hud-text-panel-text);
     animation: penWrite 0.55s ease-in-out infinite;
@@ -1324,10 +1328,9 @@ function showTextPanel(text) {
   tpUserScrolled = false;
   tpContent.innerHTML = '';
   tpContent.classList.remove('enhancing');
-  tpMic.className = tpReduceAnim ? 'tp-mic no-anim' : 'tp-mic';
-  tpContent.appendChild(tpMic);
+  tpMic.className = 'tp-mic hidden';
   tpPen.className = tpReduceAnim ? 'tp-pen no-anim' : 'tp-pen';
-  tpContent.insertBefore(tpPen, tpMic);
+  tpContent.appendChild(tpPen);
   document.documentElement.style.height = '${getExpandedWinHeight()}px';
   document.body.style.height = '${getExpandedWinHeight()}px';
   document.body.style.overflow = 'visible';
@@ -1435,16 +1438,17 @@ function showTextPanelImmediate(text) {
   tpPanel.className = 'text-panel visible';
   tpContent.innerHTML = '';
   tpContent.classList.remove('enhancing');
-  tpMic.className = tpReduceAnim ? 'tp-mic no-anim' : 'tp-mic';
+  tpMic.className = 'tp-mic hidden';
+  tpPen.className = tpReduceAnim ? 'tp-pen no-anim' : 'tp-pen';
+  tpContent.appendChild(tpPen);
   // Show all words instantly without animation
   var words = text.split(/\\s+/).filter(function(w) { return w.length > 0; });
   for (var i = 0; i < words.length; i++) {
     var span = document.createElement('span');
     span.className = 'word';
     span.textContent = words[i] + ' ';
-    tpContent.insertBefore(span, tpMic);
+    tpContent.insertBefore(span, tpPen);
   }
-  tpContent.appendChild(tpMic);
   document.documentElement.style.height = '${getExpandedWinHeight()}px';
   document.body.style.height = '${getExpandedWinHeight()}px';
   document.body.style.overflow = 'visible';
@@ -1523,17 +1527,18 @@ function restoreTextPanel(text) {
   tpPanel.className = 'text-panel visible';
   tpContent.innerHTML = '';
   tpContent.classList.remove('enhancing');
-  tpMic.className = tpReduceAnim ? 'tp-mic no-anim' : 'tp-mic';
+  tpMic.className = 'tp-mic hidden';
+  tpPen.className = tpReduceAnim ? 'tp-pen no-anim' : 'tp-pen';
+  tpContent.appendChild(tpPen);
   if (text && text.length > 0) {
     var words = text.split(/\\s+/).filter(function(w) { return w.length > 0; });
     for (var i = 0; i < words.length; i++) {
       var span = document.createElement('span');
       span.className = 'word';
       span.textContent = words[i] + ' ';
-      tpContent.insertBefore(span, tpMic);
+      tpContent.insertBefore(span, tpPen);
     }
   }
-  tpContent.appendChild(tpMic);
   document.documentElement.style.height = '${getExpandedWinHeight()}px';
   document.body.style.height = '${getExpandedWinHeight()}px';
   document.body.style.overflow = 'visible';
@@ -1559,8 +1564,7 @@ function doHideTextPanel(skipAnim) {
     tpContent.classList.remove('enhancing');
     tpMic.className = 'tp-mic hidden';
     tpPen.className = 'tp-pen hidden';
-    tpContent.appendChild(tpMic);
-    tpContent.insertBefore(tpPen, tpMic);
+    tpContent.appendChild(tpPen);
     document.documentElement.style.height = '${WIN_HEIGHT}px';
     document.body.style.height = '${WIN_HEIGHT}px';
     document.body.style.overflow = 'hidden';
