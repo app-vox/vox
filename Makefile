@@ -1,4 +1,4 @@
-.PHONY: release run dev build build-dev install deploy uninstall
+.PHONY: release run dev build build-dev install index deploy uninstall _chunkhound-index _install-hooks
 
 UNAME := $(shell uname -s)
 
@@ -6,7 +6,59 @@ release: build deploy
 
 install:
 	@which cmake > /dev/null 2>&1 || (echo "cmake is required. See https://cmake.org/download"; exit 1)
+	@which uv > /dev/null 2>&1 && uv tool install chunkhound --quiet 2>/dev/null || true
 	npm install
+	@$(MAKE) --no-print-directory _install-hooks
+	@$(MAKE) --no-print-directory index
+
+index:
+	@$(MAKE) --no-print-directory _chunkhound-index
+
+_chunkhound-index:
+	@if ! which chunkhound > /dev/null 2>&1; then exit 0; fi; \
+	HAS_SEMANTIC=0; \
+	OLLAMA_STARTED=0; \
+	if [ "$$(uname -s)" = "Darwin" ] && which ollama > /dev/null 2>&1 && ollama list 2>/dev/null | grep -q "nomic-embed-text"; then \
+		HAS_SEMANTIC=1; \
+		if ! curl -s http://localhost:11434/ > /dev/null 2>&1; then \
+			printf "  → Starting Ollama for indexing (macOS only)...\n"; \
+			ollama serve > /dev/null 2>&1 & \
+			sleep 2; \
+			OLLAMA_STARTED=1; \
+		fi; \
+	fi; \
+	if [ ! -d ".chunkhound" ]; then \
+		printf "\n  → Indexing codebase for AI code search (first time)...\n"; \
+		if [ $$HAS_SEMANTIC -eq 1 ]; then \
+			chunkhound index . 2>/dev/null \
+				&& printf "  → Done. Semantic + regex search enabled.\n" \
+				|| printf "  → Indexing failed, skipping.\n"; \
+		else \
+			printf "  → Semantic search unavailable"; \
+			if [ "$$(uname -s)" = "Darwin" ]; then \
+				printf " — run: brew install ollama && ollama pull nomic-embed-text\n"; \
+			else \
+				printf " (macOS only)\n"; \
+			fi; \
+			chunkhound index . --no-embeddings 2>/dev/null \
+				&& printf "  → Done. Regex search enabled.\n" \
+				|| printf "  → Indexing failed, skipping.\n"; \
+		fi; \
+	else \
+		if [ $$HAS_SEMANTIC -eq 1 ]; then \
+			chunkhound index . 2>/dev/null || true; \
+		else \
+			chunkhound index . --no-embeddings 2>/dev/null || true; \
+		fi; \
+	fi; \
+	if [ $$OLLAMA_STARTED -eq 1 ]; then \
+		pkill -x ollama > /dev/null 2>&1 || true; \
+	fi
+
+_install-hooks:
+	@git config core.hooksPath .githooks 2>/dev/null || true
+	@chmod +x .githooks/post-checkout .githooks/post-merge 2>/dev/null || true
+	@printf "  → Git hooks configured (.githooks/).\n"
 
 ifeq ($(UNAME),Darwin)
 build:

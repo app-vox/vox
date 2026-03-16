@@ -1,5 +1,9 @@
 # Vox Development Guidelines
 
+## Code Search: Use ChunkHound
+
+CRITICAL: Before reading files to understand code, always use `search_regex` (MCP tool) or `chunkhound search --regex <pattern> .` (CLI) to locate relevant chunks first. Never scan files blindly — ChunkHound returns pre-chunked, line-referenced results. Use it to find implementations, usages, patterns, and types before opening any file.
+
 ## i18n: No Hardcoded User-Facing Strings
 
 All user-facing text in the Vox app MUST use the i18n system. Never write hardcoded strings in components or main process code.

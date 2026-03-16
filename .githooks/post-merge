@@ -1,0 +1,8 @@
+#!/bin/sh
+# Re-index codebase after git pull/merge for AI code search
+# Runs in background — does not block git operations
+# Semantic search only available on macOS with Ollama
+
+if which chunkhound > /dev/null 2>&1; then
+  make index --no-print-directory > /dev/null 2>&1 &
+fi
