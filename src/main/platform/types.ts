@@ -41,3 +41,8 @@ export interface DisplayModule {
   /** Whether the app should intercept before-quit to support hide-on-close */
   supportsHideOnClose: boolean;
 }
+
+export interface AutostartModule {
+  setEnabled(enabled: boolean): void;
+  isEnabled(): boolean;
+}
