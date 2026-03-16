@@ -278,6 +278,7 @@
   "notification.recordingFailed": "Aufnahme fehlgeschlagen: {error}",
   "notification.pasteFailed": "Automatisches Einfügen fehlgeschlagen: {error}. Der Text befindet sich in Ihrer Zwischenablage.",
   "notification.copiedToClipboard": "{text}...Kopiert — drücken Sie Cmd+V zum Einfügen.",
+  "notification.clipboardReady": "Text in Zwischenablage kopiert — drücken Sie Strg+V zum Einfügen.",
   "notification.insertFailed": "Kein aktives Feld — zu Transkriptionen oder",
   "notification.copyLatest": "letzte kopieren",
   "hud.startRecording": "Aufnahme starten",

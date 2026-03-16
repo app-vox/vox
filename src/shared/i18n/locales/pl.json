@@ -278,6 +278,7 @@
   "notification.recordingFailed": "Nagrywanie nie powiodło się: {error}",
   "notification.pasteFailed": "Automatyczne wklejanie nie powiodło się: {error}. Tekst jest w schowku.",
   "notification.copiedToClipboard": "{text}...Skopiowano — naciśnij Cmd+V, aby wkleić.",
+  "notification.clipboardReady": "Tekst skopiowany do schowka — naciśnij Ctrl+V, aby wkleić.",
   "notification.insertFailed": "Brak aktywnego pola — przejdź do transkrypcji lub",
   "notification.copyLatest": "kopiuj ostatnią",
   "hud.startRecording": "Rozpocznij nagrywanie",
