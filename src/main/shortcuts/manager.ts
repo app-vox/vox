@@ -111,6 +111,7 @@ export class ShortcutManager {
   private displayDebounce: ReturnType<typeof setTimeout> | null = null;
   private displayChangeHandler: (() => void) | null = null;
   private isInitializing = true;
+  private isResettingShortcuts = false;
   private recordingGeneration = 0;
   private micActiveAt = 0;
   private cancelTimer: ReturnType<typeof setTimeout> | null = null;
@@ -759,7 +760,7 @@ export class ShortcutManager {
     if ((mode === "hold" || mode === "both") && !holdOk) slog.warn("Failed to register hold shortcut:", config.shortcuts.hold);
     if ((mode === "toggle" || mode === "both") && !toggleOk) slog.warn("Failed to register toggle shortcut:", config.shortcuts.toggle);
 
-    if (!holdOk || !toggleOk) {
+    if ((!holdOk || !toggleOk) && !this.isResettingShortcuts) {
       const defaults = createDefaultConfig().shortcuts;
       config.shortcuts = { ...defaults, ...display.defaultShortcuts };
       this.deps.configManager.save(config);
@@ -770,6 +771,15 @@ export class ShortcutManager {
         title: t("notification.shortcutReset.title"),
         body: t("notification.shortcutReset.body"),
       }).show();
+      // Re-register with the reset values so DoubleTap detectors are created
+      slog.info("Re-registering shortcuts after reset to platform defaults");
+      this.isResettingShortcuts = true;
+      try {
+        this.registerShortcutKeys();
+      } finally {
+        this.isResettingShortcuts = false;
+      }
+      return;
     }
 
     if (!isDoubleTap(config.shortcuts.hold)) {
