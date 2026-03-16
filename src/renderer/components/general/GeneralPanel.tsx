@@ -12,6 +12,7 @@ import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, KeyboardIcon, Chev
 import type { ThemeMode, SupportedLanguage, WidgetPosition } from "../../../shared/config";
 import { CustomSelect, MultiSelect, type SelectItem } from "../ui/CustomSelect";
 import { OfflineBanner } from "../ui/OfflineBanner";
+import { Platform } from "../layout/Platform";
 import card from "../shared/card.module.scss";
 import buttons from "../shared/buttons.module.scss";
 import styles from "./GeneralPanel.module.scss";
@@ -849,50 +850,52 @@ export function GeneralPanel() {
               </div>
             </div>
           </label>
-          <label className={styles.checkboxRow}>
-            <input
-              type="checkbox"
-              checked={config.hideOnBlur}
-              onChange={async () => {
-                updateConfig({ hideOnBlur: !config.hideOnBlur });
-                await saveConfig(false);
-                triggerToast();
-              }}
-            />
-            <div>
-              <div className={styles.checkboxLabel}>{t("general.system.hideOnBlur")}</div>
-              <div className={styles.checkboxDesc}>{t("general.system.hideOnBlurDesc")}</div>
+          <Platform only="darwin">
+            <label className={styles.checkboxRow}>
+              <input
+                type="checkbox"
+                checked={config.hideOnBlur}
+                onChange={async () => {
+                  updateConfig({ hideOnBlur: !config.hideOnBlur });
+                  await saveConfig(false);
+                  triggerToast();
+                }}
+              />
+              <div>
+                <div className={styles.checkboxLabel}>{t("general.system.hideOnBlur")}</div>
+                <div className={styles.checkboxDesc}>{t("general.system.hideOnBlurDesc")}</div>
+              </div>
+            </label>
+            <div className={styles.visibilitySelector}>
+              <p className={styles.visibilityLabel}>{t("general.system.showIn")}</p>
+              <div className={styles.segmented} role="radiogroup" aria-label={t("general.system.showIn")}>
+                {(["tray", "dock", "both"] as const).map((option) => {
+                  const active = option === "both"
+                    ? config.showInDock && config.showInTray
+                    : option === "dock"
+                      ? config.showInDock && !config.showInTray
+                      : !config.showInDock && config.showInTray;
+                  return (
+                    <button
+                      key={option}
+                      role="radio"
+                      aria-checked={active}
+                      className={`${styles.segment} ${active ? styles.active : ""}`}
+                      onClick={async () => {
+                        const showInDock = option === "dock" || option === "both";
+                        const showInTray = option === "tray" || option === "both";
+                        updateConfig({ showInDock, showInTray });
+                        await saveConfig(false);
+                        triggerToast();
+                      }}
+                    >
+                      {t(`general.system.showIn.${option}`)}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </label>
-          <div className={styles.visibilitySelector}>
-            <p className={styles.visibilityLabel}>{t("general.system.showIn")}</p>
-            <div className={styles.segmented} role="radiogroup" aria-label={t("general.system.showIn")}>
-              {(["tray", "dock", "both"] as const).map((option) => {
-                const active = option === "both"
-                  ? config.showInDock && config.showInTray
-                  : option === "dock"
-                    ? config.showInDock && !config.showInTray
-                    : !config.showInDock && config.showInTray;
-                return (
-                  <button
-                    key={option}
-                    role="radio"
-                    aria-checked={active}
-                    className={`${styles.segment} ${active ? styles.active : ""}`}
-                    onClick={async () => {
-                      const showInDock = option === "dock" || option === "both";
-                      const showInTray = option === "tray" || option === "both";
-                      updateConfig({ showInDock, showInTray });
-                      await saveConfig(false);
-                      triggerToast();
-                    }}
-                  >
-                    {t(`general.system.showIn.${option}`)}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          </Platform>
         </div>
       </div>
 

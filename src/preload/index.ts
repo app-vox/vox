@@ -40,7 +40,10 @@ export interface UpdateState {
   error: string;
 }
 
+export type VoxPlatform = "darwin" | "win32" | "linux";
+
 export interface VoxAPI {
+  platform: VoxPlatform;
   config: {
     load(): Promise<import("../shared/config").VoxConfig>;
     loadLlmForProvider(provider: import("../shared/config").LlmProviderType): Promise<import("../shared/config").LlmConfig>;
@@ -166,6 +169,7 @@ export interface VoxAPI {
 }
 
 const voxApi: VoxAPI = {
+  platform: process.platform as VoxPlatform,
   config: {
     load: () => ipcRenderer.invoke("config:load"),
     loadLlmForProvider: (provider) => ipcRenderer.invoke("config:load-llm-for-provider", provider),
