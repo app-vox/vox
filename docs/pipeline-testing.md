@@ -103,6 +103,8 @@ A test passes when **both** conditions are met:
 
 Each scenario has a corresponding WAV file under `tests/pipeline/audio/`. These are generated via macOS TTS from the `spokenText` field and serve as baseline input for the Whisper stage.
 
+> **Note:** The audio generation script uses the macOS `say` command and must be run on macOS.
+
 To regenerate all audio files (skips existing ones):
 
 ```bash

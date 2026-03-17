@@ -8,6 +8,7 @@ Open-source voice-to-text app with local Whisper transcription and AI-powered co
 [![codecov](https://codecov.io/gh/app-vox/vox/graph/badge.svg)](https://codecov.io/gh/app-vox/vox)
 [![License: FSL-1.1-ALv2](https://img.shields.io/badge/License-FSL--1.1--ALv2-blue.svg)](LICENSE)
 [![macOS](https://img.shields.io/badge/macOS-12.0+-000000?logo=apple&logoColor=white)](https://www.apple.com/macos/)
+[![Windows](https://img.shields.io/badge/Windows-10+-0078D4?logo=windows&logoColor=white)](https://www.microsoft.com/windows/)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/rodrigoluizs)
 
 Hold a keyboard shortcut, speak, and Vox transcribes your voice locally using [whisper.cpp](https://github.com/ggerganov/whisper.cpp), optionally corrects it with AI, and pastes the text into your active app.
@@ -20,8 +21,8 @@ Hold a keyboard shortcut, speak, and Vox transcribes your voice locally using [w
 
 </div>
 
-> ⚠️ **Platform Support**
-> Vox currently runs on **macOS** (Apple Silicon and Intel). Cross-platform support for Windows and Linux is planned for future releases.
+> **Platform Support**
+> Vox runs on **macOS** (Apple Silicon and Intel) and **Windows** (10+). Linux support is planned for future releases.
 
 ## Table of Contents
 
@@ -39,7 +40,10 @@ Hold a keyboard shortcut, speak, and Vox transcribes your voice locally using [w
 
 ## Quick Start
 
-Download the latest version from the [releases page](https://github.com/app-vox/vox/releases/latest) and drag `Vox.app` to your Applications folder.
+Download the latest version from the [releases page](https://github.com/app-vox/vox/releases/latest).
+
+- **macOS**: Drag `Vox.app` to your Applications folder.
+- **Windows**: Run the installer (`.exe`) and follow the setup wizard.
 
 ## First Launch
 
@@ -65,7 +69,7 @@ Once configured, hold `Alt+Space` to start recording.
 - **🤖 AI correction** — Removes filler words and fixes grammar (optional)
 - **⚙️ Custom prompts** — Tailor corrections for medical, technical, creative, or any workflow
 - **⌨️ Hold or toggle modes** — Press-and-hold or toggle recording on/off
-- **📋 Auto-paste** — Text appears in your focused app via Cmd+V
+- **📋 Auto-paste** — Text is pasted directly into your focused app
 - **🎯 Multiple models** — Choose speed vs accuracy (tiny to large)
 - **☁️ Multiple LLM providers** — OpenAI-compatible or AWS Bedrock
 - **🎨 Menu bar app** — Runs quietly in the background with dark/light mode support
@@ -108,7 +112,7 @@ Capture thoughts quickly without typing. Perfect for meetings, brainstorming, or
 | **Custom Prompts** | ✅ Full control | ❌ Limited | ❌ None | ⚠️ Some apps |
 | **AI Enhancement** | ✅ Your own API | ❌ None | ⚠️ Basic | ⚠️ Varies |
 | **Offline Mode** | ✅ Full | ⚠️ Limited | ❌ Requires internet | ✅ Most |
-| **macOS Native** | ✅ Menu bar app | ⚠️ Full app | ✅ Built-in | ✅ Varies |
+| **Native App** | ✅ Menu bar / tray | ⚠️ Full app | ✅ Built-in | ✅ Varies |
 | **Custom Shortcuts** | ✅ Configurable | ✅ Yes | ⚠️ Limited | ✅ Most |
 | **Open Source** | ✅ FSL-1.1-ALv2 | ❌ Proprietary | ❌ Proprietary | ⚠️ Some |
 
@@ -120,7 +124,7 @@ Capture thoughts quickly without typing. Perfect for meetings, brainstorming, or
 
 ## Requirements
 
-- **macOS** (Apple Silicon or Intel)
+- **macOS** (Apple Silicon or Intel) or **Windows** (10+)
 - **LLM provider** (optional) — for text correction:
   - OpenAI-compatible endpoint with API key
   - Or AWS Bedrock credentials with model access
@@ -210,7 +214,7 @@ Contributions welcome! To contribute:
 Yes, Vox is 100% free and open-source. Transcription runs locally using Whisper.cpp. If you use optional AI enhancement, you'll need your own API keys (OpenAI-compatible or AWS Bedrock), but there are no fees from Vox.
 
 ### Does my audio leave my device?
-No. Transcription happens entirely on your Mac. Only if you enable AI enhancement does the *text* (not audio) get sent to your configured LLM provider for correction. Your audio recordings never leave your device.
+No. Transcription happens entirely on your device. Only if you enable AI enhancement does the *text* (not audio) get sent to your configured LLM provider for correction. Your audio recordings never leave your device.
 
 ### What's the difference between local transcription and AI enhancement?
 - **Local transcription**: Whisper.cpp converts your speech to text on your device. Fast, accurate, 100% private.
@@ -234,15 +238,15 @@ Yes. Local transcription works 100% offline. AI enhancement requires internet (s
 ### Why does Vox need Accessibility permissions?
 Vox needs Accessibility access to:
 1. Listen for your custom keyboard shortcuts globally
-2. Simulate `Cmd+V` to paste transcribed text into your active app
+2. Simulate paste (`Cmd+V` on macOS, `Ctrl+V` on Windows) to insert transcribed text into your active app
 
 Without this, Vox can't detect shortcuts or auto-paste text.
 
 ### Can I contribute to Vox?
 Absolutely! Vox is open-source. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. We welcome bug reports, feature requests, and pull requests.
 
-### What about Windows and Linux?
-macOS-only for now, but cross-platform support is planned. Follow the repo for updates!
+### What about Linux?
+Vox runs on macOS and Windows. Linux support is planned — follow the repo for updates!
 
 ## License
 

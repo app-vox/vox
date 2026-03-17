@@ -1,6 +1,8 @@
 # Release Workflow Setup
 
-Manual GitHub Actions workflow that builds, signs, notarizes, and publishes Vox as a GitHub Release with DMG and zip artifacts.
+Manual GitHub Actions workflow that builds, signs, notarizes, and publishes Vox as a GitHub Release with artifacts for all supported platforms.
+
+> **macOS signing setup** — This document covers macOS-specific code signing and notarization via Apple Developer ID. Windows code signing uses a separate certificate process (Authenticode) and does not require the Apple-specific secrets below.
 
 ## Prerequisites
 
@@ -99,10 +101,10 @@ Go to your repo > **Settings > Secrets and variables > Actions** and add:
 The workflow will:
 
 - Build the Electron app with `electron-vite build`
-- Sign with your Developer ID certificate
-- Notarize with Apple via the App Store Connect API key
-- Package as DMG and zip
-- Create a GitHub Release with both artifacts attached and auto-generated release notes
+- Sign with your Developer ID certificate (macOS) or code signing certificate (Windows)
+- Notarize with Apple via the App Store Connect API key (macOS only)
+- Package as DMG and zip (macOS) or NSIS installer and zip (Windows)
+- Create a GitHub Release with all artifacts attached and auto-generated release notes
 
 ## Local development
 
