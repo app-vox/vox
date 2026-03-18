@@ -226,11 +226,6 @@ export class Pipeline {
     // Otherwise, use full buffer for maximum accuracy
     const snapshot = await this.deps.recorder.snapshot?.(maxSeconds);
     if (!snapshot || snapshot.audioBuffer.length === 0) return null;
-    // Trim recorder buffer: keep only last 30s to prevent unbounded memory growth.
-    // 30s is enough for Whisper fallback if hint path fails.
-    if (maxSeconds) {
-      void this.deps.recorder.trimBuffer?.(30);
-    }
     // Require at least 0.5s of audio for meaningful transcription
     const durationMs = (snapshot.audioBuffer.length / snapshot.sampleRate) * 1000;
     if (durationMs < 500) return null;
