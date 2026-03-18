@@ -1,8 +1,112 @@
 # Vox Development Guidelines
 
-## Code Search: Use ChunkHound
+## Code Search: Use ChunkHound CLI
 
-CRITICAL: Before reading files to understand code, always use `search_regex` (MCP tool) or `chunkhound search --regex <pattern> .` (CLI) to locate relevant chunks first. Never scan files blindly — ChunkHound returns pre-chunked, line-referenced results. Use it to find implementations, usages, patterns, and types before opening any file.
+**CRITICAL: ALWAYS start with ChunkHound before reading any files.** This is not optional. ChunkHound returns pre-chunked, line-referenced results and is orders of magnitude faster than scanning files.
+
+### Decision Tree
+
+```
+User asks a question about code
+    ↓
+Is it an architectural/conceptual question?
+    → YES: Use `chunkhound research "question"`
+    → NO: Continue below
+    ↓
+Is it about finding a specific pattern/class/function?
+    → YES: Use `chunkhound search --regex "pattern"`
+    → NO: Continue below
+    ↓
+Is it about finding conceptually related code?
+    → YES: Use `chunkhound search "semantic query"`
+    ↓
+After getting results → Read ONLY the specific files/lines returned
+```
+
+### When to Use Each Command
+
+**For architectural questions**, use semantic search with broad queries - it returns ranked, relevant chunks you can read to understand patterns:
+```bash
+# ✅ User asks: "explain the cross-platform strategy"
+chunkhound search "cross-platform architecture platform-specific modules" --path-filter "src/main/platform"
+
+# ✅ User asks: "how does recording work?"
+chunkhound search "audio recording pipeline microphone capture"
+
+# ✅ User asks: "what patterns are used for X?"
+chunkhound search "LLM provider abstraction factory pattern"
+```
+
+**Note:** `chunkhound research` (deep multi-hop research) requires large-context LLMs and is fragile with local models. If you need deep research, use MCP mode instead (copy `.mcp.json.example` to `.mcp.json` and restart) - it gives ChunkHound access to Claude Code for synthesis.
+
+**`chunkhound search`** - Semantic search for related code:
+```bash
+# ✅ Find all authentication-related code
+chunkhound search "authentication logic" --path-filter "src/"
+
+# ✅ Find error handling patterns
+chunkhound search "error handling retry logic"
+```
+
+**`chunkhound search --regex`** - Exact pattern matching:
+```bash
+# ✅ Find all Service classes
+chunkhound search --regex "class \w+Service"
+
+# ✅ Find all interfaces starting with I
+chunkhound search --regex "interface I\w+" --path-filter "src/main/"
+
+# ✅ Find function definitions
+chunkhound search --regex "function \w+\("
+```
+
+### Configuration
+
+ChunkHound config lives in `.chunkhound.json`:
+
+```json
+{
+  "embedding": {
+    "provider": "openai",
+    "base_url": "http://localhost:11434/v1",
+    "model": "nomic-embed-text"
+  }
+}
+```
+
+**Ollama setup** (macOS only, for semantic search):
+
+```bash
+make dev-start   # installs Ollama + nomic-embed-text, starts server
+make dev-stop    # stops Ollama server
+```
+
+If Ollama isn't available, ChunkHound falls back to regex-only search (still useful!).
+
+### Why CLI over MCP?
+
+- **Faster**: No MCP server overhead or IPC serialization
+- **Transparent**: You see exactly what commands run in the conversation
+- **Flexible**: Easy to adjust flags, pagination, filters dynamically
+- **Simpler**: One less moving part, no process locks
+
+**Alternative:** If you want deep `research` capability (multi-hop synthesis with large context), use MCP mode instead:
+```bash
+cp .mcp.json.example .mcp.json
+# Then restart Claude Code
+```
+MCP gives ChunkHound access to Claude Code as the LLM, which has huge context and can handle complex synthesis.
+
+### Examples of What NOT to Do
+
+❌ **Wrong**: User asks "explain the platform module" → immediately read files
+✅ **Right**: `chunkhound research "How does the platform module work?"`
+
+❌ **Wrong**: User asks "find all LLM providers" → use Glob/Grep
+✅ **Right**: `chunkhound search "LLM provider implementations"`
+
+❌ **Wrong**: Search for `class AudioRecorder` → use Grep
+✅ **Right**: `chunkhound search --regex "class AudioRecorder"`
 
 ## i18n: No Hardcoded User-Facing Strings
 
