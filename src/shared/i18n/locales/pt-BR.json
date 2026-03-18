@@ -280,6 +280,7 @@
   "notification.recordingFailed": "Falha na gravação: {error}",
   "notification.pasteFailed": "Falha ao colar automaticamente: {error}. O texto está na sua área de transferência.",
   "notification.copiedToClipboard": "{text}...Copiado — pressione Cmd+V para colar.",
+  "notification.clipboardReady": "Texto copiado para a área de transferência — pressione Ctrl+V para colar.",
   "notification.insertFailed": "Nenhum campo ativo — vá para transcrições ou",
   "notification.copyLatest": "copiar última",
   "hud.startRecording": "Iniciar gravação",

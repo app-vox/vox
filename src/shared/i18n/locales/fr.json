@@ -280,6 +280,7 @@
   "notification.recordingFailed": "Échec de l'enregistrement : {error}",
   "notification.pasteFailed": "Échec du collage automatique : {error}. Le texte est dans votre presse-papiers.",
   "notification.copiedToClipboard": "{text}...Copié — appuyez sur Cmd+V pour coller.",
+  "notification.clipboardReady": "Texte copié dans le presse-papiers — appuyez sur Ctrl+V pour coller.",
   "notification.insertFailed": "Aucun champ actif — voir les transcriptions ou",
   "notification.copyLatest": "copier dernière",
   "hud.startRecording": "Démarrer l'enregistrement",
