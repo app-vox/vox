@@ -124,13 +124,15 @@ export class ShortcutManager {
   private activePipeline: Pipeline | null = null;
   private activePipelineGen = 0;
   // How often to re-transcribe the full audio buffer during live preview
-  private static readonly LIVE_PREVIEW_INTERVAL_MS = 1500;
+  private static readonly LIVE_PREVIEW_INTERVAL_MS = 2000;
   // Delay before the first snapshot after recording starts
   private static readonly LIVE_PREVIEW_FIRST_SNAPSHOT_MS = 800;
-  // Rolling window size for live transcription (seconds)
-  private static readonly LIVE_PREVIEW_WINDOW_SEC = 6;
+  // Rolling window size for live transcription (seconds) — 4s keeps Whisper fast
+  private static readonly LIVE_PREVIEW_WINDOW_SEC = 4;
   // Max context words to pass to Whisper (for performance)
-  private static readonly LIVE_PREVIEW_CONTEXT_WORDS = 20;
+  private static readonly LIVE_PREVIEW_CONTEXT_WORDS = 15;
+  // When Whisper returns no new words N times in a row, slow down ticks
+  private static readonly LIVE_PREVIEW_STALE_BACKOFF_MS = 4000;
   private isShiftHeld = false;
   private shiftAlone = false;
   private shiftTrackingActive = false;
@@ -1197,6 +1199,7 @@ export class ShortcutManager {
     this.lastSnapshotText = "";
     this.accumulatedText = "";
     let running = false;
+    let staleCount = 0;
     this.hud.showTextPanelEmpty();
 
     const tick = async (): Promise<void> => {
@@ -1216,20 +1219,19 @@ export class ShortcutManager {
         );
         if (gen !== this.recordingGeneration) return;
         if (text) {
-          // Merge new transcription with accumulated text
-          const prevLength = this.accumulatedText.length;
           const merged = this.mergeTranscriptions(this.accumulatedText, text);
-          this.accumulatedText = merged;
-          this.lastSnapshotText = text;
-          this.hud.updateTextPanel(merged);
-          // Only log when text actually changed
-          if (merged.length > prevLength) {
-            slog.debug("Live preview: +%d chars, total=%d chars, snapshot=%s",
-              merged.length - prevLength,
-              merged.length,
-              text.slice(0, 40)
-            );
+          if (merged.length > this.accumulatedText.length) {
+            staleCount = 0;
+            slog.debug("Live preview: +%d chars, total=%d chars",
+              merged.length - this.accumulatedText.length, merged.length);
+            this.accumulatedText = merged;
+            this.lastSnapshotText = text;
+            this.hud.updateTextPanel(merged);
+          } else {
+            staleCount++;
           }
+        } else {
+          staleCount++;
         }
       } catch (err) {
         slog.warn("Live transcription error:", err);
@@ -1237,10 +1239,11 @@ export class ShortcutManager {
         running = false;
       }
       if (gen !== this.recordingGeneration) return;
-      this.liveTranscriptionTimer = setTimeout(
-        () => { tick(); },
-        ShortcutManager.LIVE_PREVIEW_INTERVAL_MS,
-      );
+      // Back off when Whisper returns no new words (user pausing)
+      const nextInterval = staleCount >= 2
+        ? ShortcutManager.LIVE_PREVIEW_STALE_BACKOFF_MS
+        : ShortcutManager.LIVE_PREVIEW_INTERVAL_MS;
+      this.liveTranscriptionTimer = setTimeout(() => { tick(); }, nextInterval);
     };
 
     // First snapshot
@@ -1269,26 +1272,35 @@ export class ShortcutManager {
   private mergeTranscriptions(accumulated: string, newSnapshot: string): string {
     if (!accumulated) return newSnapshot;
 
-    // Simple append strategy: check for overlap at word boundaries
     const accWords = accumulated.split(" ");
     const newWords = newSnapshot.split(" ");
 
+    // Detect whether we're mid-sentence (no sentence-ending punctuation before append)
+    const prevEnding = accumulated.trimEnd().slice(-1);
+    const isSentenceEnd = /[.!?]/.test(prevEnding);
+
+    // Normalize first word: Whisper always capitalizes the start of each snippet.
+    // When appending mid-sentence, lowercase it to avoid spurious capitals.
+    const normalize = (words: string[]): string[] => {
+      if (isSentenceEnd || words.length === 0) return words;
+      const first = words[0];
+      return [first.charAt(0).toLowerCase() + first.slice(1), ...words.slice(1)];
+    };
+
     // Try to find overlap between end of accumulated and start of new snapshot
-    // This handles cases where Whisper re-transcribes some context
     for (let overlapSize = Math.min(5, accWords.length); overlapSize > 0; overlapSize--) {
       const accEnd = accWords.slice(-overlapSize).join(" ");
       const newStart = newWords.slice(0, overlapSize).join(" ");
 
       if (accEnd.toLowerCase() === newStart.toLowerCase()) {
-        // Found overlap, append remaining words
-        const remaining = newWords.slice(overlapSize);
+        const remaining = normalize(newWords.slice(overlapSize));
         if (remaining.length === 0) return accumulated;
         return accumulated + " " + remaining.join(" ");
       }
     }
 
-    // No overlap found, just append with space
-    return accumulated + " " + newSnapshot;
+    // No overlap found — append with normalization
+    return accumulated + " " + normalize(newWords).join(" ");
   }
 
   private closeLivePreview(): void {
