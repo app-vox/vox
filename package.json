@@ -8,6 +8,7 @@
     "npm": "11.11.1"
   },
   "scripts": {
+    "preinstall": "node scripts/check-node-version.js",
     "build": "electron-vite build",
     "start": "electron-vite preview",
     "predev": "bash scripts/set-dev-icon.sh",
