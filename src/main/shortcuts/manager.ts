@@ -119,6 +119,7 @@ export class ShortcutManager {
   private lastUnpastedText: string | null = null;
   private liveTranscriptionTimer: ReturnType<typeof setTimeout> | null = null;
   private liveTranscriptionShowUI = false;
+  private liveTranscriptionRunning = false;
   private lastSnapshotText = "";
   private accumulatedText = "";
   private livePreviewClosedForSession = false;
@@ -1074,6 +1075,16 @@ export class ShortcutManager {
   }
 
   private async onRecordingStop(): Promise<void> {
+    // Wait for any in-flight snapshot to finish so its result lands in accumulatedText
+    if (this.liveTranscriptionRunning) {
+      await new Promise<void>(resolve => {
+        const check = (): void => {
+          if (!this.liveTranscriptionRunning) { resolve(); return; }
+          setTimeout(check, 30);
+        };
+        check();
+      });
+    }
     // Save hint BEFORE stopLiveTranscription clears accumulatedText
     const livePreviewHint = this.accumulatedText;
     this.stopLiveTranscription();
@@ -1201,6 +1212,7 @@ export class ShortcutManager {
     this.activePipeline = pipeline;
     this.activePipelineGen = gen;
     this.liveTranscriptionShowUI = showUI;
+    this.liveTranscriptionRunning = false;
     this.lastSnapshotText = "";
     this.accumulatedText = "";
     let running = false;
@@ -1217,6 +1229,7 @@ export class ShortcutManager {
         return;
       }
       running = true;
+      this.liveTranscriptionRunning = true;
       try {
         // Stream mode: transcribe only last N seconds with limited context for performance
         const contextPrompt = this.getContextPrompt(this.accumulatedText);
@@ -1246,6 +1259,7 @@ export class ShortcutManager {
         slog.warn("Live transcription error:", err);
       } finally {
         running = false;
+        this.liveTranscriptionRunning = false;
       }
       if (gen !== this.recordingGeneration) return;
       // Back off when Whisper returns no new words (user pausing)

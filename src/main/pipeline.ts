@@ -356,8 +356,12 @@ export class Pipeline {
           return hint + " " + appended.join(" ");
         }
       }
-      // No overlap found — only append if tail ends with more content than hint
-      return hint;
+      // No overlap found — append normalized tail (new words not yet in hint)
+      const prevEnding = hint.trimEnd().slice(-1);
+      if (!/[.!?]/.test(prevEnding) && tailWords.length > 0) {
+        tailWords[0] = tailWords[0].charAt(0).toLowerCase() + tailWords[0].slice(1);
+      }
+      return hint + " " + tailWords.join(" ");
     } catch {
       return hint;
     }
