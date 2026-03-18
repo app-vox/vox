@@ -124,13 +124,13 @@ export class ShortcutManager {
   private activePipeline: Pipeline | null = null;
   private activePipelineGen = 0;
   // How often to re-transcribe the full audio buffer during live preview
-  private static readonly LIVE_PREVIEW_INTERVAL_MS = 1000;
+  private static readonly LIVE_PREVIEW_INTERVAL_MS = 1500;
   // Delay before the first snapshot after recording starts
-  private static readonly LIVE_PREVIEW_FIRST_SNAPSHOT_MS = 700;
+  private static readonly LIVE_PREVIEW_FIRST_SNAPSHOT_MS = 800;
   // Rolling window size for live transcription (seconds)
-  private static readonly LIVE_PREVIEW_WINDOW_SEC = 10;
+  private static readonly LIVE_PREVIEW_WINDOW_SEC = 6;
   // Max context words to pass to Whisper (for performance)
-  private static readonly LIVE_PREVIEW_CONTEXT_WORDS = 30;
+  private static readonly LIVE_PREVIEW_CONTEXT_WORDS = 20;
   private isShiftHeld = false;
   private shiftAlone = false;
   private shiftTrackingActive = false;
@@ -1106,6 +1106,10 @@ export class ShortcutManager {
     try {
       // Use accumulated text from live preview as hint to skip full Whisper transcription
       const hint = this.accumulatedText;
+      slog.info("Stopping recording: hint=%d chars, will %s Whisper",
+        hint.length,
+        hint ? "skip" : "use"
+      );
       const text = hint
         ? await pipeline.stopAndProcessWithHint(hint)
         : await pipeline.stopAndProcess();
@@ -1206,11 +1210,6 @@ export class ShortcutManager {
       try {
         // Stream mode: transcribe only last N seconds with limited context for performance
         const contextPrompt = this.getContextPrompt(this.accumulatedText);
-        slog.debug("Live preview tick: window=%ds, context=%d words, accumulated=%d words",
-          ShortcutManager.LIVE_PREVIEW_WINDOW_SEC,
-          contextPrompt.split(" ").length,
-          this.accumulatedText.split(" ").filter(Boolean).length
-        );
         const text = await pipeline.snapshotAndTranscribe(
           ShortcutManager.LIVE_PREVIEW_WINDOW_SEC,
           contextPrompt
@@ -1218,14 +1217,19 @@ export class ShortcutManager {
         if (gen !== this.recordingGeneration) return;
         if (text) {
           // Merge new transcription with accumulated text
+          const prevLength = this.accumulatedText.length;
           const merged = this.mergeTranscriptions(this.accumulatedText, text);
-          slog.debug("Live preview update: new=%s, merged=%s",
-            text.slice(0, 40),
-            merged.slice(0, 60)
-          );
           this.accumulatedText = merged;
           this.lastSnapshotText = text;
           this.hud.updateTextPanel(merged);
+          // Only log when text actually changed
+          if (merged.length > prevLength) {
+            slog.debug("Live preview: +%d chars, total=%d chars, snapshot=%s",
+              merged.length - prevLength,
+              merged.length,
+              text.slice(0, 40)
+            );
+          }
         }
       } catch (err) {
         slog.warn("Live transcription error:", err);

@@ -296,7 +296,8 @@ export class Pipeline {
       return this.processFromRecording(recording, gen);
     }
 
-    slog.info("Using live preview as transcript, skipping Whisper: %s", rawText.slice(0, 80));
+    const startTime = Date.now();
+    slog.info("✓ Using live preview as transcript, skipping Whisper (%d chars)", rawText.length);
     this.heldTranscription = rawText;
     this.deps.onTranscriptionComplete?.(rawText);
 
@@ -304,7 +305,9 @@ export class Pipeline {
       throw new CanceledError();
     }
 
-    return this.processFromTranscription(rawText, recording, gen);
+    const result = await this.processFromTranscription(rawText, recording, gen);
+    slog.info("✓ Hint path completed in %dms", Date.now() - startTime);
+    return result;
   }
 
   gracefulCancel(): { stage: PipelineStage | "listening" } {
