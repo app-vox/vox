@@ -119,6 +119,7 @@ export class ShortcutManager {
   private lastUnpastedText: string | null = null;
   private liveTranscriptionTimer: ReturnType<typeof setTimeout> | null = null;
   private lastSnapshotText = "";
+  private accumulatedText = "";
   private livePreviewClosedForSession = false;
   private activePipeline: Pipeline | null = null;
   private activePipelineGen = 0;
@@ -1185,6 +1186,7 @@ export class ShortcutManager {
     this.activePipeline = pipeline;
     this.activePipelineGen = gen;
     this.lastSnapshotText = "";
+    this.accumulatedText = "";
     let running = false;
     this.hud.showTextPanelEmpty();
 
@@ -1197,11 +1199,15 @@ export class ShortcutManager {
       }
       running = true;
       try {
-        const text = await pipeline.snapshotAndTranscribe();
+        // Stream mode: transcribe only last 5s with accumulated text as context
+        const text = await pipeline.snapshotAndTranscribe(5, this.accumulatedText);
         if (gen !== this.recordingGeneration) return;
         if (text) {
+          // Merge new transcription with accumulated text
+          const merged = this.mergeTranscriptions(this.accumulatedText, text);
+          this.accumulatedText = merged;
           this.lastSnapshotText = text;
-          this.hud.updateTextPanel(text);
+          this.hud.updateTextPanel(merged);
         }
       } catch {
         // Ignore errors during live transcription
@@ -1225,6 +1231,32 @@ export class ShortcutManager {
       this.liveTranscriptionTimer = null;
     }
     this.lastSnapshotText = "";
+    this.accumulatedText = "";
+  }
+
+  private mergeTranscriptions(accumulated: string, newSnapshot: string): string {
+    if (!accumulated) return newSnapshot;
+
+    // Simple append strategy: check for overlap at word boundaries
+    const accWords = accumulated.split(" ");
+    const newWords = newSnapshot.split(" ");
+
+    // Try to find overlap between end of accumulated and start of new snapshot
+    // This handles cases where Whisper re-transcribes some context
+    for (let overlapSize = Math.min(5, accWords.length); overlapSize > 0; overlapSize--) {
+      const accEnd = accWords.slice(-overlapSize).join(" ");
+      const newStart = newWords.slice(0, overlapSize).join(" ");
+
+      if (accEnd.toLowerCase() === newStart.toLowerCase()) {
+        // Found overlap, append remaining words
+        const remaining = newWords.slice(overlapSize);
+        if (remaining.length === 0) return accumulated;
+        return accumulated + " " + remaining.join(" ");
+      }
+    }
+
+    // No overlap found, just append with space
+    return accumulated + " " + newSnapshot;
   }
 
   private closeLivePreview(): void {
