@@ -1317,9 +1317,15 @@ tpScroll.addEventListener('scroll', function() {
   tpUserScrolled = !atBottom;
 });
 
+var tpScrollPending = false;
 function tpScrollToBottom() {
   if (tpUserScrolled) return;
-  requestAnimationFrame(function() { tpScroll.scrollTop = tpScroll.scrollHeight; });
+  if (tpScrollPending) return;
+  tpScrollPending = true;
+  requestAnimationFrame(function() {
+    tpScrollPending = false;
+    tpScroll.scrollTop = tpScroll.scrollHeight;
+  });
 }
 
 function showTextPanel(text) {
@@ -1327,6 +1333,7 @@ function showTextPanel(text) {
   tpLastText = text;
   tpUserScrolled = false;
   tpContent.innerHTML = '';
+  tpWordCount = 0;
   tpContent.classList.remove('enhancing');
   tpMic.className = 'tp-mic hidden';
   tpPen.className = tpReduceAnim ? 'tp-pen no-anim' : 'tp-pen';
@@ -1345,6 +1352,8 @@ function showTextPanel(text) {
     span.className = tpReduceAnim ? 'word' : 'word appearing';
     span.textContent = words[idx] + ' ';
     tpContent.insertBefore(span, tpPen);
+    tpWordCount++;
+    tpTrimDom();
     tpScrollToBottom();
     tpTypingTimer = setTimeout(function() { addWordCC(idx + 1); }, 60);
   }
@@ -1353,6 +1362,16 @@ function showTextPanel(text) {
 }
 
 var tpSwapTimer = null;
+// Max word spans in DOM — panel is 74px tall (~4 lines visible), old words are
+// invisible above the scroll viewport. O(1) removal via firstElementChild.
+var TP_MAX_DOM_WORDS = 120;
+var tpWordCount = 0;
+function tpTrimDom() {
+  if (tpWordCount > TP_MAX_DOM_WORDS) {
+    var first = tpContent.firstElementChild;
+    if (first && first !== tpPen) { tpContent.removeChild(first); tpWordCount--; }
+  }
+}
 
 function updateTextPanel(text) {
   if (text === tpLastText) return;
@@ -1369,6 +1388,8 @@ function updateTextPanel(text) {
     span.className = tpReduceAnim ? 'word' : 'word appearing';
     span.textContent = wordsToAdd[idx] + ' ';
     tpContent.insertBefore(span, tpPen);
+    tpWordCount++;
+    tpTrimDom();
     tpScrollToBottom();
     tpTypingTimer = setTimeout(function() { addNextCC(idx + 1); }, 60);
   }
