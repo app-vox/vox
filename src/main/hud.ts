@@ -1354,6 +1354,7 @@ function showTextPanel(text) {
 
 var tpSwapTimer = null;
 
+var TP_MAX_DOM_WORDS = 150;
 function updateTextPanel(text) {
   if (text === tpLastText) return;
   if (tpTypingTimer) { clearTimeout(tpTypingTimer); tpTypingTimer = null; }
@@ -1364,12 +1365,19 @@ function updateTextPanel(text) {
   var wordsToAdd = newWords.slice(prevWordCount);
   if (wordsToAdd.length === 0) return;
   function addNextCC(idx) {
-    if (idx >= wordsToAdd.length) return;
+    if (idx >= wordsToAdd.length) {
+      tpScrollToBottom();
+      return;
+    }
     var span = document.createElement('span');
     span.className = tpReduceAnim ? 'word' : 'word appearing';
     span.textContent = wordsToAdd[idx] + ' ';
     tpContent.insertBefore(span, tpPen);
-    tpScrollToBottom();
+    // Cap DOM word count to prevent unbounded growth and reflow cost
+    var wordEls = tpContent.querySelectorAll('.word');
+    if (wordEls.length > TP_MAX_DOM_WORDS) {
+      tpContent.removeChild(wordEls[0]);
+    }
     tpTypingTimer = setTimeout(function() { addNextCC(idx + 1); }, 60);
   }
   addNextCC(0);
