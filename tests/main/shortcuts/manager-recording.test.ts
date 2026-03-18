@@ -297,11 +297,14 @@ describe("ShortcutManager — live preview session close", () => {
     vi.restoreAllMocks();
   });
 
-  it("closeLivePreview() sets session flag, stops live transcription, and hides text panel", () => {
+  it("closeLivePreview() sets session flag, disables UI updates, and hides text panel — keeps timer running", () => {
+    const timer = setTimeout(() => {}, 10000);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (manager as any).livePreviewClosedForSession = false;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (manager as any).liveTranscriptionTimer = setTimeout(() => {}, 10000);
+    (manager as any).liveTranscriptionTimer = timer;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (manager as any).liveTranscriptionShowUI = true;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (manager as any).closeLivePreview();
@@ -309,8 +312,12 @@ describe("ShortcutManager — live preview session close", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((manager as any).livePreviewClosedForSession).toBe(true);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect((manager as any).liveTranscriptionTimer).toBeNull();
+    expect((manager as any).liveTranscriptionShowUI).toBe(false);
+    // Timer kept alive — snapshot loop runs in background for hint building
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((manager as any).liveTranscriptionTimer).not.toBeNull();
     expect(mockHud.hideTextPanel).toHaveBeenCalledOnce();
+    clearTimeout(timer);
   });
 
   it("onRecordingStart() resets livePreviewClosedForSession to false each time", async () => {
