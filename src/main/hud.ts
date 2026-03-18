@@ -726,7 +726,9 @@ function buildHudHtml(): string {
     display: inline-flex;
     align-items: center;
     vertical-align: middle;
-    margin-left: -3px;
+    position: relative;
+    top: -3px;
+    margin-left: -2px;
     opacity: 0.65;
     color: var(--hud-text-panel-text);
     animation: penWrite 0.55s ease-in-out infinite;
