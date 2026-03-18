@@ -1074,6 +1074,8 @@ export class ShortcutManager {
   }
 
   private async onRecordingStop(): Promise<void> {
+    // Save hint BEFORE stopLiveTranscription clears accumulatedText
+    const livePreviewHint = this.accumulatedText;
     this.stopLiveTranscription();
     const elapsed = this.micActiveAt > 0 ? Date.now() - this.micActiveAt : 0;
     if (this.micActiveAt === 0 || elapsed < ShortcutManager.MIN_RECORDING_MS) {
@@ -1110,13 +1112,12 @@ export class ShortcutManager {
     let hudEndState: "idle" | "error" | "canceled" | "warning" = "idle";
     try {
       // Use accumulated text from live preview as hint to skip full Whisper transcription
-      const hint = this.accumulatedText;
       slog.info("Stopping recording: hint=%d chars, will %s Whisper",
-        hint.length,
-        hint ? "skip" : "use"
+        livePreviewHint.length,
+        livePreviewHint ? "skip" : "use"
       );
-      const text = hint
-        ? await pipeline.stopAndProcessWithHint(hint)
+      const text = livePreviewHint
+        ? await pipeline.stopAndProcessWithHint(livePreviewHint)
         : await pipeline.stopAndProcess();
 
       // If generation changed, a restart/cancel happened — abandon this result
