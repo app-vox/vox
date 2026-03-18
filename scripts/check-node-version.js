@@ -9,7 +9,6 @@ const packageJsonPath = path.join(__dirname, '..', 'package.json');
 // Read expected versions
 const expectedNodeVersion = fs.readFileSync(nvmrcPath, 'utf8').trim();
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-const engines = packageJson.engines || {};
 
 // Get current version
 const currentNodeVersion = process.version.slice(1); // Remove 'v' prefix
