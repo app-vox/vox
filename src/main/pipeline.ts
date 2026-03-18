@@ -298,17 +298,69 @@ export class Pipeline {
     }
 
     const startTime = Date.now();
-    slog.info("✓ Using live preview as transcript, skipping Whisper (%d chars)", rawText.length);
-    this.heldTranscription = rawText;
-    this.deps.onTranscriptionComplete?.(rawText);
+    // Capture last ~3s of audio to pick up words spoken after the last snapshot
+    const enriched = await this.enrichHintWithTail(rawText, recording);
+    slog.info("✓ Hint enriched: %d → %d chars (%dms)", rawText.length, enriched.length, Date.now() - startTime);
 
     if (this.canceled || gen !== this.generation) {
       throw new CanceledError();
     }
 
-    const result = await this.processFromTranscription(rawText, recording, gen);
+    this.heldTranscription = enriched;
+    this.deps.onTranscriptionComplete?.(enriched);
+
+    const result = await this.processFromTranscription(enriched, recording, gen);
     slog.info("✓ Hint path completed in %dms", Date.now() - startTime);
     return result;
+  }
+
+  /**
+   * Transcribes the last few seconds of the recording and merges the result
+   * with the accumulated hint text, capturing any words spoken after the last
+   * live-preview snapshot.
+   */
+  private async enrichHintWithTail(hint: string, recording: RecordingResult): Promise<string> {
+    const TAIL_SEC = 3;
+    const tailLen = Math.min(Math.round(TAIL_SEC * recording.sampleRate), recording.audioBuffer.length);
+    if (tailLen < recording.sampleRate * 0.5) return hint; // < 0.5s — nothing to enrich
+
+    const tail = recording.audioBuffer.slice(-tailLen);
+    const contextWords = hint.split(" ").filter(Boolean).slice(-15).join(" ");
+
+    try {
+      const result = await this.deps.transcribe(
+        tail, recording.sampleRate, this.deps.modelPath,
+        this.deps.dictionary, this.deps.speechLanguages,
+        undefined, contextWords,
+      );
+      const tailText = result.text
+        .replace(/\[[^\]]*\]/g, "").replace(/\([^)]*\)/g, "")
+        .replace(/\*[^*]*\*/g, "").replace(/\s{2,}/g, " ").trim();
+
+      if (!tailText || !!detectGarbage(tailText)) return hint;
+
+      // Overlap-merge: find longest matching suffix of hint in tailText prefix
+      const hintWords = hint.split(" ");
+      const tailWords = tailText.split(" ");
+      for (let overlap = Math.min(6, hintWords.length); overlap > 0; overlap--) {
+        const hintEnd = hintWords.slice(-overlap).join(" ").toLowerCase();
+        const tailStart = tailWords.slice(0, overlap).join(" ").toLowerCase();
+        if (hintEnd === tailStart) {
+          const appended = tailWords.slice(overlap);
+          if (appended.length === 0) return hint;
+          // Lowercase first appended word (Whisper capitalizes snippet starts)
+          const prevEnding = hint.trimEnd().slice(-1);
+          if (!/[.!?]/.test(prevEnding)) {
+            appended[0] = appended[0].charAt(0).toLowerCase() + appended[0].slice(1);
+          }
+          return hint + " " + appended.join(" ");
+        }
+      }
+      // No overlap found — only append if tail ends with more content than hint
+      return hint;
+    } catch {
+      return hint;
+    }
   }
 
   gracefulCancel(): { stage: PipelineStage | "listening" } {
