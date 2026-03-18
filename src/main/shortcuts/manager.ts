@@ -118,6 +118,7 @@ export class ShortcutManager {
   private devModelOverride: boolean | null = null;
   private lastUnpastedText: string | null = null;
   private liveTranscriptionTimer: ReturnType<typeof setTimeout> | null = null;
+  private liveTranscriptionShowUI = false;
   private lastSnapshotText = "";
   private accumulatedText = "";
   private livePreviewClosedForSession = false;
@@ -1042,9 +1043,11 @@ export class ShortcutManager {
       }
 
       this.hud.setState("listening");
-      if (config.alwaysShowPreview !== false && !this.livePreviewClosedForSession) {
-        this.startLiveTranscription(pipeline, gen);
-      }
+      // Always start live transcription to build accumulatedText as hint.
+      // showUI controls whether the HUD panel is updated — the snapshot loop
+      // runs either way so stopAndProcessWithHint can skip Whisper on stop.
+      const showUI = config.alwaysShowPreview !== false && !this.livePreviewClosedForSession;
+      this.startLiveTranscription(pipeline, gen, showUI);
     }).catch((err: Error) => {
       if (gen !== this.recordingGeneration) {
         slog.info("Stale recording error (gen=%d, current=%d) — discarding", gen, this.recordingGeneration);
@@ -1192,15 +1195,18 @@ export class ShortcutManager {
     }
   }
 
-  private startLiveTranscription(pipeline: Pipeline, gen: number): void {
+  private startLiveTranscription(pipeline: Pipeline, gen: number, showUI = true): void {
     this.stopLiveTranscription();
     this.activePipeline = pipeline;
     this.activePipelineGen = gen;
+    this.liveTranscriptionShowUI = showUI;
     this.lastSnapshotText = "";
     this.accumulatedText = "";
     let running = false;
     let staleCount = 0;
-    this.hud.showTextPanelEmpty();
+    if (showUI) {
+      this.hud.showTextPanelEmpty();
+    }
 
     const tick = async (): Promise<void> => {
       if (gen !== this.recordingGeneration) return;
@@ -1226,7 +1232,9 @@ export class ShortcutManager {
               merged.length - this.accumulatedText.length, merged.length);
             this.accumulatedText = merged;
             this.lastSnapshotText = text;
-            this.hud.updateTextPanel(merged);
+            if (this.liveTranscriptionShowUI) {
+              this.hud.updateTextPanel(merged);
+            }
           } else {
             staleCount++;
           }
@@ -1305,29 +1313,28 @@ export class ShortcutManager {
 
   private closeLivePreview(): void {
     this.livePreviewClosedForSession = true;
-    this.stopLiveTranscription();
+    this.liveTranscriptionShowUI = false;
+    // Keep snapshot loop running in background to build accumulatedText as hint.
     this.hud.hideTextPanel();
   }
 
   private restoreLivePreview(): void {
-    // If we're in a recording state but no active pipeline, start one
-    const state = this.stateMachine.getState();
-    const isRecording = state === RecordingState.Hold || state === RecordingState.Toggle || state === RecordingState.Processing;
+    this.livePreviewClosedForSession = false;
+    this.liveTranscriptionShowUI = true;
 
     if (!this.activePipeline || this.activePipelineGen !== this.recordingGeneration) {
-      // No active pipeline - need to start live transcription if we're recording
+      // Snapshot loop not running — start it now (edge case: preview off from the start)
+      const state = this.stateMachine.getState();
+      const isRecording = state === RecordingState.Hold || state === RecordingState.Toggle || state === RecordingState.Processing;
       if (isRecording && this.recordingGeneration > 0) {
         const pipeline = this.deps.getPipeline();
-        this.livePreviewClosedForSession = false;
-        this.startLiveTranscription(pipeline, this.recordingGeneration);
-        return;
+        this.startLiveTranscription(pipeline, this.recordingGeneration, true);
       }
       return;
     }
 
-    this.livePreviewClosedForSession = false;
-    // Show existing text immediately without animation
-    this.hud.restoreTextPanel(this.lastSnapshotText);
-    this.startLiveTranscription(this.activePipeline, this.activePipelineGen);
+    // Snapshot loop already running in background — show current accumulated text
+    // immediately (no word-by-word animation), then resume animating new words.
+    this.hud.restoreTextPanel(this.accumulatedText || this.lastSnapshotText);
   }
 }
