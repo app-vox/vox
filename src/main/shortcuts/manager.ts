@@ -126,7 +126,11 @@ export class ShortcutManager {
   // How often to re-transcribe the full audio buffer during live preview
   private static readonly LIVE_PREVIEW_INTERVAL_MS = 1000;
   // Delay before the first snapshot after recording starts
-  private static readonly LIVE_PREVIEW_FIRST_SNAPSHOT_MS = 400;
+  private static readonly LIVE_PREVIEW_FIRST_SNAPSHOT_MS = 700;
+  // Rolling window size for live transcription (seconds)
+  private static readonly LIVE_PREVIEW_WINDOW_SEC = 10;
+  // Max context words to pass to Whisper (for performance)
+  private static readonly LIVE_PREVIEW_CONTEXT_WORDS = 30;
   private isShiftHeld = false;
   private shiftAlone = false;
   private shiftTrackingActive = false;
@@ -1100,7 +1104,8 @@ export class ShortcutManager {
 
     let hudEndState: "idle" | "error" | "canceled" | "warning" = "idle";
     try {
-      const hint = this.lastSnapshotText;
+      // Use accumulated text from live preview as hint to skip full Whisper transcription
+      const hint = this.accumulatedText;
       const text = hint
         ? await pipeline.stopAndProcessWithHint(hint)
         : await pipeline.stopAndProcess();
@@ -1199,18 +1204,31 @@ export class ShortcutManager {
       }
       running = true;
       try {
-        // Stream mode: transcribe only last 5s with accumulated text as context
-        const text = await pipeline.snapshotAndTranscribe(5, this.accumulatedText);
+        // Stream mode: transcribe only last N seconds with limited context for performance
+        const contextPrompt = this.getContextPrompt(this.accumulatedText);
+        slog.debug("Live preview tick: window=%ds, context=%d words, accumulated=%d words",
+          ShortcutManager.LIVE_PREVIEW_WINDOW_SEC,
+          contextPrompt.split(" ").length,
+          this.accumulatedText.split(" ").filter(Boolean).length
+        );
+        const text = await pipeline.snapshotAndTranscribe(
+          ShortcutManager.LIVE_PREVIEW_WINDOW_SEC,
+          contextPrompt
+        );
         if (gen !== this.recordingGeneration) return;
         if (text) {
           // Merge new transcription with accumulated text
           const merged = this.mergeTranscriptions(this.accumulatedText, text);
+          slog.debug("Live preview update: new=%s, merged=%s",
+            text.slice(0, 40),
+            merged.slice(0, 60)
+          );
           this.accumulatedText = merged;
           this.lastSnapshotText = text;
           this.hud.updateTextPanel(merged);
         }
-      } catch {
-        // Ignore errors during live transcription
+      } catch (err) {
+        slog.warn("Live transcription error:", err);
       } finally {
         running = false;
       }
@@ -1232,6 +1250,16 @@ export class ShortcutManager {
     }
     this.lastSnapshotText = "";
     this.accumulatedText = "";
+  }
+
+  private getContextPrompt(accumulated: string): string {
+    if (!accumulated) return "";
+    const words = accumulated.split(" ");
+    if (words.length <= ShortcutManager.LIVE_PREVIEW_CONTEXT_WORDS) {
+      return accumulated;
+    }
+    // Return only last N words to keep context relevant without degrading performance
+    return words.slice(-ShortcutManager.LIVE_PREVIEW_CONTEXT_WORDS).join(" ");
   }
 
   private mergeTranscriptions(accumulated: string, newSnapshot: string): string {
