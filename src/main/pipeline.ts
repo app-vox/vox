@@ -29,7 +29,8 @@ export interface PipelineDeps {
     modelPath: string,
     dictionary?: string[],
     speechLanguages?: string[],
-    temperature?: number
+    temperature?: number,
+    contextPrompt?: string
   ): Promise<TranscriptionResult>;
   llmProvider: LlmProvider;
   modelPath: string;
@@ -219,9 +220,10 @@ export class Pipeline {
     await this.deps.recorder.playAudioCue?.(samples, sampleRate);
   }
 
-  async snapshotAndTranscribe(): Promise<string | null> {
-    // Full buffer — gives Whisper all context for the most accurate preview
-    const snapshot = await this.deps.recorder.snapshot?.();
+  async snapshotAndTranscribe(maxSeconds?: number, contextPrompt?: string): Promise<string | null> {
+    // When maxSeconds is provided, only transcribe the last N seconds (streaming mode)
+    // Otherwise, use full buffer for maximum accuracy
+    const snapshot = await this.deps.recorder.snapshot?.(maxSeconds);
     if (!snapshot || snapshot.audioBuffer.length === 0) return null;
     // Require at least 0.5s of audio for meaningful transcription
     const durationMs = (snapshot.audioBuffer.length / snapshot.sampleRate) * 1000;
@@ -233,6 +235,8 @@ export class Pipeline {
         this.deps.modelPath,
         this.deps.dictionary,
         this.deps.speechLanguages,
+        undefined,
+        contextPrompt,
       );
       const text = result.text
         .replace(/\[[^\]]*\]/g, "")
