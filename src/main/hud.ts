@@ -83,7 +83,7 @@ function buildHudHtml(): string {
     --hud-hover-btn-accent: rgba(99, 102, 241, 0.8);
     --hud-error-hover: rgba(239, 68, 68, 0.8);
     --hud-text-panel-bg: rgba(24, 24, 27, 0.97);
-    --hud-text-panel-border: rgba(88, 80, 220, 0.22);
+    --hud-text-panel-border: rgba(108, 100, 160, 0.32);
     --hud-text-panel-text: rgba(255, 255, 255, 0.9);
     --hud-shadow: 0 2px 4px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.15);
     --hud-spinner-track: rgba(255,255,255,0.2);
@@ -111,7 +111,7 @@ function buildHudHtml(): string {
     --hud-hover-btn-accent: rgba(79, 70, 229, 0.85);
     --hud-error-hover: rgba(239, 68, 68, 0.85);
     --hud-text-panel-bg: rgba(252, 252, 254, 0.97);
-    --hud-text-panel-border: rgba(99, 102, 241, 0.18);
+    --hud-text-panel-border: rgba(148, 142, 218, 0.22);
     --hud-text-panel-text: rgba(23, 23, 23, 0.9);
     --hud-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06), 0 8px 32px rgba(0,0,0,0.04);
     --hud-spinner-track: rgba(0,0,0,0.12);
