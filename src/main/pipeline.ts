@@ -80,7 +80,14 @@ const COMMON_HALLUCINATIONS = [
   "amara.org", "subtitles by",
   "subtitles by the amara.org community",
   "copyright", "all rights reserved",
+  "audio may contain multiple languages mixed together",
+  "this audio may contain multiple languages mixed together",
+  "this audio contains multiple languages",
+  "this video contains multiple languages",
 ];
+
+// Inline hallucination patterns — stripped from text even when mixed with real content
+const INLINE_HALLUCINATION_RE = /\b(audio may contain multiple languages(?: mixed together)?|this audio (?:may )?contains? multiple languages(?: mixed together)?|this video contains? multiple languages)\b\.?/gi;
 
 export function detectGarbage(text: string): GarbageReason | null {
   const normalized = text.toLowerCase().trim();
@@ -243,6 +250,7 @@ export class Pipeline {
         .replace(/\[[^\]]*\]/g, "")
         .replace(/\([^)]*\)/g, "")
         .replace(/\*[^*]*\*/g, "")
+        .replace(INLINE_HALLUCINATION_RE, "")
         .replace(/\s{2,}/g, " ")
         .trim();
       if (!text || !!detectGarbage(text)) return null;
