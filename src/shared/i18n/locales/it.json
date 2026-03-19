@@ -509,5 +509,21 @@
   "menu.checkForUpdates": "Controlla aggiornamenti…",
   "menu.visitOnboarding": "Avvia tour di benvenuto",
   "menu.window": "Finestra",
-  "menu.bringAllToFront": "Porta tutto in primo piano"
+  "menu.bringAllToFront": "Porta tutto in primo piano",
+  "tts.title": "Sintesi vocale",
+  "tts.description": "Leggi il testo selezionato ad alta voce usando ElevenLabs",
+  "tts.enableCheckbox": "Attiva sintesi vocale",
+  "tts.enableHint": "Quando attivato, un pulsante di riproduzione appare sull'HUD per leggere il testo selezionato ad alta voce",
+  "tts.apiKey": "Chiave API ElevenLabs",
+  "tts.apiKeyPlaceholder": "Inserisci la tua chiave API ElevenLabs",
+  "tts.voiceDefault": "Voce predefinita: Rachel",
+  "tts.test": "Testa voce",
+  "tts.testSuccess": "Sintesi vocale funzionante correttamente",
+  "tts.testError": "Connessione a ElevenLabs fallita. Controlla la tua chiave API.",
+  "tts.testPlaying": "Riproduzione audio di test...",
+  "tts.learnMore": "Ottieni la tua chiave API su elevenlabs.io",
+  "tts.testRequired": "Testa la connessione prima di attivare Text-to-Speech",
+  "tts.hudWillBeEnabled": "L'attivazione di TTS abiliterà l'HUD (sempre visibile sullo schermo) per mostrare il pulsante di riproduzione",
+  "tts.playing": "Lettura ad alta voce…",
+  "tts.error": "Sintesi vocale fallita"
 }

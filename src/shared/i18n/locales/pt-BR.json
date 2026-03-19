@@ -509,5 +509,21 @@
   "menu.checkForUpdates": "Verificar Atualizações…",
   "menu.visitOnboarding": "Iniciar Tour de Boas-vindas",
   "menu.window": "Janela",
-  "menu.bringAllToFront": "Trazer Todas para Frente"
+  "menu.bringAllToFront": "Trazer Todas para Frente",
+  "tts.title": "Texto para Fala",
+  "tts.description": "Leia o texto selecionado em voz alta usando ElevenLabs",
+  "tts.enableCheckbox": "Ativar Texto para Fala",
+  "tts.enableHint": "Quando ativado, um botão de reprodução aparece no HUD para ler o texto selecionado em voz alta",
+  "tts.apiKey": "Chave de API ElevenLabs",
+  "tts.apiKeyPlaceholder": "Insira sua chave de API ElevenLabs",
+  "tts.voiceDefault": "Voz padrão: Rachel",
+  "tts.test": "Testar Voz",
+  "tts.testSuccess": "Síntese de voz funcionando corretamente",
+  "tts.testError": "Falha ao conectar ao ElevenLabs. Verifique sua chave de API.",
+  "tts.testPlaying": "Reproduzindo áudio de teste...",
+  "tts.learnMore": "Obtenha sua chave de API em elevenlabs.io",
+  "tts.testRequired": "Teste a conexão antes de ativar Text-to-Speech",
+  "tts.hudWillBeEnabled": "Ativar TTS habilitará o HUD (sempre visível na tela) para mostrar o botão de reprodução",
+  "tts.playing": "Lendo em voz alta…",
+  "tts.error": "Falha na conversão de texto para fala"
 }

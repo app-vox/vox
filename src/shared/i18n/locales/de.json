@@ -509,5 +509,21 @@
   "menu.checkForUpdates": "Nach Updates suchen…",
   "menu.visitOnboarding": "Einführung starten",
   "menu.window": "Fenster",
-  "menu.bringAllToFront": "Alle nach vorne bringen"
+  "menu.bringAllToFront": "Alle nach vorne bringen",
+  "tts.title": "Text-zu-Sprache",
+  "tts.description": "Ausgewählten Text mit ElevenLabs vorlesen",
+  "tts.enableCheckbox": "Text-zu-Sprache aktivieren",
+  "tts.enableHint": "Wenn aktiviert, erscheint eine Wiedergabe-Schaltfläche im HUD, um ausgewählten Text vorzulesen",
+  "tts.apiKey": "ElevenLabs API Key",
+  "tts.apiKeyPlaceholder": "Geben Sie Ihren ElevenLabs API Key ein",
+  "tts.voiceDefault": "Standardstimme: Rachel",
+  "tts.test": "Stimme testen",
+  "tts.testSuccess": "Sprachsynthese funktioniert korrekt",
+  "tts.testError": "Verbindung zu ElevenLabs fehlgeschlagen. Überprüfen Sie Ihren API Key.",
+  "tts.testPlaying": "Testaudio wird abgespielt...",
+  "tts.learnMore": "API Key auf elevenlabs.io erhalten",
+  "tts.testRequired": "Testen Sie die Verbindung, bevor Sie Text-to-Speech aktivieren",
+  "tts.hudWillBeEnabled": "Das Aktivieren von TTS aktiviert das HUD (immer auf dem Bildschirm sichtbar), um die Wiedergabeschaltfläche anzuzeigen",
+  "tts.playing": "Wird vorgelesen…",
+  "tts.error": "Text-zu-Sprache fehlgeschlagen"
 }

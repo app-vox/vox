@@ -8,7 +8,7 @@ import { AnalyticsService } from "./analytics/service";
 import { AudioRecorder } from "./audio/recorder";
 import { transcribe } from "./audio/whisper";
 import { createLlmProvider } from "./llm/factory";
-import { computeLlmConfigHash } from "../shared/llm-config-hash";
+import { computeLlmConfigHash, computeTtsConfigHash } from "../shared/llm-config-hash";
 import { type VoxConfig, type LlmProviderType, type WhisperModelSize } from "../shared/config";
 import { getResourcePath } from "./resources";
 import { SetupChecker } from "./setup/checker";
@@ -19,6 +19,7 @@ import { decodeWavFile } from "./audio/persistence";
 import { Pipeline } from "./pipeline";
 import { getLlmModelName } from "../shared/llm-utils";
 import { paster, permissions, applyCase, stripTrailingPeriod } from "./platform";
+import { type TtsManager } from "./tts/manager";
 
 const testLog = log.scope("LlmTest");
 
@@ -27,7 +28,8 @@ export function registerIpcHandlers(
   modelManager: ModelManager,
   historyManager: HistoryManager,
   onConfigChange?: () => void,
-  analytics?: AnalyticsService
+  analytics?: AnalyticsService,
+  ttsManager?: TtsManager
 ): void {
   ipcMain.handle("resources:data-url", (_event, ...segments: string[]) => {
     const filePath = getResourcePath(...segments);
@@ -58,6 +60,9 @@ export function registerIpcHandlers(
     }
     if (previousConfig.llm.provider !== config.llm.provider) {
       analytics?.track("llm_provider_selected", { provider: config.llm.provider });
+    }
+    if (previousConfig.ttsEnabled !== config.ttsEnabled) {
+      analytics?.track(config.ttsEnabled ? "tts_enabled" : "tts_disabled");
     }
     analytics?.track("config_changed");
 
@@ -428,5 +433,56 @@ export function registerIpcHandlers(
 
   ipcMain.handle("analytics:track", (_event, name: string, properties?: Record<string, unknown>) => {
     analytics?.track(name, properties);
+  });
+
+  ipcMain.handle("tts:play", async () => {
+    try {
+      const config = configManager.load();
+      await ttsManager?.play({
+        ttsEnabled: config.ttsEnabled,
+        elevenLabsApiKey: config.elevenLabsApiKey,
+        elevenLabsVoiceId: config.elevenLabsVoiceId,
+      });
+    } catch (err) {
+      log.warn("TTS play failed:", err);
+    }
+  });
+
+  ipcMain.handle("tts:stop", () => {
+    ttsManager?.stop();
+  });
+
+  ipcMain.handle("tts:has-selected-text", async () => {
+    const config = configManager.load();
+    if (!config.ttsEnabled || !config.elevenLabsApiKey) return false;
+    return (await ttsManager?.hasSelectedText()) ?? false;
+  });
+
+  ipcMain.handle("tts:test", async (_event, apiKey: string, voiceId: string) => {
+    try {
+      let result: { success: boolean; error?: string };
+
+      if (ttsManager) {
+        result = await ttsManager.testAndPlay(apiKey, voiceId);
+      } else {
+        const { testConnection } = await import("./tts/elevenlabs");
+        result = await testConnection(apiKey, voiceId);
+      }
+
+      if (result.success) {
+        const config = configManager.load();
+        config.elevenLabsApiKey = apiKey;
+        config.elevenLabsVoiceId = voiceId;
+        config.ttsConnectionTested = true;
+        config.ttsConfigHash = computeTtsConfigHash(config);
+        configManager.save(config);
+        onConfigChange?.();
+      }
+
+      return result;
+    } catch (err: unknown) {
+      log.warn("TTS test failed:", err);
+      return { success: false, error: err instanceof Error ? err.message : "Unknown error" };
+    }
   });
 }
