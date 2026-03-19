@@ -1085,7 +1085,39 @@ export class ShortcutManager {
   }
 
   private async onRecordingStop(): Promise<void> {
-    // Wait for any in-flight snapshot to finish so its result lands in accumulatedText
+    // Check duration first — no async work needed for the too-short case
+    const elapsed = this.micActiveAt > 0 ? Date.now() - this.micActiveAt : 0;
+    if (this.micActiveAt === 0 || elapsed < ShortcutManager.MIN_RECORDING_MS) {
+      slog.info("Recording too short (%dms) or mic not ready — canceling", elapsed);
+      this.micActiveAt = 0;
+      this.recordingGeneration++;
+      const pipeline = this.deps.getPipeline();
+      pipeline.cancel().catch((err) => {
+        slog.error("Error during short-recording cancel", err);
+      });
+      const config = this.deps.configManager.load();
+      const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
+      this.playCue(errorCueType);
+      this.stateMachine.setIdle();
+      this.hud.setState("canceled");
+      this.hud.hideTextPanel();
+      this.updateTrayState();
+      this.stopLiveTranscription();
+      return;
+    }
+
+    // Immediate feedback — happens BEFORE any async processing
+    const config = this.deps.configManager.load();
+    this.shiftTrackingActive = config.lowercaseStart && config.shiftCapitalize;
+    this.hud.setShiftHeld(this.shiftTrackingActive && this.isShiftHeld && this.shiftAlone);
+    const stopCueType = (config.recordingStopAudioCue ?? "pop") as AudioCueType;
+    this.playCue(stopCueType);
+    this.stateMachine.setProcessing();
+    this.updateTrayState();
+    this.hud.setState("transcribing");
+    this.hud.startEnhancingEffect(); // morphing starts immediately on stop
+
+    // Background: collect the last words before handing off to pipeline
     if (this.liveTranscriptionRunning) {
       await new Promise<void>(resolve => {
         const check = (): void => {
@@ -1120,37 +1152,10 @@ export class ShortcutManager {
     // Save hint BEFORE stopLiveTranscription clears accumulatedText
     const livePreviewHint = this.accumulatedText;
     this.stopLiveTranscription();
-    const elapsed = this.micActiveAt > 0 ? Date.now() - this.micActiveAt : 0;
-    if (this.micActiveAt === 0 || elapsed < ShortcutManager.MIN_RECORDING_MS) {
-      slog.info("Recording too short (%dms) or mic not ready — canceling", elapsed);
-      this.micActiveAt = 0;
-      this.recordingGeneration++;
-      const pipeline = this.deps.getPipeline();
-      pipeline.cancel().catch((err) => {
-        slog.error("Error during short-recording cancel", err);
-      });
-      const config = this.deps.configManager.load();
-      const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
-      this.playCue(errorCueType);
-      this.stateMachine.setIdle();
-      this.hud.setState("canceled");
-      this.hud.hideTextPanel();
-      this.updateTrayState();
-      return;
-    }
 
     const pipeline = this.deps.getPipeline();
     const gen = this.recordingGeneration;
-    this.stateMachine.setProcessing();
-    this.updateTrayState();
     slog.info("Recording stopped, processing pipeline (gen=%d)", gen);
-    this.hud.setState("transcribing");
-
-    const config = this.deps.configManager.load();
-    this.shiftTrackingActive = config.lowercaseStart && config.shiftCapitalize;
-    this.hud.setShiftHeld(this.shiftTrackingActive && this.isShiftHeld && this.shiftAlone);
-    const stopCueType = (config.recordingStopAudioCue ?? "pop") as AudioCueType;
-    this.playCue(stopCueType);
 
     let hudEndState: "idle" | "error" | "canceled" | "warning" = "idle";
     try {
