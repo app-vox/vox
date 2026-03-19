@@ -1129,12 +1129,15 @@ export class ShortcutManager {
     }
     // Run one final snapshot to capture words spoken after the last live tick.
     // Uses the same merge path as the live loop — no new code, no hallucination risk.
+    let finalSnapshotMs = 0;
     if (this.activePipeline && this.activePipelineGen === this.recordingGeneration) {
       try {
+        const t0 = performance.now();
         const finalText = await this.activePipeline.snapshotAndTranscribe(
           ShortcutManager.LIVE_PREVIEW_WINDOW_SEC,
           this.getContextPrompt(this.accumulatedText)
         );
+        finalSnapshotMs = Math.round(performance.now() - t0);
         if (finalText) {
           const merged = this.mergeTranscriptions(this.accumulatedText, finalText);
           if (merged.length > this.accumulatedText.length) {
@@ -1165,7 +1168,7 @@ export class ShortcutManager {
         livePreviewHint ? "skip" : "use"
       );
       const text = livePreviewHint
-        ? await pipeline.stopAndProcessWithHint(livePreviewHint)
+        ? await pipeline.stopAndProcessWithHint(livePreviewHint, finalSnapshotMs)
         : await pipeline.stopAndProcess();
 
       // If generation changed, a restart/cancel happened — abandon this result

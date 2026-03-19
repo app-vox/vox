@@ -290,7 +290,7 @@ export class Pipeline {
    * skipping the Whisper transcription step entirely. Falls back to full
    * Whisper transcription if the hint is empty or detected as garbage.
    */
-  async stopAndProcessWithHint(hintText: string): Promise<string> {
+  async stopAndProcessWithHint(hintText: string, finalSnapshotMs = 0): Promise<string> {
     const gen = this.generation;
     const recording = await this.deps.recorder.stop();
     this.heldRecording = recording;
@@ -315,7 +315,7 @@ export class Pipeline {
     this.heldTranscription = rawText;
     this.deps.onTranscriptionComplete?.(rawText);
 
-    const result = await this.processFromTranscription(rawText, recording, gen);
+    const result = await this.processFromTranscription(rawText, recording, gen, finalSnapshotMs);
     slog.info("✓ Hint path completed in %dms", Date.now() - startTime);
     return result;
   }
