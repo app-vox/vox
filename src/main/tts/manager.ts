@@ -1,6 +1,6 @@
 import log from "electron-log/main";
 import { synthesize, testConnection } from "./elevenlabs";
-import { getSelectedText } from "../input/selection";
+import { getSelectedText } from "../platform/darwin/selection";
 
 const slog = log.scope("TTS");
 

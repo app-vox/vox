@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { TtsManager } from "../../../src/main/tts/manager";
 import { synthesize } from "../../../src/main/tts/elevenlabs";
-import { getSelectedText } from "../../../src/main/input/selection";
+import { getSelectedText } from "../../../src/main/platform/darwin/selection";
 
 vi.mock("../../../src/main/tts/elevenlabs", () => ({
   synthesize: vi.fn(),
 }));
 
-vi.mock("../../../src/main/input/selection", () => ({
+vi.mock("../../../src/main/platform/darwin/selection", () => ({
   getSelectedText: vi.fn(),
 }));
 
