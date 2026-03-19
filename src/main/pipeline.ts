@@ -84,10 +84,12 @@ const COMMON_HALLUCINATIONS = [
   "this audio may contain multiple languages mixed together",
   "this audio contains multiple languages",
   "this video contains multiple languages",
+  "audio may contain a few words",
+  "this audio may contain a few words",
 ];
 
 // Inline hallucination patterns — stripped from text even when mixed with real content
-const INLINE_HALLUCINATION_RE = /\b(audio may contain multiple languages(?: mixed together)?|this audio (?:may )?contains? multiple languages(?: mixed together)?|this video contains? multiple languages)\b\.?/gi;
+const INLINE_HALLUCINATION_RE = /\b((?:this )?(?:audio|video) may contain (?:multiple languages(?: mixed together)?|a few words)|this (?:audio|video) contains? multiple languages(?: mixed together)?)\b\.?/gi;
 
 export function detectGarbage(text: string): GarbageReason | null {
   const normalized = text.toLowerCase().trim();
@@ -292,7 +294,9 @@ export class Pipeline {
    */
   async stopAndProcessWithHint(hintText: string, finalSnapshotMs = 0): Promise<string> {
     const gen = this.generation;
+    const recStopStart = performance.now();
     const recording = await this.deps.recorder.stop();
+    slog.debug("recorder.stop() took %dms (audio: %ds)", Math.round(performance.now() - recStopStart), Math.round(recording.audioBuffer.length / recording.sampleRate));
     this.heldRecording = recording;
 
     if (this.canceled || gen !== this.generation) {
