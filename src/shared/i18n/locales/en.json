@@ -108,6 +108,8 @@
   "whisper.transcribing": "Transcribing...",
   "whisper.noSpeech": "(no speech detected)",
   "whisper.testFailed": "Test failed: {error}",
+  "whisper.osIncompatible": "Your macOS version is not supported. Local models require macOS 15 (Sequoia) or later.",
+  "whisper.osIncompatibleLink": "Check system requirements",
   "whisper.model.tiny.label": "Fastest",
   "whisper.model.tiny.description": "Fastest, lower accuracy (~75MB)",
   "whisper.model.base.label": "Fast",

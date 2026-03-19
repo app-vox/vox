@@ -1,9 +1,11 @@
-import { useT } from "../../i18n-context";
+import { useT, useLanguage } from "../../i18n-context";
 import { StatusBox } from "./StatusBox";
-import { RecordIcon } from "../../../shared/icons";
+import { RecordIcon, ExternalLinkIcon } from "../../../shared/icons";
 import type { TranscribeResult } from "../../../preload/index";
+import { getDocsUrl } from "../../../shared/i18n";
 import styles from "./TranscriptionTest.module.scss";
 import btn from "../shared/buttons.module.scss";
+import card from "../shared/card.module.scss";
 
 interface TranscriptionTestProps {
   testing: boolean;
@@ -26,9 +28,11 @@ export function TranscriptionTest({
   className,
 }: TranscriptionTestProps) {
   const t = useT();
+  const language = useLanguage();
 
   let statusText = "";
   let statusType: "info" | "success" | "error" = "info";
+  const isOsIncompatible = error === "os-incompatible";
 
   if (testing) {
     statusText = t("whisper.recording");
@@ -37,6 +41,9 @@ export function TranscriptionTest({
     if (error === "no-speech") {
       statusText = t("whisper.noSpeech");
       statusType = "info";
+    } else if (error === "os-incompatible") {
+      statusText = t("whisper.osIncompatible");
+      statusType = "error";
     } else {
       statusText = t("whisper.testFailed", { error });
       statusType = "error";
@@ -70,6 +77,16 @@ export function TranscriptionTest({
         {buttonText}
       </button>
       <StatusBox text={statusText} type={statusType} />
+      {isOsIncompatible && (
+        <button
+          type="button"
+          className={card.learnMore}
+          onClick={() => window.voxApi.shell.openExternal(getDocsUrl(language, "speech-models#system-requirements"))}
+        >
+          {t("whisper.osIncompatibleLink")}
+          <ExternalLinkIcon width={12} height={12} />
+        </button>
+      )}
     </div>
   );
 }

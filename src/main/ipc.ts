@@ -183,6 +183,16 @@ export function registerIpcHandlers(
       const samples = resampleTo16kHz(recording.audioBuffer, recording.sampleRate);
       const result = await transcribe(samples, 16000, modelPath, config.dictionary ?? []);
       return result.text;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("newer than running OS") || (msg.includes("dyld") && msg.includes("Symbol not found"))) {
+        analytics?.captureError(err instanceof Error ? err : new Error(msg), {
+          scope: "whisper_test",
+          error_type: "os_incompatible",
+        });
+        throw new Error("os-incompatible");
+      }
+      throw err;
     } finally {
       await recorder.dispose();
     }
