@@ -602,7 +602,7 @@ function buildHudHtml(): string {
   .text-panel.visible {
     display: flex;
     flex-direction: column;
-    padding: 8px 0 12px 0;
+    padding: 10px 0 10px 0;
     max-height: ${TEXT_PANEL_MAX_HEIGHT}px;
     overflow: hidden;
     animation: tpAppear 250ms ease forwards;
@@ -655,7 +655,7 @@ function buildHudHtml(): string {
   .text-panel.hiding {
     display: flex;
     flex-direction: column;
-    padding: 8px 0 12px 0;
+    padding: 10px 0 10px 0;
     max-height: ${TEXT_PANEL_MAX_HEIGHT}px;
     overflow: hidden;
     animation: tpHide 180ms ease forwards;
