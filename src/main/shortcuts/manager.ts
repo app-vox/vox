@@ -120,6 +120,7 @@ export class ShortcutManager {
   private liveTranscriptionTimer: ReturnType<typeof setTimeout> | null = null;
   private liveTranscriptionShowUI = false;
   private liveTranscriptionRunning = false;
+  private lastRecordingStopTime = 0;
   private lastSnapshotText = "";
   private accumulatedText = "";
   private livePreviewClosedForSession = false;
@@ -128,13 +129,15 @@ export class ShortcutManager {
   // How often to re-transcribe the full audio buffer during live preview
   private static readonly LIVE_PREVIEW_INTERVAL_MS = 2000;
   // Delay before the first snapshot after recording starts
-  private static readonly LIVE_PREVIEW_FIRST_SNAPSHOT_MS = 800;
+  private static readonly LIVE_PREVIEW_FIRST_SNAPSHOT_MS = 1500;
   // Rolling window size for live transcription (seconds) — 4s keeps Whisper fast
   private static readonly LIVE_PREVIEW_WINDOW_SEC = 4;
   // Max context words to pass to Whisper (for performance)
   private static readonly LIVE_PREVIEW_CONTEXT_WORDS = 15;
   // When Whisper returns no new words N times in a row, slow down ticks
   private static readonly LIVE_PREVIEW_STALE_BACKOFF_MS = 4000;
+  // If a new recording starts within this window of the previous stop, treat as cancel
+  private static readonly QUICK_CANCEL_THRESHOLD_MS = 600;
   private isShiftHeld = false;
   private shiftAlone = false;
   private shiftTrackingActive = false;
@@ -1005,6 +1008,13 @@ export class ShortcutManager {
   }
 
   private onRecordingStart(): void {
+    // Quick double-tap: starting a new recording within threshold of the last stop
+    // is treated as an accidental press — cancel the previous pipeline instead.
+    if (Date.now() - this.lastRecordingStopTime < ShortcutManager.QUICK_CANCEL_THRESHOLD_MS) {
+      slog.info("Quick restart within %dms — treating as cancel", Date.now() - this.lastRecordingStopTime);
+      this.deps.getPipeline().gracefulCancel();
+      return;
+    }
     const pipeline = this.deps.getPipeline();
     this.recordingGeneration++;
     this.livePreviewClosedForSession = false;
@@ -1085,6 +1095,28 @@ export class ShortcutManager {
         check();
       });
     }
+    // Run one final snapshot to capture words spoken after the last live tick.
+    // Uses the same merge path as the live loop — no new code, no hallucination risk.
+    if (this.activePipeline && this.activePipelineGen === this.recordingGeneration) {
+      try {
+        const finalText = await this.activePipeline.snapshotAndTranscribe(
+          ShortcutManager.LIVE_PREVIEW_WINDOW_SEC,
+          this.getContextPrompt(this.accumulatedText)
+        );
+        if (finalText) {
+          const merged = this.mergeTranscriptions(this.accumulatedText, finalText);
+          if (merged.length > this.accumulatedText.length) {
+            this.accumulatedText = merged;
+            if (this.liveTranscriptionShowUI) {
+              this.hud.updateTextPanel(merged);
+            }
+          }
+        }
+      } catch {
+        // ignore — use existing accumulatedText
+      }
+    }
+    this.lastRecordingStopTime = Date.now();
     // Save hint BEFORE stopLiveTranscription clears accumulatedText
     const livePreviewHint = this.accumulatedText;
     this.stopLiveTranscription();
