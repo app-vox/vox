@@ -4,7 +4,6 @@ const fs = require('fs');
 const path = require('path');
 
 const nvmrcPath = path.join(__dirname, '..', '.nvmrc');
-const packageJsonPath = path.join(__dirname, '..', 'package.json');
 
 // Read expected versions
 const expectedNodeVersion = fs.readFileSync(nvmrcPath, 'utf8').trim();
