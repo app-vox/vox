@@ -106,7 +106,7 @@ Capture thoughts quickly without typing. Perfect for meetings, brainstorming, or
 ## How Vox Compares
 
 | Feature | Vox | Dragon NaturallySpeaking | macOS Dictation | Whisper Desktop Apps |
-|---------|-----|--------------------------|-----------------|---------------------|
+| ------- | --- | ------------------------ | --------------- | -------------------- |
 | **Price** | Free & Open Source | $300+ | Free (limited) | Varies ($0-50) |
 | **Privacy** | 100% Local | Cloud-based | Cloud-based | Mostly local |
 | **Custom Prompts** | ✅ Full control | ❌ Limited | ❌ None | ⚠️ Some apps |
@@ -189,9 +189,10 @@ make install   # installs npm deps + builds whisper.cpp
 ### Run
 
 ```bash
-make dev        # development with hot reload
+make dev        # development with hot reload (also: make start)
 npm test        # run tests
 npm run dist    # build production app
+make help       # list all available make targets
 ```
 
 Built with Electron, React, TypeScript, and whisper.cpp.

@@ -15,7 +15,7 @@ export function LlmIntroStep() {
       </div>
 
       <h2 className={styles.stepTitle}>
-        {t("onboarding.llm.stepLabel", { current: "6", total: "8" })}
+        {t("onboarding.llm.stepLabel", { current: "6", total: "9" })}
         {" — "}
         {t("onboarding.llm.title")}
       </h2>

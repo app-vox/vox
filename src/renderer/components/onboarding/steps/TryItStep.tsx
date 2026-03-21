@@ -67,7 +67,7 @@ export function TryItStep() {
   return (
     <div className={styles.stepContent} onClick={handleStepClick}>
       <h2 className={styles.stepTitle}>
-        {t("onboarding.tryIt.stepLabel", { current: "4", total: "8" })}
+        {t("onboarding.tryIt.stepLabel", { current: "4", total: "9" })}
         {" — "}
         {t("onboarding.tryIt.title")}
       </h2>

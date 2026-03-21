@@ -57,7 +57,7 @@ export class ConfigManager {
   }
 
   load(): VoxConfig {
-    const defaults = createDefaultConfig(app?.isPackaged ?? false);
+    const defaults = createDefaultConfig();
     const defaultsFlat = createDefaultLlmFlat();
 
     let config: VoxConfig;

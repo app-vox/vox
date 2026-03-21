@@ -138,7 +138,7 @@ export interface VoxConfig {
   audioRetentionCount: number;
 }
 
-export function createDefaultConfig(isProduction = false): VoxConfig {
+export function createDefaultConfig(): VoxConfig {
   return {
     llm: {
       provider: "foundry",
@@ -159,7 +159,7 @@ export function createDefaultConfig(isProduction = false): VoxConfig {
     llmConnectionTested: false,
     llmConfigHash: "",
     customPrompt: "",
-    launchAtLogin: isProduction,
+    launchAtLogin: false,
     showInDock: true,
     showInTray: true,
     hideOnBlur: false,

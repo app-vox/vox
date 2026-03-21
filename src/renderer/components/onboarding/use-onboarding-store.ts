@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type OnboardingStep = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type OnboardingStep = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 interface OnboardingState {
   step: OnboardingStep;
@@ -13,7 +13,7 @@ interface OnboardingState {
   reset: () => void;
 }
 
-const MAX_STEP: OnboardingStep = 7;
+const MAX_STEP: OnboardingStep = 8;
 
 export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   step: 0,

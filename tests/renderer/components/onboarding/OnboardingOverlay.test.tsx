@@ -35,6 +35,7 @@ vi.mock("../../../../src/shared/icons", () => ({
   AlertTriangleIcon: (props: Record<string, unknown>) => <svg data-testid="alert-icon" {...props} />,
   XIcon: (props: Record<string, unknown>) => <svg data-testid="x-icon" {...props} />,
   SparkleIcon: (props: Record<string, unknown>) => <svg data-testid="sparkle-icon" {...props} />,
+  MonitorIcon: (props: Record<string, unknown>) => <svg data-testid="monitor-icon" {...props} />,
   TrashIcon: (props: Record<string, unknown>) => <svg data-testid="trash-icon" {...props} />,
 }));
 
@@ -128,8 +129,14 @@ describe("OnboardingOverlay", () => {
     expect(screen.getByText(/AI Enhancement/)).toBeInTheDocument();
   });
 
-  it("renders done step at step 7", () => {
+  it("renders launch at login step at step 7", () => {
     useOnboardingStore.setState({ step: 7 });
+    renderWithI18n(<OnboardingOverlay />);
+    expect(screen.getByText(/Launch at Login/)).toBeInTheDocument();
+  });
+
+  it("renders done step at step 8", () => {
+    useOnboardingStore.setState({ step: 8 });
     renderWithI18n(<OnboardingOverlay />);
     expect(screen.getByText("You're All Set!")).toBeInTheDocument();
   });
@@ -147,7 +154,7 @@ describe("OnboardingOverlay", () => {
   it("renders step indicator dots", () => {
     const { container } = renderWithI18n(<OnboardingOverlay />);
     const dots = container.querySelectorAll("[class*='dot']");
-    expect(dots.length).toBeGreaterThanOrEqual(8);
+    expect(dots.length).toBeGreaterThanOrEqual(9);
   });
 
   it("back button goes to previous step", () => {
@@ -193,12 +200,31 @@ describe("OnboardingOverlay", () => {
   });
 
   it("fires onboarding_completed event when user finishes", async () => {
-    useOnboardingStore.setState({ step: 7 });
+    useOnboardingStore.setState({ step: 8 });
     renderWithI18n(<OnboardingOverlay />);
     fireEvent.click(screen.getByText("Start Using Vox"));
 
     await waitFor(() => {
-      expect(voxApi.analytics.track).toHaveBeenCalledWith("onboarding_completed", { completed_step: 7, skipped: false });
+      expect(voxApi.analytics.track).toHaveBeenCalledWith("onboarding_completed", { completed_step: 8, skipped: false });
     });
+  });
+
+  it("shows back and skip buttons on launch at login step", () => {
+    useOnboardingStore.setState({ step: 7 });
+    renderWithI18n(<OnboardingOverlay />);
+    expect(screen.getByText("Back")).toBeInTheDocument();
+    expect(screen.getByText("Skip Setup")).toBeInTheDocument();
+  });
+
+  it("launch at login step defaults to current config value", () => {
+    useConfigStore.setState({
+      config: { ...createDefaultConfig(), launchAtLogin: true },
+      loading: false,
+      setupComplete: true,
+    });
+    useOnboardingStore.setState({ step: 7 });
+    renderWithI18n(<OnboardingOverlay />);
+    const yesRadio = screen.getByRole("radio", { name: /Yes, launch at login/ });
+    expect(yesRadio).toBeChecked();
   });
 });
