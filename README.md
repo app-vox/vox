@@ -106,7 +106,7 @@ Capture thoughts quickly without typing. Perfect for meetings, brainstorming, or
 ## How Vox Compares
 
 | Feature | Vox | Dragon NaturallySpeaking | macOS Dictation | Whisper Desktop Apps |
-|---------|-----|--------------------------|-----------------|---------------------|
+| ------- | --- | ------------------------ | --------------- | -------------------- |
 | **Price** | Free & Open Source | $300+ | Free (limited) | Varies ($0-50) |
 | **Privacy** | 100% Local | Cloud-based | Cloud-based | Mostly local |
 | **Custom Prompts** | ✅ Full control | ❌ Limited | ❌ None | ⚠️ Some apps |
