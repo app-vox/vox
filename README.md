@@ -189,9 +189,10 @@ make install   # installs npm deps + builds whisper.cpp
 ### Run
 
 ```bash
-make dev        # development with hot reload
+make dev        # development with hot reload (also: make start)
 npm test        # run tests
 npm run dist    # build production app
+make help       # list all available make targets
 ```
 
 Built with Electron, React, TypeScript, and whisper.cpp.

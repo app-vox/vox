@@ -10,7 +10,8 @@ Thanks for your interest in contributing to Vox! Here's how to get started.
 git clone https://github.com/app-vox/vox.git
 cd vox
 make install   # installs npm deps + builds whisper.cpp
-make dev       # starts the dev server
+make dev       # starts the dev server (also: make start)
+make help      # list all available make targets
 ```
 
 ## Before submitting a PR

@@ -9,11 +9,12 @@ import { ShortcutLearnStep } from "./steps/ShortcutLearnStep";
 import { TryItStep } from "./steps/TryItStep";
 import { HudDemoStep } from "./steps/HudDemoStep";
 import { LlmIntroStep } from "./steps/LlmIntroStep";
+import { LaunchAtLoginStep } from "./steps/LaunchAtLoginStep";
 import { DoneStep } from "./steps/DoneStep";
 import { XIcon } from "../../../shared/icons";
 import styles from "./OnboardingOverlay.module.scss";
 
-const TOTAL_STEPS = 8;
+const TOTAL_STEPS = 9;
 const CLOSE_ANIMATION_MS = 500;
 
 export function OnboardingOverlay() {
@@ -71,14 +72,14 @@ export function OnboardingOverlay() {
 
   const handleComplete = useCallback(() => {
     animateClose(() => {
-      window.voxApi.analytics.track("onboarding_completed", { completed_step: 7, skipped: false });
+      window.voxApi.analytics.track("onboarding_completed", { completed_step: 8, skipped: false });
       setActiveTab("transcriptions");
     });
   }, [animateClose, setActiveTab]);
 
   const handleExploreSettings = useCallback(() => {
     animateClose(() => {
-      window.voxApi.analytics.track("onboarding_completed", { completed_step: 7, skipped: false });
+      window.voxApi.analytics.track("onboarding_completed", { completed_step: 8, skipped: false });
       setActiveTab("general");
     });
   }, [animateClose, setActiveTab]);
@@ -114,7 +115,8 @@ export function OnboardingOverlay() {
     4: <TryItStep />,
     5: <HudDemoStep />,
     6: <LlmIntroStep />,
-    7: <DoneStep onComplete={handleComplete} onExploreSettings={handleExploreSettings} />,
+    7: <LaunchAtLoginStep />,
+    8: <DoneStep onComplete={handleComplete} onExploreSettings={handleExploreSettings} />,
   };
 
   return (
@@ -123,7 +125,7 @@ export function OnboardingOverlay() {
         <XIcon width={18} height={18} />
       </button>
       <div className={styles.container}>
-        {step > 0 && step < 7 && (
+        {step > 0 && step < 8 && (
           <div className={styles.topNav}>
             <button className={styles.backBtn} onClick={back}>
               {t("onboarding.navigation.back")}

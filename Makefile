@@ -1,4 +1,4 @@
-.PHONY: release run dev build build-dev install deploy uninstall
+.PHONY: release run dev start build build-dev install deploy uninstall help
 
 UNAME := $(shell uname -s)
 
@@ -47,3 +47,18 @@ run: install
 
 dev: install
 	npm run dev
+
+start: dev
+
+help:
+	@echo "Available targets:"
+	@echo "  make install    Install npm dependencies"
+	@echo "  make dev        Start development server with hot reload"
+	@echo "  make start      Alias for dev"
+	@echo "  make run        Install deps and start the app (npm start)"
+	@echo "  make build      Build production app"
+	@echo "  make build-dev  Build unsigned dev app"
+	@echo "  make deploy     Copy built app to /Applications and launch"
+	@echo "  make release    build + deploy"
+	@echo "  make uninstall  Remove the installed app"
+	@echo "  make help       Show this help message"
