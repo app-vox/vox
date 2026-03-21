@@ -1,0 +1,13 @@
+#!/bin/sh
+# Re-index codebase after branch switch for AI code search
+# Runs in background — does not block git operations
+# Semantic search only available on macOS with Ollama
+
+PREV_HEAD=$1
+NEW_HEAD=$2
+BRANCH_SWITCH=$3
+
+# Only re-index on branch switch, not individual file checkouts
+if [ "$BRANCH_SWITCH" = "1" ] && which chunkhound > /dev/null 2>&1; then
+  make index --no-print-directory > /dev/null 2>&1 &
+fi
