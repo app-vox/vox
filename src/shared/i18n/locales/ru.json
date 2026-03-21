@@ -105,6 +105,8 @@
   "whisper.transcribing": "Транскрибирование...",
   "whisper.noSpeech": "(речь не обнаружена)",
   "whisper.testFailed": "Тест не пройден: {error}",
+  "whisper.osIncompatible": "Ваша версия macOS не поддерживается. Локальные модели требуют macOS 15 (Sequoia) или новее.",
+  "whisper.osIncompatibleLink": "Проверить системные требования",
   "whisper.model.tiny.label": "Самая быстрая",
   "whisper.model.tiny.description": "Самая быстрая, низкая точность (~75 МБ)",
   "whisper.model.base.label": "Быстрая",

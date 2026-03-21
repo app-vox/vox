@@ -105,6 +105,8 @@
   "whisper.transcribing": "Yazıya dökülüyor...",
   "whisper.noSpeech": "(konuşma algılanmadı)",
   "whisper.testFailed": "Test başarısız: {error}",
+  "whisper.osIncompatible": "macOS sürümünüz desteklenmiyor. Yerel modeller macOS 15 (Sequoia) veya daha yenisini gerektirir.",
+  "whisper.osIncompatibleLink": "Sistem gereksinimlerini kontrol edin",
   "whisper.model.tiny.label": "En Hızlı",
   "whisper.model.tiny.description": "En hızlı, düşük doğruluk (~75 MB)",
   "whisper.model.base.label": "Hızlı",
