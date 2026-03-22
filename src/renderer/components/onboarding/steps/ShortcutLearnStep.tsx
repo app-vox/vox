@@ -14,7 +14,7 @@ export function ShortcutLearnStep() {
   return (
     <div className={styles.stepContent}>
       <h2 className={styles.stepTitle}>
-        {t("onboarding.shortcut.stepLabel", { current: "3", total: "8" })}
+        {t("onboarding.shortcut.stepLabel", { current: "3", total: "9" })}
         {" — "}
         {t("onboarding.shortcut.title")}
       </h2>

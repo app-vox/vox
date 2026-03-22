@@ -31,7 +31,7 @@ export function HudDemoStep() {
   return (
     <div className={styles.stepContent}>
       <h2 className={styles.stepTitle}>
-        {t("onboarding.hud.stepLabel", { current: "5", total: "8" })}
+        {t("onboarding.hud.stepLabel", { current: "5", total: "9" })}
         {" — "}
         {t("onboarding.hud.title")}
       </h2>
