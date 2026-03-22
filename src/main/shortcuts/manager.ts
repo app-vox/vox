@@ -780,11 +780,11 @@ export class ShortcutManager {
     slog.info("Shortcuts registered: mode=%s, hold=%s, toggle=%s", mode, config.shortcuts.hold, config.shortcuts.toggle);
 
     if (!busy) {
-      // Re-enable shortcuts after a longer delay to prevent spurious activations
+      // Re-enable shortcuts after a brief delay to prevent spurious activations
       setTimeout(() => {
         this.isInitializing = false;
         slog.info("Shortcuts re-enabled after registration");
-      }, 1500);
+      }, 300);
     }
   }
 

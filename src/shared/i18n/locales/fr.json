@@ -402,6 +402,7 @@
   "general.textProcessing.description": "Ajustez le formatage du texte transcrit.",
   "indicator.initializing": "Démarrage...",
   "ui.offlineWarning": "Vous semblez être hors ligne. Certaines fonctionnalités comme le téléchargement de modèles pourraient ne pas fonctionner.",
+  "ui.llmConfigBanner": "Configurer l'amélioration IA",
   "general.permissions.title": "Accorder les Permissions",
   "general.permissions.description": "Vox a besoin des permissions de microphone et d'accessibilité pour enregistrer et coller du texte.",
   "general.permissions.action": "Configurer les permissions",

@@ -401,6 +401,7 @@
   "general.textProcessing.description": "Adjust how your transcribed text is formatted.",
   "indicator.initializing": "Starting...",
   "ui.offlineWarning": "You appear to be offline. Some features like model downloads may not work.",
+  "ui.llmConfigBanner": "Configure AI Enhancement",
   "general.shortcuts.banner.title": "Set up keyboard shortcuts",
   "general.shortcuts.banner.description": "Configure hold or toggle shortcuts to start recording from anywhere without clicking.",
   "general.shortcuts.banner.action": "Configure shortcuts",

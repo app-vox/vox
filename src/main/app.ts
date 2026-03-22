@@ -88,6 +88,9 @@ function setupPipeline(): void {
       for (const win of BrowserWindow.getAllWindows()) {
         win.webContents.send("config:changed");
       }
+      // Rebuild the pipeline so the next recording uses NoopProvider
+      // (setImmediate lets the current run finish before we swap it out)
+      setImmediate(() => setupPipeline());
     },
     onComplete: (result) => {
       // Defer all side effects so the pipeline can return finalText immediately
@@ -406,6 +409,7 @@ app.whenReady().then(async () => {
   setAppMenuCallbacks({
     onShowVox: () => openHome(reloadConfig),
     onTranscriptions: () => openHome(reloadConfig, "transcriptions"),
+    onDictionary: () => openHome(reloadConfig, "dictionary"),
     onSettings: () => openHome(reloadConfig, "general"),
     onToggleHud: () => {
       const cfg = configManager.load();
