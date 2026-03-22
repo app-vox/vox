@@ -1,6 +1,7 @@
 import { XIcon } from "../../../shared/icons";
 import { useDevOverrides } from "../../stores/dev-overrides-store";
 import { useConfigStore } from "../../stores/config-store";
+import { Tabs } from "../../../shared/tabs";
 import styles from "../layout/Titlebar.module.scss";
 
 export function DevOverrideBadge() {
@@ -25,7 +26,7 @@ export function DevOverrideBadge() {
       </button>
       <button
         className={styles.overrideBadge}
-        onClick={() => setActiveTab("dev")}
+        onClick={() => setActiveTab(Tabs.DEV)}
       >
         {"Overrides Active"}
       </button>

@@ -3,6 +3,7 @@ import { useConfigStore } from "../../stores/config-store";
 import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useT, useLanguage } from "../../i18n-context";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
+import { Tabs } from "../../../shared/tabs";
 import { getDocsUrl } from "../../../shared/i18n";
 import { XIcon, ChevronsLeftIcon, ChevronLeftIcon, ChevronRightIcon, ChevronsRightIcon, InfoCircleIcon, BookIcon, ExternalLinkIcon } from "../../../shared/icons";
 import { CustomSelect } from "../ui/CustomSelect";
@@ -165,12 +166,12 @@ export function DictionaryPanel() {
             }
             {" "}
             {setupComplete && (
-              <button className={card.infoBannerLink} onClick={() => setActiveTab("llm")}>
+              <button className={card.infoBannerLink} onClick={() => setActiveTab(Tabs.AI_ENHANCEMENT)}>
                 {t("dictionary.goToAiEnhancement")}
               </button>
             )}
             {!setupComplete && (
-              <button className={card.infoBannerLink} onClick={() => setActiveTab("whisper")}>
+              <button className={card.infoBannerLink} onClick={() => setActiveTab(Tabs.SPEECH)}>
                 {t("dictionary.goToSpeech")}
               </button>
             )}
@@ -183,7 +184,7 @@ export function DictionaryPanel() {
           <InfoCircleIcon width={16} height={16} />
           <span>
             {t("dictionary.llmRequired")}{" "}
-            <button className={card.infoBannerLink} onClick={() => setActiveTab("llm")}>
+            <button className={card.infoBannerLink} onClick={() => setActiveTab(Tabs.AI_ENHANCEMENT)}>
               {t("dictionary.goToAiEnhancement")}
             </button>
           </span>

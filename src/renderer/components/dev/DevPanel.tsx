@@ -7,6 +7,7 @@ import { usePermissionsStore } from "../../stores/permissions-store";
 import { useTranscriptionsStore } from "../../stores/transcriptions-store";
 import { useSaveToast } from "../../hooks/use-save-toast";
 import { useOnlineStatus } from "../../hooks/use-online-status";
+import { useLanguage } from "../../i18n-context";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
 import { isProviderConfigured } from "../llm/LlmPanel";
 import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
@@ -201,6 +202,7 @@ export function DevPanel() {
   const config = useConfigStore((s) => s.config);
   const activeTab = useConfigStore((s) => s.activeTab);
   const setupComplete = useConfigStore((s) => s.setupComplete);
+  const language = useLanguage();
 
   const overrides = useDevOverrides((s) => s.overrides);
   const setEnabled = useDevOverrides((s) => s.setEnabled);
@@ -364,6 +366,7 @@ export function DevPanel() {
     { label: "Update Downloading", preset: { updateStatus: "downloading", updateDownloadProgress: 42 } },
     { label: "Update Ready", preset: { updateStatus: "ready" } },
     { label: "New User", preset: { setupComplete: false, visitedShortcuts: false, llmEnhancementEnabled: false, llmConnectionTested: false } },
+    { label: "First Time User", preset: { setupComplete: false, visitedShortcuts: false, llmEnhancementEnabled: false, llmConnectionTested: false, microphonePermission: "not-determined", accessibilityPermission: false } },
     { label: "Everything Broken", preset: { online: false, setupComplete: false, microphonePermission: "denied", accessibilityPermission: false, updateStatus: "error", llmEnhancementEnabled: false, llmConnectionTested: false } },
   ];
 
@@ -811,8 +814,7 @@ export function DevPanel() {
       <div className={styles.disclaimer}>
         <InfoCircleIcon width={13} height={13} />
         <span>
-          <strong>This panel is only visible in development mode.</strong>{" "}
-          Some values may become outdated as configuration changes. Read-only states come from the main process and cannot be overridden.
+          Dev mode only{language !== "en" ? " · English only" : ""} — values may lag real state.
         </span>
       </div>
 

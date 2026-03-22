@@ -1,4 +1,5 @@
 import { useConfigStore } from "../../stores/config-store";
+import { Tabs } from "../../../shared/tabs";
 import { usePermissionRequest } from "../../hooks/use-permission-request";
 import { useTranscriptionTest } from "../../hooks/use-transcription-test";
 import { useSaveToast } from "../../hooks/use-save-toast";
@@ -109,7 +110,7 @@ export function PermissionsPanel() {
               return (
                 <>
                   {parts[0]}
-                  <button className={card.infoBannerLink} onClick={() => setActiveTab("transcriptions")}>
+                  <button className={card.infoBannerLink} onClick={() => setActiveTab(Tabs.TRANSCRIPTIONS)}>
                     {t("permissions.copyToClipboardDescLink")}
                   </button>
                   {parts[1]}

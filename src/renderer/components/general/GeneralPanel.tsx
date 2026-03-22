@@ -12,6 +12,7 @@ import { SunIcon, MoonIcon, MonitorIcon, MicIcon, ShieldIcon, KeyboardIcon, Chev
 import type { ThemeMode, SupportedLanguage, WidgetPosition } from "../../../shared/config";
 import { CustomSelect, MultiSelect, type SelectItem } from "../ui/CustomSelect";
 import { OfflineBanner } from "../ui/OfflineBanner";
+import { Tabs } from "../../../shared/tabs";
 import { Platform } from "../layout/Platform";
 import card from "../shared/card.module.scss";
 import buttons from "../shared/buttons.module.scss";
@@ -324,7 +325,7 @@ export function GeneralPanel() {
               </div>
               <button
                 className={`${buttons.btn} ${buttons.primary}`}
-                onClick={() => setActiveTab("whisper")}
+                onClick={() => setActiveTab(Tabs.SPEECH)}
               >
                 {t("general.setup.getStarted")}
               </button>
@@ -346,7 +347,7 @@ export function GeneralPanel() {
               </div>
               <button
                 className={`${buttons.btn} ${buttons.primary}`}
-                onClick={() => setActiveTab("permissions")}
+                onClick={() => setActiveTab(Tabs.PERMISSIONS)}
               >
                 {t("general.permissions.action")}
               </button>
@@ -370,7 +371,7 @@ export function GeneralPanel() {
                   <button
                     className={`${buttons.btn} ${buttons.primary}`}
                     onClick={() => {
-                      setActiveTab("shortcuts");
+                      setActiveTab(Tabs.SHORTCUTS);
                       setShortcutsBannerDismissed(true);
                       localStorage.setItem(SHORTCUTS_BANNER_DISMISSED_KEY, "true");
                     }}

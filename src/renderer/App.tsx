@@ -3,6 +3,7 @@ import { useConfigStore } from "./stores/config-store";
 import { useDevValue } from "./stores/dev-overrides-store";
 import { SpinnerIcon } from "../shared/icons";
 
+import { Tabs } from "../shared/tabs";
 import { Sidebar } from "./components/layout/Sidebar";
 import { Titlebar } from "./components/layout/Titlebar";
 import { AboutPanel } from "./components/about/AboutPanel";
@@ -37,15 +38,15 @@ function DevPanelWrapper() {
 }
 
 const PANELS: Record<string, () => JSX.Element | null> = {
-  general: GeneralPanel,
-  whisper: WhisperPanel,
-  llm: LlmPanel,
-  dictionary: DictionaryPanel,
-  permissions: PermissionsPanel,
-  shortcuts: ShortcutsPanel,
-  transcriptions: TranscriptionsPanel,
-  about: AboutPanel,
-  ...(import.meta.env.DEV ? { dev: DevPanelWrapper } : {}),
+  [Tabs.GENERAL]: GeneralPanel,
+  [Tabs.SPEECH]: WhisperPanel,
+  [Tabs.AI_ENHANCEMENT]: LlmPanel,
+  [Tabs.DICTIONARY]: DictionaryPanel,
+  [Tabs.PERMISSIONS]: PermissionsPanel,
+  [Tabs.SHORTCUTS]: ShortcutsPanel,
+  [Tabs.TRANSCRIPTIONS]: TranscriptionsPanel,
+  [Tabs.ABOUT]: AboutPanel,
+  ...(import.meta.env.DEV ? { [Tabs.DEV]: DevPanelWrapper } : {}),
 };
 
 export function App() {

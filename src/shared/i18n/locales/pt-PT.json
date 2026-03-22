@@ -402,6 +402,7 @@
   "general.textProcessing.description": "Ajuste como o texto transcrito é formatado.",
   "indicator.initializing": "A iniciar...",
   "ui.offlineWarning": "Parece estar offline. Algumas funcionalidades como transferência de modelos podem não funcionar.",
+  "ui.llmConfigBanner": "Configurar Melhoramento por IA",
   "general.permissions.title": "Conceder Permissões",
   "general.permissions.description": "O Vox precisa de permissões de microfone e acessibilidade para gravar e colar texto.",
   "general.permissions.action": "Configurar permissões",

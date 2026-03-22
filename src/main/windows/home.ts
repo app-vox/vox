@@ -10,6 +10,7 @@ const slog = log.scope("Vox");
 export interface AppMenuCallbacks {
   onShowVox: () => void;
   onTranscriptions: () => void;
+  onDictionary: () => void;
   onSettings: () => void;
   onToggleHud: () => void;
   onCheckForUpdates: () => void;
@@ -58,6 +59,11 @@ function buildAppMenu(): void {
           label: t("menu.transcriptions"),
           accelerator: "CmdOrCtrl+T",
           click: () => menuCallbacks?.onTranscriptions(),
+        },
+        {
+          label: t("tabs.dictionary"),
+          accelerator: "CmdOrCtrl+D",
+          click: () => menuCallbacks?.onDictionary(),
         },
         { type: "separator" },
         { role: "close" },
