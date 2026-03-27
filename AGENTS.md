@@ -1,107 +1,89 @@
 # Vox Development Guidelines
 
-## Code Search: Use ChunkHound CLI
+## Code Search: Use ChunkHound
 
-**CRITICAL: ALWAYS start with ChunkHound before reading any files.** This is not optional. ChunkHound returns pre-chunked, line-referenced results and is orders of magnitude faster than scanning files.
+**CRITICAL: ALWAYS start with ChunkHound before reading any files.** ChunkHound returns pre-chunked, line-referenced results and is orders of magnitude faster than scanning files.
 
-### Decision Tree
+### Mode selection
+
+ChunkHound is available in two modes. **Prefer CLI** — it's transparent and shows exactly what runs. Fall back to MCP tools if CLI fails (e.g. DuckDB lock conflict because the MCP server is already holding the connection).
+
+```
+Try CLI first:
+    chunkhound search "query"
+
+If you get a DuckDB lock error → use MCP tools instead:
+    search_semantic / search_regex / research
+```
+
+### Decision tree
 
 ```
 User asks a question about code
     ↓
-Is it an architectural/conceptual question?
-    → YES: Use `chunkhound research "question"`
-    → NO: Continue below
-    ↓
 Is it about finding a specific pattern/class/function?
-    → YES: Use `chunkhound search --regex "pattern"`
+    → YES: chunkhound search --regex "pattern"
+           (or MCP: search_regex)
     → NO: Continue below
     ↓
 Is it about finding conceptually related code?
-    → YES: Use `chunkhound search "semantic query"`
+    → YES: chunkhound search "semantic query"
+           (or MCP: search_semantic)
+    ↓
+Is it a deep architectural question needing multi-hop synthesis?
+    → YES: MCP research tool (CLI research is fragile with local models)
     ↓
 After getting results → Read ONLY the specific files/lines returned
 ```
 
-### When to Use Each Command
+### CLI usage
 
-**For architectural questions**, use semantic search with broad queries - it returns ranked, relevant chunks you can read to understand patterns:
+**Semantic search** — conceptually related code:
 ```bash
-# ✅ User asks: "explain the cross-platform strategy"
-chunkhound search "cross-platform architecture platform-specific modules" --path-filter "src/main/platform"
-
-# ✅ User asks: "how does recording work?"
 chunkhound search "audio recording pipeline microphone capture"
-
-# ✅ User asks: "what patterns are used for X?"
 chunkhound search "LLM provider abstraction factory pattern"
-```
-
-**Note:** `chunkhound research` (deep multi-hop research) requires large-context LLMs and is fragile with local models. For deep research, use MCP mode instead — `.mcp.json` is versioned and always active, giving ChunkHound access to Claude Code for synthesis. Just use the `research` MCP tool directly.
-
-**`chunkhound search`** - Semantic search for related code:
-```bash
-# ✅ Find all authentication-related code
 chunkhound search "authentication logic" --path-filter "src/"
-
-# ✅ Find error handling patterns
-chunkhound search "error handling retry logic"
 ```
 
-**`chunkhound search --regex`** - Exact pattern matching:
+**Regex search** — exact pattern matching:
 ```bash
-# ✅ Find all Service classes
 chunkhound search --regex "class \w+Service"
-
-# ✅ Find all interfaces starting with I
 chunkhound search --regex "interface I\w+" --path-filter "src/main/"
-
-# ✅ Find function definitions
-chunkhound search --regex "function \w+\("
 ```
 
-### Configuration
-
-ChunkHound config lives in `.chunkhound.json`:
-
-```json
-{
-  "embedding": {
-    "provider": "openai",
-    "base_url": "http://localhost:11434/v1",
-    "model": "nomic-embed-text"
-  }
-}
+**Pagination** (default page-size is 10):
+```bash
+chunkhound search "query" --page-size 20
+chunkhound search "query" --page-size 10 --offset 10
 ```
 
-**Ollama setup** (macOS only, for semantic search):
+### MCP tools (fallback)
+
+The MCP server is always active (`.mcp.json` is versioned). Use its tools when CLI fails due to a lock conflict:
+
+- `search_semantic` — equivalent to `chunkhound search "query"`
+- `search_regex` — equivalent to `chunkhound search --regex "pattern"`
+- `research` — deep multi-hop synthesis (preferred for architectural questions)
+
+### Ollama setup (macOS only, for semantic search)
 
 ```bash
-make embeddings        # starts Ollama + pulls nomic-embed-text if needed + re-indexes
+make embeddings        # starts Ollama + pulls nomic-embed-text + re-indexes
 make embeddings-stop   # stops Ollama
 ```
 
-If Ollama isn't available, ChunkHound falls back to regex-only search (still useful!).
+Without Ollama, regex search still works everywhere.
 
-### Why CLI over MCP?
+### Examples of what NOT to do
 
-- **Faster**: No MCP server overhead or IPC serialization
-- **Transparent**: You see exactly what commands run in the conversation
-- **Flexible**: Easy to adjust flags, pagination, filters dynamically
-- **Simpler**: One less moving part, no process locks
+❌ User asks "explain the platform module" → immediately read files
+✅ `chunkhound search "platform module cross-platform architecture"`
 
-**MCP mode**: `.mcp.json` is versioned and always active — ChunkHound's MCP server is connected automatically in every Claude Code session. Use it for deep `research` capability (multi-hop synthesis with large context), where ChunkHound uses Claude Code as its LLM for complex architectural analysis.
+❌ User asks "find all LLM providers" → use Glob/Grep
+✅ `chunkhound search --regex "class \w+Provider"`
 
-### Examples of What NOT to Do
-
-❌ **Wrong**: User asks "explain the platform module" → immediately read files
-✅ **Right**: `chunkhound research "How does the platform module work?"`
-
-❌ **Wrong**: User asks "find all LLM providers" → use Glob/Grep
-✅ **Right**: `chunkhound search "LLM provider implementations"`
-
-❌ **Wrong**: Search for `class AudioRecorder` → use Grep
-✅ **Right**: `chunkhound search --regex "class AudioRecorder"`
+❌ Use `--limit` flag
+✅ Use `--page-size` (e.g. `--page-size 20`)
 
 ## i18n: No Hardcoded User-Facing Strings
 
