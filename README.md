@@ -231,9 +231,8 @@ chunkhound search "error handling patterns retry logic"
 **Ollama setup** (macOS only, for semantic search):
 
 ```bash
-make embeddings        # starts Ollama + pulls nomic-embed-text if needed
+make embeddings        # starts Ollama + pulls nomic-embed-text if needed + re-indexes
 make embeddings-stop   # stops Ollama
-make index             # re-index codebase (run after make embeddings if first time)
 ```
 
 Without Ollama, ChunkHound uses regex-only search (still fast and useful for exact patterns).

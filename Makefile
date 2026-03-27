@@ -49,6 +49,7 @@ embeddings:
 		echo "Pulling nomic-embed-text model (for semantic search)..."; \
 		ollama pull nomic-embed-text; \
 	fi
+	@$(MAKE) --no-print-directory index
 
 embeddings-stop:
 	@pkill -x ollama 2>/dev/null && echo "Ollama stopped" || echo "Ollama not running"

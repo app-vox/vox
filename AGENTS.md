@@ -77,7 +77,7 @@ ChunkHound config lives in `.chunkhound.json`:
 **Ollama setup** (macOS only, for semantic search):
 
 ```bash
-make embeddings        # starts Ollama + pulls nomic-embed-text if needed
+make embeddings        # starts Ollama + pulls nomic-embed-text if needed + re-indexes
 make embeddings-stop   # stops Ollama
 ```
 
