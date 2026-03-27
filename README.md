@@ -231,13 +231,14 @@ chunkhound search "error handling patterns retry logic"
 **Ollama setup** (macOS only, for semantic search):
 
 ```bash
-make dev-start   # installs Ollama + nomic-embed-text model, starts server
-make dev-stop    # stops Ollama server
+make embeddings        # starts Ollama + pulls nomic-embed-text if needed
+make embeddings-stop   # stops Ollama
+make index             # re-index codebase (run after make embeddings if first time)
 ```
 
 Without Ollama, ChunkHound uses regex-only search (still fast and useful for exact patterns).
 
-**MCP alternative**: For deep research with multi-hop synthesis (`chunkhound research`), use MCP mode instead - copy `.mcp.json.example` to `.mcp.json` and restart Claude Code. MCP mode gives ChunkHound access to Claude Code's LLM for complex architectural analysis.
+**MCP mode**: `.mcp.json` is versioned and active by default — ChunkHound's MCP server is always available in Claude Code sessions, enabling `chunkhound research` for deep multi-hop architectural analysis.
 
 Built with Electron, React, TypeScript, and whisper.cpp.
 

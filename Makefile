@@ -1,4 +1,4 @@
-.PHONY: release run dev build build-dev install index deploy uninstall start stop dev-start dev-stop _chunkhound-index _install-hooks
+.PHONY: release run dev build build-dev install index deploy uninstall start stop embeddings embeddings-stop _chunkhound-index _install-hooks
 
 UNAME := $(shell uname -s)
 
@@ -28,7 +28,7 @@ stop:
 	fi; \
 	echo "Stopped"
 
-dev-start:
+embeddings:
 	@if [ "$$(uname -s)" != "Darwin" ]; then \
 		echo "Ollama auto-start is macOS only. Install Ollama manually: https://ollama.com"; \
 		exit 1; \
@@ -50,7 +50,7 @@ dev-start:
 		ollama pull nomic-embed-text; \
 	fi
 
-dev-stop:
+embeddings-stop:
 	@pkill -x ollama 2>/dev/null && echo "Ollama stopped" || echo "Ollama not running"
 
 _chunkhound-index:

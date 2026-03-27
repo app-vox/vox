@@ -37,7 +37,7 @@ chunkhound search "audio recording pipeline microphone capture"
 chunkhound search "LLM provider abstraction factory pattern"
 ```
 
-**Note:** `chunkhound research` (deep multi-hop research) requires large-context LLMs and is fragile with local models. If you need deep research, use MCP mode instead (copy `.mcp.json.example` to `.mcp.json` and restart) - it gives ChunkHound access to Claude Code for synthesis.
+**Note:** `chunkhound research` (deep multi-hop research) requires large-context LLMs and is fragile with local models. For deep research, use MCP mode instead — `.mcp.json` is versioned and always active, giving ChunkHound access to Claude Code for synthesis. Just use the `research` MCP tool directly.
 
 **`chunkhound search`** - Semantic search for related code:
 ```bash
@@ -77,8 +77,8 @@ ChunkHound config lives in `.chunkhound.json`:
 **Ollama setup** (macOS only, for semantic search):
 
 ```bash
-make dev-start   # installs Ollama + nomic-embed-text, starts server
-make dev-stop    # stops Ollama server
+make embeddings        # starts Ollama + pulls nomic-embed-text if needed
+make embeddings-stop   # stops Ollama
 ```
 
 If Ollama isn't available, ChunkHound falls back to regex-only search (still useful!).
@@ -90,12 +90,7 @@ If Ollama isn't available, ChunkHound falls back to regex-only search (still use
 - **Flexible**: Easy to adjust flags, pagination, filters dynamically
 - **Simpler**: One less moving part, no process locks
 
-**Alternative:** If you want deep `research` capability (multi-hop synthesis with large context), use MCP mode instead:
-```bash
-cp .mcp.json.example .mcp.json
-# Then restart Claude Code
-```
-MCP gives ChunkHound access to Claude Code as the LLM, which has huge context and can handle complex synthesis.
+**MCP mode**: `.mcp.json` is versioned and always active — ChunkHound's MCP server is connected automatically in every Claude Code session. Use it for deep `research` capability (multi-hop synthesis with large context), where ChunkHound uses Claude Code as its LLM for complex architectural analysis.
 
 ### Examples of What NOT to Do
 
