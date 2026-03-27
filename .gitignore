@@ -38,3 +38,6 @@ pipeline-test-config.json
 
 # Pipeline test results (generated)
 tests/pipeline/.results/
+
+# ChunkHound index (local, auto-generated)
+.chunkhound/

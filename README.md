@@ -189,10 +189,55 @@ make install   # installs npm deps + builds whisper.cpp
 ### Run
 
 ```bash
-make dev        # development with hot reload
+make start      # development with hot reload (alias: make dev)
+make stop       # stop dev processes
 npm test        # run tests
 npm run dist    # build production app
 ```
+
+### Code Search with ChunkHound (optional)
+
+`make install` automatically sets up [ChunkHound](https://github.com/ofriw/chunkhound) for AI-powered code search. The CLI provides semantic and regex search over the indexed codebase:
+
+```bash
+# Semantic search (works immediately after make install)
+chunkhound search "authentication logic"
+
+# Regex search (fast pattern matching)
+chunkhound search --regex "class \w+Module"
+
+# Broad semantic queries for architecture questions
+chunkhound search "error handling patterns retry logic"
+```
+
+**Configuration**: ChunkHound config is in `.chunkhound.json`:
+
+```json
+{
+  "embedding": {
+    "provider": "openai",
+    "base_url": "http://localhost:11434/v1",
+    "model": "nomic-embed-text"
+  },
+  "llm": {
+    "provider": "openai",
+    "base_url": "http://localhost:11434/v1",
+    "model": "qwen2.5-coder:7b",
+    "api_key": "ollama"
+  }
+}
+```
+
+**Ollama setup** (macOS only, for semantic search):
+
+```bash
+make embeddings        # starts Ollama + pulls nomic-embed-text if needed + re-indexes
+make embeddings-stop   # stops Ollama
+```
+
+Without Ollama, ChunkHound uses regex-only search (still fast and useful for exact patterns).
+
+**MCP mode**: `.mcp.json` is versioned and active by default — ChunkHound's MCP server is always available in Claude Code sessions, enabling `chunkhound research` for deep multi-hop architectural analysis.
 
 Built with Electron, React, TypeScript, and whisper.cpp.
 
