@@ -6,7 +6,9 @@ import { useT, useLanguage } from "../../i18n-context";
 import { getDocsUrl } from "../../../shared/i18n";
 import { GearIcon, InfoCircleIcon, DownloadIcon, BookIcon } from "../../../shared/icons";
 import { SaveToast } from "../ui/SaveToast";
+import { LlmConfigBanner } from "../ui/LlmConfigBanner";
 import { useDevOverrideValue } from "../../hooks/use-dev-override";
+import { Tabs } from "../../../shared/tabs";
 import styles from "./Titlebar.module.scss";
 
 // Lazy-load the dev override badge so the store is excluded from production bundles.
@@ -94,6 +96,7 @@ export function Titlebar() {
     <div className={styles.titlebar}>
       <div className={styles.spacer} />
       <SaveToast show={showToast} timestamp={toastTimestamp} onHide={hideToast} />
+      <LlmConfigBanner />
       {LazyDevOverrideBadge && (
         <Suspense fallback={null}>
           <LazyDevOverrideBadge />
@@ -109,15 +112,15 @@ export function Titlebar() {
         {t("titlebar.docs")}
       </button>
       <button
-        className={`${styles.actionBtn} ${activeTab === "about" ? styles.actionBtnActive : ""}`}
-        onClick={() => setActiveTab("about")}
+        className={`${styles.actionBtn} ${activeTab === Tabs.ABOUT ? styles.actionBtnActive : ""}`}
+        onClick={() => setActiveTab(Tabs.ABOUT)}
         title={t("general.about.title")}
       >
         <InfoCircleIcon width={18} height={18} />
       </button>
       <button
-        className={`${styles.actionBtn} ${activeTab === "general" ? styles.actionBtnActive : ""}`}
-        onClick={() => setActiveTab("general")}
+        className={`${styles.actionBtn} ${activeTab === Tabs.GENERAL ? styles.actionBtnActive : ""}`}
+        onClick={() => setActiveTab(Tabs.GENERAL)}
         title={t("tabs.general")}
       >
         <GearIcon width={18} height={18} />

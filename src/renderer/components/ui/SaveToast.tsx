@@ -14,10 +14,15 @@ export function SaveToast({ show, timestamp, onHide }: SaveToastProps) {
   const [visible, setVisible] = useState(false);
   const [prevTimestamp, setPrevTimestamp] = useState(timestamp);
 
-  // Adjust state during render when a new save occurs (React recommended pattern)
+  // Adjust state during render (React recommended pattern for derived state)
   if (show && timestamp !== prevTimestamp) {
     setVisible(true);
     setPrevTimestamp(timestamp);
+  }
+  // When show is cleared externally (e.g. window blur handler), sync visible so
+  // the component doesn't stay rendered at opacity:1 forever.
+  if (!show && visible) {
+    setVisible(false);
   }
 
   useEffect(() => {

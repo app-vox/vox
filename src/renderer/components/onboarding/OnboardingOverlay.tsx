@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type JSX } from "react";
 import { useConfigStore } from "../../stores/config-store";
+import { Tabs } from "../../../shared/tabs";
 import { useOnboardingStore, type OnboardingStep } from "./use-onboarding-store";
 import { useT } from "../../i18n-context";
 import { WelcomeStep } from "./steps/WelcomeStep";
@@ -66,21 +67,21 @@ export function OnboardingOverlay() {
     const currentStep = useOnboardingStore.getState().step;
     animateClose(() => {
       window.voxApi.analytics.track("onboarding_skipped", { skipped_at_step: currentStep });
-      setActiveTab("general");
+      setActiveTab(Tabs.GENERAL);
     });
   }, [animateClose, setActiveTab]);
 
   const handleComplete = useCallback(() => {
     animateClose(() => {
       window.voxApi.analytics.track("onboarding_completed", { completed_step: 8, skipped: false });
-      setActiveTab("transcriptions");
+      setActiveTab(Tabs.TRANSCRIPTIONS);
     });
   }, [animateClose, setActiveTab]);
 
   const handleExploreSettings = useCallback(() => {
     animateClose(() => {
       window.voxApi.analytics.track("onboarding_completed", { completed_step: 8, skipped: false });
-      setActiveTab("general");
+      setActiveTab(Tabs.GENERAL);
     });
   }, [animateClose, setActiveTab]);
 

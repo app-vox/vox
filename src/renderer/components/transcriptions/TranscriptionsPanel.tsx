@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { useTranscriptionsStore } from "../../stores/transcriptions-store";
 import { useConfigStore } from "../../stores/config-store";
 import { useT } from "../../i18n-context";
+import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
 import type { TranscriptionEntry } from "../../../shared/types";
 import {
   SearchIcon,
@@ -131,8 +132,13 @@ function OverflowMenu({
   deleteEntry: (id: string) => void;
 }) {
   const t = useT();
+  const config = useConfigStore((s) => s.config);
   const isRetrying = retryingId === entry.id;
   const [downloaded, setDownloaded] = useState(false);
+
+  const retryBlockedByLlm = entry.failedStep === "llm"
+    && config?.enableLlmEnhancement === true
+    && (!config.llmConnectionTested || computeLlmConfigHash(config) !== config.llmConfigHash);
 
   return (
     <div className={styles.overflowMenu}>
@@ -147,7 +153,8 @@ function OverflowMenu({
             <button
               className={styles.overflowItem}
               onClick={() => retryEntry(entry.id)}
-              disabled={isRetrying || retryingId !== null}
+              disabled={isRetrying || retryingId !== null || retryBlockedByLlm}
+              title={retryBlockedByLlm ? t("ui.llmConfigBanner") : undefined}
             >
               <RefreshIcon width={14} height={14} />
               <span>{isRetrying ? t("history.retrying") : t("history.retry")}</span>

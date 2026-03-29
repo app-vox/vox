@@ -1,10 +1,11 @@
 import { create } from "zustand";
 import type { VoxConfig } from "../../shared/config";
 import { useSaveToast } from "../hooks/use-save-toast";
+import { Tabs } from "../../shared/tabs";
 
 export function migrateActiveTab(tab: string | null): string | null {
-  if (tab === "appearance") return "general";
-  if (tab === "history") return "transcriptions";
+  if (tab === "appearance") return Tabs.GENERAL;
+  if (tab === "history") return Tabs.TRANSCRIPTIONS;
   return tab;
 }
 
@@ -27,7 +28,7 @@ const _savedTab = typeof window !== "undefined" ? migrateActiveTab(localStorage.
 export const useConfigStore = create<ConfigState>((set, get) => ({
   config: null,
   loading: true,
-  activeTab: _savedTab || "general",
+  activeTab: _savedTab || Tabs.GENERAL,
   setupComplete: false,
   _hasSavedTab: _savedTab !== null,
   _hasUserNavigated: false,
@@ -53,7 +54,7 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     };
 
     if (!_hasUserNavigated && !_hasSavedTab) {
-      updates.activeTab = setupState.hasAnyModel ? "transcriptions" : "general";
+      updates.activeTab = setupState.hasAnyModel ? Tabs.TRANSCRIPTIONS : Tabs.GENERAL;
     }
 
     set(updates as ConfigState);
