@@ -1,5 +1,90 @@
 # Vox Development Guidelines
 
+## Code Search: Use ChunkHound
+
+**CRITICAL: ALWAYS start with ChunkHound before reading any files.** ChunkHound returns pre-chunked, line-referenced results and is orders of magnitude faster than scanning files.
+
+### Mode selection
+
+ChunkHound is available in two modes. **Prefer CLI** — it's transparent and shows exactly what runs. Fall back to MCP tools if CLI fails (e.g. DuckDB lock conflict because the MCP server is already holding the connection).
+
+```
+Try CLI first:
+    chunkhound search "query"
+
+If you get a DuckDB lock error → use MCP tools instead:
+    search_semantic / search_regex / research
+```
+
+### Decision tree
+
+```
+User asks a question about code
+    ↓
+Is it about finding a specific pattern/class/function?
+    → YES: chunkhound search --regex "pattern"
+           (or MCP: search_regex)
+    → NO: Continue below
+    ↓
+Is it about finding conceptually related code?
+    → YES: chunkhound search "semantic query"
+           (or MCP: search_semantic)
+    ↓
+Is it a deep architectural question needing multi-hop synthesis?
+    → YES: MCP research tool (CLI research is fragile with local models)
+    ↓
+After getting results → Read ONLY the specific files/lines returned
+```
+
+### CLI usage
+
+**Semantic search** — conceptually related code:
+```bash
+chunkhound search "audio recording pipeline microphone capture"
+chunkhound search "LLM provider abstraction factory pattern"
+chunkhound search "authentication logic" --path-filter "src/"
+```
+
+**Regex search** — exact pattern matching:
+```bash
+chunkhound search --regex "class \w+Service"
+chunkhound search --regex "interface I\w+" --path-filter "src/main/"
+```
+
+**Pagination** (default page-size is 10):
+```bash
+chunkhound search "query" --page-size 20
+chunkhound search "query" --page-size 10 --offset 10
+```
+
+### MCP tools (fallback)
+
+The MCP server is always active (`.mcp.json` is versioned). Use its tools when CLI fails due to a lock conflict:
+
+- `search_semantic` — equivalent to `chunkhound search "query"`
+- `search_regex` — equivalent to `chunkhound search --regex "pattern"`
+- `research` — deep multi-hop synthesis (preferred for architectural questions)
+
+### Ollama setup (macOS only, for semantic search)
+
+```bash
+make embeddings        # starts Ollama + pulls nomic-embed-text + re-indexes
+make embeddings-stop   # stops Ollama
+```
+
+Without Ollama, regex search still works everywhere.
+
+### Examples of what NOT to do
+
+❌ User asks "explain the platform module" → immediately read files
+✅ `chunkhound search "platform module cross-platform architecture"`
+
+❌ User asks "find all LLM providers" → use Glob/Grep
+✅ `chunkhound search --regex "class \w+Provider"`
+
+❌ Use `--limit` flag
+✅ Use `--page-size` (e.g. `--page-size 20`)
+
 ## i18n: No Hardcoded User-Facing Strings
 
 All user-facing text in the Vox app MUST use the i18n system. Never write hardcoded strings in components or main process code.
