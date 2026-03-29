@@ -78,6 +78,11 @@ describe("VoxConfig", () => {
     expect(config.hideOnBlur).toBe(false);
   });
 
+  it("should have launchAtLogin defaulting to false", () => {
+    const config = createDefaultConfig();
+    expect(config.launchAtLogin).toBe(false);
+  });
+
   it("should accept 'turbo' as a valid WhisperModelSize", () => {
     const size: WhisperModelSize = "turbo";
     expect(size).toBe("turbo");
