@@ -402,6 +402,7 @@
   "history.audioRetentionHint": "Ustaw na 0, aby wyłączyć przechowywanie nagrań audio",
   "history.cannotRetryWhileRecording": "Nie można ponowić próby podczas trwającego nagrywania",
   "ui.offlineWarning": "Wygląda na to, że jesteś offline. Niektóre funkcje, takie jak pobieranie modeli, mogą nie działać.",
+  "ui.llmConfigBanner": "Skonfiguruj ulepszenie AI",
   "general.permissions.title": "Przyznaj Uprawnienia",
   "general.permissions.description": "Vox potrzebuje uprawnień do mikrofonu i ułatwień dostępu, aby nagrywać i wklejać tekst.",
   "general.permissions.action": "Skonfiguruj uprawnienia",

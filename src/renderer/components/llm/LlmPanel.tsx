@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useConfigStore } from "../../stores/config-store";
+import { Tabs } from "../../../shared/tabs";
 import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useDebouncedSave } from "../../hooks/use-debounced-save";
 import { useT } from "../../i18n-context";
@@ -125,7 +126,7 @@ export function LlmPanel() {
               href="#"
               onClick={(e) => {
                 e.preventDefault();
-                useConfigStore.getState().setActiveTab("whisper");
+                useConfigStore.getState().setActiveTab(Tabs.SPEECH);
               }}
               style={{ color: "inherit", textDecoration: "underline", cursor: "pointer" }}
             >

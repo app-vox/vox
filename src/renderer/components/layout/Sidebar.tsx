@@ -19,6 +19,7 @@ import {
 } from "../../../shared/icons";
 import { WarningBadge } from "../ui/WarningBadge";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
+import { Tabs } from "../../../shared/tabs";
 import { useDevOverrideValue, useDevOverridesActive } from "../../hooks/use-dev-override";
 import styles from "./Sidebar.module.scss";
 
@@ -52,27 +53,27 @@ const CATEGORY_DEFS: NavCategoryDef[] = [
   {
     labelKey: "sidebar.content",
     items: [
-      { id: "transcriptions", icon: <ClockIcon width={16} height={16} /> },
-      { id: "dictionary", icon: <BookIcon width={16} height={16} />, requiresLlm: true, checkConfigured: "ai-enhancement" },
+      { id: Tabs.TRANSCRIPTIONS, icon: <ClockIcon width={16} height={16} /> },
+      { id: Tabs.DICTIONARY, icon: <BookIcon width={16} height={16} />, requiresLlm: true, checkConfigured: "ai-enhancement" },
     ],
   },
   {
     labelKey: "sidebar.ai",
     items: [
-      { id: "whisper", icon: <MicIcon width={16} height={16} />, requiresModel: true, checkConfigured: "speech" },
-      { id: "llm", icon: <LayersIcon width={16} height={16} />, requiresTest: true, checkConfigured: "ai-enhancement" },
+      { id: Tabs.SPEECH, icon: <MicIcon width={16} height={16} />, requiresModel: true, checkConfigured: "speech" },
+      { id: Tabs.AI_ENHANCEMENT, icon: <LayersIcon width={16} height={16} />, requiresTest: true, checkConfigured: "ai-enhancement" },
     ],
   },
   {
     labelKey: "sidebar.interface",
     items: [
-      { id: "shortcuts", icon: <KeyboardIcon width={16} height={16} /> },
-      { id: "permissions", icon: <ShieldIcon width={16} height={16} />, requiresPermissions: true, checkConfigured: "permissions" },
+      { id: Tabs.SHORTCUTS, icon: <KeyboardIcon width={16} height={16} /> },
+      { id: Tabs.PERMISSIONS, icon: <ShieldIcon width={16} height={16} />, requiresPermissions: true, checkConfigured: "permissions" },
     ],
   },
   {
     items: [
-      { id: "general", icon: <GearIcon width={16} height={16} /> },
+      { id: Tabs.GENERAL, icon: <GearIcon width={16} height={16} /> },
     ],
   },
 ];
@@ -275,8 +276,8 @@ export function Sidebar() {
         {import.meta.env.DEV && (
           <>
             <button
-              className={`${styles.navItem} ${styles.devItem} ${activeTab === "dev" ? styles.devItemActive : ""} ${hideDevVisuals === true ? styles.devHidden : ""}`}
-              onClick={() => handleTabClick("dev")}
+              className={`${styles.navItem} ${styles.devItem} ${activeTab === Tabs.DEV ? styles.devItemActive : ""} ${hideDevVisuals === true ? styles.devHidden : ""}`}
+              onClick={() => handleTabClick(Tabs.DEV)}
               title={collapsed ? "Dev Panel" : undefined}
             >
               <div className={styles.iconWrap}>
@@ -302,8 +303,8 @@ export function Sidebar() {
           </>
         )}
         <button
-          className={`${styles.navItem} ${activeTab === "about" ? styles.navItemActive : ""}`}
-          onClick={() => setActiveTab("about")}
+          className={`${styles.navItem} ${activeTab === Tabs.ABOUT ? styles.navItemActive : ""}`}
+          onClick={() => setActiveTab(Tabs.ABOUT)}
           title={collapsed ? (hasUpdate ? t("sidebar.updateAvailable") : t("general.about.title")) : undefined}
         >
           <div className={styles.iconWrap}>

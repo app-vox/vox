@@ -402,6 +402,7 @@
   "general.textProcessing.description": "Passen Sie die Formatierung des transkribierten Texts an.",
   "indicator.initializing": "Starten...",
   "ui.offlineWarning": "Sie scheinen offline zu sein. Einige Funktionen wie das Herunterladen von Modellen funktionieren möglicherweise nicht.",
+  "ui.llmConfigBanner": "KI-Verbesserung konfigurieren",
   "general.permissions.title": "Berechtigungen Erteilen",
   "general.permissions.description": "Vox benötigt Mikrofon- und Bedienungshilfen-Berechtigungen zum Aufnehmen und Einfügen von Text.",
   "general.permissions.action": "Berechtigungen einrichten",

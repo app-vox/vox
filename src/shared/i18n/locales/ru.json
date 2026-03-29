@@ -402,6 +402,7 @@
   "general.textProcessing.description": "Настройте форматирование транскрибированного текста.",
   "indicator.initializing": "Запуск...",
   "ui.offlineWarning": "Похоже, вы не в сети. Некоторые функции, такие как загрузка моделей, могут не работать.",
+  "ui.llmConfigBanner": "Настроить улучшение ИИ",
   "general.permissions.title": "Предоставить Разрешения",
   "general.permissions.description": "Vox требуются разрешения на микрофон и универсальный доступ для записи и вставки текста.",
   "general.permissions.action": "Настроить разрешения",
