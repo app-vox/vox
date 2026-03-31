@@ -27,6 +27,7 @@ stop:
 		taskkill //F //IM Vox.exe 2>/dev/null || true; \
 	fi; \
 	echo "Stopped"
+	@$(MAKE) --no-print-directory embeddings-stop
 
 embeddings:
 	@if [ "$$(uname -s)" != "Darwin" ]; then \
