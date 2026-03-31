@@ -6,7 +6,7 @@ release: build deploy
 
 install:
 	@which cmake > /dev/null 2>&1 || (echo "cmake is required. See https://cmake.org/download"; exit 1)
-	@which uv > /dev/null 2>&1 && uv tool install chunkhound --quiet 2>/dev/null || true
+	@which uv > /dev/null 2>&1 && uv tool install "chunkhound==3.3.1" --quiet 2>/dev/null || true
 	npm install
 	@$(MAKE) --no-print-directory _install-hooks
 	@$(MAKE) --no-print-directory index
