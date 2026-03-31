@@ -6,15 +6,10 @@
 
 ### Mode selection
 
-ChunkHound is available in two modes. **Prefer CLI** — it's transparent and shows exactly what runs. Fall back to MCP tools if CLI fails (e.g. DuckDB lock conflict because the MCP server is already holding the connection).
+ChunkHound has two modes — use one at a time (they share a DuckDB lock):
 
-```
-Try CLI first:
-    chunkhound search "query"
-
-If you get a DuckDB lock error → use MCP tools instead:
-    search_semantic / search_regex / research
-```
+- **CLI** (default): `chunkhound search` via Bash. Works out of the box.
+- **MCP** (opt-in): copy `.mcp.json.example` to `.mcp.json` and restart Claude Code. Enables `research` tool for deep multi-hop synthesis.
 
 ### Decision tree
 
@@ -57,13 +52,14 @@ chunkhound search "query" --page-size 20
 chunkhound search "query" --page-size 10 --offset 10
 ```
 
-### MCP tools (fallback)
+### MCP tools (opt-in)
 
-The MCP server is always active (`.mcp.json` is versioned). Use its tools when CLI fails due to a lock conflict:
+MCP mode is opt-in — copy `.mcp.json.example` to `.mcp.json` and restart Claude Code. **Note:** enabling MCP locks the DuckDB, making CLI unavailable. Use one or the other, not both.
 
+When MCP is active, use its tools instead of CLI:
 - `search_semantic` — equivalent to `chunkhound search "query"`
 - `search_regex` — equivalent to `chunkhound search --regex "pattern"`
-- `research` — deep multi-hop synthesis (preferred for architectural questions)
+- `research` — deep multi-hop synthesis (not available via CLI with local models)
 
 ### Ollama setup (macOS only, for semantic search)
 

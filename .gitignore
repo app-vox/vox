@@ -41,3 +41,6 @@ tests/pipeline/.results/
 
 # ChunkHound index (local, auto-generated)
 .chunkhound/
+
+# MCP config (opt-in, not required for default CLI workflow)
+.mcp.json

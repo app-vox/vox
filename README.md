@@ -237,7 +237,7 @@ make embeddings-stop   # stops Ollama
 
 Without Ollama, ChunkHound uses regex-only search (still fast and useful for exact patterns).
 
-**MCP mode**: `.mcp.json` is versioned and active by default — ChunkHound's MCP server is always available in Claude Code sessions, enabling `chunkhound research` for deep multi-hop architectural analysis.
+**MCP mode** (opt-in): for deep multi-hop research, copy `.mcp.json.example` to `.mcp.json` and restart Claude Code. Note: MCP locks the DuckDB, so CLI won't work while it's active — use one or the other.
 
 Built with Electron, React, TypeScript, and whisper.cpp.
 
