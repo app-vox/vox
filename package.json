@@ -70,7 +70,7 @@
   },
   "overrides": {
     "fast-xml-parser": "^5.3.6",
-    "minimatch": "10.2.4"
+    "minimatch": "10.2.5"
   },
   "build": {
     "npmRebuild": false,
