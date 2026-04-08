@@ -78,7 +78,12 @@ function setupPipeline(): void {
       }
     },
     onTranscriptionComplete: (rawText) => {
-      shortcutManager?.getHud().updateTextPanel(rawText);
+      const hud = shortcutManager?.getHud();
+      if (!hud) return;
+      hud.updateTextPanel(rawText);
+      // Start enhancing effect immediately — works for both hint path (instant)
+      // and Whisper path. The blur/shuffle signals "AI is working on this".
+      hud.startEnhancingEffect();
     },
     onLlmFailed: () => {
       const cfg = configManager.load();
