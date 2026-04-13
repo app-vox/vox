@@ -42,5 +42,6 @@ export { default as MoveIcon } from "./svg/move.svg?react";
 export { default as ShiftIcon } from "./svg/shift.svg?react";
 export { default as EllipsisVerticalIcon } from "./svg/ellipsis-vertical.svg?react";
 export { default as PauseIcon } from "./svg/pause.svg?react";
+export { default as VolumeIcon } from "./svg/volume.svg?react";
 
 export { Icon } from "./Icon";
