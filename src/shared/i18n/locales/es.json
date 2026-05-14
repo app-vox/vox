@@ -282,6 +282,7 @@
   "notification.recordingFailed": "Error en la grabación: {error}",
   "notification.pasteFailed": "Error al pegar automáticamente: {error}. El texto está en su portapapeles.",
   "notification.copiedToClipboard": "{text}...Copiado — presione Cmd+V para pegar.",
+  "notification.clipboardReady": "Texto copiado al portapapeles — presione Ctrl+V para pegar.",
   "notification.insertFailed": "Sin campo activo — ir a transcripciones o",
   "notification.copyLatest": "copiar última",
   "hud.startRecording": "Iniciar grabación",
