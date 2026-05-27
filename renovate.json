@@ -1,16 +1,18 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "mode": "full",
   "extends": [
-    "config:recommended",
-    ":dependencyDashboard",
-    ":semanticCommits",
-    ":separateMajorReleases"
+    "config:best-practices",
+    ":automergeStableNonMajor",
+    ":automergePatch",
+    ":automergeDigest",
+    ":timezone(Europe/Berlin)",
+    "mergeConfidence:all-badges"
   ],
   "labels": ["dependencies"],
   "minimumReleaseAge": "3 days",
   "prConcurrentLimit": 5,
   "prHourlyLimit": 2,
+  "schedule": ["before 9am on monday"],
   "vulnerabilityAlerts": {
     "enabled": true,
     "labels": ["dependencies", "security", "priority:high"],
@@ -19,15 +21,7 @@
   "osvVulnerabilityAlerts": true,
   "packageRules": [
     {
-      "description": "Automerge patch updates for all packages",
-      "matchUpdateTypes": ["patch", "digest"],
-      "automerge": true,
-      "automergeType": "pr",
-      "automergeStrategy": "squash",
-      "platformAutomerge": true
-    },
-    {
-      "description": "Automerge minor updates for devDependencies",
+      "description": "Automerge minor updates for devDependencies (covers 0.x where :automergeStableNonMajor opts out)",
       "matchDepTypes": ["devDependencies"],
       "matchUpdateTypes": ["minor"],
       "automerge": true,
@@ -36,7 +30,7 @@
       "platformAutomerge": true
     },
     {
-      "description": "Group Electron ecosystem packages",
+      "description": "Electron ecosystem — manual review, longer cool-off",
       "groupName": "Electron ecosystem",
       "matchPackageNames": ["electron", "electron-builder", "electron-vite"],
       "minimumReleaseAge": "7 days",
@@ -44,42 +38,58 @@
       "labels": ["dependencies", "electron", "needs-testing"]
     },
     {
-      "description": "Group AWS SDK packages",
       "groupName": "AWS SDK",
-      "matchPackagePatterns": ["^@aws-sdk/"]
+      "matchPackageNames": ["@aws-sdk/{/,}**"]
     },
     {
-      "description": "Group React packages",
       "groupName": "React",
-      "matchPackageNames": ["react", "react-dom", "@types/react", "@types/react-dom"]
+      "matchPackageNames": [
+        "react",
+        "react-dom",
+        "@types/react",
+        "@types/react-dom"
+      ]
     },
     {
-      "description": "Group build tools",
       "groupName": "Build tools",
       "matchPackageNames": [
         "vite",
         "vitest",
         "typescript",
         "sass",
-        "tailwindcss"
-      ],
-      "matchPackagePatterns": ["^@vitejs/", "^@tailwindcss/"]
+        "tailwindcss",
+        "@vitejs/{/,}**",
+        "@vitest/{/,}**",
+        "@tailwindcss/{/,}**"
+      ]
     },
     {
-      "description": "Group linters and formatters with automerge",
+      "description": "Linters and formatters — automerge",
       "groupName": "Linters and formatters",
-      "matchPackagePatterns": ["^eslint", "^prettier", "^stylelint"],
-      "matchPackageNames": ["typescript-eslint"],
+      "matchPackageNames": [
+        "typescript-eslint",
+        "/^eslint/",
+        "/^@eslint\\//",
+        "/^prettier/",
+        "/^stylelint/"
+      ],
       "automerge": true,
       "automergeType": "pr",
       "automergeStrategy": "squash",
       "platformAutomerge": true
     },
     {
-      "description": "Automerge type definitions (excluding React types handled by React group)",
+      "groupName": "@testing-library",
+      "matchPackageNames": ["@testing-library/{/,}**"]
+    },
+    {
+      "description": "Type definitions — automerge (React types handled separately by React group)",
       "groupName": "Type definitions",
-      "matchPackagePatterns": ["^@types/"],
-      "excludePackageNames": ["@types/react", "@types/react-dom"],
+      "matchPackageNames": [
+        "@types/{/,}**",
+        "!@types/react",
+        "!@types/react-dom"
+      ],
       "automerge": true,
       "automergeType": "pr",
       "automergeStrategy": "squash",
@@ -101,6 +111,12 @@
         "- [ ] Verify shortcuts work",
         "- [ ] Check DMG build succeeds"
       ]
+    },
+    {
+      "description": "Pin Node/npm engine bumps — they touch CI and the preinstall guard",
+      "matchDepTypes": ["engines"],
+      "matchPackageNames": ["node", "npm"],
+      "automerge": false
     }
   ]
 }
