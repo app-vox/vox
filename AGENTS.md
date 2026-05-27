@@ -122,6 +122,14 @@ All five commands must exit with code 0. Do not commit or claim success if any o
 
 Pipeline tests (`npm run test:pipeline`) are **not** part of the standard validation. They call external LLM APIs (with real cost) and require a separate config file. Never run them automatically — only on explicit user request. See `docs/pipeline-testing.md` for setup.
 
+## Dependencies
+
+When adding or removing a package, cross-check `renovate.json` so Renovate keeps PRs grouped per ecosystem instead of one PR per package:
+
+- If the package fits an existing group (e.g., a build-tool plugin in `Build tools`, a linter in `Linters and formatters`, a type-defs package in `Type definitions`, a new Electron tool in `Electron ecosystem`), no change is needed; the existing rule already covers it.
+- If the package is the first of an ecosystem with several related siblings, add a `packageRules` entry with a `groupName`.
+- Anything that calls `node-gyp` or loads a `.node` binary (current set: `whisper-node`, `koffi`, `uiohook-napi`) goes in the `Native modules` rule with `automerge: false` and the `prBodyNotes` test checklist, since it has to be re-tested on both architectures.
+
 ## Issue Tracking
 
 Bugs, feature requests, and technical work are tracked as GitHub Issues in **this repo**. When creating issues, always add them to the organization's public project board (the one linked to `app-vox/vox`).
