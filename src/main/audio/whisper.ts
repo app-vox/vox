@@ -23,7 +23,8 @@ export async function transcribe(
   modelPath: string,
   dictionary: string[] = [],
   speechLanguages: string[] = [],
-  temperature?: number
+  temperature?: number,
+  contextPrompt?: string
 ): Promise<TranscriptionResult> {
   const tempPath = path.join(os.tmpdir(), `vox-recording-${crypto.randomUUID()}.wav`);
 
@@ -33,7 +34,10 @@ export async function transcribe(
     fs.writeFileSync(tempPath, wavBuffer);
 
     const whisperArgs = buildWhisperArgs(speechLanguages);
-    const prompt = buildWhisperPrompt(dictionary, whisperArgs.promptPrefix);
+    let prompt = buildWhisperPrompt(dictionary, whisperArgs.promptPrefix);
+    if (contextPrompt) {
+      prompt = contextPrompt + " " + prompt;
+    }
     const language = whisperConfig.resolveLanguage(whisperArgs.language, speechLanguages);
 
     const stdout = await runWhisperCli(modelPath, tempPath, prompt, language, temperature);

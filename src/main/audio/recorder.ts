@@ -170,6 +170,22 @@ export class AudioRecorder {
     }
   }
 
+  async trimBuffer(keepSeconds: number): Promise<void> {
+    if (!this.recording || !this.win || this.win.isDestroyed()) return;
+    try {
+      await this.win.webContents.executeJavaScript(`
+        (() => {
+          if (!window._recChunks || !window._recCtx) return;
+          var maxSamples = ${Math.ceil(keepSeconds)} * window._recCtx.sampleRate;
+          var total = window._recChunks.reduce(function(s, c) { return s + c.length; }, 0);
+          while (total > maxSamples && window._recChunks.length > 1) {
+            total -= window._recChunks.shift().length;
+          }
+        })()
+      `);
+    } catch { /* ignore */ }
+  }
+
   async stop(): Promise<RecordingResult> {
     this.stopLevels();
     if (!this.recording || !this.win || this.win.isDestroyed()) {
