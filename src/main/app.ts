@@ -447,7 +447,10 @@ app.whenReady().then(async () => {
     app.dock?.hide();
   }
 
-  openHome(reloadConfig);
+  const startHidden = process.argv.includes("--hidden");
+  if (!startHidden) {
+    openHome(reloadConfig);
+  }
 }).catch((err) => {
   slog.error("Fatal error during app initialization", err);
 });
