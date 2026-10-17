@@ -56,7 +56,7 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.54.0",
     "vite-plugin-svgr": "^5.0.0",
-    "vitest": "^4.0.18",
+    "vitest": "^4.1.11",
     "zustand": "^5.0.11"
   },
   "dependencies": {
