@@ -31,6 +31,7 @@ vi.mock("../../../src/shared/icons", () => ({
   CopyIcon: (props: Record<string, unknown>) => <svg data-testid="copy-icon" {...props} />,
   SparkleIcon: (props: Record<string, unknown>) => <svg data-testid="sparkle-icon" {...props} />,
   PlayIcon: (props: Record<string, unknown>) => <svg data-testid="play-icon" {...props} />,
+  VolumeIcon: (props: Record<string, unknown>) => <svg data-testid="volume-icon" {...props} />,
 }));
 
 // Mock sub-components to isolate LlmPanel behavior
@@ -81,6 +82,19 @@ vi.mock("../../../src/renderer/components/ui/CustomSelect", () => ({
           </option>
         ))}
     </select>
+  ),
+}));
+
+// Mock SecretInput as a simple password input
+vi.mock("../../../src/renderer/components/ui/SecretInput", () => ({
+  SecretInput: ({ id, value, onChange, placeholder }: { id?: string; value: string; onChange: (v: string) => void; placeholder?: string }) => (
+    <input
+      data-testid={id ?? "secret-input"}
+      type="password"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+    />
   ),
 }));
 

@@ -504,13 +504,28 @@ function buildHudHtml(): string {
   .settings-btn.visible { transition-delay: 0ms; }
   .settings-btn:hover { background: var(--hud-hover-btn-accent); color: #fff; }
 
-  .transcriptions-btn { --tx: -26px; --ty: 20px; top: ${CIRCLE_SIZE / 2}px; left: 50%; margin-top: -9px; margin-left: -9px; transition-delay: 0ms; }
+  .transcriptions-btn { --tx: -26px; --ty: -24px; top: ${CIRCLE_SIZE / 2}px; left: 50%; margin-top: -9px; margin-left: -9px; transition-delay: 0ms; }
   .transcriptions-btn.visible { transition-delay: 60ms; }
   .transcriptions-btn:hover { background: var(--hud-hover-btn-accent); color: #fff; }
 
   .close-btn { --tx: 26px; --ty: 20px; top: ${CIRCLE_SIZE / 2}px; left: 50%; margin-top: -9px; margin-left: -9px; }
   .close-btn:hover { background: var(--hud-error-hover); }
   .close-btn.visible { transition-delay: 120ms; }
+
+  .hover-btn.tts-btn {
+    --tx: -26px; --ty: 20px;
+    top: ${CIRCLE_SIZE / 2}px; left: 50%;
+    margin-top: -9px; margin-left: -9px;
+    transition-delay: 120ms;
+  }
+  .hover-btn.tts-btn:not(.tts-available) { opacity: 0 !important; pointer-events: none !important; }
+  .hover-btn.tts-btn:hover { background: rgba(34, 197, 94, 0.8); }
+  .hover-btn.tts-btn.loading { pointer-events: none; }
+  .hover-btn.tts-btn.playing {
+    width: 24px; height: 24px;
+    margin-top: -12px; margin-left: -12px;
+  }
+  .hover-btn.tts-btn.playing:hover { background: var(--hud-error-hover); }
 
   /* Cancel button (below widget during idle+listening transition) */
   .circle-cancel {
@@ -798,6 +813,16 @@ function buildHudHtml(): string {
   <div class="hover-btn transcriptions-btn" id="transcriptions-btn" onclick="event.stopPropagation(); if (recentDragEnd || wasDragged) return; window.electronAPI?.hudOpenTranscriptions()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
   </div>
+  <div class="hover-btn tts-btn" id="tts-btn"
+    onclick="if(!window.__dragged){
+      var s=document.getElementById('tts-btn').dataset.state;
+      if(s==='playing') window.electronAPI?.hudStopTts();
+      else if(s!=='loading') window.electronAPI?.hudPlayTts();
+    }">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="white" id="tts-icon">
+      <polygon points="5,3 19,12 5,21"/>
+    </svg>
+  </div>
   <div class="hover-btn settings-btn" id="settings-btn" onclick="event.stopPropagation(); if (recentDragEnd || wasDragged) return; window.electronAPI?.hudOpenSettings()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </div>
@@ -944,15 +969,68 @@ document.body.addEventListener('mouseleave', function() {
   }
 });
 
+var buttonsVisible = false;
+var ttsPollingInterval = null;
+
+function startTtsPolling() {
+  if (ttsPollingInterval) return;
+  ttsPollingInterval = setInterval(function() {
+    if (!buttonsVisible) { stopTtsPolling(); return; }
+    if (window.electronAPI?.hudCheckSelectedText) {
+      window.electronAPI.hudCheckSelectedText().then(function(hasText) {
+        var ttsBtn = document.getElementById('tts-btn');
+        if (!ttsBtn) return;
+        var state = ttsBtn.dataset.state;
+        // Keep button visible if playing/loading, even without selected text
+        if (hasText || state === 'playing' || state === 'loading') {
+          ttsBtn.classList.add('tts-available');
+        } else {
+          ttsBtn.classList.remove('tts-available');
+        }
+      });
+    }
+  }, 1500);
+}
+
+function stopTtsPolling() {
+  if (ttsPollingInterval) {
+    clearInterval(ttsPollingInterval);
+    ttsPollingInterval = null;
+  }
+}
+
 function showSideButtons() {
+  buttonsVisible = true;
   document.getElementById('transcriptions-btn').classList.add('visible');
   document.getElementById('settings-btn').classList.add('visible');
   document.getElementById('close-btn').classList.add('visible');
+  if (window.electronAPI?.hudCheckSelectedText) {
+    window.electronAPI.hudCheckSelectedText().then(function(hasText) {
+      if (!buttonsVisible) return;
+      var ttsBtn = document.getElementById('tts-btn');
+      if (ttsBtn) {
+        var state = ttsBtn.dataset.state;
+        // Show button if has text OR if playing/loading
+        if (hasText || state === 'playing' || state === 'loading') {
+          ttsBtn.classList.add('tts-available');
+          ttsBtn.classList.add('visible');
+        }
+      }
+      startTtsPolling();
+    });
+  }
 }
 function hideSideButtons() {
+  buttonsVisible = false;
+  stopTtsPolling();
   document.getElementById('transcriptions-btn').classList.remove('visible');
   document.getElementById('settings-btn').classList.remove('visible');
   document.getElementById('close-btn').classList.remove('visible');
+  var ttsBtn = document.getElementById('tts-btn');
+  if (ttsBtn) {
+    ttsBtn.classList.remove('visible');
+    ttsBtn.classList.remove('tts-available');
+  }
 }
 function startHoverActionsTimer() {
   clearHoverActions();
@@ -1263,6 +1341,36 @@ function stopCountdown() {
 
 document.getElementById('undo-bar').addEventListener('mouseenter', function() { pauseCountdown(); });
 document.getElementById('undo-bar').addEventListener('mouseleave', function() { resumeCountdown(); });
+
+if (window.electronAPI?.onTtsStateChanged) {
+  window.electronAPI.onTtsStateChanged(function(state) {
+    var btn = document.getElementById('tts-btn');
+    var icon = document.getElementById('tts-icon');
+    if (!btn || !icon) return;
+
+    btn.dataset.state = state;
+    var isVisible = btn.classList.contains('visible');
+    var isTtsAvailable = btn.classList.contains('tts-available');
+    btn.className = 'hover-btn tts-btn' + (state !== 'idle' ? ' ' + state : '');
+
+    // Keep button visible and available during playing/loading
+    if (state === 'playing' || state === 'loading') {
+      btn.classList.add('tts-available');
+      if (buttonsVisible) btn.classList.add('visible');
+    } else {
+      if (isTtsAvailable) btn.classList.add('tts-available');
+    }
+    if (isVisible) btn.classList.add('visible');
+
+    if (state === 'loading') {
+      icon.innerHTML = '<circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" stroke-dasharray="31 31"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle>';
+    } else if (state === 'playing') {
+      icon.innerHTML = '<rect x="6" y="6" width="12" height="12" fill="white"/>';
+    } else {
+      icon.innerHTML = '<polygon points="5,3 19,12 5,21"/>';
+    }
+  });
+}
 
 function playAttention() {
   var overlay = document.getElementById('attention-overlay');
