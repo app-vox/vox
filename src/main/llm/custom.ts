@@ -37,7 +37,6 @@ export class CustomProvider extends BaseLlmProvider {
         { role: "system", content: this.config.customPrompt },
         { role: "user", content: rawText },
       ],
-      temperature: 0.1,
       max_tokens: 4096,
     };
 

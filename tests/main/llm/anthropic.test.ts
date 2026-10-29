@@ -110,7 +110,7 @@ describe("AnthropicProvider", () => {
     expect(body.messages[0].role).toBe("user");
     expect(body.messages[0].content).toBe(wrapTranscription("raw text"));
     expect(body.model).toBe("claude-sonnet-4-20250514");
-    expect(body.temperature).toBe(0.1);
+    expect(body).not.toHaveProperty("temperature");
     expect(body.max_tokens).toBe(4096);
   });
 
