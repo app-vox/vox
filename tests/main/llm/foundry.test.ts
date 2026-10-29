@@ -71,6 +71,7 @@ describe("FoundryProvider", () => {
     expect(body.system).toBe(LLM_SYSTEM_PROMPT);
     expect(body.messages[0].role).toBe("user");
     expect(body.messages[0].content).toBe(wrapTranscription("raw text"));
+    expect(body).not.toHaveProperty("temperature");
   });
 
   it("should call the correct endpoint URL", async () => {
