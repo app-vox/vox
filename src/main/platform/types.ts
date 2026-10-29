@@ -31,6 +31,11 @@ export interface WhisperModule {
   resolveLanguage(detected: string, speechLanguages: string[]): string;
 }
 
+export interface DefaultShortcuts {
+  hold: string;
+  toggle: string;
+}
+
 export interface DisplayModule {
   /** Extra BrowserWindow options for the main settings window (titlebar, frame, etc.) */
   homeWindowOptions: Partial<BrowserWindowConstructorOptions>;
@@ -40,4 +45,13 @@ export interface DisplayModule {
   appMenuPlatformItems: MenuItemConstructorOptions[];
   /** Whether the app should intercept before-quit to support hide-on-close */
   supportsHideOnClose: boolean;
+  /** Platform-specific default shortcut keys */
+  defaultShortcuts: DefaultShortcuts;
+  /** Whether setIgnoreMouseEvents(true, { forward: true }) works (macOS/Windows only) */
+  supportsMouseForward: boolean;
+}
+
+export interface AutostartModule {
+  setEnabled(enabled: boolean): void;
+  isEnabled(): boolean;
 }

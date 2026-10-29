@@ -285,6 +285,7 @@
   "notification.recordingFailed": "Recording failed: {error}",
   "notification.pasteFailed": "Auto-paste failed: {error}. Text is on your clipboard.",
   "notification.copiedToClipboard": "{text}...Copied — press Cmd+V to paste.",
+  "notification.clipboardReady": "Text copied to clipboard — press Ctrl+V to paste.",
   "notification.insertFailed": "No active field — go to transcriptions or",
   "notification.copyLatest": "copy latest",
   "hud.startRecording": "Start recording",

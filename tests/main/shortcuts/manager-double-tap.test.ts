@@ -108,6 +108,9 @@ vi.mock("../../../src/main/platform", () => ({
     requestMicrophoneAccess: vi.fn().mockResolvedValue(true),
     openAccessibilitySettings: vi.fn(),
   },
+  display: {
+    defaultShortcuts: { hold: "Alt+Space", toggle: "Alt+Shift+Space" },
+  },
   applyCase: vi.fn((text: string) => text),
   stripTrailingPeriod: vi.fn((text: string) => text),
 }));
