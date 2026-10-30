@@ -1,5 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "mode=full is required: the org-level Renovate app defaults to silent, which suppresses all PRs and the dashboard",
+  "mode": "full",
   "extends": [
     "config:best-practices",
     ":automergeStableNonMajor",
