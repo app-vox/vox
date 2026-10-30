@@ -117,6 +117,13 @@
       "matchDepTypes": ["engines"],
       "matchPackageNames": ["node", "npm"],
       "automerge": false
+    },
+    {
+      "description": "GitHub Actions digests have no release timestamp, so minimumReleaseAge keeps stability-days pending forever — skip it and require manual review instead",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["digest", "pinDigest"],
+      "minimumReleaseAge": null,
+      "automerge": false
     }
   ]
 }
