@@ -58,3 +58,11 @@ export function computeLlmConfigHash(config: VoxConfig): string {
   };
   return simpleHash(JSON.stringify(relevant));
 }
+
+export function computeTtsConfigHash(config: VoxConfig): string {
+  const relevant = {
+    apiKey: config.elevenLabsApiKey,
+    voiceId: config.elevenLabsVoiceId,
+  };
+  return simpleHash(JSON.stringify(relevant));
+}

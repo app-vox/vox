@@ -292,6 +292,63 @@ export class AudioRecorder {
     `, true);
   }
 
+  async playMp3Buffer(mp3Buffer: ArrayBuffer): Promise<void> {
+    if (mp3Buffer.byteLength === 0) return;
+    const win = await this.ensureWindow();
+
+    const base64 = Buffer.from(mp3Buffer).toString("base64");
+
+    await win.webContents.executeJavaScript(`
+      (async () => {
+        const base64 = "${base64}";
+        const binary = atob(base64);
+        const len = binary.length;
+        const buffer = new ArrayBuffer(len);
+        const view = new Uint8Array(buffer);
+        for (let i = 0; i < len; i++) view[i] = binary.charCodeAt(i);
+
+        const ctx = new AudioContext({ sampleRate: 44100 });
+        await ctx.resume();
+
+        const audioBuffer = await ctx.decodeAudioData(buffer);
+        const source = ctx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(ctx.destination);
+        source.start();
+
+        window._ttsSource = source;
+        window._ttsCtx = ctx;
+
+        return new Promise(resolve => {
+          source.onended = () => {
+            ctx.close();
+            window._ttsSource = null;
+            window._ttsCtx = null;
+            resolve();
+          };
+        });
+      })()
+    `, true);
+  }
+
+  async stopMp3Playback(): Promise<void> {
+    const win = this.win;
+    if (!win) return;
+
+    await win.webContents.executeJavaScript(`
+      (async () => {
+        if (window._ttsSource) {
+          try { window._ttsSource.stop(); } catch {}
+          window._ttsSource = null;
+        }
+        if (window._ttsCtx) {
+          try { window._ttsCtx.close(); } catch {}
+          window._ttsCtx = null;
+        }
+      })()
+    `, true);
+  }
+
   private stopLevels(): void {
     if (this.levelsInterval) {
       clearInterval(this.levelsInterval);
