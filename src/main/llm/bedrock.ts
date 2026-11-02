@@ -57,15 +57,11 @@ export class BedrockProvider extends BaseLlmProvider {
         },
       ],
       inferenceConfig: {
-        temperature: 0.1,
         maxTokens: 4096,
       },
     });
 
-    slog.debug("Bedrock request", {
-      modelId: this.modelId,
-      temperature: 0.1,
-    });
+    slog.debug("Bedrock request", { modelId: this.modelId });
 
     const response: ConverseCommandOutput = await this.client.send(command);
 

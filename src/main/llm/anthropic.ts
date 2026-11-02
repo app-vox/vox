@@ -31,7 +31,6 @@ export class AnthropicProvider extends BaseLlmProvider {
       messages: [
         { role: "user", content: rawText },
       ],
-      temperature: 0.1,
       max_tokens: 4096,
     };
 
