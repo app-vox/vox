@@ -159,12 +159,8 @@
   white-space: nowrap;
   flex-shrink: 0;
   letter-spacing: 0.02em;
-  cursor: pointer;
-  transition: background 150ms ease;
-
-  &:hover {
-    background: var(--color-error-hover);
-  }
+  cursor: default;
+  pointer-events: none;
 }
 
 .devHidden {
