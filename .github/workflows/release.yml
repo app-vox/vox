@@ -197,9 +197,48 @@ jobs:
             dist/latest.yml
           if-no-files-found: error
 
+  build-linux:
+    name: Build (Linux)
+    needs: version
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: 25
+          cache: npm
+
+      - name: Apply version
+        run: npm version "${{ needs.version.outputs.version }}" --no-git-tag-version
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Linux icon from logo
+        run: |
+          sudo apt-get install -y imagemagick
+          convert resources/logo.png -resize 1024x1024 build/icon.png
+
+      - name: Build app
+        run: npm run build
+
+      - name: Package (AppImage x64)
+        run: npx electron-builder --linux AppImage --x64 --publish never
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+        with:
+          name: vox-${{ needs.version.outputs.version }}-linux-x64
+          path: |
+            dist/*.AppImage
+            dist/latest-linux.yml
+          if-no-files-found: error
+
   release:
     name: Publish Release
-    needs: [version, build-mac, build-windows]
+    needs: [version, build-mac, build-windows, build-linux]
     if: ${{ !inputs.dry_run }}
     runs-on: ubuntu-latest
 
@@ -234,7 +273,9 @@ jobs:
           # Move all build artifacts to release directory
           find artifacts -type f \( \
             -name "*.dmg" -o -name "*.zip" -o -name "*.exe" -o \
-            -name "*.blockmap" -o -name "latest-mac.yml" -o -name "latest.yml" \
+            -name "*.AppImage" -o \
+            -name "*.blockmap" -o -name "latest-mac.yml" -o -name "latest.yml" -o \
+            -name "latest-linux.yml" \
           \) -exec mv {} release/ \;
 
           # Create stable-named copies for releases/latest/download URLs
@@ -251,6 +292,11 @@ jobs:
           # to match the naming convention used by electron-builder on macOS
           cp "$EXE" "release/Vox-${VERSION}-x64.exe"
           cp "$BLOCKMAP" "release/Vox-${VERSION}-x64.exe.blockmap"
+
+          APPIMAGE=$(find release -name "*.AppImage" | head -1)
+          if [ -n "$APPIMAGE" ]; then
+            cp "$APPIMAGE" "release/Vox-linux-x64.AppImage"
+          fi
 
           ls -lh release/
 
@@ -290,6 +336,8 @@ jobs:
             release/Vox-${VERSION}-x64.exe \
             release/Vox-${VERSION}-x64.exe.blockmap \
             release/latest.yml \
-            release/Vox-win-x64.exe
+            release/Vox-win-x64.exe \
+            release/Vox-linux-x64.AppImage \
+            release/latest-linux.yml
 
           echo "Release created: $TAG"
