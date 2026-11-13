@@ -31,7 +31,9 @@ export interface PipelineDeps {
     modelPath: string,
     dictionary?: string[],
     speechLanguages?: string[],
-    temperature?: number
+    temperature?: number,
+    /** Aborting it stops the transcription; the returned promise then rejects. */
+    signal?: AbortSignal
   ): Promise<TranscriptionResult>;
   /** Reads the current config when an enhancement starts, so a prompt switch applies to the next one. */
   loadConfig(): VoxConfig;
@@ -203,6 +205,8 @@ export class Pipeline {
   private cancelingStage: PipelineStage | "listening" | null = null;
   private heldRecording: RecordingResult | null = null;
   private heldTranscription: string | null = null;
+  /** Stops the live-preview transcription in flight, so it does not share the GPU with the final one. */
+  private previewAbort: AbortController | null = null;
 
   private get whisperModelName(): string {
     return this.deps.modelPath.split("/").pop()?.replace("ggml-", "").replace(".bin", "") ?? "unknown";
@@ -229,19 +233,23 @@ export class Pipeline {
   }
 
   async snapshotAndTranscribe(): Promise<string | null> {
-    // Full buffer — gives Whisper all context for the most accurate preview
-    const snapshot = await this.deps.recorder.snapshot?.();
-    if (!snapshot || snapshot.audioBuffer.length === 0) return null;
-    // Require at least 0.5s of audio for meaningful transcription
-    const durationMs = (snapshot.audioBuffer.length / snapshot.sampleRate) * 1000;
-    if (durationMs < 500) return null;
+    const preview = new AbortController();
+    this.previewAbort = preview;
     try {
+      // Full buffer — gives Whisper all context for the most accurate preview
+      const snapshot = await this.deps.recorder.snapshot?.();
+      if (!snapshot || snapshot.audioBuffer.length === 0) return null;
+      // Require at least 0.5s of audio for meaningful transcription
+      const durationMs = (snapshot.audioBuffer.length / snapshot.sampleRate) * 1000;
+      if (durationMs < 500) return null;
       const result = await this.deps.transcribe(
         snapshot.audioBuffer,
         snapshot.sampleRate,
         this.deps.modelPath,
         this.deps.dictionary,
         this.deps.speechLanguages,
+        undefined,
+        preview.signal,
       );
       const text = result.text
         .replace(/\[[^\]]*\]/g, "")
@@ -253,6 +261,8 @@ export class Pipeline {
       return text;
     } catch {
       return null;
+    } finally {
+      if (this.previewAbort === preview) this.previewAbort = null;
     }
   }
 
@@ -271,6 +281,7 @@ export class Pipeline {
 
   async stopAndProcess(): Promise<string> {
     const gen = this.generation;
+    this.previewAbort?.abort();
     const recording = await this.deps.recorder.stop();
     this.heldRecording = recording;
 
@@ -288,6 +299,7 @@ export class Pipeline {
    */
   async stopAndProcessWithHint(hintText: string): Promise<string> {
     const gen = this.generation;
+    this.previewAbort?.abort();
     const recording = await this.deps.recorder.stop();
     this.heldRecording = recording;
 

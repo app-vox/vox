@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Pipeline, type PipelineDeps } from "../../src/main/pipeline";
+import { type RecordingResult } from "../../src/main/audio/recorder";
 import { type LlmProvider } from "../../src/main/llm/provider";
 import { createLlmProvider } from "../../src/main/llm/factory";
 import { type VoxConfig, createDefaultConfig } from "../../src/shared/config";
@@ -470,6 +471,45 @@ describe("Pipeline", () => {
     await pipeline.stopAndProcess();
 
     expect(onTranscriptionComplete).not.toHaveBeenCalled();
+  });
+
+  it("stops the in-flight preview transcription when recording stops", async () => {
+    const oneSecond: RecordingResult = { audioBuffer: new Float32Array(16000), sampleRate: 16000 };
+    const recorder: PipelineDeps["recorder"] = {
+      start: async () => {},
+      stop: async () => oneSecond,
+      cancel: async () => {},
+      snapshot: async () => oneSecond,
+    };
+    let previewSignal: AbortSignal | undefined;
+    let previewCalls = 0;
+    let previewAbortedWhenFinalStarted: boolean | undefined;
+    // The preview runs until its signal aborts; the final transcription resolves at once.
+    const transcribe: PipelineDeps["transcribe"] = (_audio, _rate, _model, _dict, _langs, _temp, signal) => {
+      if (previewCalls === 0) {
+        previewCalls++;
+        previewSignal = signal;
+        return new Promise((_resolve, reject) => {
+          signal?.addEventListener("abort", () => reject(signal.reason));
+        });
+      }
+      previewAbortedWhenFinalStarted = previewSignal?.aborted;
+      return Promise.resolve({ text: "final transcription" });
+    };
+    const pipeline = new Pipeline({
+      recorder,
+      transcribe,
+      ...enhancingWith(mockProvider),
+      modelPath: "/models/ggml-small.bin",
+    });
+
+    await pipeline.startRecording();
+    const preview = pipeline.snapshotAndTranscribe();
+    await vi.waitFor(() => expect(previewCalls).toBe(1));
+    await pipeline.stopAndProcess();
+
+    expect(previewAbortedWhenFinalStarted).toBe(true);
+    await expect(preview).resolves.toBeNull();
   });
 
   describe("active prompt", () => {

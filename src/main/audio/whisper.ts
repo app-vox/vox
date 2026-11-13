@@ -23,7 +23,8 @@ export async function transcribe(
   modelPath: string,
   dictionary: string[] = [],
   speechLanguages: string[] = [],
-  temperature?: number
+  temperature?: number,
+  signal?: AbortSignal
 ): Promise<TranscriptionResult> {
   const tempPath = path.join(os.tmpdir(), `vox-recording-${crypto.randomUUID()}.wav`);
 
@@ -37,7 +38,7 @@ export async function transcribe(
     const language = whisperConfig.resolveLanguage(whisperArgs.language, speechLanguages);
 
     const timeoutMs = whisperTimeoutMs(audioBuffer.length / sampleRate);
-    const stdout = await runWhisperCli(modelPath, tempPath, prompt, language, temperature, timeoutMs);
+    const stdout = await runWhisperCli(modelPath, tempPath, prompt, language, temperature, timeoutMs, signal);
     const text = parseWhisperOutput(stdout);
 
     return { text };
@@ -83,14 +84,15 @@ function runWhisperCli(
   prompt: string,
   language: string,
   temperature: number | undefined,
-  timeoutMs: number
+  timeoutMs: number,
+  signal: AbortSignal | undefined
 ): Promise<string> {
   const args = buildWhisperCliArgs(modelPath, filePath, prompt, language, temperature);
   return new Promise((resolve, reject) => {
     execFile(
       WHISPER_BIN,
       args,
-      { timeout: timeoutMs },
+      { timeout: timeoutMs, signal },
       (error, stdout, stderr) => {
         if (error) {
           reject(new Error(`Whisper failed: ${stderr || error.message}`));
