@@ -23,6 +23,7 @@ function getProviderFields(llm: LlmConfig): Record<string, string> {
       return {
         anthropicApiKey: llm.anthropicApiKey,
         anthropicModel: llm.anthropicModel,
+        anthropicEndpoint: llm.anthropicEndpoint,
       };
     case "custom":
       return {

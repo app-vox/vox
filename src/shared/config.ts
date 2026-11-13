@@ -46,6 +46,7 @@ export interface AnthropicLlmConfig {
   provider: "anthropic";
   anthropicApiKey: string;
   anthropicModel: string;
+  anthropicEndpoint: string;
 }
 
 export interface CustomLlmConfig {
@@ -215,6 +216,7 @@ export function createDefaultLlmFlat(): LlmConfigFlat {
     litellmEndpoint: "http://localhost:4000",
     anthropicApiKey: "",
     anthropicModel: "claude-sonnet-4-20250514",
+    anthropicEndpoint: "https://api.anthropic.com",
     customEndpoint: "",
     customToken: "",
     customTokenAttr: "Authorization",
@@ -267,6 +269,7 @@ export function narrowLlmConfig(flat: LlmConfigFlat): LlmConfig {
         provider: "anthropic",
         anthropicApiKey: flat.anthropicApiKey,
         anthropicModel: flat.anthropicModel,
+        anthropicEndpoint: flat.anthropicEndpoint,
       };
     case "custom":
       return {

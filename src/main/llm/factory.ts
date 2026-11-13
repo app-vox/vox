@@ -59,6 +59,7 @@ export function createLlmProvider(config: VoxConfig, options?: CreateLlmProvider
       return new AnthropicProvider({
         apiKey: config.llm.anthropicApiKey,
         model: config.llm.anthropicModel,
+        endpoint: config.llm.anthropicEndpoint,
         customPrompt: prompt,
         hasCustomPrompt,
       });

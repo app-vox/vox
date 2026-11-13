@@ -166,6 +166,8 @@
   "llm.anthropic.apiKey": "Klucz API",
   "llm.anthropic.apiKeyPlaceholder": "Wprowadź klucz API Anthropic",
   "llm.anthropic.model": "Model",
+  "llm.anthropic.endpoint": "Endpoint",
+  "llm.anthropic.endpointHint": "Bazowy adres URL API zgodnego z Anthropic. Zmień tylko w przypadku użycia proxy lub bramy.",
   "llm.custom.label": "Niestandardowy",
   "llm.custom.endpoint": "Endpoint",
   "llm.custom.endpointHint": "Pełny URL endpointu API (np. https://moje-api.przyklad.pl/v1/chat/completions).",

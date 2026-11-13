@@ -35,7 +35,7 @@ export function isProviderConfigured(provider: LlmProviderType, llm: LlmConfig):
     case "litellm":
       return !!(llm.openaiEndpoint && llm.openaiModel);
     case "anthropic":
-      return !!(llm.anthropicApiKey && llm.anthropicModel);
+      return !!(llm.anthropicApiKey && llm.anthropicModel && llm.anthropicEndpoint);
     case "custom":
       return !!(llm.customEndpoint && llm.customToken && llm.customTokenAttr);
     default:

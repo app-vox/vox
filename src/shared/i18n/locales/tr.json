@@ -166,6 +166,8 @@
   "llm.anthropic.apiKey": "API Key",
   "llm.anthropic.apiKeyPlaceholder": "Anthropic API key'inizi girin",
   "llm.anthropic.model": "Model",
+  "llm.anthropic.endpoint": "Endpoint",
+  "llm.anthropic.endpointHint": "Anthropic uyumlu API'nin temel URL'si. Yalnızca proxy veya ağ geçidi kullanıyorsanız değiştirin.",
   "llm.custom.label": "Özel",
   "llm.custom.endpoint": "Endpoint",
   "llm.custom.endpointHint": "API endpoint'inizin tam URL'si (ör: https://api.ornek.com/v1/chat/completions).",
