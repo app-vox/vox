@@ -8,8 +8,8 @@ export const threads: WhisperModule["threads"] = 4;
 // Metal acceleration keeps inference fast — 30s is plenty.
 export const timeout: WhisperModule["timeout"] = 30000;
 
-// Measured: large model ≈ 0.11 s of inference per audio second; allow 2x headroom.
-export const timeoutPerAudioSecond: WhisperModule["timeoutPerAudioSecond"] = 250;
+// App logs: large model ran 0.06–0.23 s of inference per audio second; allow ~2x the worst case.
+export const timeoutPerAudioSecond: WhisperModule["timeoutPerAudioSecond"] = 500;
 
 // On macOS with Metal GPU, auto-detection overhead is negligible
 // so we always use the detected language for accuracy.
