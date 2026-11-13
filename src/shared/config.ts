@@ -100,6 +100,13 @@ export interface ShortcutsConfig {
   toggle: string;
 }
 
+export interface Prompt {
+  id: string;
+  name: string;
+  icon: string;
+  instructions: string;
+}
+
 export interface VoxConfig {
   llm: LlmConfig;
   whisper: WhisperConfig;
@@ -108,7 +115,8 @@ export interface VoxConfig {
   enableLlmEnhancement: boolean;
   llmConnectionTested: boolean;
   llmConfigHash: string;
-  customPrompt: string;
+  prompts: Prompt[];
+  activePromptId: string | null;
   launchAtLogin: boolean;
   showInDock: boolean;
   showInTray: boolean;
@@ -159,7 +167,8 @@ export function createDefaultConfig(): VoxConfig {
     enableLlmEnhancement: false,
     llmConnectionTested: false,
     llmConfigHash: "",
-    customPrompt: "",
+    prompts: [],
+    activePromptId: null,
     launchAtLogin: false,
     showInDock: true,
     showInTray: true,
