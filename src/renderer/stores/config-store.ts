@@ -22,6 +22,8 @@ interface ConfigState {
   _hasUserNavigated: boolean;
   setActiveTab: (tab: string) => void;
   setLlmSubTab: (tab: LlmSubTab) => void;
+  /** Shows the AI Enhancement tab, on the Custom Prompt sub-tab when AI enhancement is on. */
+  openPromptSettings: () => Promise<void>;
   loadConfig: () => Promise<void>;
   updateConfig: (partial: Partial<VoxConfig>) => void;
   saveConfig: (showToast?: boolean) => Promise<void>;
@@ -47,6 +49,13 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
   },
 
   setLlmSubTab: (tab) => set({ llmSubTab: tab }),
+
+  openPromptSettings: async () => {
+    get().setActiveTab(Tabs.AI_ENHANCEMENT);
+    // A window that has just opened gets this navigation before its first config load.
+    const config = get().config ?? (await window.voxApi.config.load());
+    if (config.enableLlmEnhancement) set({ llmSubTab: "prompt" });
+  },
 
   loadConfig: async () => {
     const config = await window.voxApi.config.load();

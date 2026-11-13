@@ -24,6 +24,7 @@ import { type AudioCueType, type VoxConfig } from "../shared/config";
 import { generateCueSamples, isWavCue, getWavFilename, parseWavSamples } from "../shared/audio-cue";
 import { t, setLanguage, resolveSystemLanguage } from "../shared/i18n";
 import { getLlmModelName } from "../shared/llm-utils";
+import { Tabs } from "../shared/tabs";
 import { AnalyticsService } from "./analytics/service";
 import { setupAnalyticsErrorCapture } from "./logger";
 import log from "./logger";
@@ -209,6 +210,8 @@ function reloadConfig(): void {
         onStartListening: () => shortcutManager?.triggerToggle(),
         onStopListening: () => shortcutManager?.stopAndProcess(),
         onCancelListening: () => shortcutManager?.cancelRecording(),
+        onSelectPrompt: (id) => promptSwitch.setActivePrompt(id),
+        onOpenPromptSettings: () => openHome(reloadConfig, Tabs.PROMPT_SETTINGS),
         onToggleHud: () => {
           const cfg = configManager.load();
           cfg.showHud = !cfg.showHud;
@@ -383,6 +386,8 @@ app.whenReady().then(async () => {
       onStartListening: () => shortcutManager?.triggerToggle(),
       onStopListening: () => shortcutManager?.stopAndProcess(),
       onCancelListening: () => shortcutManager?.cancelRecording(),
+      onSelectPrompt: (id) => promptSwitch.setActivePrompt(id),
+      onOpenPromptSettings: () => openHome(reloadConfig, Tabs.PROMPT_SETTINGS),
       onToggleHud: () => {
         const cfg = configManager.load();
         cfg.showHud = !cfg.showHud;

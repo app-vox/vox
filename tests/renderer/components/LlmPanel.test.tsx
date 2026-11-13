@@ -9,6 +9,7 @@ import { createDefaultConfig } from "../../../src/shared/config";
 import { installVoxApiMock, resetStores, renderWithI18n } from "../helpers/setup";
 import type { VoxAPI } from "../../../src/preload/index";
 import { PROMPT_TEMPLATES } from "../../../src/shared/prompt-templates";
+import { Tabs } from "../../../src/shared/tabs";
 
 // Mock SCSS modules
 vi.mock("../../../src/renderer/components/shared/card.module.scss", () => ({
@@ -494,5 +495,19 @@ describe("LlmPanel prompt list", () => {
 
     expect(screen.getByTestId("status-box")).toHaveAttribute("data-type", "error");
     expect(screen.getByTestId("status-box")).toHaveTextContent("Connection refused");
+  });
+
+  it("a prompt-settings navigation opens the Custom Prompt sub-tab", async () => {
+    const LlmPanel = await loadLlmPanel();
+    vi.mocked(voxApi.config.load).mockResolvedValue(promptConfig());
+
+    // The settings window was closed: the navigation reaches a window that has not loaded the config yet.
+    await act(() => useConfigStore.getState().openPromptSettings());
+    await act(() => useConfigStore.getState().loadConfig());
+    renderWithI18n(<SettingsWindow Panel={LlmPanel} />);
+
+    expect(useConfigStore.getState().activeTab).toBe(Tabs.AI_ENHANCEMENT);
+    expect(screen.getByRole("button", { name: "Custom Prompt" })).toHaveClass("mock-form-active");
+    expect(promptList().getByRole("button", { name: /Cleanup/ })).toBeInTheDocument();
   });
 });
