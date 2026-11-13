@@ -305,7 +305,7 @@
   "notification.shortcutReset.body": "Eine ungültige Tastenkombination wurde erkannt. Die Tastenkombinationen wurden auf die Standardwerte zurückgesetzt. Sie können sie in den Einstellungen neu konfigurieren.",
   "notification.promptSwitched.title": "Vox - Prompt gewechselt",
   "notification.promptNotReady.title": "Vox - KI-Verbesserung nicht bereit",
-  "notification.promptNotReady.body": "Die KI-Verbesserung ist nicht bereit, daher wurde der Prompt nicht gewechselt. Prüfe Einstellungen → KI-Verbesserung.",
+  "notification.promptNotReady.body": "Die KI-Verbesserung ist nicht bereit, daher wurde der Prompt nicht gewechselt. Prüfen Sie Einstellungen → KI-Verbesserung.",
   "notification.nextPromptCleared.title": "Vox - Tastenkombination entfernt",
   "notification.nextPromptCleared.body": "Die Tastenkombination „Nächster Prompt“ konnte nicht registriert werden und wurde entfernt. Sie können in den Einstellungen eine andere festlegen.",
   "notification.recordingFailed": "Aufnahme fehlgeschlagen: {error}",
