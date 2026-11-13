@@ -4,8 +4,8 @@ import { type VoxConfig } from "../shared/config";
 import { updateTrayConfig } from "./tray";
 
 /**
- * The single write path for the active prompt and for marking the AI connection untested.
- * Every write saves, refreshes the tray and tells open windows to reload the config.
+ * The single write path for the active prompt and for marking the AI connection untested,
+ * and the one save-and-announce step main uses after it changes the config itself.
  */
 export class PromptSwitch {
   constructor(private readonly configManager: ConfigManager) {}
@@ -30,7 +30,8 @@ export class PromptSwitch {
     this.configManager.save({ ...config, activePromptId: this.configManager.load().activePromptId });
   }
 
-  private saveAndAnnounce(config: VoxConfig): void {
+  /** Saves the config, refreshes the tray and tells open windows to reload the config. */
+  saveAndAnnounce(config: VoxConfig): void {
     this.configManager.save(config);
     updateTrayConfig(config);
     for (const win of BrowserWindow.getAllWindows()) {

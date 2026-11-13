@@ -322,6 +322,8 @@ app.whenReady().then(async () => {
     analytics,
     openSettings: (tab) => openHome(reloadConfig, tab),
     hasModel: () => new SetupChecker(modelManager).hasAnyModel(),
+    setActivePrompt: (id) => promptSwitch.setActivePrompt(id),
+    saveAndAnnounce: (config) => promptSwitch.saveAndAnnounce(config),
   });
   shortcutManager.start();
 

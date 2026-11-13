@@ -1,12 +1,12 @@
 import { app, Tray, Menu, nativeImage, shell } from "electron";
 import { existsSync } from "fs";
 import { getResourcePath } from "./resources";
-import { type Prompt, type VoxConfig } from "../shared/config";
+import { type VoxConfig } from "../shared/config";
 import { getUpdateState, quitAndInstall } from "./updater";
 import { t } from "../shared/i18n";
 import { getLlmModelName } from "../shared/llm-utils";
 import { isEnhancementReady } from "../shared/llm-config-hash";
-import { findActivePrompt } from "../shared/prompts";
+import { findActivePrompt, promptLabel } from "../shared/prompts";
 import log from "./logger";
 
 const slog = log.scope("tray");
@@ -85,10 +85,6 @@ function simplifyModelName(fullName: string): string {
     .replace(/-\d{4}-\d{2}-\d{2}$/, ""); // Remove trailing date YYYY-MM-DD
 
   return simplified;
-}
-
-function promptLabel(prompt: Prompt): string {
-  return prompt.icon ? `${prompt.icon} ${prompt.name}` : prompt.name;
 }
 
 /** The Prompt submenu, disabled while the enhancement is not ready, and the always-enabled Prompt Settings item. */

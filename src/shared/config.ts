@@ -98,6 +98,8 @@ export interface ShortcutsConfig {
   mode: ShortcutMode;
   hold: string;
   toggle: string;
+  /** Accelerator for the Next prompt shortcut; "" when unset. */
+  nextPrompt: string;
 }
 
 export interface Prompt {
@@ -162,6 +164,7 @@ export function createDefaultConfig(): VoxConfig {
       mode: "toggle",
       hold: "Alt+Space",
       toggle: "Alt+Shift+Space",
+      nextPrompt: "",
     },
     theme: "system",
     enableLlmEnhancement: false,

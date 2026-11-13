@@ -214,6 +214,8 @@ describe("ShortcutManager — double-tap integration", () => {
       configManager: mockConfigManager,
       getPipeline: () => mockPipeline,
       hasModel: () => true,
+      setActivePrompt: vi.fn(),
+      saveAndAnnounce: (saved: unknown) => mockConfigManager.save(saved),
     } as unknown as ShortcutManagerDeps);
 
     manager.start();
