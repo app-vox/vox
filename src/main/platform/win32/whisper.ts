@@ -10,6 +10,9 @@ export const threads: WhisperModule["threads"] = Math.max(4, Math.floor(os.cpus(
 // CPU-only inference is much slower — allow up to 120s.
 export const timeout: WhisperModule["timeout"] = 120000;
 
+// CPU inference can approach real time; grant 1 s per audio second on top of the base.
+export const timeoutPerAudioSecond: WhisperModule["timeoutPerAudioSecond"] = 1000;
+
 // On CPU-only platforms, language auto-detection runs the encoder twice
 // (once to detect, once to transcribe), doubling latency. Use the first
 // configured language instead; the LLM correction layer handles any
