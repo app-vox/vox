@@ -474,9 +474,11 @@ export class Pipeline {
 
     if (garbageReason) {
       if (garbageReason === "loop") {
+        const retryStartTime = performance.now();
         const retried = await this.retryWithTemperature(recording, gen);
         if (retried !== null) {
-          return this.processFromTranscription(retried, recording, gen, enhancement, whisperTimeMs);
+          const allPassesMs = Number((whisperTimeMs + performance.now() - retryStartTime).toFixed(1));
+          return this.processFromTranscription(retried, recording, gen, enhancement, allPassesMs, processingStartTime);
         }
       }
 
@@ -502,7 +504,7 @@ export class Pipeline {
       throw new CanceledError();
     }
 
-    return this.processFromTranscription(rawText, recording, gen, enhancement, whisperTimeMs);
+    return this.processFromTranscription(rawText, recording, gen, enhancement, whisperTimeMs, processingStartTime);
   }
 
   /** Snapshots the config once, so the provider and the analytics flag agree on the active prompt. */
@@ -564,9 +566,9 @@ export class Pipeline {
     recording: RecordingResult,
     gen: number,
     enhancement: Enhancement,
-    whisperTimeMs = 0
+    whisperTimeMs = 0,
+    processingStartTime = performance.now()
   ): Promise<string> {
-    const processingStartTime = performance.now();
     const audioDurationMs = Math.round((recording.audioBuffer.length / recording.sampleRate) * 1000);
 
     if (this.deps.dictionary && this.deps.dictionary.length > 0) {

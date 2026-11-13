@@ -1,10 +1,11 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, onTestFinished } from "vitest";
 import { Pipeline, type PipelineDeps } from "../../src/main/pipeline";
 import { type RecordingResult } from "../../src/main/audio/recorder";
 import { type LlmProvider } from "../../src/main/llm/provider";
 import { createLlmProvider } from "../../src/main/llm/factory";
 import { type VoxConfig, createDefaultConfig } from "../../src/shared/config";
 import { computeLlmConfigHash } from "../../src/shared/llm-config-hash";
+import log from "electron-log/main";
 
 /** Pipeline deps whose enhancement always uses `provider`, whatever the config says. */
 function enhancingWith(provider: LlmProvider): Pick<PipelineDeps, "loadConfig" | "createLlmProvider"> {
@@ -510,6 +511,42 @@ describe("Pipeline", () => {
 
     expect(previewAbortedWhenFinalStarted).toBe(true);
     await expect(preview).resolves.toBeNull();
+  });
+
+  it("timing record counts loop retries in whisper time", async () => {
+    // Each peer moves the fake clock by the time its step takes, so the record is exact.
+    vi.useFakeTimers({ toFake: ["performance"] });
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
+    const loopText = "Please subscribe to our channel. ".repeat(10).trim();
+    const attemptTexts = [loopText, "I need to schedule a meeting for tomorrow"];
+    let attempts = 0;
+    const transcribe: PipelineDeps["transcribe"] = async () => {
+      vi.advanceTimersByTime(1000);
+      return { text: attemptTexts[attempts++] };
+    };
+    const slowProvider: LlmProvider = {
+      correct: async (text) => {
+        vi.advanceTimersByTime(500);
+        return text;
+      },
+    };
+    const pipeline = new Pipeline({
+      recorder: mockRecorder,
+      transcribe,
+      ...enhancingWith(slowProvider),
+      modelPath: "/models/ggml-small.bin",
+    });
+
+    await pipeline.startRecording();
+    await pipeline.stopAndProcess();
+
+    const timing = vi.mocked(log.scope("Pipeline").info).mock.calls
+      .find(([message]) => message === "Pipeline timing")?.[1];
+    expect(attempts).toBe(2);
+    expect(timing).toMatchObject({ whisperMs: 2000, llmMs: 500 });
+    expect(timing.totalMs).toBeGreaterThanOrEqual(timing.whisperMs + timing.llmMs);
   });
 
   describe("active prompt", () => {
