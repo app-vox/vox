@@ -2,7 +2,7 @@ import log from "electron-log/main";
 import type { LlmProvider } from "./provider";
 
 export function wrapTranscription(rawText: string): string {
-  return `Clean the following raw speech transcription. Return ONLY the cleaned text, nothing else.\n\n<transcription>\n${rawText}\n</transcription>`;
+  return `Process the following raw speech transcription according to your instructions. Return ONLY the resulting text, nothing else.\n\n<transcription>\n${rawText}\n</transcription>`;
 }
 
 export abstract class BaseLlmProvider implements LlmProvider {

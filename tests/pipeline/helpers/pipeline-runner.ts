@@ -64,7 +64,7 @@ function buildLlmConfig(testConfig: PipelineTestConfig): LlmConfig {
         provider: "anthropic",
         anthropicApiKey: testConfig.llm.apiKey,
         anthropicModel: testConfig.llm.model,
-        anthropicEndpoint: "https://api.anthropic.com",
+        anthropicEndpoint: testConfig.llm.baseUrl ?? "https://api.anthropic.com",
       };
 
     case "openai":
