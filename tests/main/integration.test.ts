@@ -56,7 +56,8 @@ describe("Whisper-only mode integration", () => {
     const pipeline = new Pipeline({
       recorder: mockRecorder,
       transcribe: mockTranscribe,
-      llmProvider: provider,
+      loadConfig: () => config,
+      createLlmProvider: () => provider,
       modelPath: "/fake/path",
       onStage,
     });
@@ -98,7 +99,8 @@ describe("Whisper-only mode integration", () => {
     const pipeline = new Pipeline({
       recorder: mockRecorder,
       transcribe: mockTranscribe,
-      llmProvider: provider,
+      loadConfig: () => config,
+      createLlmProvider: () => provider,
       modelPath: "/fake/path",
       onStage,
     });
@@ -134,7 +136,8 @@ describe("Whisper-only mode integration", () => {
     const pipeline = new Pipeline({
       recorder: mockRecorder,
       transcribe: mockTranscribe,
-      llmProvider: provider,
+      loadConfig: () => config,
+      createLlmProvider: () => provider,
       modelPath: "/fake/path",
     });
 
@@ -164,7 +167,8 @@ describe("Whisper-only mode integration", () => {
     const pipeline = new Pipeline({
       recorder: mockRecorder,
       transcribe: mockTranscribe,
-      llmProvider: provider,
+      loadConfig: () => config,
+      createLlmProvider: () => provider,
       modelPath: "/fake/path",
     });
 
@@ -198,7 +202,8 @@ describe("Whisper-only mode integration", () => {
     const pipeline = new Pipeline({
       recorder: mockRecorder,
       transcribe: mockTranscribe,
-      llmProvider: provider,
+      loadConfig: () => config,
+      createLlmProvider: () => provider,
       modelPath: "/fake/path",
     });
 
