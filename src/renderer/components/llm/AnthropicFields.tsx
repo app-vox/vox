@@ -57,6 +57,19 @@ export function AnthropicFields() {
           placeholder="claude-sonnet-4-20250514"
         />
       </div>
+      <div className={form.field}>
+        <label htmlFor="llm-anthropic-endpoint">{t("llm.anthropic.endpoint")}</label>
+        <input
+          id="llm-anthropic-endpoint"
+          type="text"
+          value={llm.anthropicEndpoint || ""}
+          onChange={(e) => update("anthropicEndpoint", e.target.value)}
+          onFocus={(e) => handleFocus("anthropicEndpoint", e.target.value)}
+          onBlur={(e) => handleBlur("anthropicEndpoint", e.target.value)}
+          placeholder="https://api.anthropic.com"
+        />
+        <p className={form.hint}>{t("llm.anthropic.endpointHint")}</p>
+      </div>
     </>
   );
 }

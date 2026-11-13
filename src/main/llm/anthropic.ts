@@ -4,6 +4,7 @@ import { BaseLlmProvider } from "./base-provider";
 export interface AnthropicConfig {
   apiKey: string;
   model: string;
+  endpoint: string;
   customPrompt: string;
   hasCustomPrompt: boolean;
 }
@@ -23,7 +24,7 @@ export class AnthropicProvider extends BaseLlmProvider {
 
   protected async enhance(rawText: string): Promise<string> {
     const slog = log.scope(this.providerName);
-    const url = "https://api.anthropic.com/v1/messages";
+    const url = `${this.config.endpoint.replace(/\/+$/, "")}/v1/messages`;
 
     const requestBody = {
       model: this.config.model,

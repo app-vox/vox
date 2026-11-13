@@ -169,6 +169,8 @@
   "llm.anthropic.apiKey": "API Key",
   "llm.anthropic.apiKeyPlaceholder": "Enter your Anthropic API key",
   "llm.anthropic.model": "Model",
+  "llm.anthropic.endpoint": "Endpoint",
+  "llm.anthropic.endpointHint": "Base URL of the Anthropic-compatible API. Change only if using a proxy or gateway.",
   "llm.custom.label": "Custom",
   "llm.custom.endpoint": "Endpoint",
   "llm.custom.endpointHint": "Full URL of your API endpoint (e.g., https://my-api.example.com/v1/chat/completions).",
