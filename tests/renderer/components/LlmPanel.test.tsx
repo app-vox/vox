@@ -394,7 +394,7 @@ describe("LlmPanel prompt list", () => {
 
     await openPromptTab(user);
     await user.click(screen.getByRole("button", { name: "From template" }));
-    await user.click(screen.getByRole("menuitem", { name: /Translate to German/ }));
+    await user.click(screen.getByRole("button", { name: /Translate to German/ }));
 
     expect(screen.getByLabelText("Name")).toHaveValue("Translate to German");
     expect(screen.getByLabelText("Icon")).toHaveValue("🇩🇪");
@@ -408,7 +408,7 @@ describe("LlmPanel prompt list", () => {
 
     expect(german.instructions).toBe(germanInstructions);
     await user.click(screen.getByRole("button", { name: "From template" }));
-    await user.click(screen.getByRole("menuitem", { name: /Translate to German/ }));
+    await user.click(within(screen.getByRole("group", { name: "From template" })).getByRole("button", { name: /Translate to German/ }));
     expect(screen.getByLabelText("Custom Instructions")).toHaveValue(germanInstructions);
     const prompts = useConfigStore.getState().config!.prompts;
     expect(prompts).toHaveLength(5);
@@ -416,23 +416,29 @@ describe("LlmPanel prompt list", () => {
     expect(prompts[3].id).not.toBe(prompts[4].id);
   });
 
-  it("template menu closes on a click elsewhere and on Escape", async () => {
+  it("template list is a plain disclosure that closes on a click elsewhere and on Escape", async () => {
     const LlmPanel = await loadLlmPanel();
     const user = userEvent.setup();
     useConfigStore.setState({ config: promptConfig(), setupComplete: true });
     renderWithI18n(<LlmPanel />);
 
     await openPromptTab(user);
-    await user.click(screen.getByRole("button", { name: "From template" }));
-    expect(screen.getByRole("menu")).toBeInTheDocument();
+    const toggle = screen.getByRole("button", { name: "From template" });
+    await user.click(toggle);
+    expect(screen.getByRole("button", { name: /Translate to German/ })).toBeInTheDocument();
+    // No menu roles: they promise arrow-key navigation that is not there.
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitem")).not.toBeInTheDocument();
+    expect(toggle).not.toHaveAttribute("aria-haspopup");
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
     await user.click(promptList().getByRole("button", { name: /Formal/ }));
-    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Translate to German/ })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "From template" }));
-    expect(screen.getByRole("menu")).toBeInTheDocument();
+    await user.click(toggle);
+    expect(screen.getByRole("button", { name: /Translate to German/ })).toBeInTheDocument();
     await user.keyboard("{Escape}");
-    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "From template" })).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("button", { name: /Translate to German/ })).not.toBeInTheDocument();
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
     expect(voxApi.config.save).not.toHaveBeenCalled();
   });
 

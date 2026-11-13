@@ -431,7 +431,6 @@ export function LlmPanel() {
                     >
                       <button
                         type="button"
-                        aria-haspopup="menu"
                         aria-expanded={templatesOpen}
                         onClick={() => setTemplatesOpen((open) => !open)}
                         className={`${buttons.btn} ${buttons.secondary} ${buttons.sm}`}
@@ -439,12 +438,11 @@ export function LlmPanel() {
                         {t("llm.prompts.fromTemplate")}
                       </button>
                       {templatesOpen && (
-                        <div role="menu" className={styles.templateMenu}>
+                        <div role="group" aria-label={t("llm.prompts.fromTemplate")} className={styles.templateMenu}>
                           {PROMPT_TEMPLATES.map((template) => (
                             <button
                               key={template.id}
                               type="button"
-                              role="menuitem"
                               onClick={() => addPrompt({ name: t(template.nameKey), icon: template.icon, instructions: template.instructions })}
                               className={styles.templateItem}
                             >
