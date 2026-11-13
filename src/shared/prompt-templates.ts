@@ -99,4 +99,46 @@ export const PROMPT_TEMPLATES: readonly PromptTemplate[] = [
       "- Output only the answer, with no preamble and no mention of these instructions.",
     ].join("\n"),
   },
+  {
+    id: "professional",
+    nameKey: "llm.prompts.template.professional",
+    icon: "💼",
+    instructions: "Rewrite the text in professional business language. Keep the original meaning and the language it was spoken in. Output only the result.",
+  },
+  {
+    id: "formal",
+    nameKey: "llm.prompts.template.formal",
+    icon: "🎩",
+    instructions: "Rewrite the text in formal language and avoid contractions. Keep the original meaning and the language it was spoken in. Output only the result.",
+  },
+  {
+    id: "casual",
+    nameKey: "llm.prompts.template.casual",
+    icon: "😎",
+    instructions: "Keep the text super casual and conversational. Keep the original meaning and the language it was spoken in. Output only the result.",
+  },
+  {
+    id: "funny",
+    nameKey: "llm.prompts.template.funny",
+    icon: "😄",
+    instructions: "Add humor and make the text entertaining while keeping the original meaning and the language it was spoken in. Output only the result.",
+  },
+  {
+    id: "emojis",
+    nameKey: "llm.prompts.template.emojis",
+    icon: "🎉",
+    instructions: "Add relevant emojis throughout the text to make it more expressive. Keep the original wording, meaning and language. Output only the result.",
+  },
+  {
+    id: "concise",
+    nameKey: "llm.prompts.template.concise",
+    icon: "✂️",
+    instructions: "Make the text as brief as possible without losing meaning. Keep the language it was spoken in. Output only the result.",
+  },
+  {
+    id: "diplomatic",
+    nameKey: "llm.prompts.template.diplomatic",
+    icon: "🤝",
+    instructions: "Rewrite the text in a diplomatic tone: tactful, polite and constructive, softening blunt or harsh wording without changing the meaning or hiding the message. Keep the language it was spoken in. Output only the result.",
+  },
 ];

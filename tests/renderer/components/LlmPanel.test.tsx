@@ -2,7 +2,7 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import "@testing-library/jest-dom/vitest";
-import { screen, cleanup, waitFor, act, within } from "@testing-library/react";
+import { screen, cleanup, waitFor, act, within, fireEvent } from "@testing-library/react";
 import userEvent, { type UserEvent } from "@testing-library/user-event";
 import { useConfigStore } from "../../../src/renderer/stores/config-store";
 import { createDefaultConfig } from "../../../src/shared/config";
@@ -363,6 +363,36 @@ describe("LlmPanel prompt list", () => {
     expect(vi.mocked(voxApi.config.save).mock.invocationCallOrder[0])
       .toBeLessThan(vi.mocked(voxApi.prompts.setActive).mock.invocationCallOrder[0]);
     expect(promptList().queryByRole("button", { name: /Cleanup/ })).not.toBeInTheDocument();
+  });
+
+  it("Alt+ArrowDown moves a prompt down in the list and saves the new order", async () => {
+    const LlmPanel = await loadLlmPanel();
+    const user = userEvent.setup();
+    useConfigStore.setState({ config: promptConfig(), setupComplete: true });
+    renderWithI18n(<LlmPanel />);
+
+    await openPromptTab(user);
+    promptList().getByRole("button", { name: /Cleanup/ }).focus();
+    await user.keyboard("{Alt>}{ArrowDown}{/Alt}");
+
+    await waitFor(() => expect(savedConfigs().at(-1)?.prompts.map((p) => p.id)).toEqual(["p2", "p1", "p3"]));
+    expect(savedConfigs().at(-1)?.activePromptId).toBe("p1");
+  });
+
+  it("dragging a prompt onto another moves it there", async () => {
+    const LlmPanel = await loadLlmPanel();
+    const user = userEvent.setup();
+    useConfigStore.setState({ config: promptConfig(), setupComplete: true });
+    renderWithI18n(<LlmPanel />);
+
+    await openPromptTab(user);
+    const dragged = promptList().getByRole("button", { name: /Short/ }).closest("li")!;
+    const target = promptList().getByRole("button", { name: /Cleanup/ }).closest("li")!;
+    fireEvent.dragStart(dragged, { dataTransfer: { setData: vi.fn(), effectAllowed: "" } });
+    fireEvent.dragOver(target);
+    fireEvent.drop(target);
+
+    await waitFor(() => expect(savedConfigs().at(-1)?.prompts.map((p) => p.id)).toEqual(["p3", "p1", "p2"]));
   });
 
   it("an unconfirmed delete keeps the prompt", async () => {
