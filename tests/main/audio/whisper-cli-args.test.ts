@@ -4,10 +4,6 @@ vi.mock("electron", () => ({
   app: { getAppPath: vi.fn().mockReturnValue("/mock/appPath"), isPackaged: false },
 }));
 
-vi.mock("../../../src/main/platform", () => ({
-  whisper: { binaryName: "whisper-cli", threads: 4, timeout: 30000, timeoutPerAudioSecond: 500, resolveLanguage: (d: string) => d },
-}));
-
 import { buildWhisperCliArgs } from "../../../src/main/audio/whisper";
 
 describe("buildWhisperCliArgs", () => {
