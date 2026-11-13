@@ -9,14 +9,19 @@ export function migrateActiveTab(tab: string | null): string | null {
   return tab;
 }
 
+/** The sub-tab shown in the AI Enhancement tab. */
+export type LlmSubTab = "provider" | "prompt";
+
 interface ConfigState {
   config: VoxConfig | null;
   loading: boolean;
   activeTab: string;
+  llmSubTab: LlmSubTab;
   setupComplete: boolean;
   _hasSavedTab: boolean;
   _hasUserNavigated: boolean;
   setActiveTab: (tab: string) => void;
+  setLlmSubTab: (tab: LlmSubTab) => void;
   loadConfig: () => Promise<void>;
   updateConfig: (partial: Partial<VoxConfig>) => void;
   saveConfig: (showToast?: boolean) => Promise<void>;
@@ -29,6 +34,7 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
   config: null,
   loading: true,
   activeTab: _savedTab || Tabs.GENERAL,
+  llmSubTab: "provider",
   setupComplete: false,
   _hasSavedTab: _savedTab !== null,
   _hasUserNavigated: false,
@@ -40,8 +46,9 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     }
   },
 
+  setLlmSubTab: (tab) => set({ llmSubTab: tab }),
+
   loadConfig: async () => {
-    set({ loading: true });
     const config = await window.voxApi.config.load();
 
     const setupState = await window.voxApi.setup.check();
