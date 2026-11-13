@@ -166,6 +166,8 @@
   "llm.prompts.template.translatePortuguese": "Portekizceye çevir",
   "llm.prompts.template.translateGerman": "Almancaya çevir",
   "llm.prompts.template.translateEnglish": "İngilizceye çevir",
+  "llm.prompts.template.translateEnglishGerman": "İngilizceye ve Almancaya çevir",
+  "llm.prompts.template.wikipedia": "Vikipedi tarzı yanıtlar",
   "llm.foundry.endpoint": "Endpoint",
   "llm.foundry.apiKey": "API Key",
   "llm.foundry.apiKeyPlaceholder": "API key'inizi girin",

@@ -166,6 +166,8 @@
   "llm.prompts.template.translatePortuguese": "Ins Portugiesische übersetzen",
   "llm.prompts.template.translateGerman": "Ins Deutsche übersetzen",
   "llm.prompts.template.translateEnglish": "Ins Englische übersetzen",
+  "llm.prompts.template.translateEnglishGerman": "Ins Englische und Deutsche übersetzen",
+  "llm.prompts.template.wikipedia": "Antworten im Wikipedia-Stil",
   "llm.foundry.endpoint": "Endpoint",
   "llm.foundry.apiKey": "API Key",
   "llm.foundry.apiKeyPlaceholder": "Geben Sie Ihren API Key ein",

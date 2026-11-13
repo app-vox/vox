@@ -166,12 +166,14 @@ Customize keyboard shortcuts in the Shortcuts tab:
 
 Custom prompts tell the AI enhancement how to treat your text. Manage them in Settings > AI Enhancement > Custom Prompt; this sub-tab appears once AI enhancement is turned on:
 - **New** — adds a prompt with a name, a one-character icon, and instructions
-- **From template** — adds an editable copy of *Translate to Portuguese*, *Translate to German*, or *Translate to English* (instructions in English)
+- **From template** — adds an editable copy of *Translate to Portuguese*, *Translate to German*, *Translate to English*, *Translate to English and German* (the cleaned text plus both translations), or *Wikipedia-style answers* (say a topic, get a short encyclopedic answer); instructions are in English
 - **Make active** — picks the prompt Vox applies; with **None** active, Vox uses only its default correction
 
 One prompt is active at a time. Switch it from anywhere:
 - **Tray menu** — the **Prompt** submenu lists None and every prompt; **Prompt Settings** opens the prompt list, or just the AI Enhancement tab while AI enhancement is off
 - **Next prompt shortcut** — set it in the Shortcuts tab (**Clear** unsets it); each press moves to the next prompt and wraps back to None, and the floating indicator (or a notification) shows the new prompt
+
+A prompt is just an instruction, so the list is as useful as you make it: translate whatever you say into one or more languages, turn speech into an encyclopedia-style answer, rewrite it in a formal or casual tone, format it as notes or a bulleted list, or keep one prompt per project or audience and switch between them with a key press.
 
 Switching from the tray or the shortcut needs AI enhancement ready: turned on, with a passing **Test Connection** and no provider settings changed since that test. Until then the tray shows "Prompt: AI enhancement isn't ready" and the shortcut only shows a notification; **Make active** in settings still works. A switch applies to the next dictation, even one you are already recording.
 

@@ -166,6 +166,8 @@
   "llm.prompts.template.translatePortuguese": "Перевести на португальский",
   "llm.prompts.template.translateGerman": "Перевести на немецкий",
   "llm.prompts.template.translateEnglish": "Перевести на английский",
+  "llm.prompts.template.translateEnglishGerman": "Перевести на английский и немецкий",
+  "llm.prompts.template.wikipedia": "Ответы в стиле Википедии",
   "llm.foundry.endpoint": "Endpoint",
   "llm.foundry.apiKey": "API Key",
   "llm.foundry.apiKeyPlaceholder": "Введите ваш API key",
