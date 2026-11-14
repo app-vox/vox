@@ -98,6 +98,7 @@ A test passes when **both** conditions are met:
 | contextual-repair           | 5     | Semantically broken phrases reconstructed                                |
 | mixed-complexity            | 6     | Multiple issues combined in realistic passages                           |
 | dictionary-terms            | 6     | Custom dictionary terms corrected to exact spelling                      |
+| custom-instructions         | 5     | Custom prompts (translation, formatting) output only the result          |
 
 ## Audio files
 

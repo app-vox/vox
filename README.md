@@ -67,7 +67,7 @@ Once configured, hold `Alt+Space` to start recording.
 
 - **🔒 100% Local transcription** — Powered by whisper.cpp, audio stays on your device
 - **🤖 AI correction** — Removes filler words and fixes grammar (optional)
-- **⚙️ Custom prompts** — Tailor corrections for medical, technical, creative, or any workflow
+- **⚙️ Custom prompts** — Keep several prompts for medical, technical, creative, or translation workflows, and switch from the tray or a shortcut
 - **⌨️ Hold or toggle modes** — Press-and-hold or toggle recording on/off
 - **📋 Auto-paste** — Text is pasted directly into your focused app
 - **🎯 Multiple models** — Choose speed vs accuracy (tiny to large)
@@ -109,7 +109,7 @@ Capture thoughts quickly without typing. Perfect for meetings, brainstorming, or
 | ------- | --- | ------------------------ | --------------- | -------------------- |
 | **Price** | Free & Open Source | $300+ | Free (limited) | Varies ($0-50) |
 | **Privacy** | 100% Local | Cloud-based | Cloud-based | Mostly local |
-| **Custom Prompts** | ✅ Full control | ❌ Limited | ❌ None | ⚠️ Some apps |
+| **Custom Prompts** | ✅ Full control, multiple prompts | ❌ Limited | ❌ None | ⚠️ Some apps |
 | **AI Enhancement** | ✅ Your own API | ❌ None | ⚠️ Basic | ⚠️ Varies |
 | **Offline Mode** | ✅ Full | ⚠️ Limited | ❌ Requires internet | ✅ Most |
 | **Native App** | ✅ Menu bar / tray | ⚠️ Full app | ✅ Built-in | ✅ Varies |
@@ -160,6 +160,34 @@ Download at least one model from the Whisper tab:
 Customize keyboard shortcuts in the Shortcuts tab:
 - **Hold mode** (default: `Alt+Space`)
 - **Toggle mode** (default: `Alt+Shift+Space`)
+- **Next prompt** (unset by default) — switches to the next custom prompt, see [Custom Prompts](#custom-prompts)
+
+### Custom Prompts
+
+Custom prompts tell the AI enhancement how to treat your text. Manage them in Settings > AI Enhancement > Custom Prompt; this sub-tab appears once AI enhancement is turned on:
+- **New** — adds a prompt with a name, a one-character icon, and instructions
+- **From template** — adds an editable copy of *Translate to Portuguese*, *Translate to German*, *Translate to English*, *Translate to English and German* (the cleaned text plus both translations), or *Wikipedia-style answers* (say a topic, get a short encyclopedic answer); instructions are in English
+- **Make active** — picks the prompt Vox applies; with **None** active, Vox uses only its default correction
+
+One prompt is active at a time. Switch it from anywhere:
+- **Tray menu** — the **Prompt** submenu lists None and every prompt; **Prompt Settings** opens the prompt list, or just the AI Enhancement tab while AI enhancement is off
+- **Next prompt shortcut** — set it in the Shortcuts tab (**Clear** unsets it); each press moves to the next prompt and wraps back to None, and the floating indicator (or a notification) shows the new prompt
+
+A prompt is just an instruction, so the list is as useful as you make it: translate whatever you say into one or more languages, turn speech into an encyclopedia-style answer, rewrite it in a formal or casual tone, format it as notes or a bulleted list, or keep one prompt per project or audience and switch between them with a key press.
+
+Switching from the tray or the shortcut needs AI enhancement ready: turned on, with a passing **Test Connection** and no provider settings changed since that test. Until then the tray shows "Prompt: AI enhancement isn't ready" and the shortcut only shows a notification; **Make active** in settings still works. A switch applies to the next dictation, even one you are already recording.
+
+#### Upgrading from a single custom prompt
+
+If you had a custom prompt, it becomes a prompt named **Default** and stays active. Vox then keeps a one-time copy of your old settings as `config.json.pre-prompts.bak` next to `config.json` in its config folder; without earlier custom instructions there is no copy:
+- **macOS**: `~/Library/Application Support/vox/` — Finder hides `~/Library`, so use **Go > Go to Folder…** and paste the path
+- **Windows**: `%APPDATA%\vox\`
+
+⚠️ The upgrade is one-way. An older Vox drops the prompt list the next time it saves its settings, and prompts created since the upgrade can't be recovered after a downgrade. Don't run an older Vox at the same time as this version.
+
+To go back to an older Vox:
+- **Keep one prompt** — before downgrading, copy the instructions of the prompt you want to keep from the Custom Prompt list, then paste them into the older Vox's single custom prompt field
+- **Restore everything** — quit Vox from its tray menu (**Quit**), then copy `config.json.pre-prompts.bak` over `config.json`; every other setting also returns to how it was at the upgrade
 
 ## Usage
 

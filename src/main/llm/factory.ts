@@ -1,7 +1,8 @@
 import log from "electron-log/main";
 import { type LlmProvider } from "./provider";
 import { type VoxConfig } from "../../shared/config";
-import { computeLlmConfigHash } from "../../shared/llm-config-hash";
+import { isEnhancementReady } from "../../shared/llm-config-hash";
+import { activeInstructions } from "../../shared/prompts";
 import { buildSystemPrompt } from "../../shared/constants";
 import { FoundryProvider } from "./foundry";
 import { BedrockProvider } from "./bedrock";
@@ -17,29 +18,20 @@ interface CreateLlmProviderOptions {
 }
 
 export function createLlmProvider(config: VoxConfig, options?: CreateLlmProviderOptions): LlmProvider {
-  // When running a connection test, always create the real provider
-  if (!options?.forTest) {
-    // If LLM enhancement is disabled, return no-op provider
-    if (!config.enableLlmEnhancement) {
-      slog.info("LLM enhancement disabled, using NoopProvider");
-      return new NoopProvider();
-    }
-
-    // If not tested or config changed since last test, block
-    if (!config.llmConnectionTested || computeLlmConfigHash(config) !== config.llmConfigHash) {
-      slog.info("LLM connection not tested or config changed, using NoopProvider");
-      return new NoopProvider();
-    }
+  // A connection test always creates the real provider; otherwise only a ready enhancement does
+  if (!options?.forTest && !isEnhancementReady(config)) {
+    slog.info("AI enhancement not ready (off, untested or changed since the test), using NoopProvider");
+    return new NoopProvider();
   }
 
-  // Append custom prompt at the END with CRITICAL emphasis (only if custom is not empty)
-  const customPrompt = config.customPrompt?.trim();
-  const hasCustomPrompt = !!customPrompt;
-  const prompt = buildSystemPrompt(customPrompt || "", config.dictionary ?? [], config.speechLanguages ?? []);
+  // Append the active prompt's instructions at the END with CRITICAL emphasis (only if there are any)
+  const instructions = activeInstructions(config);
+  const hasCustomPrompt = instructions !== null;
+  const prompt = buildSystemPrompt(instructions ?? "", config.dictionary ?? [], config.speechLanguages ?? []);
 
   slog.info("Creating provider: %s", config.llm.provider);
   slog.info("Custom prompt: %s", hasCustomPrompt ? "YES" : "NO");
-  slog.debug("Custom prompt content", customPrompt);
+  slog.debug("Custom prompt content", instructions);
   slog.debug("Full system prompt length: %d", prompt.length);
 
   // Otherwise route to configured provider

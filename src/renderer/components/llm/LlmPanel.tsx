@@ -3,6 +3,8 @@ import { useConfigStore } from "../../stores/config-store";
 import { Tabs } from "../../../shared/tabs";
 import { useDevOverrideValue } from "../../hooks/use-dev-override";
 import { useDebouncedSave } from "../../hooks/use-debounced-save";
+import { useInlineConfirm } from "../../hooks/use-inline-confirm";
+import { useOutsideMousedown } from "../../hooks/use-outside-mousedown";
 import { useT } from "../../i18n-context";
 import { FoundryFields } from "./FoundryFields";
 import { BedrockFields } from "./BedrockFields";
@@ -14,8 +16,10 @@ import { StatusBox } from "../ui/StatusBox";
 import { NewDot } from "../ui/NewDot";
 import { CustomSelect } from "../ui/CustomSelect";
 import { ExternalLinkIcon, CheckCircleIcon, InfoCircleAltIcon, CopyIcon, SparkleIcon, PlayIcon } from "../../../shared/icons";
-import type { LlmProviderType, LlmConfig } from "../../../shared/config";
+import type { LlmProviderType, LlmConfig, Prompt } from "../../../shared/config";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
+import { findActivePrompt } from "../../../shared/prompts";
+import { PROMPT_TEMPLATES } from "../../../shared/prompt-templates";
 import card from "../shared/card.module.scss";
 import form from "../shared/forms.module.scss";
 import buttons from "../shared/buttons.module.scss";
@@ -52,8 +56,23 @@ export function LlmPanel() {
   const { debouncedSave, flush } = useDebouncedSave(500, true);
   const [testing, setTesting] = useState(false);
   const [testStatus, setTestStatus] = useState<{ text: string; type: "info" | "success" | "error" }>({ text: "", type: "info" });
-  const [activeTab, setActiveTab] = useState<"provider" | "prompt">("provider");
-  const [initialPromptValue, setInitialPromptValue] = useState<string | null>(null);
+  const llmSubTab = useConfigStore((s) => s.llmSubTab);
+  const setLlmSubTab = useConfigStore((s) => s.setLlmSubTab);
+  const [selectedPromptId, setSelectedPromptId] = useState<string | null>(() => config?.activePromptId ?? null);
+  // Field values of the selected prompt as typed, re-applied by id when a config reload drops unsaved typing.
+  const [draft, setDraft] = useState<Prompt | null>(null);
+  const hasUnsavedEdit = useRef(false);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
+  const templateMenuRef = useRef<HTMLDivElement>(null);
+  const closeTemplates = useCallback(() => setTemplatesOpen(false), []);
+  useOutsideMousedown(templatesOpen, templateMenuRef, closeTemplates);
+  // deleteSelectedPrompt is declared after the early returns; it runs only on the confirming click.
+  const {
+    confirming: confirmingDelete,
+    buttonRef: confirmBtnRef,
+    handleClick: handleDeleteClick,
+    cancel: cancelDelete,
+  } = useInlineConfirm(() => deleteSelectedPrompt());
   const [visitedCustomPrompt, setVisitedCustomPrompt] = useState(() => localStorage.getItem("vox:visited-custom-prompt") === "true");
   const [copiedExample, setCopiedExample] = useState<string | null>(null);
   const [hasPickedProvider, setHasPickedProvider] = useState(false);
@@ -67,6 +86,20 @@ export function LlmPanel() {
     }
     prevHashRef.current = configHash;
   }, [configHash]);
+
+  const toSavedPrompt = useCallback(
+    (prompt: Prompt): Prompt => ({ ...prompt, name: prompt.name.trim() || t("llm.prompts.untitled") }),
+    [t],
+  );
+
+  useEffect(() => {
+    if (!config || !draft) return;
+    const stored = config.prompts.find((prompt) => prompt.id === draft.id);
+    const pending = toSavedPrompt(draft);
+    if (stored && (stored.name !== pending.name || stored.icon !== pending.icon || stored.instructions !== pending.instructions)) {
+      updateConfig({ prompts: config.prompts.map((prompt) => (prompt.id === pending.id ? pending : prompt)) });
+    }
+  }, [config, draft, toSavedPrompt, updateConfig]);
 
   // Dev overrides (gated — tree-shaken in production)
   const setupComplete = import.meta.env.DEV
@@ -94,8 +127,8 @@ export function LlmPanel() {
       setVisitedCustomPrompt(true);
       localStorage.setItem("vox:visited-custom-prompt", "true");
     }
-    setActiveTab("prompt");
-  }, [visitedCustomPrompt]);
+    setLlmSubTab("prompt");
+  }, [visitedCustomPrompt, setLlmSubTab]);
 
   if (!config) return null;
 
@@ -173,6 +206,64 @@ export function LlmPanel() {
     }
   };
 
+  const activePromptId = findActivePrompt(config)?.id ?? null;
+  const selectedPrompt = config.prompts.find((prompt) => prompt.id === selectedPromptId) ?? null;
+  // A selected id that is no longer in the list shows the None row.
+  const shownPromptId = selectedPrompt?.id ?? null;
+  const editorValues = draft && draft.id === shownPromptId ? draft : selectedPrompt;
+
+  const selectPrompt = (id: string | null) => {
+    cancelDelete();
+    setDraft(null);
+    setSelectedPromptId(id);
+  };
+
+  const addPrompt = (prompt: Omit<Prompt, "id">) => {
+    const created = { id: crypto.randomUUID(), ...prompt };
+    updateConfig({ prompts: [...config.prompts, created] });
+    setTemplatesOpen(false);
+    selectPrompt(created.id);
+    saveConfig(true);
+  };
+
+  const editSelectedPrompt = (changes: Partial<Omit<Prompt, "id">>) => {
+    if (!editorValues) return;
+    const edited = { ...editorValues, ...changes };
+    setDraft(edited);
+    const saved = toSavedPrompt(edited);
+    updateConfig({ prompts: config.prompts.map((prompt) => (prompt.id === saved.id ? saved : prompt)) });
+    hasUnsavedEdit.current = true;
+    debouncedSave();
+  };
+
+  const flushPromptEdit = () => {
+    if (!hasUnsavedEdit.current) return;
+    hasUnsavedEdit.current = false;
+    flush();
+  };
+
+  const deleteSelectedPrompt = async () => {
+    if (!selectedPrompt) return;
+    updateConfig({ prompts: config.prompts.filter((prompt) => prompt.id !== selectedPrompt.id) });
+    selectPrompt(null);
+    await saveConfig(true);
+    if (selectedPrompt.id === activePromptId) {
+      await window.voxApi.prompts.setActive(null);
+    }
+  };
+
+  const selectedIsActive = shownPromptId === activePromptId;
+  const makeActiveButton = (
+    <button
+      type="button"
+      onClick={() => window.voxApi.prompts.setActive(shownPromptId)}
+      disabled={selectedIsActive}
+      className={`${buttons.btn} ${buttons.primary} ${buttons.sm}`}
+    >
+      {selectedIsActive ? t("llm.prompts.active") : t("llm.prompts.makeActive")}
+    </button>
+  );
+
   return (
     <div className={card.card}>
       <div className={card.header}>
@@ -227,21 +318,21 @@ export function LlmPanel() {
 
             <div className={form.inlineTabs}>
               <button
-                onClick={() => setActiveTab("provider")}
-                className={`${form.inlineTab} ${activeTab === "provider" ? form.active : ""}`}
+                onClick={() => setLlmSubTab("provider")}
+                className={`${form.inlineTab} ${llmSubTab === "provider" ? form.active : ""}`}
               >
                 {t("llm.providerTab")}
               </button>
               <button
                 onClick={handlePromptTabClick}
-                className={`${form.inlineTab} ${activeTab === "prompt" ? form.active : ""}`}
+                className={`${form.inlineTab} ${llmSubTab === "prompt" ? form.active : ""}`}
               >
                 {t("llm.customPromptTab")}
                 {!visitedCustomPrompt && <NewDot />}
               </button>
             </div>
 
-            {activeTab === "provider" && (
+            {llmSubTab === "provider" && (
               <>
                 <div className={form.field}>
                   <label htmlFor="llm-provider">{t("llm.providerLabel")}</label>
@@ -302,72 +393,171 @@ export function LlmPanel() {
               </>
             )}
 
-            {activeTab === "prompt" && (
-              <div className={form.field}>
-                <label htmlFor="custom-prompt">{t("llm.customInstructions")}</label>
-                <p className={form.hint}>
-                  {t("llm.customInstructionsHint")}
-                </p>
-                <textarea
-                  id="custom-prompt"
-                  value={config.customPrompt || ""}
-                  onChange={(e) => {
-                    updateConfig({ customPrompt: e.target.value });
-                    debouncedSave();
-                  }}
-                  onFocus={() => {
-                    setInitialPromptValue(config.customPrompt || "");
-                  }}
-                  onBlur={() => {
-                    const currentValue = config.customPrompt || "";
-                    const hasChanged = initialPromptValue !== null && initialPromptValue !== currentValue;
-                    if (hasChanged) {
-                      flush();
-                    }
-                    setInitialPromptValue(null);
-                  }}
-                  placeholder={t("llm.customInstructionsPlaceholder")}
-                  rows={12}
-                  className={form.monospaceTextarea}
-                  style={{ resize: "none" }}
-                />
-                <details className={form.exampleDetails}>
-                  <summary>
-                    <InfoCircleAltIcon width={13} height={13} />
-                    {t("llm.exampleInstructions")}
-                  </summary>
-                  <ul>
-                    {([
-                      { label: t("llm.exampleProfessionalLabel"), text: t("llm.exampleProfessional"), key: "professional" },
-                      { label: t("llm.exampleFormalLabel"), text: t("llm.exampleFormal"), key: "formal" },
-                      { label: t("llm.exampleCasualLabel"), text: t("llm.exampleCasual"), key: "casual" },
-                      { label: t("llm.exampleFunnyLabel"), text: t("llm.exampleFunny"), key: "funny" },
-                      { label: t("llm.exampleEmojisLabel"), text: t("llm.exampleEmojis"), key: "emojis" },
-                      { label: t("llm.exampleConciseLabel"), text: t("llm.exampleConcise"), key: "concise" },
-                      { label: t("llm.exampleLanguageLabel"), text: t("llm.exampleLanguage"), key: "language" },
-                    ]).map((ex) => (
-                      <li key={ex.key} className={form.exampleItem}>
-                        <span><strong>{ex.label}</strong> {ex.text}</span>
+            {llmSubTab === "prompt" && (
+              <div className={styles.promptManager}>
+                <div>
+                  <ul aria-label={t("llm.prompts.listLabel")} className={styles.promptRows}>
+                    {[{ id: null, icon: "", name: t("llm.prompts.none") }, ...config.prompts].map((prompt) => (
+                      <li key={prompt.id ?? "none"}>
                         <button
                           type="button"
-                          className={form.exampleCopyBtn}
-                          title={copiedExample === ex.key ? t("history.copied") : t("history.copy")}
-                          onClick={() => {
-                            const clean = ex.text.replace(/^[""\u201C]|[""\u201D]$/g, "");
-                            window.voxApi.clipboard.write(clean);
-                            setCopiedExample(ex.key);
-                            setTimeout(() => setCopiedExample((prev) => prev === ex.key ? null : prev), 1500);
-                          }}
+                          aria-current={prompt.id === shownPromptId ? "true" : undefined}
+                          onClick={() => selectPrompt(prompt.id)}
+                          className={`${styles.promptRow} ${prompt.id === shownPromptId ? styles.selected : ""}`}
                         >
-                          {copiedExample === ex.key
-                            ? <CheckCircleIcon width={12} height={12} />
-                            : <CopyIcon width={12} height={12} />
-                          }
+                          <span className={styles.promptIcon}>{prompt.icon}</span>
+                          <span className={styles.promptName}>{prompt.name}</span>
+                          {prompt.id === activePromptId && (
+                            <span role="img" aria-label={t("llm.prompts.active")} className={styles.activeDot} />
+                          )}
                         </button>
                       </li>
                     ))}
                   </ul>
-                </details>
+                  <div className={styles.promptListActions}>
+                    <button
+                      type="button"
+                      onClick={() => addPrompt({ name: t("llm.prompts.newName"), icon: "📝", instructions: "" })}
+                      className={`${buttons.btn} ${buttons.secondary} ${buttons.sm}`}
+                    >
+                      {/* eslint-disable-next-line i18next/no-literal-string -- decorative symbol */}
+                      <span aria-hidden="true">+</span>
+                      {t("llm.prompts.new")}
+                    </button>
+                    <div
+                      ref={templateMenuRef}
+                      className={styles.templateMenuAnchor}
+                      onKeyDown={(e) => { if (e.key === "Escape") closeTemplates(); }}
+                    >
+                      <button
+                        type="button"
+                        aria-expanded={templatesOpen}
+                        onClick={() => setTemplatesOpen((open) => !open)}
+                        className={`${buttons.btn} ${buttons.secondary} ${buttons.sm}`}
+                      >
+                        {t("llm.prompts.fromTemplate")}
+                      </button>
+                      {templatesOpen && (
+                        <div role="group" aria-label={t("llm.prompts.fromTemplate")} className={styles.templateMenu}>
+                          {PROMPT_TEMPLATES.map((template) => (
+                            <button
+                              key={template.id}
+                              type="button"
+                              onClick={() => addPrompt({ name: t(template.nameKey), icon: template.icon, instructions: template.instructions })}
+                              className={styles.templateItem}
+                            >
+                              <span className={styles.promptIcon}>{template.icon}</span>
+                              {t(template.nameKey)}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.promptEditor}>
+                  {editorValues ? (
+                    <>
+                      <div className={form.fieldRow}>
+                        <div className={`${form.field} ${styles.iconField}`}>
+                          <label htmlFor="prompt-icon">{t("llm.prompts.icon")}</label>
+                          <input
+                            id="prompt-icon"
+                            type="text"
+                            value={editorValues.icon}
+                            onChange={(e) => {
+                              const graphemes = [...new Intl.Segmenter().segment(e.target.value)];
+                              editSelectedPrompt({ icon: graphemes.at(-1)?.segment ?? "" });
+                            }}
+                            onBlur={flushPromptEdit}
+                          />
+                        </div>
+                        <div className={`${form.field} ${styles.nameField}`}>
+                          <label htmlFor="prompt-name">{t("llm.prompts.name")}</label>
+                          <input
+                            id="prompt-name"
+                            type="text"
+                            value={editorValues.name}
+                            placeholder={t("llm.prompts.untitled")}
+                            onChange={(e) => editSelectedPrompt({ name: e.target.value })}
+                            onBlur={flushPromptEdit}
+                          />
+                        </div>
+                      </div>
+                      <div className={form.field}>
+                        <label htmlFor="custom-prompt">{t("llm.customInstructions")}</label>
+                        <p className={form.hint}>
+                          {t("llm.customInstructionsHint")}
+                        </p>
+                        <textarea
+                          id="custom-prompt"
+                          value={editorValues.instructions}
+                          onChange={(e) => editSelectedPrompt({ instructions: e.target.value })}
+                          onBlur={flushPromptEdit}
+                          placeholder={t("llm.customInstructionsPlaceholder")}
+                          rows={12}
+                          className={form.monospaceTextarea}
+                          style={{ resize: "none" }}
+                        />
+                        <details className={form.exampleDetails}>
+                          <summary>
+                            <InfoCircleAltIcon width={13} height={13} />
+                            {t("llm.exampleInstructions")}
+                          </summary>
+                          <ul>
+                            {([
+                              { label: t("llm.exampleProfessionalLabel"), text: t("llm.exampleProfessional"), key: "professional" },
+                              { label: t("llm.exampleFormalLabel"), text: t("llm.exampleFormal"), key: "formal" },
+                              { label: t("llm.exampleCasualLabel"), text: t("llm.exampleCasual"), key: "casual" },
+                              { label: t("llm.exampleFunnyLabel"), text: t("llm.exampleFunny"), key: "funny" },
+                              { label: t("llm.exampleEmojisLabel"), text: t("llm.exampleEmojis"), key: "emojis" },
+                              { label: t("llm.exampleConciseLabel"), text: t("llm.exampleConcise"), key: "concise" },
+                              { label: t("llm.exampleLanguageLabel"), text: t("llm.exampleLanguage"), key: "language" },
+                            ]).map((ex) => (
+                              <li key={ex.key} className={form.exampleItem}>
+                                <span><strong>{ex.label}</strong> {ex.text}</span>
+                                <button
+                                  type="button"
+                                  className={form.exampleCopyBtn}
+                                  title={copiedExample === ex.key ? t("history.copied") : t("history.copy")}
+                                  onClick={() => {
+                                    const clean = ex.text.replace(/^[""\u201C]|[""\u201D]$/g, "");
+                                    window.voxApi.clipboard.write(clean);
+                                    setCopiedExample(ex.key);
+                                    setTimeout(() => setCopiedExample((prev) => prev === ex.key ? null : prev), 1500);
+                                  }}
+                                >
+                                  {copiedExample === ex.key
+                                    ? <CheckCircleIcon width={12} height={12} />
+                                    : <CopyIcon width={12} height={12} />
+                                  }
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </details>
+                      </div>
+                      <div className={styles.editorActions}>
+                        {makeActiveButton}
+                        {confirmingDelete ? (
+                          <button ref={confirmBtnRef} type="button" onClick={handleDeleteClick} className={`${buttons.btn} ${buttons.sm} ${styles.confirmDelete}`}>
+                            {t("model.confirmDelete")}
+                          </button>
+                        ) : (
+                          <button type="button" onClick={handleDeleteClick} className={`${buttons.btn} ${buttons.secondary} ${buttons.sm}`}>
+                            {t("llm.prompts.delete")}
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className={form.hint}>{t("llm.prompts.noneHint")}</p>
+                      <div className={styles.editorActions}>{makeActiveButton}</div>
+                    </>
+                  )}
+                </div>
               </div>
             )}
           </>

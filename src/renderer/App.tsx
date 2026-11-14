@@ -79,6 +79,10 @@ export function App() {
         store.setForceOpen(true);
         return;
       }
+      if (tab === Tabs.PROMPT_SETTINGS) {
+        useConfigStore.getState().openPromptSettings();
+        return;
+      }
       useConfigStore.getState().setActiveTab(tab);
     });
   }, []);

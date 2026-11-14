@@ -16,13 +16,15 @@ import { initAutoUpdater } from "./updater";
 import { isUpdating } from "./update-state";
 import { openHome, setAppMenuCallbacks, refreshAppMenu, suppressBlur, setHideOnBlur } from "./windows/home";
 import { registerIpcHandlers } from "./ipc";
+import { PromptSwitch } from "./prompt-switch";
 import { paster, permissions, applyCase, stripTrailingPeriod } from "./platform";
 import { SetupChecker } from "./setup/checker";
 import { HistoryManager } from "./history/manager";
-import { type AudioCueType } from "../shared/config";
+import { type AudioCueType, type VoxConfig } from "../shared/config";
 import { generateCueSamples, isWavCue, getWavFilename, parseWavSamples } from "../shared/audio-cue";
 import { t, setLanguage, resolveSystemLanguage } from "../shared/i18n";
 import { getLlmModelName } from "../shared/llm-utils";
+import { Tabs } from "../shared/tabs";
 import { AnalyticsService } from "./analytics/service";
 import { setupAnalyticsErrorCapture } from "./logger";
 import log from "./logger";
@@ -37,12 +39,14 @@ const configManager = new ConfigManager(configDir, createSecretStore());
 const modelManager = new ModelManager(modelsDir);
 const historyManager = new HistoryManager();
 const analytics = new AnalyticsService();
+const promptSwitch = new PromptSwitch(configManager);
 
 let pipeline: Pipeline | null = null;
 let shortcutManager: ShortcutManager | null = null;
 let devLlmOverride: { enabled?: boolean; tested?: boolean } | null = null;
 
-function setupPipeline(): void {
+/** The saved config with the Dev panel's LLM override applied. */
+function loadPipelineConfig(): VoxConfig {
   const config = configManager.load();
   if (devLlmOverride) {
     if (devLlmOverride.enabled !== undefined) config.enableLlmEnhancement = devLlmOverride.enabled;
@@ -51,10 +55,14 @@ function setupPipeline(): void {
       if (!devLlmOverride.tested) config.llmConfigHash = "";
     }
   }
+  return config;
+}
+
+function setupPipeline(): void {
+  const config = loadPipelineConfig();
   const modelPath = config.whisper.model
     ? modelManager.getModelPath(config.whisper.model)
     : "";
-  const llmProvider = createLlmProvider(config);
 
   const recorder = new AudioRecorder();
   recorder.onAudioLevels = (levels) => {
@@ -64,11 +72,11 @@ function setupPipeline(): void {
   pipeline = new Pipeline({
     recorder,
     transcribe,
-    llmProvider,
+    loadConfig: loadPipelineConfig,
+    createLlmProvider,
     modelPath,
     dictionary: config.dictionary ?? [],
     speechLanguages: config.speechLanguages ?? [],
-    hasCustomPrompt: Boolean(config.customPrompt),
     llmModelName: config.enableLlmEnhancement ? getLlmModelName(config.llm) : undefined,
     analytics,
     onStage: (stage) => {
@@ -80,18 +88,7 @@ function setupPipeline(): void {
     onTranscriptionComplete: (rawText) => {
       shortcutManager?.getHud().updateTextPanel(rawText);
     },
-    onLlmFailed: () => {
-      const cfg = configManager.load();
-      cfg.llmConnectionTested = false;
-      cfg.llmConfigHash = "";
-      configManager.save(cfg);
-      for (const win of BrowserWindow.getAllWindows()) {
-        win.webContents.send("config:changed");
-      }
-      // Rebuild the pipeline so the next recording uses NoopProvider
-      // (setImmediate lets the current run finish before we swap it out)
-      setImmediate(() => setupPipeline());
-    },
+    onLlmFailed: () => promptSwitch.markConnectionUntested(),
     onComplete: (result) => {
       // Defer all side effects so the pipeline can return finalText immediately
       // and the paste happens without waiting for history/IPC/disk operations.
@@ -213,6 +210,8 @@ function reloadConfig(): void {
         onStartListening: () => shortcutManager?.triggerToggle(),
         onStopListening: () => shortcutManager?.stopAndProcess(),
         onCancelListening: () => shortcutManager?.cancelRecording(),
+        onSelectPrompt: (id) => promptSwitch.setActivePrompt(id),
+        onOpenPromptSettings: () => openHome(reloadConfig, Tabs.PROMPT_SETTINGS),
         onToggleHud: () => {
           const cfg = configManager.load();
           cfg.showHud = !cfg.showHud;
@@ -264,7 +263,7 @@ app.whenReady().then(async () => {
     launch_at_login: initialConfig.launchAtLogin,
   });
 
-  registerIpcHandlers(configManager, modelManager, historyManager, reloadConfig, analytics);
+  registerIpcHandlers(configManager, modelManager, historyManager, promptSwitch, reloadConfig, analytics);
 
   ipcMain.handle("audio:preview-cue", async (_event, cueType: string) => {
     if (cueType === "none" || !pipeline) return;
@@ -323,6 +322,8 @@ app.whenReady().then(async () => {
     analytics,
     openSettings: (tab) => openHome(reloadConfig, tab),
     hasModel: () => new SetupChecker(modelManager).hasAnyModel(),
+    setActivePrompt: (id) => promptSwitch.setActivePrompt(id),
+    saveAndAnnounce: (config) => promptSwitch.saveAndAnnounce(config),
   });
   shortcutManager.start();
 
@@ -387,6 +388,8 @@ app.whenReady().then(async () => {
       onStartListening: () => shortcutManager?.triggerToggle(),
       onStopListening: () => shortcutManager?.stopAndProcess(),
       onCancelListening: () => shortcutManager?.cancelRecording(),
+      onSelectPrompt: (id) => promptSwitch.setActivePrompt(id),
+      onOpenPromptSettings: () => openHome(reloadConfig, Tabs.PROMPT_SETTINGS),
       onToggleHud: () => {
         const cfg = configManager.load();
         cfg.showHud = !cfg.showHud;

@@ -98,6 +98,15 @@ export interface ShortcutsConfig {
   mode: ShortcutMode;
   hold: string;
   toggle: string;
+  /** Accelerator for the Next prompt shortcut; "" when unset. */
+  nextPrompt: string;
+}
+
+export interface Prompt {
+  id: string;
+  name: string;
+  icon: string;
+  instructions: string;
 }
 
 export interface VoxConfig {
@@ -108,7 +117,8 @@ export interface VoxConfig {
   enableLlmEnhancement: boolean;
   llmConnectionTested: boolean;
   llmConfigHash: string;
-  customPrompt: string;
+  prompts: Prompt[];
+  activePromptId: string | null;
   launchAtLogin: boolean;
   showInDock: boolean;
   showInTray: boolean;
@@ -154,12 +164,14 @@ export function createDefaultConfig(): VoxConfig {
       mode: "toggle",
       hold: "Alt+Space",
       toggle: "Alt+Shift+Space",
+      nextPrompt: "",
     },
     theme: "system",
     enableLlmEnhancement: false,
     llmConnectionTested: false,
     llmConfigHash: "",
-    customPrompt: "",
+    prompts: [],
+    activePromptId: null,
     launchAtLogin: false,
     showInDock: true,
     showInTray: true,

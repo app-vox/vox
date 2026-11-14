@@ -9,6 +9,16 @@
   40%, 80% { transform: translateX(4px); }
 }
 
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.clear {
+  flex-shrink: 0;
+}
+
 .field {
   display: flex;
   align-items: center;

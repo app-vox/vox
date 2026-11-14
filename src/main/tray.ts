@@ -5,6 +5,8 @@ import { type VoxConfig } from "../shared/config";
 import { getUpdateState, quitAndInstall } from "./updater";
 import { t } from "../shared/i18n";
 import { getLlmModelName } from "../shared/llm-utils";
+import { isEnhancementReady } from "../shared/llm-config-hash";
+import { findActivePrompt, promptLabel } from "../shared/prompts";
 import log from "./logger";
 
 const slog = log.scope("tray");
@@ -18,6 +20,8 @@ export interface TrayCallbacks {
   onStopListening?: () => void;
   onCancelListening?: () => void;
   onToggleHud?: () => void;
+  onSelectPrompt: (id: string | null) => void;
+  onOpenPromptSettings: () => void;
 }
 
 let callbacks: TrayCallbacks | null = null;
@@ -81,6 +85,36 @@ function simplifyModelName(fullName: string): string {
     .replace(/-\d{4}-\d{2}-\d{2}$/, ""); // Remove trailing date YYYY-MM-DD
 
   return simplified;
+}
+
+/** The Prompt submenu, disabled while the enhancement is not ready, and the always-enabled Prompt Settings item. */
+export function buildPromptMenuItems(
+  config: VoxConfig,
+  trayCallbacks: Pick<TrayCallbacks, "onSelectPrompt" | "onOpenPromptSettings">,
+): Electron.MenuItemConstructorOptions[] {
+  const active = findActivePrompt(config);
+  const ready = isEnhancementReady(config);
+  const noneLabel = t("llm.prompts.none");
+  const options: { id: string | null; label: string }[] = [
+    { id: null, label: noneLabel },
+    ...config.prompts.map((prompt) => ({ id: prompt.id, label: promptLabel(prompt) })),
+  ];
+  return [
+    {
+      label: ready ? t("tray.prompt", { prompt: active ? promptLabel(active) : noneLabel }) : t("tray.promptNotReady"),
+      enabled: ready,
+      submenu: options.map(({ id, label }) => ({
+        label,
+        type: "radio",
+        checked: id === (active?.id ?? null),
+        click: () => trayCallbacks.onSelectPrompt(id),
+      })),
+    },
+    {
+      label: t("tray.promptSettings"),
+      click: trayCallbacks.onOpenPromptSettings,
+    },
+  ];
 }
 
 export function setupTray(trayCallbacks: TrayCallbacks): void {
@@ -160,6 +194,7 @@ export function updateTrayMenu(): void {
           : t("tray.aiEnhancementOff"),
         enabled: false,
       },
+      ...buildPromptMenuItems(currentConfig, callbacks),
     );
   }
 

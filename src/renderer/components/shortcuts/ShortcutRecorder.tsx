@@ -7,6 +7,7 @@ const slog = log.scope("ShortcutRecorder");
 
 import styles from "./ShortcutRecorder.module.scss";
 import form from "../shared/forms.module.scss";
+import btn from "../shared/buttons.module.scss";
 
 const CODE_TO_KEY: Record<string, string> = {
   Space: "Space", Enter: "Enter", Backspace: "Backspace", Tab: "Tab",
@@ -47,12 +48,17 @@ interface ShortcutRecorderProps {
   label: string;
   hint: string;
   value: string;
-  otherValue: string;
+  /** Shortcuts this one must not equal; pressing one flags a conflict instead of saving it. */
+  otherValues: string[];
   onChange: (accelerator: string) => void;
   disabled?: boolean;
+  /** Whether a double-tapped modifier may be recorded; defaults to true. */
+  allowDoubleTap?: boolean;
+  /** Shows a Clear button while a shortcut is set, which sets it to "". */
+  clearable?: boolean;
 }
 
-export function ShortcutRecorder({ label, hint, value, otherValue, onChange, disabled }: ShortcutRecorderProps) {
+export function ShortcutRecorder({ label, hint, value, otherValues, onChange, disabled, allowDoubleTap = true, clearable }: ShortcutRecorderProps) {
   const t = useT();
   const [recording, setRecording] = useState(false);
   const [previewParts, setPreviewParts] = useState<string[]>([]);
@@ -140,7 +146,7 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
         const now = Date.now();
         const last = lastModifierRef.current;
 
-        if (last && last.code === e.code && now - last.time <= DOUBLE_TAP_THRESHOLD_MS) {
+        if (allowDoubleTap && last && last.code === e.code && now - last.time <= DOUBLE_TAP_THRESHOLD_MS) {
           // Double-tap detected — map code prefix to modifier name
           let modifier: string;
           if (e.code.startsWith("Meta")) modifier = "Command";
@@ -189,7 +195,7 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
         ? [...modifiers, mainKey].join("+")
         : mainKey;
 
-      if (accelerator === otherValue) {
+      if (otherValues.includes(accelerator)) {
         setConflict(true);
         setTimeout(() => setConflict(false), 600);
         return;
@@ -227,7 +233,7 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
       const accelerator = [...modifiers, mainKey].join("+");
       slog.debug("Main key detected via keyup fallback", accelerator);
 
-      if (accelerator === otherValue) {
+      if (otherValues.includes(accelerator)) {
         setConflict(true);
         setTimeout(() => setConflict(false), 600);
         return;
@@ -264,7 +270,7 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
       const accelerator = [...modifiers, mainKey].join("+");
       slog.debug("Main key detected via before-input-event fallback", accelerator);
 
-      if (accelerator === otherValue) {
+      if (otherValues.includes(accelerator)) {
         setConflict(true);
         setTimeout(() => setConflict(false), 600);
         return;
@@ -292,7 +298,7 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
       document.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [recording, otherValue, onChange, stopRecording]);
+  }, [recording, otherValues, allowDoubleTap, onChange, stopRecording]);
 
   const showingDoubleTap = !(recording && previewParts.length > 0) && isDoubleTap(value);
   const displayParts = recording && previewParts.length > 0
@@ -313,27 +319,40 @@ export function ShortcutRecorder({ label, hint, value, otherValue, onChange, dis
   return (
     <div className={form.field}>
       <label>{label}</label>
-      <div
-        ref={fieldRef}
-        onClick={() => !recording && !disabled && startRecording()}
-        className={fieldClasses}
-        tabIndex={disabled ? -1 : 0}
-        aria-disabled={disabled}
-      >
-        <span className={showingDoubleTap ? styles.doubleTapKeys : undefined}>
-          {displayParts.map((part, i) => (
-            <span key={i}>
-              {/* eslint-disable-next-line i18next/no-literal-string */}
-              {i > 0 && !showingDoubleTap && <span className={styles.separator}>+</span>}
-              <kbd className={styles.kbd}>{PLATFORM_LABELS[part] || part}</kbd>
+      <div className={styles.row}>
+        <div
+          ref={fieldRef}
+          onClick={() => !recording && !disabled && startRecording()}
+          className={fieldClasses}
+          tabIndex={disabled ? -1 : 0}
+          aria-disabled={disabled}
+        >
+          <span className={showingDoubleTap ? styles.doubleTapKeys : undefined}>
+            {displayParts.map((part, i) => (
+              <span key={i}>
+                {/* eslint-disable-next-line i18next/no-literal-string */}
+                {i > 0 && !showingDoubleTap && <span className={styles.separator}>+</span>}
+                <kbd className={styles.kbd}>{PLATFORM_LABELS[part] || part}</kbd>
+              </span>
+            ))}
+          </span>
+          {!recording && !value && (
+            <span className={styles.placeholder}>{t("shortcuts.notSet")}</span>
+          )}
+          {recording && previewParts.length === 0 && (
+            <span className={styles.placeholder}>
+              {t(allowDoubleTap ? "shortcuts.pressShortcutOrDoubleTap" : "shortcuts.pressShortcut")}
             </span>
-          ))}
-        </span>
-        {!recording && !value && (
-          <span className={styles.placeholder}>{t("shortcuts.notSet")}</span>
-        )}
-        {recording && previewParts.length === 0 && (
-          <span className={styles.placeholder}>{t("shortcuts.pressShortcutOrDoubleTap")}</span>
+          )}
+        </div>
+        {clearable && value && !recording && !disabled && (
+          <button
+            type="button"
+            className={`${btn.btn} ${btn.secondary} ${btn.sm} ${styles.clear}`}
+            onClick={() => onChange("")}
+          >
+            {t("shortcuts.clear")}
+          </button>
         )}
       </div>
       <p className={form.hint}>{hint}</p>
