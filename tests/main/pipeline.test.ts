@@ -513,6 +513,48 @@ describe("Pipeline", () => {
     await expect(preview).resolves.toBeNull();
   });
 
+  it.each(["stopAndProcess", "stopAndProcessWithHint"] as const)(
+    "%s stops every preview transcription in flight",
+    async (stopMethod) => {
+      const oneSecond: RecordingResult = { audioBuffer: new Float32Array(16000), sampleRate: 16000 };
+      const recorder: PipelineDeps["recorder"] = {
+        start: async () => {},
+        stop: async () => oneSecond,
+        cancel: async () => {},
+        snapshot: async () => oneSecond,
+      };
+      const previewSignals: (AbortSignal | undefined)[] = [];
+      // Two previews run until their signals abort; the final transcription resolves at once.
+      const transcribe: PipelineDeps["transcribe"] = (_audio, _rate, _model, _dict, _langs, _temp, signal) => {
+        if (previewSignals.length < 2) {
+          previewSignals.push(signal);
+          return new Promise((_resolve, reject) => {
+            signal?.addEventListener("abort", () => reject(signal.reason));
+          });
+        }
+        return Promise.resolve({ text: "final transcription" });
+      };
+      const pipeline = new Pipeline({
+        recorder,
+        transcribe,
+        ...enhancingWith(mockProvider),
+        modelPath: "/models/ggml-small.bin",
+      });
+
+      await pipeline.startRecording();
+      const first = pipeline.snapshotAndTranscribe();
+      const second = pipeline.snapshotAndTranscribe();
+      await vi.waitFor(() => expect(previewSignals).toHaveLength(2));
+      await (stopMethod === "stopAndProcess"
+        ? pipeline.stopAndProcess()
+        : pipeline.stopAndProcessWithHint("final transcription"));
+
+      expect(previewSignals.map((signal) => signal?.aborted)).toEqual([true, true]);
+      await expect(first).resolves.toBeNull();
+      await expect(second).resolves.toBeNull();
+    }
+  );
+
   it("timing record counts loop retries in whisper time", async () => {
     // Each peer moves the fake clock by the time its step takes, so the record is exact.
     vi.useFakeTimers({ toFake: ["performance"] });

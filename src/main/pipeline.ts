@@ -205,8 +205,8 @@ export class Pipeline {
   private cancelingStage: PipelineStage | "listening" | null = null;
   private heldRecording: RecordingResult | null = null;
   private heldTranscription: string | null = null;
-  /** Stops the live-preview transcription in flight, so it does not share the GPU with the final one. */
-  private previewAbort: AbortController | null = null;
+  /** Stops the live-preview transcriptions in flight, so they do not share the GPU with the final one. */
+  private readonly previewAborts = new Set<AbortController>();
 
   private get whisperModelName(): string {
     return this.deps.modelPath.split("/").pop()?.replace("ggml-", "").replace(".bin", "") ?? "unknown";
@@ -234,7 +234,7 @@ export class Pipeline {
 
   async snapshotAndTranscribe(): Promise<string | null> {
     const preview = new AbortController();
-    this.previewAbort = preview;
+    this.previewAborts.add(preview);
     try {
       // Full buffer — gives Whisper all context for the most accurate preview
       const snapshot = await this.deps.recorder.snapshot?.();
@@ -262,8 +262,12 @@ export class Pipeline {
     } catch {
       return null;
     } finally {
-      if (this.previewAbort === preview) this.previewAbort = null;
+      this.previewAborts.delete(preview);
     }
+  }
+
+  private abortPreviews(): void {
+    for (const preview of this.previewAborts) preview.abort();
   }
 
   async startRecording(): Promise<void> {
@@ -281,7 +285,7 @@ export class Pipeline {
 
   async stopAndProcess(): Promise<string> {
     const gen = this.generation;
-    this.previewAbort?.abort();
+    this.abortPreviews();
     const recording = await this.deps.recorder.stop();
     this.heldRecording = recording;
 
@@ -299,7 +303,7 @@ export class Pipeline {
    */
   async stopAndProcessWithHint(hintText: string): Promise<string> {
     const gen = this.generation;
-    this.previewAbort?.abort();
+    this.abortPreviews();
     const recording = await this.deps.recorder.stop();
     this.heldRecording = recording;
 
