@@ -54,40 +54,26 @@ export function whisperTimeoutMs(audioSeconds: number): number {
   return whisperConfig.timeout + Math.ceil(audioSeconds * whisperConfig.timeoutPerAudioSecond);
 }
 
-// --max-context 0 stops text carrying between 30 s windows: on long
-// recordings the carried text caused repetition loops and doubled the time.
-export function buildWhisperCliArgs(
+function runWhisperCli(
   modelPath: string,
   filePath: string,
   prompt: string,
   language = "auto",
-  temperature?: number
-): string[] {
+  temperature: number | undefined,
+  timeoutMs: number,
+  signal: AbortSignal | undefined
+): Promise<string> {
   const args = [
     "-t", String(whisperConfig.threads),
     "-l", language,
     "-m", modelPath,
     "-f", filePath,
-    "-mc", "0",
     "--entropy-thold", "2.0",
     "--prompt", prompt,
   ];
   if (temperature !== undefined) {
     args.push("--temperature", String(temperature));
   }
-  return args;
-}
-
-function runWhisperCli(
-  modelPath: string,
-  filePath: string,
-  prompt: string,
-  language: string,
-  temperature: number | undefined,
-  timeoutMs: number,
-  signal: AbortSignal | undefined
-): Promise<string> {
-  const args = buildWhisperCliArgs(modelPath, filePath, prompt, language, temperature);
   return new Promise((resolve, reject) => {
     execFile(
       WHISPER_BIN,
