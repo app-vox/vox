@@ -32,12 +32,11 @@ class TestProvider extends BaseLlmProvider {
 }
 
 describe("wrapTranscription", () => {
-  it("wraps raw text with XML tags and cleaning instruction", () => {
+  it("wraps raw text with XML tags", () => {
     const result = wrapTranscription("hello world");
     expect(result).toContain("<transcription>");
     expect(result).toContain("hello world");
     expect(result).toContain("</transcription>");
-    expect(result).toContain("Clean the following raw speech transcription");
   });
 
   it("preserves the raw text exactly inside the tags", () => {

@@ -1,4 +1,4 @@
-import { BrowserWindow, clipboard, globalShortcut, ipcMain, Notification, screen } from "electron";
+import { clipboard, globalShortcut, ipcMain, Notification, screen } from "electron";
 import { uIOhook, UiohookKey } from "uiohook-napi";
 import log from "electron-log/main";
 import { type ConfigManager } from "../config/manager";
@@ -8,10 +8,12 @@ import { ShortcutStateMachine, RecordingState } from "./listener";
 import { DoubleTapDetector } from "./double-tap";
 import { isDoubleTap, getDoubleTapModifier } from "../../shared/shortcuts";
 import { HudWindow } from "../hud";
-import { setTrayListeningState, updateTrayConfig } from "../tray";
+import { setTrayListeningState } from "../tray";
 import { t } from "../../shared/i18n";
 import { generateCueSamples, isWavCue, getWavFilename, parseWavSamples } from "../../shared/audio-cue";
-import { type AudioCueType, createDefaultConfig } from "../../shared/config";
+import { type AudioCueType, type VoxConfig, createDefaultConfig } from "../../shared/config";
+import { findActivePrompt, nextPromptId, promptLabel } from "../../shared/prompts";
+import { isEnhancementReady } from "../../shared/llm-config-hash";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { app } from "electron";
@@ -99,6 +101,10 @@ export interface ShortcutManagerDeps {
   analytics?: { track(event: string, properties?: Record<string, unknown>): void };
   openSettings?: (tab?: string) => void;
   hasModel: () => boolean;
+  /** Makes the prompt with `id` active, or None when `id` is null. */
+  setActivePrompt: (id: string | null) => void;
+  /** Saves a config main changed itself, refreshes the tray and tells open windows to reload it. */
+  saveAndAnnounce: (config: VoxConfig) => void;
 }
 
 export class ShortcutManager {
@@ -761,23 +767,22 @@ export class ShortcutManager {
     if ((mode === "toggle" || mode === "both") && !toggleOk) slog.warn("Failed to register toggle shortcut:", config.shortcuts.toggle);
 
     if (!holdOk || !toggleOk) {
-      const defaults = createDefaultConfig().shortcuts;
-      config.shortcuts = defaults;
-      this.deps.configManager.save(config);
-      for (const win of BrowserWindow.getAllWindows()) {
-        win.webContents.send("config:changed");
-      }
+      // Reset only the recording shortcuts; the Next prompt shortcut is handled on its own below.
+      config.shortcuts = { ...createDefaultConfig().shortcuts, nextPrompt: config.shortcuts.nextPrompt };
+      this.deps.saveAndAnnounce(config);
       new Notification({
         title: t("notification.shortcutReset.title"),
         body: t("notification.shortcutReset.body"),
       }).show();
     }
 
+    if (config.shortcuts.nextPrompt) this.registerNextPromptShortcut(config);
+
     if (!isDoubleTap(config.shortcuts.hold)) {
       this.holdKeyCodes = (mode === "hold" || mode === "both") ? getHoldKeyCodes(config.shortcuts.hold) : new Set();
     }
 
-    slog.info("Shortcuts registered: mode=%s, hold=%s, toggle=%s", mode, config.shortcuts.hold, config.shortcuts.toggle);
+    slog.info("Shortcuts registered: mode=%s, hold=%s, toggle=%s, nextPrompt=%s", mode, config.shortcuts.hold, config.shortcuts.toggle, config.shortcuts.nextPrompt);
 
     if (!busy) {
       // Re-enable shortcuts after a brief delay to prevent spurious activations
@@ -785,6 +790,48 @@ export class ShortcutManager {
         this.isInitializing = false;
         slog.info("Shortcuts re-enabled after registration");
       }, 300);
+    }
+  }
+
+  /** Registers the Next prompt shortcut; when that fails, clears only this shortcut and tells the user. */
+  private registerNextPromptShortcut(config: VoxConfig): void {
+    let ok: boolean;
+    try {
+      ok = globalShortcut.register(config.shortcuts.nextPrompt, () => this.switchToNextPrompt());
+    } catch (err: unknown) {
+      slog.error("Invalid next-prompt shortcut accelerator: %s", config.shortcuts.nextPrompt, err);
+      ok = false;
+    }
+    if (ok) return;
+
+    slog.warn("Failed to register next-prompt shortcut — clearing it:", config.shortcuts.nextPrompt);
+    config.shortcuts.nextPrompt = "";
+    this.deps.saveAndAnnounce(config);
+    new Notification({
+      title: t("notification.nextPromptCleared.title"),
+      body: t("notification.nextPromptCleared.body"),
+    }).show();
+  }
+
+  /** Activates the next prompt and shows it in the idle HUD, or as a notification when the HUD is off or busy. */
+  private switchToNextPrompt(): void {
+    const config = this.deps.configManager.load();
+    if (!isEnhancementReady(config)) {
+      new Notification({
+        title: t("notification.promptNotReady.title"),
+        body: t("notification.promptNotReady.body"),
+      }).show();
+      return;
+    }
+
+    const id = nextPromptId(config);
+    this.deps.setActivePrompt(id);
+    const prompt = findActivePrompt({ ...config, activePromptId: id });
+    const label = prompt ? promptLabel(prompt) : t("llm.prompts.none");
+    if (config.showHud && !this.isRecording()) {
+      this.hud.setState("prompt", label);
+    } else {
+      new Notification({ title: t("notification.promptSwitched.title"), body: label }).show();
     }
   }
 
@@ -865,12 +912,8 @@ export class ShortcutManager {
     ipcMain.handle("hud:disable", () => {
       const config = this.deps.configManager.load();
       config.showHud = false;
-      this.deps.configManager.save(config);
+      this.deps.saveAndAnnounce(config);
       this.hud.hide();
-      updateTrayConfig(config);
-      for (const win of BrowserWindow.getAllWindows()) {
-        win.webContents.send("config:changed");
-      }
     });
 
     ipcMain.on("hud:drag", (_event, dx: number, dy: number) => {
@@ -885,10 +928,7 @@ export class ShortcutManager {
         config.hudCustomX = result.nx;
         config.hudCustomY = result.ny;
         config.targetDisplayId = result.displayId;
-        this.deps.configManager.save(config);
-        for (const win of BrowserWindow.getAllWindows()) {
-          win.webContents.send("config:changed");
-        }
+        this.deps.saveAndAnnounce(config);
       }
     });
 

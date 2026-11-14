@@ -1,5 +1,7 @@
 import { type LlmProvider } from "./llm/provider";
 import { NoopProvider } from "./llm/noop";
+import { type VoxConfig } from "../shared/config";
+import { activeInstructions } from "../shared/prompts";
 import { type RecordingResult } from "./audio/recorder";
 import { type TranscriptionResult } from "./audio/whisper";
 import { existsSync } from "fs";
@@ -31,11 +33,12 @@ export interface PipelineDeps {
     speechLanguages?: string[],
     temperature?: number
   ): Promise<TranscriptionResult>;
-  llmProvider: LlmProvider;
+  /** Reads the current config when an enhancement starts, so a prompt switch applies to the next one. */
+  loadConfig(): VoxConfig;
+  createLlmProvider(config: VoxConfig): LlmProvider;
   modelPath: string;
   dictionary?: string[];
   speechLanguages?: string[];
-  hasCustomPrompt?: boolean;
   llmModelName?: string;
   analytics?: {
     track(event: string, properties?: Record<string, unknown>): void;
@@ -57,6 +60,12 @@ export interface PipelineDeps {
     recording: RecordingResult;
     audioDurationMs: number;
   }) => void;
+}
+
+/** The provider and analytics flag of one dictation's enhancement, built from one config snapshot. */
+interface Enhancement {
+  llmProvider: LlmProvider;
+  hasCustomPrompt: boolean;
 }
 
 const COMMON_HALLUCINATIONS = [
@@ -300,7 +309,7 @@ export class Pipeline {
       throw new CanceledError();
     }
 
-    return this.processFromTranscription(rawText, recording, gen);
+    return this.processFromTranscription(rawText, recording, gen, this.startEnhancement());
   }
 
   gracefulCancel(): { stage: PipelineStage | "listening" } {
@@ -329,7 +338,7 @@ export class Pipeline {
     const gen = this.generation;
 
     if (stage === "enhancing" && this.heldTranscription) {
-      return this.processFromTranscription(this.heldTranscription, this.heldRecording!, gen);
+      return this.processFromTranscription(this.heldTranscription, this.heldRecording!, gen, this.startEnhancement());
     }
 
     return this.processFromRecording(this.heldRecording!, gen);
@@ -431,12 +440,13 @@ export class Pipeline {
       audio_duration_ms: audioDurationMs,
     });
     slog.info("Whisper transcription", rawText);
+    const enhancement = this.startEnhancement();
     slog.debug("Transcription details", {
       rawTextLength: rawText.length,
-      llmProviderType: this.deps.llmProvider.constructor.name,
+      llmProviderType: enhancement.llmProvider.constructor.name,
     });
 
-    if (this.deps.llmProvider instanceof NoopProvider) {
+    if (enhancement.llmProvider instanceof NoopProvider) {
       const totalTimeMs = Number((performance.now() - processingStartTime).toFixed(1));
       slog.info("Pipeline timing", { whisperModel: this.whisperModelName, audioDurationMs, whisperMs: whisperTimeMs, llmMs: 0, totalMs: totalTimeMs });
       this.deps.analytics?.track("llm_enhancement_skipped");
@@ -454,7 +464,7 @@ export class Pipeline {
       if (garbageReason === "loop") {
         const retried = await this.retryWithTemperature(recording, gen);
         if (retried !== null) {
-          return this.processFromTranscription(retried, recording, gen, whisperTimeMs);
+          return this.processFromTranscription(retried, recording, gen, enhancement, whisperTimeMs);
         }
       }
 
@@ -480,7 +490,16 @@ export class Pipeline {
       throw new CanceledError();
     }
 
-    return this.processFromTranscription(rawText, recording, gen, whisperTimeMs);
+    return this.processFromTranscription(rawText, recording, gen, enhancement, whisperTimeMs);
+  }
+
+  /** Snapshots the config once, so the provider and the analytics flag agree on the active prompt. */
+  private startEnhancement(): Enhancement {
+    const config = this.deps.loadConfig();
+    return {
+      llmProvider: this.deps.createLlmProvider(config),
+      hasCustomPrompt: activeInstructions(config) !== null,
+    };
   }
 
   private async retryWithTemperature(
@@ -532,6 +551,7 @@ export class Pipeline {
     rawText: string,
     recording: RecordingResult,
     gen: number,
+    enhancement: Enhancement,
     whisperTimeMs = 0
   ): Promise<string> {
     const processingStartTime = performance.now();
@@ -543,7 +563,7 @@ export class Pipeline {
       });
     }
 
-    if (this.deps.hasCustomPrompt) {
+    if (enhancement.hasCustomPrompt) {
       this.deps.analytics?.track("custom_prompt_used");
     }
 
@@ -555,7 +575,7 @@ export class Pipeline {
     }
 
     const llmStartTime = performance.now();
-    const llmProviderName = this.deps.llmProvider.constructor.name.replace("Provider", "").toLowerCase();
+    const llmProviderName = enhancement.llmProvider.constructor.name.replace("Provider", "").toLowerCase();
 
     let finalText: string;
     try {
@@ -565,7 +585,7 @@ export class Pipeline {
       });
       this.currentStage = "enhancing";
       this.deps.onStage?.("enhancing");
-      finalText = await this.deps.llmProvider.correct(rawText);
+      finalText = await enhancement.llmProvider.correct(rawText);
       slog.debug("LLM enhanced text", {
         finalText,
         length: finalText.length,

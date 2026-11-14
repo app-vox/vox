@@ -59,3 +59,10 @@ export function computeLlmConfigHash(config: VoxConfig): string {
   };
   return simpleHash(JSON.stringify(relevant));
 }
+
+/** AI enhancement is on, its connection test passed, and the provider settings are unchanged since. */
+export function isEnhancementReady(config: VoxConfig): boolean {
+  return config.enableLlmEnhancement
+    && config.llmConnectionTested
+    && computeLlmConfigHash(config) === config.llmConfigHash;
+}

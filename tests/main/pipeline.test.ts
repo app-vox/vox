@@ -1,6 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { Pipeline } from "../../src/main/pipeline";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { Pipeline, type PipelineDeps } from "../../src/main/pipeline";
 import { type LlmProvider } from "../../src/main/llm/provider";
+import { createLlmProvider } from "../../src/main/llm/factory";
+import { type VoxConfig, createDefaultConfig } from "../../src/shared/config";
+import { computeLlmConfigHash } from "../../src/shared/llm-config-hash";
+
+/** Pipeline deps whose enhancement always uses `provider`, whatever the config says. */
+function enhancingWith(provider: LlmProvider): Pick<PipelineDeps, "loadConfig" | "createLlmProvider"> {
+  return { loadConfig: createDefaultConfig, createLlmProvider: () => provider };
+}
 
 // Mock electron-log
 vi.mock("electron-log/main", () => ({
@@ -46,7 +54,7 @@ describe("Pipeline", () => {
     const pipeline = new Pipeline({
       recorder: mockRecorder,
       transcribe: mockTranscribe,
-      llmProvider: mockProvider,
+      ...enhancingWith(mockProvider),
       modelPath: "/models/ggml-small.bin",
     });
 
@@ -68,7 +76,7 @@ describe("Pipeline", () => {
     const pipeline = new Pipeline({
       recorder: mockRecorder,
       transcribe: mockTranscribe,
-      llmProvider: failingProvider,
+      ...enhancingWith(failingProvider),
       modelPath: "/models/ggml-small.bin",
     });
 
@@ -86,7 +94,7 @@ describe("Pipeline", () => {
     const pipeline = new Pipeline({
       recorder: mockRecorder,
       transcribe: mockTranscribe,
-      llmProvider: mockProvider,
+      ...enhancingWith(mockProvider),
       modelPath: "/fake/nonexistent/model.bin",
       onStage: vi.fn(),
     });
@@ -100,7 +108,7 @@ describe("Pipeline", () => {
     const pipeline = new Pipeline({
       recorder: mockRecorder,
       transcribe: mockTranscribe,
-      llmProvider: mockProvider,
+      ...enhancingWith(mockProvider),
       modelPath: "/models/ggml-small.bin",
       onComplete,
     });
@@ -126,7 +134,7 @@ describe("Pipeline", () => {
     const pipeline = new Pipeline({
       recorder: mockRecorder,
       transcribe: emptyTranscribe,
-      llmProvider: mockProvider,
+      ...enhancingWith(mockProvider),
       modelPath: "/models/ggml-small.bin",
       onComplete,
     });
@@ -150,7 +158,7 @@ describe("Pipeline", () => {
         cancel: vi.fn(),
       },
       transcribe: mockTranscribe,
-      llmProvider: mockProvider,
+      ...enhancingWith(mockProvider),
       modelPath: "/models/ggml-small.bin",
       onComplete,
     });
@@ -168,7 +176,7 @@ describe("Pipeline", () => {
     const pipeline = new Pipeline({
       recorder: mockRecorder,
       transcribe: mockTranscribe,
-      llmProvider: mockProvider,
+      ...enhancingWith(mockProvider),
       modelPath: "/models/ggml-small.bin",
       analytics: mockAnalytics,
     });
@@ -190,7 +198,7 @@ describe("Pipeline", () => {
     const pipeline = new Pipeline({
       recorder: mockRecorder,
       transcribe: mockTranscribe,
-      llmProvider: new NoopProvider(),
+      ...enhancingWith(new NoopProvider()),
       modelPath: "/models/ggml-small.bin",
       analytics: mockAnalytics,
     });
@@ -215,7 +223,7 @@ describe("Pipeline", () => {
         cancel: vi.fn(),
       },
       transcribe: mockTranscribe,
-      llmProvider: mockProvider,
+      ...enhancingWith(mockProvider),
       modelPath: "/models/ggml-small.bin",
       onStage,
     });
@@ -241,7 +249,7 @@ describe("Pipeline", () => {
     const pipeline = new Pipeline({
       recorder,
       transcribe: mockTranscribe,
-      llmProvider: mockProvider,
+      ...enhancingWith(mockProvider),
       modelPath: "/models/ggml-small.bin",
       onComplete,
     });
@@ -271,7 +279,7 @@ describe("Pipeline", () => {
     const pipeline = new Pipeline({
       recorder,
       transcribe: mockTranscribe,
-      llmProvider: mockProvider,
+      ...enhancingWith(mockProvider),
       modelPath: "/models/ggml-small.bin",
     });
 
@@ -289,7 +297,7 @@ describe("Pipeline", () => {
     const pipeline = new Pipeline({
       recorder: mockRecorder,
       transcribe: failingTranscribe,
-      llmProvider: mockProvider,
+      ...enhancingWith(mockProvider),
       modelPath: "/models/ggml-small.bin",
       onFailure,
     });
@@ -317,7 +325,7 @@ describe("Pipeline", () => {
     const pipeline = new Pipeline({
       recorder: mockRecorder,
       transcribe: mockTranscribe,
-      llmProvider: failingProvider,
+      ...enhancingWith(failingProvider),
       modelPath: "/models/ggml-small.bin",
       onComplete,
     });
@@ -345,7 +353,7 @@ describe("Pipeline", () => {
     const pipeline = new Pipeline({
       recorder: longRecorder,
       transcribe: garbageTranscribe,
-      llmProvider: mockProvider,
+      ...enhancingWith(mockProvider),
       modelPath: "/models/ggml-small.bin",
       onFailure,
     });
@@ -365,7 +373,7 @@ describe("Pipeline", () => {
     const pipeline = new Pipeline({
       recorder: mockRecorder, // Not used for retry
       transcribe: mockTranscribe,
-      llmProvider: mockProvider,
+      ...enhancingWith(mockProvider),
       modelPath: "/models/ggml-small.bin",
       onComplete,
     });
@@ -392,7 +400,7 @@ describe("Pipeline", () => {
     const pipeline = new Pipeline({
       recorder: mockRecorder,
       transcribe: mockTranscribe,
-      llmProvider: failingProvider,
+      ...enhancingWith(failingProvider),
       modelPath: "/models/ggml-small.bin",
       analytics: mockAnalytics,
     });
@@ -416,7 +424,7 @@ describe("Pipeline", () => {
     const pipeline = new Pipeline({
       recorder: mockRecorder,
       transcribe: mockTranscribe,
-      llmProvider: mockProvider,
+      ...enhancingWith(mockProvider),
       modelPath: "/models/ggml-small.bin",
       onTranscriptionComplete,
     });
@@ -435,7 +443,7 @@ describe("Pipeline", () => {
     const pipeline = new Pipeline({
       recorder: mockRecorder,
       transcribe: mockTranscribe,
-      llmProvider: new ActualNoopProvider(),
+      ...enhancingWith(new ActualNoopProvider()),
       modelPath: "/models/ggml-small.bin",
       onTranscriptionComplete,
     });
@@ -453,7 +461,7 @@ describe("Pipeline", () => {
     const pipeline = new Pipeline({
       recorder: mockRecorder,
       transcribe: garbageTranscribe,
-      llmProvider: mockProvider,
+      ...enhancingWith(mockProvider),
       modelPath: "/models/ggml-small.bin",
       onTranscriptionComplete,
     });
@@ -462,5 +470,95 @@ describe("Pipeline", () => {
     await pipeline.stopAndProcess();
 
     expect(onTranscriptionComplete).not.toHaveBeenCalled();
+  });
+
+  describe("active prompt", () => {
+    const mockFetch = vi.fn();
+
+    beforeEach(() => {
+      vi.stubGlobal("fetch", mockFetch);
+      mockFetch.mockReset().mockResolvedValue({
+        ok: true,
+        json: async () => ({ choices: [{ message: { content: "enhanced text" } }] }),
+      });
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    function readyConfig(activePromptId: string | null): VoxConfig {
+      const config: VoxConfig = {
+        ...createDefaultConfig(),
+        enableLlmEnhancement: true,
+        llmConnectionTested: true,
+        llm: { provider: "openai", openaiEndpoint: "https://api.openai.com", openaiApiKey: "sk-test", openaiModel: "gpt-4o" },
+        prompts: [
+          { id: "first", name: "Cleanup", icon: "🧹", instructions: "FIRST INSTRUCTIONS" },
+          { id: "second", name: "German", icon: "🇩🇪", instructions: "SECOND INSTRUCTIONS" },
+        ],
+        activePromptId,
+      };
+      config.llmConfigHash = computeLlmConfigHash(config);
+      return config;
+    }
+
+    it("enhancement uses the prompt active when it starts", async () => {
+      const config = readyConfig("first");
+      const recorder = { ...mockRecorder, cancel: vi.fn() };
+      const pipeline = new Pipeline({
+        recorder,
+        transcribe: mockTranscribe,
+        loadConfig: () => config,
+        createLlmProvider,
+        modelPath: "/models/ggml-small.bin",
+      });
+
+      await pipeline.startRecording();
+      config.activePromptId = "second";
+      const result = await pipeline.stopAndProcess();
+
+      const systemPrompt = JSON.parse(mockFetch.mock.calls[0][1].body).messages[0].content;
+      expect(systemPrompt).toContain("SECOND INSTRUCTIONS");
+      expect(systemPrompt).not.toContain("FIRST INSTRUCTIONS");
+      expect(recorder.cancel).not.toHaveBeenCalled();
+      expect(result).toBe("enhanced text");
+    });
+
+    it("no custom_prompt_used when none active", async () => {
+      const analytics = { track: vi.fn() };
+      const pipeline = new Pipeline({
+        recorder: mockRecorder,
+        transcribe: mockTranscribe,
+        loadConfig: () => readyConfig(null),
+        createLlmProvider,
+        modelPath: "/models/ggml-small.bin",
+        analytics,
+      });
+
+      await pipeline.startRecording();
+      await pipeline.stopAndProcess();
+
+      const events = analytics.track.mock.calls.map((c) => c[0]);
+      expect(events).toContain("llm_enhancement_completed");
+      expect(events).not.toContain("custom_prompt_used");
+    });
+
+    it("custom_prompt_used when a prompt is active", async () => {
+      const analytics = { track: vi.fn() };
+      const pipeline = new Pipeline({
+        recorder: mockRecorder,
+        transcribe: mockTranscribe,
+        loadConfig: () => readyConfig("second"),
+        createLlmProvider,
+        modelPath: "/models/ggml-small.bin",
+        analytics,
+      });
+
+      await pipeline.startRecording();
+      await pipeline.stopAndProcess();
+
+      expect(analytics.track.mock.calls.map((c) => c[0])).toContain("custom_prompt_used");
+    });
   });
 });

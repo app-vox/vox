@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useT } from "../../i18n-context";
+import { useInlineConfirm } from "../../hooks/use-inline-confirm";
 import { TrashIcon, XIcon, AlertTriangleIcon } from "../../../shared/icons";
 import type { ModelInfo } from "../../../preload/index";
 import styles from "./ModelSelector.module.scss";
@@ -66,30 +67,15 @@ function ModelSelectorRow({
   model, selected, isDownloading, progress, isRecommended, onSelect, onDownload, onCancel, onDelete, downloadDisabled,
 }: ModelSelectorRowProps) {
   const t = useT();
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const { confirming: confirmingDelete, buttonRef: confirmBtnRef, handleClick: handleDeleteClick } = useInlineConfirm(onDelete);
   const [error, setError] = useState<string | null>(null);
-  const confirmTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const confirmBtnRef = useRef<HTMLButtonElement>(null);
   const errorTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     return () => {
-      if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
       if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
     };
   }, []);
-
-  useEffect(() => {
-    if (!confirmingDelete) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (confirmBtnRef.current && !confirmBtnRef.current.contains(e.target as Node)) {
-        setConfirmingDelete(false);
-        if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [confirmingDelete]);
 
   useEffect(() => {
     if (error) {
@@ -116,17 +102,6 @@ function ModelSelectorRow({
         // Download failed - show user-friendly error
         setError(t("model.downloadFailed"));
       }
-    }
-  };
-
-  const handleDeleteClick = () => {
-    if (confirmingDelete) {
-      if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
-      setConfirmingDelete(false);
-      onDelete();
-    } else {
-      setConfirmingDelete(true);
-      confirmTimerRef.current = setTimeout(() => setConfirmingDelete(false), 3000);
     }
   };
 

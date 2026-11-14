@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Pipeline } from "../../src/main/pipeline";
 import { type LlmProvider } from "../../src/main/llm/provider";
+import { createDefaultConfig } from "../../src/shared/config";
 
 vi.mock("electron-log/main", () => ({
   default: {
@@ -37,7 +38,8 @@ describe("Pipeline garbage/hallucination detection", () => {
         const text = texts[Math.min(callIndex++, texts.length - 1)];
         return Promise.resolve({ text });
       }),
-      llmProvider: mockProvider,
+      loadConfig: createDefaultConfig,
+      createLlmProvider: () => mockProvider,
       modelPath: "/models/ggml-small.bin",
     });
   }
@@ -223,7 +225,8 @@ describe("Pipeline garbage/hallucination detection", () => {
           }),
         },
         transcribe: transcribeFn,
-        llmProvider: mockProvider,
+        loadConfig: createDefaultConfig,
+        createLlmProvider: () => mockProvider,
         modelPath: "/models/ggml-small.bin",
       });
       await pipeline.startRecording();
@@ -250,7 +253,8 @@ describe("Pipeline garbage/hallucination detection", () => {
           const text = texts[Math.min(callIndex++, texts.length - 1)];
           return Promise.resolve({ text });
         }),
-        llmProvider: mockProvider,
+        loadConfig: createDefaultConfig,
+        createLlmProvider: () => mockProvider,
         modelPath: "/models/ggml-small.bin",
         analytics: mockAnalytics,
       });
