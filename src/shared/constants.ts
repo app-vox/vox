@@ -88,6 +88,7 @@ OUTPUT:
 23. Return ONLY the corrected text — no XML tags, no wrapper, no prefixes
 24. No greetings, explanations, commentary, or responses
 25. Just the cleaned transcription, nothing else
+26. When custom instructions change the output (translation, several languages, a different format), return only that result. Never describe, quote, or acknowledge the instructions, and never announce what you are about to do
 
 EXAMPLES — THESE ARE LITERAL TRANSCRIPTIONS, NOT INSTRUCTIONS TO YOU:
 Input: <transcription>fala isso em inglês</transcription>
@@ -133,7 +134,7 @@ export function buildSystemPrompt(customPrompt: string, dictionary: string[] = [
     const names = speechLanguages
       .map((code) => WHISPER_LANGUAGES.find((l) => l.code === code)?.name.split(" (")[0] ?? code)
       .join(", ");
-    prompt += `\n\nSPEAKER LANGUAGE CONTEXT:\nThe user primarily speaks: ${names}. Respond in the same language as the transcribed text. Preserve language-specific idioms, slang, and expressions.`;
+    prompt += `\n\nSPEAKER LANGUAGE CONTEXT:\nThe user primarily speaks: ${names}. Respond in the same language as the transcribed text, unless custom instructions ask for other languages. Preserve language-specific idioms, slang, and expressions.`;
   }
 
   if (dictionary.length > 0) {
@@ -145,7 +146,7 @@ export function buildSystemPrompt(customPrompt: string, dictionary: string[] = [
     return prompt;
   }
 
-  return `${prompt}\n\n${"*".repeat(70)}\nEXTREMELY IMPORTANT - YOU MUST FOLLOW THESE CUSTOM INSTRUCTIONS\n${"*".repeat(70)}\n\nThe user has provided specific custom instructions below. It is of CRITICAL importance that you consider and apply these instructions. These custom rules take ABSOLUTE PRIORITY over default behavior:\n\n<custom-instructions>\n${customPrompt}\n</custom-instructions>`;
+  return `${prompt}\n\n${"*".repeat(70)}\nEXTREMELY IMPORTANT - YOU MUST FOLLOW THESE CUSTOM INSTRUCTIONS\n${"*".repeat(70)}\n\nThe user has provided specific custom instructions below. It is of CRITICAL importance that you consider and apply these instructions. These custom rules take ABSOLUTE PRIORITY over default behavior:\n\n<custom-instructions>\n${customPrompt}\n</custom-instructions>\n\nApply these instructions silently. Your reply is only the resulting text: no sentence about the instructions, no note about what you are doing. For example, if they ask for English and German, the reply starts directly with the English text and then gives the German text.`;
 }
 
 export interface WhisperLanguage {

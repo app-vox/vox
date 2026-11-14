@@ -76,6 +76,10 @@ describe("scenario schema validation", () => {
         expect(Array.isArray(s.dictionary)).toBe(true);
         expect(s.dictionary!.length).toBeGreaterThan(0);
       }
+
+      if (category === "custom-instructions") {
+        expect(s.promptInstructions?.trim().length ?? 0).toBeGreaterThan(0);
+      }
     });
   });
 });

@@ -10,7 +10,8 @@ import type { PipelineTestConfig } from "./config";
 export interface PipelineRunnerOptions {
   dictionary?: string[];
   speechLanguages?: string[];
-  customPrompt?: string;
+  /** Instructions of the active prompt; none is active when omitted. */
+  promptInstructions?: string;
 }
 
 export interface PipelineResult {
@@ -22,8 +23,9 @@ export interface PipelineResult {
  * Build a minimal VoxConfig from the pipeline test config.
  *
  * The factory reads `config.llm`, `config.enableLlmEnhancement`,
- * `config.llmConnectionTested`, `config.llmConfigHash`, `config.customPrompt`,
- * `config.dictionary`, and `config.speechLanguages`.
+ * `config.llmConnectionTested`, `config.llmConfigHash`, the active prompt
+ * (`config.prompts`, `config.activePromptId`), `config.dictionary`, and
+ * `config.speechLanguages`.
  *
  * We pass `forTest: true` so the factory skips the connection-tested and
  * hash guards, meaning we only need to populate the LLM connection fields
@@ -40,7 +42,10 @@ function buildVoxConfig(
     ...base,
     llm,
     enableLlmEnhancement: true,
-    customPrompt: options.customPrompt ?? "",
+    prompts: options.promptInstructions === undefined
+      ? []
+      : [{ id: "pipeline-test", name: "Pipeline test", icon: "📝", instructions: options.promptInstructions }],
+    activePromptId: options.promptInstructions === undefined ? null : "pipeline-test",
     dictionary: options.dictionary ?? [],
     speechLanguages: options.speechLanguages ?? [],
   };
@@ -59,6 +64,7 @@ function buildLlmConfig(testConfig: PipelineTestConfig): LlmConfig {
         provider: "anthropic",
         anthropicApiKey: testConfig.llm.apiKey,
         anthropicModel: testConfig.llm.model,
+        anthropicEndpoint: testConfig.llm.baseUrl ?? "https://api.anthropic.com",
       };
 
     case "openai":

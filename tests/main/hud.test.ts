@@ -243,4 +243,32 @@ describe("HudWindow", () => {
       vi.useRealTimers();
     });
   });
+
+  describe("prompt switch", () => {
+    it("shows icon and name after a prompt switch when idle", () => {
+      vi.useFakeTimers();
+      const hud = createHudWithWindow();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (hud as any).contentReady = true;
+      hud.show(true, false);
+      mockWindow.webContents.executeJavaScript.mockClear();
+
+      hud.setState("prompt", "🇩🇪 Translate to German");
+
+      const shown = mockWindow.webContents.executeJavaScript.mock.calls
+        .map(([js]) => js as string)
+        .find((js) => js.startsWith('setState("prompt"'));
+      expect(shown).toContain('"labelText":"🇩🇪 Translate to German"');
+      expect(shown).toContain('"showLabel":true');
+      expect(shown).not.toContain("showCopy");
+      expect(hud.getState()).toBe("prompt");
+
+      vi.advanceTimersByTime(1499);
+      expect(hud.getState()).toBe("prompt");
+      vi.advanceTimersByTime(1);
+      expect(hud.getState()).toBe("idle");
+      expect(mockWindow.webContents.executeJavaScript).toHaveBeenLastCalledWith(expect.stringContaining('setState("idle"'));
+      vi.useRealTimers();
+    });
+  });
 });

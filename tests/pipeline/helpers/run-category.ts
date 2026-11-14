@@ -45,6 +45,8 @@ export function runCategory(category: string): void {
         async () => {
           const runnerOptions = {
             dictionary: scenario.dictionary,
+            promptInstructions: scenario.promptInstructions,
+            speechLanguages: scenario.speechLanguages,
           };
 
           let result;

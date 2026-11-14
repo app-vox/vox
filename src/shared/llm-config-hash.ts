@@ -23,6 +23,7 @@ function getProviderFields(llm: LlmConfig): Record<string, string> {
       return {
         anthropicApiKey: llm.anthropicApiKey,
         anthropicModel: llm.anthropicModel,
+        anthropicEndpoint: llm.anthropicEndpoint,
       };
     case "custom":
       return {
@@ -57,4 +58,11 @@ export function computeLlmConfigHash(config: VoxConfig): string {
     ...getProviderFields(config.llm),
   };
   return simpleHash(JSON.stringify(relevant));
+}
+
+/** AI enhancement is on, its connection test passed, and the provider settings are unchanged since. */
+export function isEnhancementReady(config: VoxConfig): boolean {
+  return config.enableLlmEnhancement
+    && config.llmConnectionTested
+    && computeLlmConfigHash(config) === config.llmConfigHash;
 }

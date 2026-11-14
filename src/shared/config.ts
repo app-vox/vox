@@ -46,6 +46,7 @@ export interface AnthropicLlmConfig {
   provider: "anthropic";
   anthropicApiKey: string;
   anthropicModel: string;
+  anthropicEndpoint: string;
 }
 
 export interface CustomLlmConfig {
@@ -97,6 +98,15 @@ export interface ShortcutsConfig {
   mode: ShortcutMode;
   hold: string;
   toggle: string;
+  /** Accelerator for the Next prompt shortcut; "" when unset. */
+  nextPrompt: string;
+}
+
+export interface Prompt {
+  id: string;
+  name: string;
+  icon: string;
+  instructions: string;
 }
 
 export interface VoxConfig {
@@ -107,7 +117,8 @@ export interface VoxConfig {
   enableLlmEnhancement: boolean;
   llmConnectionTested: boolean;
   llmConfigHash: string;
-  customPrompt: string;
+  prompts: Prompt[];
+  activePromptId: string | null;
   launchAtLogin: boolean;
   showInDock: boolean;
   showInTray: boolean;
@@ -153,12 +164,14 @@ export function createDefaultConfig(): VoxConfig {
       mode: "toggle",
       hold: "Alt+Space",
       toggle: "Alt+Shift+Space",
+      nextPrompt: "",
     },
     theme: "system",
     enableLlmEnhancement: false,
     llmConnectionTested: false,
     llmConfigHash: "",
-    customPrompt: "",
+    prompts: [],
+    activePromptId: null,
     launchAtLogin: false,
     showInDock: true,
     showInTray: true,
@@ -215,6 +228,7 @@ export function createDefaultLlmFlat(): LlmConfigFlat {
     litellmEndpoint: "http://localhost:4000",
     anthropicApiKey: "",
     anthropicModel: "claude-sonnet-4-20250514",
+    anthropicEndpoint: "https://api.anthropic.com",
     customEndpoint: "",
     customToken: "",
     customTokenAttr: "Authorization",
@@ -267,6 +281,7 @@ export function narrowLlmConfig(flat: LlmConfigFlat): LlmConfig {
         provider: "anthropic",
         anthropicApiKey: flat.anthropicApiKey,
         anthropicModel: flat.anthropicModel,
+        anthropicEndpoint: flat.anthropicEndpoint,
       };
     case "custom":
       return {

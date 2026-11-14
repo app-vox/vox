@@ -1,0 +1,82 @@
+[
+  {
+    "id": "custom-instructions-001",
+    "description": "Real case: Portuguese speech, speech languages en/pt/de, two-language translation prompt — output is only the two translations, with no note about the instructions",
+    "spokenText": "Então, a ideia é ter a opção de ter vários custom prompts. No caso que você queira mudar o tom da conversa, do transcript, você pode mudar. Ou, no caso aqui, eu estou testando com tradução e funcionou a tradução para duas línguas. E também tem um shortcut ali que você pode ciclar entre os prompts e aparece no HUD.",
+    "audioFile": "custom-instructions/001.wav",
+    "speechLanguages": ["en", "pt", "de"],
+    "promptInstructions": "Translate the text into English and German. Output only the translation, keeping the original meaning, tone and formatting.\n\nDo NOT add any additional information such as a brief \"introduction/header\" like\n```\nThe custom instructions say to translate into English and German and output only the translation. So I'll provide both.\n```",
+    "expectedOutput": "So, the idea is to have the option of having several custom prompts. In case you want to change the tone of the conversation, of the transcript, you can change it. Or, in this case, I'm testing with translation, and the translation worked for two languages. And there's also a shortcut there that lets you cycle between the prompts, and it shows up in the HUD.\n\nAlso, die Idee ist, die Möglichkeit zu haben, mehrere benutzerdefinierte Prompts zu verwenden. Falls du den Ton des Gesprächs, des Transkripts, ändern möchtest, kannst du das tun. Oder, in diesem Fall, teste ich gerade mit Übersetzung, und die Übersetzung hat für zwei Sprachen funktioniert. Außerdem gibt es dort einen Shortcut, mit dem du zwischen den Prompts wechseln kannst, und er wird im HUD angezeigt.",
+    "minSimilarity": 0.4,
+    "assertions": [
+      { "type": "must_not_contain", "value": "custom instructions" },
+      { "type": "must_not_contain", "value": "I'll provide" },
+      { "type": "must_not_contain", "value": "I'll follow" },
+      { "type": "must_match_regex", "value": "\\b(die|der|das|und|ist)\\b" },
+      { "type": "must_contain", "value": "prompts" }
+    ]
+  },
+  {
+    "id": "custom-instructions-002",
+    "description": "Plain two-language translation prompt — output starts with the translation, not with a sentence about what the model will do",
+    "spokenText": "I tested it today and the translation worked for two languages which is pretty awesome",
+    "audioFile": "custom-instructions/002.wav",
+    "promptInstructions": "Translate the text into English and German. Output only the translation, keeping the original meaning, tone and formatting.",
+    "expectedOutput": "I tested it today, and the translation worked for two languages, which is pretty awesome!\n\nIch habe es heute getestet, und die Übersetzung hat für zwei Sprachen funktioniert, was ziemlich großartig ist!",
+    "minSimilarity": 0.4,
+    "assertions": [
+      { "type": "must_not_contain", "value": "custom instructions" },
+      { "type": "must_not_contain", "value": "I'll" },
+      { "type": "must_not_contain", "value": "Here is" },
+      { "type": "must_not_contain", "value": "Here's" },
+      { "type": "must_match_regex", "value": "\\b(die|der|das|und|ist)\\b" }
+    ]
+  },
+  {
+    "id": "custom-instructions-003",
+    "description": "Single-language translation prompt — output is only the German text",
+    "spokenText": "can you send me the report by Friday afternoon please",
+    "audioFile": "custom-instructions/003.wav",
+    "promptInstructions": "Translate the text into German. Output only the translation.",
+    "expectedOutput": "Kannst du mir den Bericht bis Freitagnachmittag schicken, bitte?",
+    "minSimilarity": 0.5,
+    "assertions": [
+      { "type": "must_contain", "value": "Bericht" },
+      { "type": "must_not_contain", "value": "custom instructions" },
+      { "type": "must_not_contain", "value": "Here is" },
+      { "type": "must_not_contain", "value": "Translation" },
+      { "type": "must_not_contain", "value": "report" }
+    ]
+  },
+  {
+    "id": "custom-instructions-004",
+    "description": "Brazilian Portuguese translation prompt — output is only the Portuguese text",
+    "spokenText": "the meeting was moved to Tuesday because the client is traveling",
+    "audioFile": "custom-instructions/004.wav",
+    "promptInstructions": "Translate the text into Brazilian Portuguese. Output only the translation.",
+    "expectedOutput": "A reunião foi remarcada para terça-feira porque o cliente está viajando.",
+    "minSimilarity": 0.5,
+    "assertions": [
+      { "type": "must_contain", "value": "reunião" },
+      { "type": "must_not_contain", "value": "custom instructions" },
+      { "type": "must_not_contain", "value": "Here is" },
+      { "type": "must_not_contain", "value": "meeting" }
+    ]
+  },
+  {
+    "id": "custom-instructions-005",
+    "description": "Format-changing prompt — output is only the bulleted list, with no lead-in sentence",
+    "spokenText": "we need to buy milk then call the plumber and finally send the invoice to the client",
+    "audioFile": "custom-instructions/005.wav",
+    "promptInstructions": "Format the text as a bulleted list with one item per task.",
+    "expectedOutput": "- Buy milk\n- Call the plumber\n- Send the invoice to the client",
+    "minSimilarity": 0.5,
+    "assertions": [
+      { "type": "must_match_regex", "value": "^[-•*] " },
+      { "type": "must_contain", "value": "plumber" },
+      { "type": "must_not_contain", "value": "Here is" },
+      { "type": "must_not_contain", "value": "Here's" },
+      { "type": "must_not_contain", "value": "custom instructions" }
+    ]
+  }
+]

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 vi.mock("electron-log/main", () => ({
   default: {
@@ -104,5 +104,57 @@ describe("createLlmProvider", () => {
       llm: { provider: "foundry", endpoint: "https://example.com", apiKey: "key", model: "claude" },
     });
     expect(createLlmProvider(config, { forTest: true })).toBeInstanceOf(FoundryProvider);
+  });
+});
+
+describe("createLlmProvider with prompts", () => {
+  const mockFetch = vi.fn();
+
+  beforeEach(() => {
+    vi.stubGlobal("fetch", mockFetch);
+    mockFetch.mockReset().mockResolvedValue({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: "cleaned" } }] }),
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  function readyConfig(activePromptId: string | null): VoxConfig {
+    const config = makeVoxConfig({
+      enableLlmEnhancement: true,
+      llmConnectionTested: true,
+      llm: { provider: "openai", openaiEndpoint: "https://api.openai.com", openaiApiKey: "sk-test", openaiModel: "gpt-4o" },
+      prompts: [
+        { id: "first", name: "Cleanup", icon: "🧹", instructions: "FIRST INSTRUCTIONS" },
+        { id: "second", name: "German", icon: "🇩🇪", instructions: "SECOND INSTRUCTIONS" },
+      ],
+      activePromptId,
+    });
+    config.llmConfigHash = computeLlmConfigHash(config);
+    return config;
+  }
+
+  async function systemPromptSent(config: VoxConfig): Promise<string> {
+    await createLlmProvider(config).correct("raw text");
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+    return body.messages[0].content;
+  }
+
+  it("uses the active prompt text", async () => {
+    const systemPrompt = await systemPromptSent(readyConfig("second"));
+
+    expect(systemPrompt).toContain("<custom-instructions>\nSECOND INSTRUCTIONS\n</custom-instructions>");
+    expect(systemPrompt).not.toContain("FIRST INSTRUCTIONS");
+  });
+
+  it("none active adds no custom block", async () => {
+    const systemPrompt = await systemPromptSent(readyConfig(null));
+
+    expect(systemPrompt).not.toContain("<custom-instructions>");
+    expect(systemPrompt).not.toContain("FIRST INSTRUCTIONS");
+    expect(systemPrompt).not.toContain("SECOND INSTRUCTIONS");
   });
 });

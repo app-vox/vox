@@ -96,4 +96,28 @@ describe("ModelSelector", () => {
     );
     expect(screen.getByText("Recommended")).toBeInTheDocument();
   });
+
+  it("deletes a model on the second click of the inline confirm", () => {
+    const onDelete = vi.fn();
+    renderWithI18n(
+      <ModelSelector models={models} selectedSize="tiny" downloading={null} progress={{ downloaded: 0, total: 0 }} onSelect={vi.fn()} onDownload={vi.fn()} onCancel={vi.fn()} onDelete={onDelete} />
+    );
+    fireEvent.click(screen.getByTitle("Delete model"));
+    expect(onDelete).not.toHaveBeenCalled();
+    fireEvent.mouseDown(screen.getByText("Confirm?"));
+    fireEvent.click(screen.getByText("Confirm?"));
+    expect(onDelete).toHaveBeenCalledWith("tiny");
+  });
+
+  it("cancels the inline confirm on a click elsewhere", () => {
+    const onDelete = vi.fn();
+    renderWithI18n(
+      <ModelSelector models={models} selectedSize="tiny" downloading={null} progress={{ downloaded: 0, total: 0 }} onSelect={vi.fn()} onDownload={vi.fn()} onCancel={vi.fn()} onDelete={onDelete} />
+    );
+    fireEvent.click(screen.getByTitle("Delete model"));
+    fireEvent.mouseDown(document.body);
+    expect(screen.queryByText("Confirm?")).not.toBeInTheDocument();
+    expect(screen.getByTitle("Delete model")).toBeInTheDocument();
+    expect(onDelete).not.toHaveBeenCalled();
+  });
 });

@@ -23,6 +23,7 @@ describe("AnthropicProvider", () => {
     provider = new AnthropicProvider({
       apiKey: "sk-ant-test-key",
       model: "claude-sonnet-4-20250514",
+      endpoint: "https://api.anthropic.com",
       customPrompt: LLM_SYSTEM_PROMPT,
       hasCustomPrompt: false,
     });
@@ -41,6 +42,24 @@ describe("AnthropicProvider", () => {
 
     expect(result).toBe("I wanted to talk about the new feature.");
     expect(mockFetch).toHaveBeenCalledOnce();
+  });
+
+  it("should post to the configured endpoint, ignoring trailing slashes", async () => {
+    const bridge = new AnthropicProvider({
+      apiKey: "k",
+      model: "claude-haiku-5-5",
+      endpoint: "http://127.0.0.1:4142/",
+      customPrompt: LLM_SYSTEM_PROMPT,
+      hasCustomPrompt: false,
+    });
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ content: [{ type: "text", text: "ok" }] }),
+    });
+
+    await bridge.correct("hello");
+
+    expect(mockFetch.mock.calls[0][0]).toBe("http://127.0.0.1:4142/v1/messages");
   });
 
   it("should throw on HTTP error", async () => {
