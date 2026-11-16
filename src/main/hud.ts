@@ -82,8 +82,8 @@ function buildHudHtml(): string {
     --hud-hover-btn-bg: rgba(40, 40, 40, 0.95);
     --hud-hover-btn-accent: rgba(99, 102, 241, 0.8);
     --hud-error-hover: rgba(239, 68, 68, 0.8);
-    --hud-text-panel-bg: rgba(20, 20, 35, 0.95);
-    --hud-text-panel-border: rgba(255, 255, 255, 0.08);
+    --hud-text-panel-bg: rgba(24, 24, 27, 0.97);
+    --hud-text-panel-border: rgba(108, 100, 160, 0.32);
     --hud-text-panel-text: rgba(255, 255, 255, 0.9);
     --hud-shadow: 0 2px 4px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.15);
     --hud-spinner-track: rgba(255,255,255,0.2);
@@ -110,8 +110,8 @@ function buildHudHtml(): string {
     --hud-hover-btn-bg: rgba(245, 245, 245, 0.98);
     --hud-hover-btn-accent: rgba(79, 70, 229, 0.85);
     --hud-error-hover: rgba(239, 68, 68, 0.85);
-    --hud-text-panel-bg: rgba(255, 255, 255, 0.97);
-    --hud-text-panel-border: rgba(0, 0, 0, 0.08);
+    --hud-text-panel-bg: rgba(252, 252, 254, 0.97);
+    --hud-text-panel-border: rgba(148, 142, 218, 0.22);
     --hud-text-panel-text: rgba(23, 23, 23, 0.9);
     --hud-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06), 0 8px 32px rgba(0,0,0,0.04);
     --hud-spinner-track: rgba(0,0,0,0.12);
@@ -602,7 +602,7 @@ function buildHudHtml(): string {
   .text-panel.visible {
     display: flex;
     flex-direction: column;
-    padding: 8px 0 12px 0;
+    padding: 10px 0 10px 0;
     max-height: ${TEXT_PANEL_MAX_HEIGHT}px;
     overflow: hidden;
     animation: tpAppear 250ms ease forwards;
@@ -655,7 +655,7 @@ function buildHudHtml(): string {
   .text-panel.hiding {
     display: flex;
     flex-direction: column;
-    padding: 8px 0 12px 0;
+    padding: 10px 0 10px 0;
     max-height: ${TEXT_PANEL_MAX_HEIGHT}px;
     overflow: hidden;
     animation: tpHide 180ms ease forwards;
@@ -726,7 +726,9 @@ function buildHudHtml(): string {
     display: inline-flex;
     align-items: center;
     vertical-align: middle;
-    margin-left: -3px;
+    position: relative;
+    top: -3px;
+    margin-left: -2px;
     opacity: 0.65;
     color: var(--hud-text-panel-text);
     animation: penWrite 0.55s ease-in-out infinite;
@@ -1317,9 +1319,15 @@ tpScroll.addEventListener('scroll', function() {
   tpUserScrolled = !atBottom;
 });
 
+var tpScrollPending = false;
 function tpScrollToBottom() {
   if (tpUserScrolled) return;
-  requestAnimationFrame(function() { tpScroll.scrollTop = tpScroll.scrollHeight; });
+  if (tpScrollPending) return;
+  tpScrollPending = true;
+  requestAnimationFrame(function() {
+    tpScrollPending = false;
+    tpScroll.scrollTop = tpScroll.scrollHeight;
+  });
 }
 
 function showTextPanel(text) {

@@ -21,6 +21,7 @@ export interface PipelineDeps {
     stop(): Promise<RecordingResult>;
     cancel(): Promise<void>;
     snapshot?(maxSeconds?: number): Promise<RecordingResult | null>;
+    trimBuffer?(keepSeconds: number): Promise<void>;
     playAudioCue?(samples: number[], sampleRate?: number): Promise<void>;
   };
   transcribe(
@@ -29,7 +30,8 @@ export interface PipelineDeps {
     modelPath: string,
     dictionary?: string[],
     speechLanguages?: string[],
-    temperature?: number
+    temperature?: number,
+    contextPrompt?: string
   ): Promise<TranscriptionResult>;
   llmProvider: LlmProvider;
   modelPath: string;
@@ -78,7 +80,16 @@ const COMMON_HALLUCINATIONS = [
   "amara.org", "subtitles by",
   "subtitles by the amara.org community",
   "copyright", "all rights reserved",
+  "audio may contain multiple languages mixed together",
+  "this audio may contain multiple languages mixed together",
+  "this audio contains multiple languages",
+  "this video contains multiple languages",
+  "audio may contain a few words",
+  "this audio may contain a few words",
 ];
+
+// Inline hallucination patterns — stripped from text even when mixed with real content
+const INLINE_HALLUCINATION_RE = /\b((?:this )?(?:audio|video) may contain (?:multiple languages(?: mixed together)?|a few words)|this (?:audio|video) contains? multiple languages(?: mixed together)?)\b\.?/gi;
 
 export function detectGarbage(text: string): GarbageReason | null {
   const normalized = text.toLowerCase().trim();
@@ -219,9 +230,10 @@ export class Pipeline {
     await this.deps.recorder.playAudioCue?.(samples, sampleRate);
   }
 
-  async snapshotAndTranscribe(): Promise<string | null> {
-    // Full buffer — gives Whisper all context for the most accurate preview
-    const snapshot = await this.deps.recorder.snapshot?.();
+  async snapshotAndTranscribe(maxSeconds?: number, contextPrompt?: string): Promise<string | null> {
+    // When maxSeconds is provided, only transcribe the last N seconds (streaming mode)
+    // Otherwise, use full buffer for maximum accuracy
+    const snapshot = await this.deps.recorder.snapshot?.(maxSeconds);
     if (!snapshot || snapshot.audioBuffer.length === 0) return null;
     // Require at least 0.5s of audio for meaningful transcription
     const durationMs = (snapshot.audioBuffer.length / snapshot.sampleRate) * 1000;
@@ -233,11 +245,14 @@ export class Pipeline {
         this.deps.modelPath,
         this.deps.dictionary,
         this.deps.speechLanguages,
+        undefined,
+        contextPrompt,
       );
       const text = result.text
         .replace(/\[[^\]]*\]/g, "")
         .replace(/\([^)]*\)/g, "")
         .replace(/\*[^*]*\*/g, "")
+        .replace(INLINE_HALLUCINATION_RE, "")
         .replace(/\s{2,}/g, " ")
         .trim();
       if (!text || !!detectGarbage(text)) return null;
@@ -277,9 +292,11 @@ export class Pipeline {
    * skipping the Whisper transcription step entirely. Falls back to full
    * Whisper transcription if the hint is empty or detected as garbage.
    */
-  async stopAndProcessWithHint(hintText: string): Promise<string> {
+  async stopAndProcessWithHint(hintText: string, finalSnapshotMs = 0): Promise<string> {
     const gen = this.generation;
+    const recStopStart = performance.now();
     const recording = await this.deps.recorder.stop();
+    slog.debug("recorder.stop() took %dms (audio: %ds)", Math.round(performance.now() - recStopStart), Math.round(recording.audioBuffer.length / recording.sampleRate));
     this.heldRecording = recording;
 
     if (this.canceled || gen !== this.generation) {
@@ -292,15 +309,19 @@ export class Pipeline {
       return this.processFromRecording(recording, gen);
     }
 
-    slog.info("Using live preview as transcript, skipping Whisper: %s", rawText.slice(0, 80));
-    this.heldTranscription = rawText;
-    this.deps.onTranscriptionComplete?.(rawText);
+    const startTime = Date.now();
+    slog.info("✓ Using live preview hint (%d chars), skipping Whisper", rawText.length);
 
     if (this.canceled || gen !== this.generation) {
       throw new CanceledError();
     }
 
-    return this.processFromTranscription(rawText, recording, gen);
+    this.heldTranscription = rawText;
+    this.deps.onTranscriptionComplete?.(rawText);
+
+    const result = await this.processFromTranscription(rawText, recording, gen, finalSnapshotMs);
+    slog.info("✓ Hint path completed in %dms", Date.now() - startTime);
+    return result;
   }
 
   gracefulCancel(): { stage: PipelineStage | "listening" } {

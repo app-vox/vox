@@ -297,11 +297,14 @@ describe("ShortcutManager — live preview session close", () => {
     vi.restoreAllMocks();
   });
 
-  it("closeLivePreview() sets session flag, stops live transcription, and hides text panel", () => {
+  it("closeLivePreview() sets session flag, disables UI updates, and hides text panel — keeps timer running", () => {
+    const timer = setTimeout(() => {}, 10000);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (manager as any).livePreviewClosedForSession = false;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (manager as any).liveTranscriptionTimer = setTimeout(() => {}, 10000);
+    (manager as any).liveTranscriptionTimer = timer;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (manager as any).liveTranscriptionShowUI = true;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (manager as any).closeLivePreview();
@@ -309,8 +312,12 @@ describe("ShortcutManager — live preview session close", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((manager as any).livePreviewClosedForSession).toBe(true);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect((manager as any).liveTranscriptionTimer).toBeNull();
+    expect((manager as any).liveTranscriptionShowUI).toBe(false);
+    // Timer kept alive — snapshot loop runs in background for hint building
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((manager as any).liveTranscriptionTimer).not.toBeNull();
     expect(mockHud.hideTextPanel).toHaveBeenCalledOnce();
+    clearTimeout(timer);
   });
 
   it("onRecordingStart() resets livePreviewClosedForSession to false each time", async () => {
@@ -344,5 +351,87 @@ describe("ShortcutManager — live preview session close", () => {
     expect((manager as any).livePreviewClosedForSession).toBe(false);
     // showTextPanelEmpty is called by startLiveTranscription, confirming live preview restarted
     expect(mockHud.showTextPanelEmpty).toHaveBeenCalled();
+  });
+});
+
+describe("ShortcutManager — mergeTranscriptions", () => {
+  let manager: ShortcutManager;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    const mockPipeline = createMockPipeline();
+    const mockConfigManager = {
+      load: vi.fn().mockReturnValue(createMockConfig()),
+    };
+    manager = new ShortcutManager({
+      configManager: mockConfigManager,
+      getPipeline: () => mockPipeline,
+    } as unknown as ShortcutManagerDeps);
+  });
+
+  it("returns new snapshot when accumulated is empty", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = (manager as any).mergeTranscriptions("", "hello world");
+    expect(result).toBe("hello world");
+  });
+
+  it("appends new text when no overlap is found", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = (manager as any).mergeTranscriptions("hello world", "this is new");
+    expect(result).toBe("hello world this is new");
+  });
+
+  it("detects overlap at the end and appends remaining words", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = (manager as any).mergeTranscriptions(
+      "hello world testing",
+      "world testing foo bar"
+    );
+    expect(result).toBe("hello world testing foo bar");
+  });
+
+  it("detects single word overlap", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = (manager as any).mergeTranscriptions(
+      "hello world",
+      "world again"
+    );
+    expect(result).toBe("hello world again");
+  });
+
+  it("returns accumulated text when new snapshot is identical", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = (manager as any).mergeTranscriptions(
+      "hello world",
+      "hello world"
+    );
+    expect(result).toBe("hello world");
+  });
+
+  it("handles case-insensitive overlap", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = (manager as any).mergeTranscriptions(
+      "Hello World",
+      "world testing"
+    );
+    expect(result).toBe("Hello World testing");
+  });
+
+  it("tries up to 5 words for overlap detection", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = (manager as any).mergeTranscriptions(
+      "one two three four five six",
+      "three four five six seven eight"
+    );
+    expect(result).toBe("one two three four five six seven eight");
+  });
+
+  it("appends when overlap is longer than available words", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = (manager as any).mergeTranscriptions(
+      "hello",
+      "world testing"
+    );
+    expect(result).toBe("hello world testing");
   });
 });
