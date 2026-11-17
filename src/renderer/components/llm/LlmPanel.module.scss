@@ -110,9 +110,31 @@
   gap: var(--spacing-0-75);
   max-height: 320px;
   margin: 0;
-  padding: 0;
+  padding: 0 var(--spacing-1) 0 0;
   overflow-y: auto;
   list-style: none;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background: var(--color-border);
+  }
+}
+
+.dragging {
+  opacity: 0.4;
+}
+
+.dropTarget {
+  border-radius: var(--radius-md);
+  box-shadow: 0 0 0 1px var(--color-accent);
 }
 
 .promptRow {
@@ -166,28 +188,56 @@
 
 .promptListActions {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: var(--spacing-2);
   margin-top: var(--spacing-3);
+
+  button {
+    justify-content: center;
+    width: 100%;
+  }
 }
 
 .templateMenuAnchor {
   position: relative;
+
+  > button[aria-expanded="true"] {
+    border-color: var(--color-border-hover);
+    background: var(--color-bg-hover);
+    outline: none;
+  }
 }
 
 .templateMenu {
   position: absolute;
-  top: calc(100% + var(--spacing-1));
+  bottom: calc(100% + var(--spacing-1));
+  max-height: 320px;
+  overflow-y: auto;
   left: 0;
   z-index: 10;
   display: flex;
   flex-direction: column;
+  width: max-content;
   min-width: 200px;
+  max-width: 320px;
   padding: var(--spacing-1) 0;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-bg-card);
   box-shadow: 0 4px 16px var(--color-shadow);
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background: var(--color-border);
+  }
 }
 
 .templateItem {
@@ -230,7 +280,12 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-2);
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
   margin-top: var(--spacing-4);
+  padding: var(--spacing-3) 0;
+  background: var(--color-bg-card);
 }
 
 .confirmDelete {

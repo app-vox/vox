@@ -15,7 +15,7 @@ import { CustomProviderFields } from "./CustomProviderFields";
 import { StatusBox } from "../ui/StatusBox";
 import { NewDot } from "../ui/NewDot";
 import { CustomSelect } from "../ui/CustomSelect";
-import { ExternalLinkIcon, CheckCircleIcon, InfoCircleAltIcon, CopyIcon, SparkleIcon, PlayIcon } from "../../../shared/icons";
+import { ExternalLinkIcon, CheckCircleIcon, SparkleIcon, PlayIcon } from "../../../shared/icons";
 import type { LlmProviderType, LlmConfig, Prompt } from "../../../shared/config";
 import { computeLlmConfigHash } from "../../../shared/llm-config-hash";
 import { findActivePrompt } from "../../../shared/prompts";
@@ -74,7 +74,8 @@ export function LlmPanel() {
     cancel: cancelDelete,
   } = useInlineConfirm(() => deleteSelectedPrompt());
   const [visitedCustomPrompt, setVisitedCustomPrompt] = useState(() => localStorage.getItem("vox:visited-custom-prompt") === "true");
-  const [copiedExample, setCopiedExample] = useState<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [hasPickedProvider, setHasPickedProvider] = useState(false);
   const testSectionRef = useRef<HTMLDivElement>(null);
 
@@ -224,6 +225,20 @@ export function LlmPanel() {
     setTemplatesOpen(false);
     selectPrompt(created.id);
     saveConfig(true);
+  };
+
+  const movePrompt = (id: string, toIndex: number) => {
+    const from = config.prompts.findIndex((prompt) => prompt.id === id);
+    if (from < 0 || toIndex < 0 || toIndex >= config.prompts.length || toIndex === from) return;
+    const reordered = [...config.prompts];
+    reordered.splice(toIndex, 0, ...reordered.splice(from, 1));
+    updateConfig({ prompts: reordered });
+    saveConfig(true);
+  };
+
+  const endDrag = () => {
+    setDraggingId(null);
+    setDragOverId(null);
   };
 
   const editSelectedPrompt = (changes: Partial<Omit<Prompt, "id">>) => {
@@ -398,11 +413,38 @@ export function LlmPanel() {
                 <div>
                   <ul aria-label={t("llm.prompts.listLabel")} className={styles.promptRows}>
                     {[{ id: null, icon: "", name: t("llm.prompts.none") }, ...config.prompts].map((prompt) => (
-                      <li key={prompt.id ?? "none"}>
+                      <li
+                        key={prompt.id ?? "none"}
+                        draggable={prompt.id !== null}
+                        onDragStart={(e) => {
+                          if (!prompt.id) return;
+                          e.dataTransfer.effectAllowed = "move";
+                          e.dataTransfer.setData("text/plain", prompt.id);
+                          setDraggingId(prompt.id);
+                        }}
+                        onDragOver={(e) => {
+                          if (!draggingId || !prompt.id) return;
+                          e.preventDefault();
+                          setDragOverId(prompt.id);
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          if (draggingId && prompt.id) movePrompt(draggingId, config.prompts.findIndex((p) => p.id === prompt.id));
+                          endDrag();
+                        }}
+                        onDragEnd={endDrag}
+                        className={`${draggingId === prompt.id ? styles.dragging : ""} ${dragOverId === prompt.id && draggingId !== prompt.id ? styles.dropTarget : ""}`}
+                      >
                         <button
                           type="button"
                           aria-current={prompt.id === shownPromptId ? "true" : undefined}
                           onClick={() => selectPrompt(prompt.id)}
+                          onKeyDown={(e) => {
+                            if (!prompt.id || !e.altKey || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return;
+                            e.preventDefault();
+                            const from = config.prompts.findIndex((p) => p.id === prompt.id);
+                            movePrompt(prompt.id, from + (e.key === "ArrowUp" ? -1 : 1));
+                          }}
                           className={`${styles.promptRow} ${prompt.id === shownPromptId ? styles.selected : ""}`}
                         >
                           <span className={styles.promptIcon}>{prompt.icon}</span>
@@ -496,47 +538,10 @@ export function LlmPanel() {
                           onChange={(e) => editSelectedPrompt({ instructions: e.target.value })}
                           onBlur={flushPromptEdit}
                           placeholder={t("llm.customInstructionsPlaceholder")}
-                          rows={12}
+                          rows={8}
                           className={form.monospaceTextarea}
                           style={{ resize: "none" }}
                         />
-                        <details className={form.exampleDetails}>
-                          <summary>
-                            <InfoCircleAltIcon width={13} height={13} />
-                            {t("llm.exampleInstructions")}
-                          </summary>
-                          <ul>
-                            {([
-                              { label: t("llm.exampleProfessionalLabel"), text: t("llm.exampleProfessional"), key: "professional" },
-                              { label: t("llm.exampleFormalLabel"), text: t("llm.exampleFormal"), key: "formal" },
-                              { label: t("llm.exampleCasualLabel"), text: t("llm.exampleCasual"), key: "casual" },
-                              { label: t("llm.exampleFunnyLabel"), text: t("llm.exampleFunny"), key: "funny" },
-                              { label: t("llm.exampleEmojisLabel"), text: t("llm.exampleEmojis"), key: "emojis" },
-                              { label: t("llm.exampleConciseLabel"), text: t("llm.exampleConcise"), key: "concise" },
-                              { label: t("llm.exampleLanguageLabel"), text: t("llm.exampleLanguage"), key: "language" },
-                            ]).map((ex) => (
-                              <li key={ex.key} className={form.exampleItem}>
-                                <span><strong>{ex.label}</strong> {ex.text}</span>
-                                <button
-                                  type="button"
-                                  className={form.exampleCopyBtn}
-                                  title={copiedExample === ex.key ? t("history.copied") : t("history.copy")}
-                                  onClick={() => {
-                                    const clean = ex.text.replace(/^[""\u201C]|[""\u201D]$/g, "");
-                                    window.voxApi.clipboard.write(clean);
-                                    setCopiedExample(ex.key);
-                                    setTimeout(() => setCopiedExample((prev) => prev === ex.key ? null : prev), 1500);
-                                  }}
-                                >
-                                  {copiedExample === ex.key
-                                    ? <CheckCircleIcon width={12} height={12} />
-                                    : <CopyIcon width={12} height={12} />
-                                  }
-                                </button>
-                              </li>
-                            ))}
-                          </ul>
-                        </details>
                       </div>
                       <div className={styles.editorActions}>
                         {makeActiveButton}

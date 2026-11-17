@@ -23,7 +23,8 @@ export async function transcribe(
   modelPath: string,
   dictionary: string[] = [],
   speechLanguages: string[] = [],
-  temperature?: number
+  temperature?: number,
+  signal?: AbortSignal
 ): Promise<TranscriptionResult> {
   const tempPath = path.join(os.tmpdir(), `vox-recording-${crypto.randomUUID()}.wav`);
 
@@ -36,7 +37,8 @@ export async function transcribe(
     const prompt = buildWhisperPrompt(dictionary, whisperArgs.promptPrefix);
     const language = whisperConfig.resolveLanguage(whisperArgs.language, speechLanguages);
 
-    const stdout = await runWhisperCli(modelPath, tempPath, prompt, language, temperature);
+    const timeoutMs = whisperTimeoutMs(audioBuffer.length / sampleRate);
+    const stdout = await runWhisperCli(modelPath, tempPath, prompt, language, temperature, timeoutMs, signal);
     const text = parseWhisperOutput(stdout);
 
     return { text };
@@ -47,7 +49,20 @@ export async function transcribe(
   }
 }
 
-function runWhisperCli(modelPath: string, filePath: string, prompt: string, language = "auto", temperature?: number): Promise<string> {
+// Inference time grows with audio length, so a fixed timeout kills long recordings.
+export function whisperTimeoutMs(audioSeconds: number): number {
+  return whisperConfig.timeout + Math.ceil(audioSeconds * whisperConfig.timeoutPerAudioSecond);
+}
+
+function runWhisperCli(
+  modelPath: string,
+  filePath: string,
+  prompt: string,
+  language = "auto",
+  temperature: number | undefined,
+  timeoutMs: number,
+  signal: AbortSignal | undefined
+): Promise<string> {
   const args = [
     "-t", String(whisperConfig.threads),
     "-l", language,
@@ -63,7 +78,7 @@ function runWhisperCli(modelPath: string, filePath: string, prompt: string, lang
     execFile(
       WHISPER_BIN,
       args,
-      { timeout: whisperConfig.timeout },
+      { timeout: timeoutMs, signal },
       (error, stdout, stderr) => {
         if (error) {
           reject(new Error(`Whisper failed: ${stderr || error.message}`));
