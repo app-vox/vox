@@ -43,7 +43,7 @@ function clampX(x: number, width: number): number {
   return Math.max(minX, Math.min(x, maxX));
 }
 
-export type HudState = "idle" | "initializing" | "listening" | "transcribing" | "enhancing" | "error" | "canceled" | "warning";
+export type HudState = "idle" | "initializing" | "listening" | "transcribing" | "enhancing" | "error" | "canceled" | "warning" | "prompt";
 
 
 function getLogoDataUrl(): string {
@@ -269,7 +269,7 @@ function buildHudHtml(): string {
   .widget.pill.enhancing .pill-cancel:active {
     transform: translateY(-50%) scale(0.92);
   }
-  .widget.pill.error, .widget.pill.canceled {
+  .widget.pill.error, .widget.pill.canceled, .widget.pill.prompt {
     background: var(--hud-bg);
     border-color: var(--hud-border-md);
     box-shadow: 0 2px 4px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2);
@@ -1168,8 +1168,8 @@ function setState(newState, cfg) {
     if (pillLabel) pillLabel.classList.remove('clickable');
   }
 
-  // Auto-size pill width and hover-pause only for error/warning states
-  if (newState === 'error' || newState === 'warning') {
+  // Auto-size pill width and hover-pause only for error/warning/prompt states
+  if (newState === 'error' || newState === 'warning' || newState === 'prompt') {
     autoSizePill();
     startFlashHoverTracking();
   } else {
@@ -1673,6 +1673,7 @@ const INDICATOR_KEYS: Record<string, string> = {
   error: "indicator.nothingHeard",
   canceled: "indicator.canceled",
   warning: "notification.insertFailed",
+  prompt: "indicator.promptSwitched",
 };
 
 const PILL_MODES: Record<string, Omit<PillModeConfig, "labelText">> = {
@@ -1683,6 +1684,7 @@ const PILL_MODES: Record<string, Omit<PillModeConfig, "labelText">> = {
   error:        { color: "#fbbf24", icon: "x-icon", showLabel: true, showCancel: false, showStop: false, animation: "glow" },
   canceled:     { color: "#fbbf24", icon: "x-icon", showLabel: true, showCancel: false, showStop: false, animation: "glow" },
   warning:      { color: "#fbbf24", icon: "x-icon", showLabel: true, showCancel: false, showStop: false, animation: "glow" },
+  prompt:       { color: "#44aaff", icon: "dot", showLabel: true, showCancel: false, showStop: false, animation: "none" },
 };
 
 export class HudWindow {
@@ -1850,7 +1852,7 @@ export class HudWindow {
       this.execSetScale(1.0);
     }
 
-    if ((state === "error" || state === "canceled" || state === "warning") && !suppressFlash) {
+    if ((state === "error" || state === "canceled" || state === "warning" || state === "prompt") && !suppressFlash) {
       const delay = state === "warning" ? 5000 : state === "error" ? 3000 : 1500;
       this.flashStartedAt = Date.now();
       this.flashDurationMs = delay;

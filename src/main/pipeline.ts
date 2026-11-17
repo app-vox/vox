@@ -1,5 +1,7 @@
 import { type LlmProvider } from "./llm/provider";
 import { NoopProvider } from "./llm/noop";
+import { type VoxConfig } from "../shared/config";
+import { activeInstructions } from "../shared/prompts";
 import { type RecordingResult } from "./audio/recorder";
 import { type TranscriptionResult } from "./audio/whisper";
 import { existsSync } from "fs";
@@ -29,13 +31,16 @@ export interface PipelineDeps {
     modelPath: string,
     dictionary?: string[],
     speechLanguages?: string[],
-    temperature?: number
+    temperature?: number,
+    /** Aborting it stops the transcription; the returned promise then rejects. */
+    signal?: AbortSignal
   ): Promise<TranscriptionResult>;
-  llmProvider: LlmProvider;
+  /** Reads the current config when an enhancement starts, so a prompt switch applies to the next one. */
+  loadConfig(): VoxConfig;
+  createLlmProvider(config: VoxConfig): LlmProvider;
   modelPath: string;
   dictionary?: string[];
   speechLanguages?: string[];
-  hasCustomPrompt?: boolean;
   llmModelName?: string;
   analytics?: {
     track(event: string, properties?: Record<string, unknown>): void;
@@ -57,6 +62,12 @@ export interface PipelineDeps {
     recording: RecordingResult;
     audioDurationMs: number;
   }) => void;
+}
+
+/** The provider and analytics flag of one dictation's enhancement, built from one config snapshot. */
+interface Enhancement {
+  llmProvider: LlmProvider;
+  hasCustomPrompt: boolean;
 }
 
 const COMMON_HALLUCINATIONS = [
@@ -194,6 +205,8 @@ export class Pipeline {
   private cancelingStage: PipelineStage | "listening" | null = null;
   private heldRecording: RecordingResult | null = null;
   private heldTranscription: string | null = null;
+  /** Stops the live-preview transcriptions in flight, so they do not share the GPU with the final one. */
+  private readonly previewAborts = new Set<AbortController>();
 
   private get whisperModelName(): string {
     return this.deps.modelPath.split("/").pop()?.replace("ggml-", "").replace(".bin", "") ?? "unknown";
@@ -220,19 +233,23 @@ export class Pipeline {
   }
 
   async snapshotAndTranscribe(): Promise<string | null> {
-    // Full buffer — gives Whisper all context for the most accurate preview
-    const snapshot = await this.deps.recorder.snapshot?.();
-    if (!snapshot || snapshot.audioBuffer.length === 0) return null;
-    // Require at least 0.5s of audio for meaningful transcription
-    const durationMs = (snapshot.audioBuffer.length / snapshot.sampleRate) * 1000;
-    if (durationMs < 500) return null;
+    const preview = new AbortController();
+    this.previewAborts.add(preview);
     try {
+      // Full buffer — gives Whisper all context for the most accurate preview
+      const snapshot = await this.deps.recorder.snapshot?.();
+      if (!snapshot || snapshot.audioBuffer.length === 0) return null;
+      // Require at least 0.5s of audio for meaningful transcription
+      const durationMs = (snapshot.audioBuffer.length / snapshot.sampleRate) * 1000;
+      if (durationMs < 500) return null;
       const result = await this.deps.transcribe(
         snapshot.audioBuffer,
         snapshot.sampleRate,
         this.deps.modelPath,
         this.deps.dictionary,
         this.deps.speechLanguages,
+        undefined,
+        preview.signal,
       );
       const text = result.text
         .replace(/\[[^\]]*\]/g, "")
@@ -244,7 +261,13 @@ export class Pipeline {
       return text;
     } catch {
       return null;
+    } finally {
+      this.previewAborts.delete(preview);
     }
+  }
+
+  private abortPreviews(): void {
+    for (const preview of this.previewAborts) preview.abort();
   }
 
   async startRecording(): Promise<void> {
@@ -262,6 +285,7 @@ export class Pipeline {
 
   async stopAndProcess(): Promise<string> {
     const gen = this.generation;
+    this.abortPreviews();
     const recording = await this.deps.recorder.stop();
     this.heldRecording = recording;
 
@@ -279,6 +303,7 @@ export class Pipeline {
    */
   async stopAndProcessWithHint(hintText: string): Promise<string> {
     const gen = this.generation;
+    this.abortPreviews();
     const recording = await this.deps.recorder.stop();
     this.heldRecording = recording;
 
@@ -300,7 +325,7 @@ export class Pipeline {
       throw new CanceledError();
     }
 
-    return this.processFromTranscription(rawText, recording, gen);
+    return this.processFromTranscription(rawText, recording, gen, this.startEnhancement());
   }
 
   gracefulCancel(): { stage: PipelineStage | "listening" } {
@@ -329,7 +354,7 @@ export class Pipeline {
     const gen = this.generation;
 
     if (stage === "enhancing" && this.heldTranscription) {
-      return this.processFromTranscription(this.heldTranscription, this.heldRecording!, gen);
+      return this.processFromTranscription(this.heldTranscription, this.heldRecording!, gen, this.startEnhancement());
     }
 
     return this.processFromRecording(this.heldRecording!, gen);
@@ -431,12 +456,13 @@ export class Pipeline {
       audio_duration_ms: audioDurationMs,
     });
     slog.info("Whisper transcription", rawText);
+    const enhancement = this.startEnhancement();
     slog.debug("Transcription details", {
       rawTextLength: rawText.length,
-      llmProviderType: this.deps.llmProvider.constructor.name,
+      llmProviderType: enhancement.llmProvider.constructor.name,
     });
 
-    if (this.deps.llmProvider instanceof NoopProvider) {
+    if (enhancement.llmProvider instanceof NoopProvider) {
       const totalTimeMs = Number((performance.now() - processingStartTime).toFixed(1));
       slog.info("Pipeline timing", { whisperModel: this.whisperModelName, audioDurationMs, whisperMs: whisperTimeMs, llmMs: 0, totalMs: totalTimeMs });
       this.deps.analytics?.track("llm_enhancement_skipped");
@@ -452,9 +478,11 @@ export class Pipeline {
 
     if (garbageReason) {
       if (garbageReason === "loop") {
+        const retryStartTime = performance.now();
         const retried = await this.retryWithTemperature(recording, gen);
         if (retried !== null) {
-          return this.processFromTranscription(retried, recording, gen, whisperTimeMs);
+          const allPassesMs = Number((whisperTimeMs + performance.now() - retryStartTime).toFixed(1));
+          return this.processFromTranscription(retried, recording, gen, enhancement, allPassesMs, processingStartTime);
         }
       }
 
@@ -480,7 +508,16 @@ export class Pipeline {
       throw new CanceledError();
     }
 
-    return this.processFromTranscription(rawText, recording, gen, whisperTimeMs);
+    return this.processFromTranscription(rawText, recording, gen, enhancement, whisperTimeMs, processingStartTime);
+  }
+
+  /** Snapshots the config once, so the provider and the analytics flag agree on the active prompt. */
+  private startEnhancement(): Enhancement {
+    const config = this.deps.loadConfig();
+    return {
+      llmProvider: this.deps.createLlmProvider(config),
+      hasCustomPrompt: activeInstructions(config) !== null,
+    };
   }
 
   private async retryWithTemperature(
@@ -532,9 +569,10 @@ export class Pipeline {
     rawText: string,
     recording: RecordingResult,
     gen: number,
-    whisperTimeMs = 0
+    enhancement: Enhancement,
+    whisperTimeMs = 0,
+    processingStartTime = performance.now()
   ): Promise<string> {
-    const processingStartTime = performance.now();
     const audioDurationMs = Math.round((recording.audioBuffer.length / recording.sampleRate) * 1000);
 
     if (this.deps.dictionary && this.deps.dictionary.length > 0) {
@@ -543,7 +581,7 @@ export class Pipeline {
       });
     }
 
-    if (this.deps.hasCustomPrompt) {
+    if (enhancement.hasCustomPrompt) {
       this.deps.analytics?.track("custom_prompt_used");
     }
 
@@ -555,7 +593,7 @@ export class Pipeline {
     }
 
     const llmStartTime = performance.now();
-    const llmProviderName = this.deps.llmProvider.constructor.name.replace("Provider", "").toLowerCase();
+    const llmProviderName = enhancement.llmProvider.constructor.name.replace("Provider", "").toLowerCase();
 
     let finalText: string;
     try {
@@ -565,7 +603,7 @@ export class Pipeline {
       });
       this.currentStage = "enhancing";
       this.deps.onStage?.("enhancing");
-      finalText = await this.deps.llmProvider.correct(rawText);
+      finalText = await enhancement.llmProvider.correct(rawText);
       slog.debug("LLM enhanced text", {
         finalText,
         length: finalText.length,

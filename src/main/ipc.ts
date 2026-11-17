@@ -19,6 +19,7 @@ import { decodeWavFile } from "./audio/persistence";
 import { Pipeline } from "./pipeline";
 import { getLlmModelName } from "../shared/llm-utils";
 import { paster, permissions, applyCase, stripTrailingPeriod } from "./platform";
+import { type PromptSwitch } from "./prompt-switch";
 
 const testLog = log.scope("LlmTest");
 
@@ -26,6 +27,7 @@ export function registerIpcHandlers(
   configManager: ConfigManager,
   modelManager: ModelManager,
   historyManager: HistoryManager,
+  promptSwitch: PromptSwitch,
   onConfigChange?: () => void,
   analytics?: AnalyticsService
 ): void {
@@ -49,7 +51,7 @@ export function registerIpcHandlers(
 
   ipcMain.handle("config:save", (_event, config: VoxConfig) => {
     const previousConfig = configManager.load();
-    configManager.save(config);
+    promptSwitch.saveKeepingActivePrompt(config);
     nativeTheme.themeSource = config.theme;
 
     // Track config changes (field names only, never values)
@@ -69,8 +71,12 @@ export function registerIpcHandlers(
       });
     }
 
-    // Reload pipeline to apply new config (especially custom prompt changes)
+    // Reload pipeline to apply new config
     onConfigChange?.();
+  });
+
+  ipcMain.handle("prompts:set-active", (_event, id: string | null) => {
+    promptSwitch.setActivePrompt(id);
   });
 
   ipcMain.handle("models:list", () => {
@@ -138,15 +144,14 @@ export function registerIpcHandlers(
 
       config.llmConnectionTested = true;
       config.llmConfigHash = computeLlmConfigHash(config);
-      configManager.save(config);
+      promptSwitch.saveKeepingActivePrompt(config);
       onConfigChange?.();
 
       return { ok: true };
     } catch (err: unknown) {
       testLog.warn(">>> llm.correct() THREW: %s", err instanceof Error ? err.message : String(err));
-      config.llmConnectionTested = false;
-      config.llmConfigHash = "";
-      configManager.save(config);
+      promptSwitch.saveKeepingActivePrompt(config);
+      promptSwitch.markConnectionUntested();
 
       return { ok: false, error: err instanceof Error ? err.message : String(err) };
     }
@@ -348,16 +353,15 @@ export function registerIpcHandlers(
     const modelPath = config.whisper.model
       ? modelManager.getModelPath(config.whisper.model)
       : "";
-    const llmProvider = createLlmProvider(config);
 
     const retryPipeline = new Pipeline({
       recorder: { start: async () => {}, stop: async () => recording, cancel: async () => {} },
       transcribe,
-      llmProvider,
+      loadConfig: () => configManager.load(),
+      createLlmProvider,
       modelPath,
       dictionary: config.dictionary ?? [],
       speechLanguages: config.speechLanguages ?? [],
-      hasCustomPrompt: Boolean(config.customPrompt),
       llmModelName: config.enableLlmEnhancement ? getLlmModelName(config.llm) : undefined,
       analytics,
     });

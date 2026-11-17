@@ -401,4 +401,62 @@ describe("ConfigManager", () => {
     expect(loaded.shiftCapitalize).toBe(true);
     expect(loaded.lowercaseStart).toBe(true);
   });
+
+  describe("prompt list migration", () => {
+    function writeSaved(saved: Record<string, unknown>): string {
+      const raw = JSON.stringify({ llm: { provider: "foundry", endpoint: "", apiKey: "", model: "gpt-4o" }, ...saved });
+      fs.writeFileSync(path.join(testDir, "config.json"), raw);
+      return raw;
+    }
+
+    it("migrates customPrompt to an active Default prompt", () => {
+      writeSaved({ customPrompt: "Always answer in haiku." });
+
+      const loaded = manager.load();
+
+      expect(loaded.prompts).toEqual([{ id: "default", name: "Default", icon: "📝", instructions: "Always answer in haiku." }]);
+      expect(loaded.activePromptId).toBe("default");
+      expect(loaded).not.toHaveProperty("customPrompt");
+    });
+
+    it("empty customPrompt yields no prompts and none active", () => {
+      writeSaved({ customPrompt: "" });
+
+      const loaded = manager.load();
+
+      expect(loaded.prompts).toEqual([]);
+      expect(loaded.activePromptId).toBeNull();
+    });
+
+    it("whitespace-only customPrompt is not migrated", () => {
+      writeSaved({ customPrompt: "  \n\t " });
+
+      const loaded = manager.load();
+
+      expect(loaded.prompts).toEqual([]);
+      expect(loaded.activePromptId).toBeNull();
+    });
+
+    it("existing prompt list wins over customPrompt", () => {
+      writeSaved({ prompts: [], activePromptId: null, customPrompt: "Leftover instructions" });
+
+      const loaded = manager.load();
+
+      expect(loaded.prompts).toEqual([]);
+      expect(loaded.activePromptId).toBeNull();
+    });
+
+    it("first save keeps config.json.pre-prompts.bak once", () => {
+      const original = writeSaved({ customPrompt: "Fix my grammar." });
+      const backupPath = path.join(testDir, "config.json.pre-prompts.bak");
+
+      const loaded = manager.load();
+      manager.save(loaded);
+      expect(fs.readFileSync(backupPath, "utf-8")).toBe(original);
+      expect(JSON.parse(fs.readFileSync(path.join(testDir, "config.json"), "utf-8"))).not.toHaveProperty("customPrompt");
+
+      manager.save({ ...manager.load(), prompts: [], activePromptId: null });
+      expect(fs.readFileSync(backupPath, "utf-8")).toBe(original);
+    });
+  });
 });

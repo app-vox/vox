@@ -151,6 +151,7 @@ describe("narrowLlmConfig", () => {
       provider: "anthropic",
       anthropicApiKey: "",
       anthropicModel: "claude-sonnet-4-20250514",
+      anthropicEndpoint: "https://api.anthropic.com",
     });
   });
 
