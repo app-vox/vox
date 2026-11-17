@@ -31,7 +31,9 @@ export interface PipelineDeps {
     modelPath: string,
     dictionary?: string[],
     speechLanguages?: string[],
-    temperature?: number
+    temperature?: number,
+    /** Aborting it stops the transcription; the returned promise then rejects. */
+    signal?: AbortSignal
   ): Promise<TranscriptionResult>;
   /** Reads the current config when an enhancement starts, so a prompt switch applies to the next one. */
   loadConfig(): VoxConfig;
@@ -203,6 +205,8 @@ export class Pipeline {
   private cancelingStage: PipelineStage | "listening" | null = null;
   private heldRecording: RecordingResult | null = null;
   private heldTranscription: string | null = null;
+  /** Stops the live-preview transcriptions in flight, so they do not share the GPU with the final one. */
+  private readonly previewAborts = new Set<AbortController>();
 
   private get whisperModelName(): string {
     return this.deps.modelPath.split("/").pop()?.replace("ggml-", "").replace(".bin", "") ?? "unknown";
@@ -229,19 +233,23 @@ export class Pipeline {
   }
 
   async snapshotAndTranscribe(): Promise<string | null> {
-    // Full buffer — gives Whisper all context for the most accurate preview
-    const snapshot = await this.deps.recorder.snapshot?.();
-    if (!snapshot || snapshot.audioBuffer.length === 0) return null;
-    // Require at least 0.5s of audio for meaningful transcription
-    const durationMs = (snapshot.audioBuffer.length / snapshot.sampleRate) * 1000;
-    if (durationMs < 500) return null;
+    const preview = new AbortController();
+    this.previewAborts.add(preview);
     try {
+      // Full buffer — gives Whisper all context for the most accurate preview
+      const snapshot = await this.deps.recorder.snapshot?.();
+      if (!snapshot || snapshot.audioBuffer.length === 0) return null;
+      // Require at least 0.5s of audio for meaningful transcription
+      const durationMs = (snapshot.audioBuffer.length / snapshot.sampleRate) * 1000;
+      if (durationMs < 500) return null;
       const result = await this.deps.transcribe(
         snapshot.audioBuffer,
         snapshot.sampleRate,
         this.deps.modelPath,
         this.deps.dictionary,
         this.deps.speechLanguages,
+        undefined,
+        preview.signal,
       );
       const text = result.text
         .replace(/\[[^\]]*\]/g, "")
@@ -253,7 +261,13 @@ export class Pipeline {
       return text;
     } catch {
       return null;
+    } finally {
+      this.previewAborts.delete(preview);
     }
+  }
+
+  private abortPreviews(): void {
+    for (const preview of this.previewAborts) preview.abort();
   }
 
   async startRecording(): Promise<void> {
@@ -271,6 +285,7 @@ export class Pipeline {
 
   async stopAndProcess(): Promise<string> {
     const gen = this.generation;
+    this.abortPreviews();
     const recording = await this.deps.recorder.stop();
     this.heldRecording = recording;
 
@@ -288,6 +303,7 @@ export class Pipeline {
    */
   async stopAndProcessWithHint(hintText: string): Promise<string> {
     const gen = this.generation;
+    this.abortPreviews();
     const recording = await this.deps.recorder.stop();
     this.heldRecording = recording;
 
@@ -462,9 +478,11 @@ export class Pipeline {
 
     if (garbageReason) {
       if (garbageReason === "loop") {
+        const retryStartTime = performance.now();
         const retried = await this.retryWithTemperature(recording, gen);
         if (retried !== null) {
-          return this.processFromTranscription(retried, recording, gen, enhancement, whisperTimeMs);
+          const allPassesMs = Number((whisperTimeMs + performance.now() - retryStartTime).toFixed(1));
+          return this.processFromTranscription(retried, recording, gen, enhancement, allPassesMs, processingStartTime);
         }
       }
 
@@ -490,7 +508,7 @@ export class Pipeline {
       throw new CanceledError();
     }
 
-    return this.processFromTranscription(rawText, recording, gen, enhancement, whisperTimeMs);
+    return this.processFromTranscription(rawText, recording, gen, enhancement, whisperTimeMs, processingStartTime);
   }
 
   /** Snapshots the config once, so the provider and the analytics flag agree on the active prompt. */
@@ -552,9 +570,9 @@ export class Pipeline {
     recording: RecordingResult,
     gen: number,
     enhancement: Enhancement,
-    whisperTimeMs = 0
+    whisperTimeMs = 0,
+    processingStartTime = performance.now()
   ): Promise<string> {
-    const processingStartTime = performance.now();
     const audioDurationMs = Math.round((recording.audioBuffer.length / recording.sampleRate) * 1000);
 
     if (this.deps.dictionary && this.deps.dictionary.length > 0) {
