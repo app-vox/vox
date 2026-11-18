@@ -18,7 +18,7 @@ import * as path from "path";
 import { decodeWavFile } from "./audio/persistence";
 import { Pipeline } from "./pipeline";
 import { getLlmModelName } from "../shared/llm-utils";
-import { paster, permissions, applyCase, stripTrailingPeriod } from "./platform";
+import { paster, permissions, autostart, applyCase, stripTrailingPeriod } from "./platform";
 
 const testLog = log.scope("LlmTest");
 
@@ -63,10 +63,7 @@ export function registerIpcHandlers(
 
     // Apply launch at login setting (packaged builds only)
     if (app.isPackaged) {
-      app.setLoginItemSettings({
-        openAtLogin: config.launchAtLogin,
-        openAsHidden: false,
-      });
+      autostart.setEnabled(config.launchAtLogin);
     }
 
     // Reload pipeline to apply new config (especially custom prompt changes)
