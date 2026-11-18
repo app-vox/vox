@@ -519,5 +519,21 @@
   "menu.checkForUpdates": "Check for Updates…",
   "menu.visitOnboarding": "Visit Onboarding",
   "menu.window": "Window",
-  "menu.bringAllToFront": "Bring All to Front"
+  "menu.bringAllToFront": "Bring All to Front",
+  "tts.title": "Text to Speech",
+  "tts.description": "Read selected text aloud using ElevenLabs",
+  "tts.enableCheckbox": "Enable Text to Speech",
+  "tts.enableHint": "When enabled, a play button appears on the HUD to read selected text aloud",
+  "tts.apiKey": "ElevenLabs API Key",
+  "tts.apiKeyPlaceholder": "Enter your ElevenLabs API key",
+  "tts.voiceDefault": "Default voice: Rachel",
+  "tts.test": "Test Voice",
+  "tts.testSuccess": "Voice synthesis working correctly",
+  "tts.testError": "Failed to connect to ElevenLabs. Check your API key.",
+  "tts.testPlaying": "Playing test audio...",
+  "tts.learnMore": "Get your API key at elevenlabs.io",
+  "tts.testRequired": "Test connection before enabling Text-to-Speech",
+  "tts.hudWillBeEnabled": "Enabling TTS will turn on the HUD (always visible on screen) to show the play button",
+  "tts.playing": "Reading aloud…",
+  "tts.error": "Text-to-speech failed"
 }

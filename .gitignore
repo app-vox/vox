@@ -38,3 +38,6 @@ pipeline-test-config.json
 
 # Pipeline test results (generated)
 tests/pipeline/.results/
+
+# Superpowers agent workspace
+.superpowers/
