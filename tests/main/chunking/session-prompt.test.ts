@@ -27,7 +27,7 @@ describe("ChunkSession language", () => {
     await session.finish();
 
     expect(whisper.calls.map((call) => call.language)).toEqual(["auto", "pt", "pt"]);
-    expect(lines).toEqual([]);
+    expect(lines.filter((line) => line.level === "warn")).toEqual([]);
   });
 
   it("no language reported keeps auto", async () => {
@@ -39,7 +39,7 @@ describe("ChunkSession language", () => {
     await session.finish();
 
     expect(whisper.calls.map((call) => call.language)).toEqual(["auto", "auto", "auto"]);
-    expect(lines).toEqual([
+    expect(lines.filter((line) => line.level === "warn")).toEqual([
       { level: "warn", message: "Chunk reported no language", fields: { index: 1 } },
       { level: "warn", message: "Chunk reported no language", fields: { index: 2 } },
       { level: "warn", message: "Chunk reported no language", fields: { index: 3 } },
@@ -56,7 +56,7 @@ describe("ChunkSession language", () => {
     await session.finish();
 
     expect(whisper.calls).toHaveLength(3);
-    expect(lines.map((line) => line.fields)).toEqual([{ index: 1 }, { index: 2 }]);
+    expect(lines.filter((line) => line.level === "warn").map((line) => line.fields)).toEqual([{ index: 1 }, { index: 2 }]);
   });
 
   it("configured single language is used for every chunk", async () => {
@@ -68,7 +68,7 @@ describe("ChunkSession language", () => {
     await session.finish();
 
     expect(whisper.calls.map((call) => call.language)).toEqual(["de", "de", "de"]);
-    expect(lines).toEqual([]);
+    expect(lines.filter((line) => line.level === "warn")).toEqual([]);
   });
 
   it("several configured languages keep their prefix after the language is pinned", async () => {

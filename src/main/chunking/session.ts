@@ -51,17 +51,23 @@ export interface PassRecord {
 export interface ChunkReport {
   /** Counted from 1. */
   index: number;
+  /** Rounded to 2 decimals. */
   audioSeconds: number;
   /** What closed the chunk: a cut of the splitter, or the recording's end. */
   cut: CutRule | "end";
+  /** Every pass over the chunk's audio: an aborted one and those of a chunk the tail merge replaced included. */
   whisperMs: number;
-  chars: number;
+  /** The language the passes asked for; after `auto`, a colon and the one whisper reported, or `none`. */
+  language: string;
   /** A pass over the chunk gave a loop. */
   loop: boolean;
   outcome: ChunkOutcome;
   /** The chunk's passes beyond the first, an aborted one not counted. */
   retries: number;
-  /** The passes over the chunk as finally cut. */
+  /** The pass that gave the chunk's text, or the last pass of a chunk without text, started before `finish()` was called. */
+  whileRecording: boolean;
+  chars: number;
+  /** The passes over the chunk as finally cut, after the pass over the earlier cut that the tail merge aborted, if any. */
   passes: PassRecord[];
 }
 
@@ -87,6 +93,14 @@ interface PassState {
   used: number;
   /** What the chunk's last pass that threw threw. */
   error: Error | null;
+  /** The language the chunk's first pass asked for. */
+  language: string;
+  /** What a pass over the chunk that asked for `auto` reported first. */
+  reported: string | null;
+  /** The chunk's last pass, or for a loop that no retry broke the first pass that gave one, started before `finish()` was called. */
+  whileRecording: boolean;
+  /** `whileRecording` of the first pass that gave a loop. */
+  loopWhileRecording: boolean;
   /** `ok` until the passes end. */
   outcome: ChunkOutcome;
 }
@@ -101,7 +115,19 @@ interface Chunk extends PassState {
 }
 
 function noPasses(): PassState {
-  return { text: "", retry: 0, loopText: null, passes: [], used: 0, error: null, outcome: "ok" };
+  return {
+    text: "",
+    retry: 0,
+    loopText: null,
+    passes: [],
+    used: 0,
+    error: null,
+    language: "",
+    reported: null,
+    whileRecording: false,
+    loopWhileRecording: false,
+    outcome: "ok",
+  };
 }
 
 /**
@@ -122,6 +148,8 @@ export class ChunkSession {
   private pinned: string | null = null;
   /** What `options.enhancing` answered, once the first pass has asked. */
   private enhancing: boolean | null = null;
+  /** `finish()` was called. */
+  private stopped = false;
   /** The recording so far, in the first `length` samples. */
   private samples = new Float32Array(0);
   private length = 0;
@@ -181,6 +209,7 @@ export class ChunkSession {
   }
 
   private async complete(): Promise<SessionResult> {
+    this.stopped = true;
     const last = this.chunks.at(-1);
     if (last && ((this.length - last.end) / this.sampleRate) * 1000 < TAIL_MERGE_MS) {
       this.mergeTail(last);
@@ -189,17 +218,22 @@ export class ChunkSession {
     }
     await this.passes;
 
-    const chunks = this.chunks.map((chunk, i) => ({
-      index: i + 1,
-      audioSeconds: (chunk.end - chunk.start) / this.sampleRate,
-      cut: chunk.cut,
-      whisperMs: chunk.whisperMs,
-      chars: chunk.text.length,
-      loop: chunk.loopText !== null,
-      outcome: chunk.outcome,
-      retries: Math.max(0, chunk.used - 1),
-      passes: chunk.passes,
-    }));
+    const chunks = this.chunks.map((chunk, i) => {
+      const fields = {
+        index: i + 1,
+        audioSeconds: Math.round(((chunk.end - chunk.start) / this.sampleRate) * 100) / 100,
+        cut: chunk.cut,
+        whisperMs: chunk.whisperMs,
+        language: chunk.language === "auto" ? `auto:${chunk.reported ?? "none"}` : chunk.language,
+        loop: chunk.loopText !== null,
+        outcome: chunk.outcome,
+        retries: Math.max(0, chunk.used - 1),
+        whileRecording: chunk.whileRecording,
+        chars: chunk.text.length,
+      };
+      this.options.log.info("Chunk", fields);
+      return { ...fields, passes: chunk.passes };
+    });
     return {
       text: this.joinedText(),
       chunks,
@@ -254,6 +288,7 @@ export class ChunkSession {
     const index = this.next;
     const abort = new AbortController();
     this.inFlight = abort;
+    const whileRecording = !this.stopped;
     this.enhancing ??= this.options.enhancing();
     const previous = this.chunks[index - 1];
     // Only a pass that asked for `auto` pins a language, so a configured single language is never replaced.
@@ -290,8 +325,16 @@ export class ChunkSession {
     if (abort.signal.aborted) return;
 
     chunk.used++;
+    if (chunk.used === 1) chunk.language = settings.language;
+    chunk.whileRecording = whileRecording;
     if (answer instanceof Error) {
       record.result = "threw";
+      this.options.log.warn("Chunk pass failed", {
+        index: index + 1,
+        pass: chunk.used,
+        temperature: settings.temperature ?? 0,
+        error: answer.message,
+      });
       this.passThrew(chunk, answer);
       return;
     }
@@ -310,7 +353,10 @@ export class ChunkSession {
   private takeText(chunk: Chunk, text: string): PassRecord["result"] {
     const reason = text === "" ? null : detectGarbage(text);
     if (reason === "loop") {
-      chunk.loopText ??= text;
+      if (chunk.loopText === null) {
+        chunk.loopText = text;
+        chunk.loopWhileRecording = chunk.whileRecording;
+      }
       this.retryOrGiveUp(chunk);
       return "loop";
     }
@@ -345,6 +391,7 @@ export class ChunkSession {
   /** Ends the passes of a chunk that no pass gave a text: with its loop, collapsed, or with nothing. */
   private giveUp(chunk: Chunk): void {
     if (chunk.loopText !== null) {
+      chunk.whileRecording = chunk.loopWhileRecording;
       this.endPasses(chunk, collapseLoops(chunk.loopText), "collapsed");
     } else {
       this.endPasses(chunk, "", "failed");
@@ -362,6 +409,7 @@ export class ChunkSession {
   private pinLanguage(reported: string | undefined, chunk: Chunk, index: number): void {
     if (reported !== undefined) {
       this.pinned ??= reported;
+      chunk.reported ??= reported;
     } else if (!chunk.noLanguageWarned) {
       chunk.noLanguageWarned = true;
       this.options.log.warn("Chunk reported no language", { index: index + 1 });

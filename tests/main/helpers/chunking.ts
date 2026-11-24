@@ -99,6 +99,11 @@ export function threeChunks(): Float32Array {
   return audio(speech(21), quiet(0.6), speech(21), quiet(0.6), speech(8));
 }
 
+/** A recording of 1331200 samples with pause cuts at 338240 and 683840 and a cut by the 30 s rule at 1004480. */
+export function fourChunks(): Float32Array {
+  return audio(speech(21), quiet(0.6), speech(21), quiet(0.6), speech(40));
+}
+
 /** `count` words `<prefix>000`, `<prefix>001`, … joined by one space. */
 export function words(prefix: string, count: number): string {
   return Array.from({ length: count }, (_, i) => `${prefix}${String(i).padStart(3, "0")}`).join(" ");
