@@ -5,9 +5,12 @@ import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
 import { whisper as whisperConfig } from "../platform";
+import { parseDetectedLanguage, parseWhisperOutput } from "./whisper-output";
 
 export interface TranscriptionResult {
   text: string;
+  /** The language the pass ran in: the resolved one, or the one whisper-cli reported for `auto`; absent when it reported none. */
+  language?: string;
 }
 
 /** One whisper-cli run as its caller describes it: the prompt as given, the language before the platform resolves it. */
@@ -42,10 +45,11 @@ export async function transcribe(
     const language = whisperConfig.resolveLanguage(pass.language, pass.speechLanguages);
 
     const timeoutMs = whisperTimeoutMs(audioBuffer.length / sampleRate);
-    const stdout = await runWhisperCli(modelPath, tempPath, pass.prompt, language, pass.temperature, timeoutMs, pass.signal);
-    const text = parseWhisperOutput(stdout);
+    const output = await runWhisperCli(modelPath, tempPath, pass.prompt, language, pass.temperature, timeoutMs, pass.signal);
+    const text = parseWhisperOutput(output);
+    const ranIn = language === "auto" ? parseDetectedLanguage(output) : language;
 
-    return { text };
+    return ranIn === null ? { text } : { text, language: ranIn };
   } finally {
     if (fs.existsSync(tempPath)) {
       fs.unlinkSync(tempPath);
@@ -93,21 +97,6 @@ function runWhisperCli(
       }
     );
   });
-}
-
-function parseWhisperOutput(output: string): string {
-  // Match lines like: [00:00:00.000 --> 00:00:03.000]   Testando para ver se funciona
-  const lines = output.match(/\[\d{2}:\d{2}:\d{2}\.\d{3}\s-->\s\d{2}:\d{2}:\d{2}\.\d{3}\]\s+.+/g);
-  if (!lines) return "";
-
-  return lines
-    .map((line) => {
-      const match = line.match(/\]\s+(.+)/);
-      return match ? match[1].trim() : "";
-    })
-    .filter(Boolean)
-    .join(" ")
-    .trim();
 }
 
 // Scale audio so peak amplitude reaches the target, preventing Whisper
