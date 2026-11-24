@@ -8,7 +8,8 @@ import { computeLlmConfigHash } from "../../src/shared/llm-config-hash";
 import { buildWhisperArgs, buildWhisperPrompt } from "../../src/shared/constants";
 import log from "electron-log/main";
 import { detectGarbage } from "../../src/main/garbage";
-import { audio, quiet, scriptedWhisper, speech, threeChunks } from "./helpers/chunking";
+import { audio, deferred, quiet, scriptedWhisper, speech, threeChunks } from "./helpers/chunking";
+import { pasteOutcome } from "../../src/main/shortcuts/paste-outcome";
 
 /** Pipeline deps whose enhancement always uses `provider`, whatever the config says. */
 function enhancingWith(provider: LlmProvider): Pick<PipelineDeps, "loadConfig" | "createLlmProvider"> {
@@ -269,6 +270,36 @@ describe("Pipeline", () => {
 
     expect(result).toBe("corrected text");
     expect(onComplete).toHaveBeenCalled();
+  });
+
+  it("undo of a cancel warns on an incomplete transcript", async () => {
+    const LOOP = "and then we will see, and then we will see, and then we will see, and then we will see";
+    const whisper = scriptedWhisper([LOOP, LOOP, LOOP]);
+    const config = createDefaultConfig();
+    const stopped = deferred<void>();
+    const pipeline = new Pipeline({
+      recorder: {
+        start: async () => {},
+        stop: async () => {
+          queueMicrotask(() => stopped.resolve());
+          return { audioBuffer: speech(3), sampleRate: 16000 };
+        },
+        cancel: async () => {},
+      },
+      transcribe: whisper.transcribe,
+      loadConfig: () => config,
+      createLlmProvider,
+      modelPath: "/models/ggml-small.bin",
+    });
+
+    await pipeline.startRecording();
+    pipeline.gracefulCancel();
+    await stopped.promise;
+    const text = await pipeline.undoCancel();
+
+    expect(text).toBe("and then we will see,");
+    expect(pipeline.lastTranscriptIncomplete()).toBe(true);
+    expect(pasteOutcome(true, pipeline.lastTranscriptIncomplete())).toBe("incomplete");
   });
 
   it("should fully discard when confirmCancel is called", async () => {

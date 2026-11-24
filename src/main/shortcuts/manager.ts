@@ -6,6 +6,7 @@ import { paster } from "../platform";
 import { type Pipeline, CanceledError, NoModelError } from "../pipeline";
 import { ShortcutStateMachine, RecordingState } from "./listener";
 import { DoubleTapDetector } from "./double-tap";
+import { pasteOutcome } from "./paste-outcome";
 import { isDoubleTap, getDoubleTapModifier } from "../../shared/shortcuts";
 import { HudWindow } from "../hud";
 import { setTrayListeningState } from "../tray";
@@ -417,8 +418,9 @@ export class ShortcutManager {
         slog.info("Undo succeeded, pasting text");
         const config = this.deps.configManager.load();
         const pasted = paster.pasteText(trimmedText, config.copyToClipboard, { finishWithPeriod: config.finishWithPeriod });
+        const outcome = pasteOutcome(pasted, pipeline.lastTranscriptIncomplete());
 
-        if (!pasted) {
+        if (outcome === "insert-failed") {
           slog.info("Text not inserted — showing HUD warning");
           const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
           this.playCue(errorCueType);
@@ -429,7 +431,11 @@ export class ShortcutManager {
           this.lastUnpastedText = null;
           this.deps.analytics?.track("paste_completed", { method: "undo-cancel" });
           this.stateMachine.setIdle();
-          this.hud.setState("idle");
+          if (outcome === "incomplete") {
+            this.hud.showIncompleteWarning();
+          } else {
+            this.hud.setState("idle");
+          }
         }
       }
       this.updateTrayState();
@@ -1168,8 +1174,9 @@ export class ShortcutManager {
         const pasteConfig = this.deps.configManager.load();
         const forceCapitalize = this.isShiftHeld && this.shiftAlone && pasteConfig.shiftCapitalize && pasteConfig.lowercaseStart;
         const pasted = paster.pasteText(trimmedText, pasteConfig.copyToClipboard, { lowercaseStart: pasteConfig.lowercaseStart, shiftCapitalize: forceCapitalize, finishWithPeriod: pasteConfig.finishWithPeriod });
+        const outcome = pasteOutcome(pasted || !config.onboardingCompleted, pipeline.lastTranscriptIncomplete());
 
-        if (!pasted && config.onboardingCompleted) {
+        if (outcome === "insert-failed") {
           slog.info("Text not inserted — showing HUD warning");
           const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
           this.playCue(errorCueType);
@@ -1180,6 +1187,7 @@ export class ShortcutManager {
           this.lastUnpastedText = null;
           this.hud.hideTextPanel();
           this.deps.analytics?.track("paste_completed", { method: !pasted ? "onboarding" : "auto-paste" });
+          if (outcome === "incomplete") this.hud.showIncompleteWarning();
         }
       }
     } catch (err: unknown) {
