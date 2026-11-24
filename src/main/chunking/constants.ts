@@ -42,3 +42,6 @@ export const MAX_CHUNK_PASSES = 3;
 
 /** Temperatures of the retries after a loop: 0.4 lets whisper leave the loop, 0.8 is the last and strongest try. */
 export const LOOP_RETRY_TEMPERATURES = [0.4, 0.8] as const;
+
+/** Sample rate of the recorder window's audio context: whisper-cli reads 16 kHz audio, so no resampling follows. */
+export const RECORDER_SAMPLE_RATE = 16_000;

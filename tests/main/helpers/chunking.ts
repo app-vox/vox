@@ -1,3 +1,5 @@
+import { recordedSamplesFrom } from "../../../src/main/audio/recorded-samples";
+import type { RecordingResult } from "../../../src/main/audio/recorder";
 import {
   ChunkSession,
   type ChunkLog,
@@ -155,4 +157,71 @@ export function newSession(
   overrides?: Partial<ChunkSessionOptions>,
 ): ChunkSession {
   return new ChunkSession(sessionOptions(whisper, overrides));
+}
+
+const RECORDER_BLOCK = 4096;
+
+/**
+ * Stands in for the recorder window, which is Electron's `BrowserWindow`. It
+ * keeps the recorded part as blocks of 4096 samples, like `window._recChunks`.
+ */
+export class FakeRecorder {
+  readonly fetches: { offset: number; returned: number }[] = [];
+  private recording: Float32Array;
+  private blocks: number[][] = [];
+  private recorded = 0;
+  private failure: Error | null = null;
+
+  constructor(recording: Float32Array, private readonly sampleRate = RATE) {
+    this.recording = recording;
+  }
+
+  /** Replaces the recording that `recordUpTo` plays from; nothing counts as recorded yet. */
+  load(recording: Float32Array): void {
+    this.recording = recording;
+    this.blocks = [];
+    this.recorded = 0;
+  }
+
+  /** Records up to `seconds` of the recording, whole blocks first and the rest as a short last block. */
+  recordUpTo(seconds: number): void {
+    const target = Math.min(Math.round(seconds * this.sampleRate), this.recording.length);
+    while (this.recorded < target) {
+      const last = this.blocks[this.blocks.length - 1];
+      if (last && last.length < RECORDER_BLOCK) {
+        // a short block only ends a recording that stopped there: keep blocks full while it grows
+        const room = Math.min(RECORDER_BLOCK - last.length, target - this.recorded);
+        for (let i = 0; i < room; i++) last.push(this.recording[this.recorded + i]);
+        this.recorded += room;
+        continue;
+      }
+      const size = Math.min(RECORDER_BLOCK, target - this.recorded);
+      this.blocks.push(Array.from(this.recording.subarray(this.recorded, this.recorded + size)));
+      this.recorded += size;
+    }
+  }
+
+  /** The next fetch rejects with `error`. */
+  failNextFetch(error: Error): void {
+    this.failure = error;
+  }
+
+  async start(): Promise<void> {}
+
+  async stop(): Promise<RecordingResult> {
+    return { audioBuffer: Float32Array.from(recordedSamplesFrom(this.blocks, 0)), sampleRate: this.sampleRate };
+  }
+
+  async cancel(): Promise<void> {}
+
+  async samplesFrom(offset: number): Promise<Float32Array> {
+    if (this.failure) {
+      const error = this.failure;
+      this.failure = null;
+      throw error;
+    }
+    const samples = Float32Array.from(recordedSamplesFrom(this.blocks, offset));
+    this.fetches.push({ offset, returned: samples.length });
+    return samples;
+  }
 }
