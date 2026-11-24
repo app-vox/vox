@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseDetectedLanguage, parseWhisperOutput } from "../../../src/main/audio/whisper-output";
+import { parseDetectedLanguage, parseWhisperOutput, passLanguage } from "../../../src/main/audio/whisper-output";
 
 const LANGUAGE_LINE = "whisper_full_with_state: auto-detected language: pt (p = 0.980138)";
 const TEXT_LINE = "[00:00:00.000 --> 00:00:03.000]   Testando para ver se funciona";
@@ -28,5 +28,17 @@ describe("whisper-cli output", () => {
 
   it("the text lines are read as before", () => {
     expect(parseWhisperOutput(TEXT_LINE)).toBe("Testando para ver se funciona");
+  });
+
+  it("a pass in a resolved language ran in it, whatever the output reports", () => {
+    expect(passLanguage("de", LANGUAGE_LINE)).toBe("de");
+  });
+
+  it("a pass with auto ran in the reported language", () => {
+    expect(passLanguage("auto", LANGUAGE_LINE)).toBe("pt");
+  });
+
+  it("a pass with auto and no reported language ran in none", () => {
+    expect(passLanguage("auto", TEXT_LINE)).toBeUndefined();
   });
 });

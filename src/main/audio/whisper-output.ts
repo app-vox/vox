@@ -20,3 +20,9 @@ export function parseDetectedLanguage(output: string): string | null {
   const match = output.match(/auto-detected language: ([a-z]+)/i);
   return match ? match[1] : null;
 }
+
+/** The language a pass ran in: the resolved one, or for `auto` the one whisper-cli reports; undefined when it reports none. */
+export function passLanguage(resolved: string, output: string): string | undefined {
+  if (resolved !== "auto") return resolved;
+  return parseDetectedLanguage(output) ?? undefined;
+}

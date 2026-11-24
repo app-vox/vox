@@ -5,7 +5,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
 import { whisper as whisperConfig } from "../platform";
-import { parseDetectedLanguage, parseWhisperOutput } from "./whisper-output";
+import { parseWhisperOutput, passLanguage } from "./whisper-output";
 
 export interface TranscriptionResult {
   text: string;
@@ -47,9 +47,9 @@ export async function transcribe(
     const timeoutMs = whisperTimeoutMs(audioBuffer.length / sampleRate);
     const output = await runWhisperCli(modelPath, tempPath, pass.prompt, language, pass.temperature, timeoutMs, pass.signal);
     const text = parseWhisperOutput(output);
-    const ranIn = language === "auto" ? parseDetectedLanguage(output) : language;
+    const ranIn = passLanguage(language, output);
 
-    return ranIn === null ? { text } : { text, language: ranIn };
+    return ranIn === undefined ? { text } : { text, language: ranIn };
   } finally {
     if (fs.existsSync(tempPath)) {
       fs.unlinkSync(tempPath);
