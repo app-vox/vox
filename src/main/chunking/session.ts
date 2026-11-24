@@ -30,6 +30,8 @@ export interface ChunkSessionOptions {
   enhancing: () => boolean;
   /** Gets the chunk texts so far, joined, each time a chunk's text is final. */
   onChunkText?: (joined: string) => void;
+  /** Awaited once, before the first chunk pass starts: the live pass, which is a whisper process too, ends there. */
+  onFirstCut?: () => Promise<void>;
 }
 
 /**
@@ -166,6 +168,8 @@ export class ChunkSession {
   private readonly chunks: Chunk[] = [];
   /** Index of the chunk whose pass runs, or of the next one to get a pass. */
   private next = 0;
+  /** `onFirstCut` was awaited, or there is none. */
+  private cutAnnounced = false;
   /** Aborts the pass that runs, which is over `chunks[next]`. */
   private inFlight: AbortController | null = null;
   /** Settles when no chunk waits for a pass. */
@@ -237,6 +241,11 @@ export class ChunkSession {
     this.inFlight?.abort();
     for (const chunk of this.chunks) chunk.text = "";
     this.wake?.();
+  }
+
+  /** The recording so far. */
+  audioSoFar(): Float32Array {
+    return this.samples.subarray(0, this.length);
   }
 
   /** The texts of the chunks transcribed so far, in recording order. */
@@ -331,6 +340,11 @@ export class ChunkSession {
    * aborted leaves the chunk for a new one and counts as no pass of it.
    */
   private async runPass(chunk: Chunk): Promise<void> {
+    if (!this.cutAnnounced && this.options.onFirstCut) {
+      this.cutAnnounced = true;
+      await this.options.onFirstCut();
+      if (this.paused || this.aborted) return;
+    }
     const index = this.next;
     const abort = new AbortController();
     this.inFlight = abort;
