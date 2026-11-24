@@ -5,7 +5,9 @@ import { activeInstructions } from "../shared/prompts";
 import { type RecordingResult } from "./audio/recorder";
 import { type TranscriptionResult, type WhisperPass } from "./audio/whisper";
 import { buildWhisperArgs, buildWhisperPrompt } from "../shared/constants";
-import { ChunkSession, type ChunkReport, type SessionResult } from "./chunking/session";
+import { RECORDER_SAMPLE_RATE } from "./chunking/constants";
+import { ChunkedRecording } from "./chunking/recording";
+import { type ChunkReport, type SessionResult } from "./chunking/session";
 import { detectGarbage } from "./garbage";
 import { existsSync } from "fs";
 import { t } from "../shared/i18n";
@@ -23,6 +25,8 @@ export interface PipelineDeps {
     stop(): Promise<RecordingResult>;
     cancel(): Promise<void>;
     snapshot?(maxSeconds?: number): Promise<RecordingResult | null>;
+    /** The samples recorded after the first `offset`; a recorder without it is transcribed once it stops. */
+    samplesFrom?(offset: number): Promise<Float32Array>;
     playAudioCue?(samples: number[], sampleRate?: number): Promise<void>;
   };
   transcribe(
@@ -68,6 +72,15 @@ interface Enhancement {
   hasCustomPrompt: boolean;
 }
 
+/** What a run measured before its enhancement, for its timing line. */
+interface RunStats {
+  whisperMs: number;
+  chunks: number;
+  waitAfterStopMs: number;
+}
+
+const NO_STATS: RunStats = { whisperMs: 0, chunks: 0, waitAfterStopMs: 0 };
+
 export class CanceledError extends Error {
   constructor() {
     super("Operation was canceled");
@@ -92,6 +105,10 @@ export class Pipeline {
   private heldTranscription: string | null = null;
   /** What the session said of the held transcription: a chunk's text is a collapsed loop, or a chunk failed. */
   private heldIncomplete = false;
+  /** The chunk passes of the recording being made, canceled or transcribed; one per recording. */
+  private chunked: ChunkedRecording | null = null;
+  /** The recorder's stop, started by a cancel while listening. */
+  private stopping: Promise<void> | null = null;
   /** Stops the live-preview transcriptions in flight, so they do not share the GPU with the final one. */
   private readonly previewAborts = new Set<AbortController>();
 
@@ -108,6 +125,7 @@ export class Pipeline {
 
   async cancel(): Promise<void> {
     this.canceled = true;
+    this.dropRecording();
     try {
       await this.deps.recorder.cancel();
     } catch (err) {
@@ -163,14 +181,21 @@ export class Pipeline {
     this.heldRecording = null;
     this.heldTranscription = null;
     this.heldIncomplete = false;
+    this.stopping = null;
     this.currentStage = "listening";
     this.generation++;
+    this.dropRecording();
     await this.deps.recorder.start();
+    const chunked = this.newRecording(RECORDER_SAMPLE_RATE);
+    this.chunked = chunked;
+    if (this.deps.recorder.samplesFrom) chunked.startCapture({ samplesFrom: (offset) => this.deps.recorder.samplesFrom!(offset) });
   }
 
   async stopAndProcess(): Promise<string> {
+    const stopStart = performance.now();
     const gen = this.generation;
     this.abortPreviews();
+    await this.chunked?.endCapture();
     const recording = await this.deps.recorder.stop();
     this.heldRecording = recording;
 
@@ -178,7 +203,7 @@ export class Pipeline {
       throw new CanceledError();
     }
 
-    return this.processFromRecording(recording, gen);
+    return this.processFromRecording(recording, gen, stopStart);
   }
 
   /**
@@ -187,8 +212,10 @@ export class Pipeline {
    * Whisper transcription if the hint is empty or detected as garbage.
    */
   async stopAndProcessWithHint(hintText: string): Promise<string> {
+    const stopStart = performance.now();
     const gen = this.generation;
     this.abortPreviews();
+    await this.chunked?.endCapture();
     const recording = await this.deps.recorder.stop();
     this.heldRecording = recording;
 
@@ -199,11 +226,12 @@ export class Pipeline {
     const rawText = hintText.trim();
     if (!rawText || !!detectGarbage(rawText)) {
       slog.info("Preview hint empty or garbage — falling back to Whisper");
-      return this.processFromRecording(recording, gen);
+      return this.processFromRecording(recording, gen, stopStart);
     }
 
     slog.info("Using live preview as transcript, skipping Whisper: %s", rawText.slice(0, 80));
     this.heldTranscription = rawText;
+    this.dropRecording();
     this.deps.onTranscriptionComplete?.(rawText);
 
     if (this.canceled || gen !== this.generation) {
@@ -218,8 +246,9 @@ export class Pipeline {
     this.cancelingStage = stage;
     this.canceled = true;
 
+    this.chunked?.pause();
     if (stage === "listening") {
-      this.deps.recorder.stop().then((recording) => {
+      this.stopping = this.deps.recorder.stop().then((recording) => {
         this.heldRecording = recording;
       }).catch(() => {
         // If stop fails (already stopped), heldRecording may already be set
@@ -232,7 +261,11 @@ export class Pipeline {
   async undoCancel(): Promise<string> {
     if (!this.cancelingStage) throw new Error("Not in canceling state");
 
+    const undoStart = performance.now();
     const stage = this.cancelingStage;
+    await this.stopping;
+    this.stopping = null;
+    if (!this.cancelingStage) throw new CanceledError();
     this.cancelingStage = null;
     this.canceled = false;
     this.generation++;
@@ -242,13 +275,17 @@ export class Pipeline {
       return this.processFromTranscription(this.heldTranscription, this.heldRecording!, gen, this.startEnhancement());
     }
 
-    return this.processFromRecording(this.heldRecording!, gen);
+    this.chunked?.resume();
+    return this.processFromRecording(this.heldRecording!, gen, undoStart);
   }
 
   async retryFromRecording(recording: RecordingResult): Promise<string> {
+    const retryStart = performance.now();
     if (!existsSync(this.deps.modelPath)) {
       throw new NoModelError();
     }
+    this.dropRecording();
+    this.stopping = null;
     this.canceled = false;
     this.cancelingStage = null;
     this.heldRecording = recording;
@@ -258,13 +295,16 @@ export class Pipeline {
     this.generation++;
     const gen = this.generation;
 
-    return this.processFromRecording(recording, gen);
+    return this.processFromRecording(recording, gen, retryStart);
   }
 
   confirmCancel(): void {
+    this.dropRecording();
+    this.stopping = null;
     this.cancelingStage = null;
     this.heldRecording = null;
     this.heldTranscription = null;
+    this.heldIncomplete = false;
     this.currentStage = null;
     this.canceled = true;
   }
@@ -305,9 +345,55 @@ export class Pipeline {
     }
   }
 
+  /** A recording's chunk passes, with `enhancing` read from the config once, now. */
+  private newRecording(sampleRate: number): ChunkedRecording {
+    const config = this.deps.loadConfig();
+    return new ChunkedRecording({
+      sampleRate,
+      transcribe: this.deps.transcribe,
+      modelPath: this.deps.modelPath,
+      dictionary: this.deps.dictionary ?? [],
+      speechLanguages: this.deps.speechLanguages ?? [],
+      log: slog,
+      enhancing: () => !(this.deps.createLlmProvider(config) instanceof NoopProvider),
+    });
+  }
+
+  /** Aborts the recording's passes and lets it go. */
+  private dropRecording(): void {
+    this.chunked?.abort();
+    this.chunked = null;
+  }
+
+  /** Lets `chunked` go once its run has ended; a newer recording stays. */
+  private releaseRecording(chunked: ChunkedRecording): void {
+    if (this.chunked === chunked) this.chunked = null;
+  }
+
+  /** The one line of a run's timing: `message` says how the run ended. */
+  private logTiming(
+    message: string,
+    fields: Record<string, unknown> & { audioDurationMs: number },
+    stats: RunStats,
+    processingStartTime: number,
+    llmMs = 0,
+  ): void {
+    slog.info(message, {
+      whisperModel: this.whisperModelName,
+      ...fields,
+      whisperMs: stats.whisperMs,
+      llmMs,
+      totalMs: Number((performance.now() - processingStartTime).toFixed(1)),
+      chunks: stats.chunks,
+      waitAfterStopMs: stats.waitAfterStopMs,
+    });
+  }
+
+  /** `waitStart` is when the stop, the undo or the retry was asked for. */
   private async processFromRecording(
     recording: RecordingResult,
-    gen: number
+    gen: number,
+    waitStart: number
   ): Promise<string> {
     const processingStartTime = performance.now();
 
@@ -322,26 +408,32 @@ export class Pipeline {
 
     this.currentStage = "transcribing";
     this.deps.onStage?.("transcribing");
-    let result: SessionResult;
+    let chunked = this.chunked;
+    if (!chunked || chunked.sampleRate !== recording.sampleRate) {
+      chunked?.abort();
+      chunked = this.chunked = this.newRecording(recording.sampleRate);
+    }
+    let result: SessionResult | undefined;
+    let stats = NO_STATS;
     try {
-      const session = new ChunkSession({
-        sampleRate: recording.sampleRate,
-        transcribe: this.deps.transcribe,
-        modelPath: this.deps.modelPath,
-        dictionary: this.deps.dictionary ?? [],
-        speechLanguages: this.deps.speechLanguages ?? [],
-        log: slog,
-        enhancing: () => !(this.deps.createLlmProvider(this.deps.loadConfig()) instanceof NoopProvider),
-      });
-      session.append(recording.audioBuffer);
-      const finished = await session.finish();
+      const finished = await chunked.finish(recording);
       if (finished === null || this.canceled || gen !== this.generation) {
         throw new CanceledError();
       }
       result = finished;
+      stats = {
+        whisperMs: Number(result.whisperMs.toFixed(1)),
+        chunks: result.chunks.length,
+        waitAfterStopMs: Number((performance.now() - waitStart).toFixed(1)),
+      };
       if (!result.text && result.error) throw result.error;
     } catch (err: unknown) {
       if (err instanceof CanceledError) throw err;
+      if (result) {
+        this.logTiming("Pipeline timing (whisper failed)", {
+          audioDurationMs: Math.round((recording.audioBuffer.length / recording.sampleRate) * 1000),
+        }, stats, processingStartTime);
+      }
       this.deps.analytics?.track("transcription_failed", {
         whisper_model: this.whisperModelName,
         error_type: err instanceof Error ? err.name : "unknown",
@@ -353,10 +445,10 @@ export class Pipeline {
         recording,
         audioDurationMs,
       });
+      this.releaseRecording(chunked);
       throw err;
     }
 
-    const whisperTimeMs = Number(result.whisperMs.toFixed(1));
     this.trackLoopRetries(result.chunks);
     const rawText = result.text;
     this.heldTranscription = rawText;
@@ -376,10 +468,12 @@ export class Pipeline {
     });
 
     if (enhancement.llmProvider instanceof NoopProvider) {
-      const totalTimeMs = Number((performance.now() - processingStartTime).toFixed(1));
-      slog.info("Pipeline timing", { whisperModel: this.whisperModelName, audioDurationMs, whisperMs: whisperTimeMs, llmMs: 0, totalMs: totalTimeMs });
+      this.logTiming("Pipeline timing", { audioDurationMs }, stats, processingStartTime);
       this.deps.analytics?.track("llm_enhancement_skipped");
-      if (!rawText) return "";
+      if (!rawText) {
+        this.releaseRecording(chunked);
+        return "";
+      }
       this.deps.onTranscriptionComplete?.(rawText);
       this.currentStage = null;
       this.deps.onComplete?.({
@@ -389,6 +483,7 @@ export class Pipeline {
         recording,
         ...(this.heldIncomplete && { incomplete: true }),
       });
+      this.releaseRecording(chunked);
       return rawText;
     }
 
@@ -408,6 +503,8 @@ export class Pipeline {
           audioDurationMs,
         });
       }
+      this.logTiming("Pipeline timing", { audioDurationMs }, stats, processingStartTime);
+      this.releaseRecording(chunked);
       return "";
     }
     slog.info("Transcription passed, sending to LLM");
@@ -417,7 +514,9 @@ export class Pipeline {
       throw new CanceledError();
     }
 
-    return this.processFromTranscription(rawText, recording, gen, enhancement, whisperTimeMs, processingStartTime);
+    const text = await this.processFromTranscription(rawText, recording, gen, enhancement, stats, processingStartTime);
+    this.releaseRecording(chunked);
+    return text;
   }
 
   /** Snapshots the config once, so the provider and the analytics flag agree on the active prompt. */
@@ -434,7 +533,7 @@ export class Pipeline {
     recording: RecordingResult,
     gen: number,
     enhancement: Enhancement,
-    whisperTimeMs = 0,
+    stats: RunStats = NO_STATS,
     processingStartTime = performance.now()
   ): Promise<string> {
     const audioDurationMs = Math.round((recording.audioBuffer.length / recording.sampleRate) * 1000);
@@ -495,8 +594,7 @@ export class Pipeline {
       }
 
       const llmTimeMs = Number((performance.now() - llmStartTime).toFixed(1));
-      const totalTimeMs = Number((performance.now() - processingStartTime).toFixed(1));
-      slog.info("Pipeline timing (LLM failed)", { whisperModel: this.whisperModelName, llmProvider: llmProviderName, llmModel: this.deps.llmModelName, audioDurationMs, whisperMs: whisperTimeMs, llmMs: llmTimeMs, totalMs: totalTimeMs });
+      this.logTiming("Pipeline timing (LLM failed)", { llmProvider: llmProviderName, llmModel: this.deps.llmModelName, audioDurationMs }, stats, processingStartTime, llmTimeMs);
       this.currentStage = null;
       this.deps.onComplete?.({
         text: finalText,
@@ -515,8 +613,7 @@ export class Pipeline {
     }
 
     const llmTimeMs = Number((performance.now() - llmStartTime).toFixed(1));
-    const totalTimeMs = Number((performance.now() - processingStartTime).toFixed(1));
-    slog.info("Pipeline timing", { whisperModel: this.whisperModelName, llmProvider: llmProviderName, llmModel: this.deps.llmModelName, audioDurationMs, whisperMs: whisperTimeMs, llmMs: llmTimeMs, totalMs: totalTimeMs });
+    this.logTiming("Pipeline timing", { llmProvider: llmProviderName, llmModel: this.deps.llmModelName, audioDurationMs }, stats, processingStartTime, llmTimeMs);
     this.currentStage = null;
 
     this.deps.onComplete?.({
