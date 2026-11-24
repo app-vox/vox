@@ -24,3 +24,6 @@ export const QUIET_WINDOW_FRAMES = 5;
 
 /** A cut without a pause lies this many frames into the quietest run, at its middle. */
 export const MAX_CUT_OFFSET_FRAMES = 2;
+
+/** A tail shorter than this is merged into the chunk before it: whisper transcribes a few seconds without context poorly. */
+export const TAIL_MERGE_MS = 5_000;

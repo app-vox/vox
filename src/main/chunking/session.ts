@@ -1,5 +1,6 @@
 import { buildWhisperArgs, buildWhisperPrompt } from "../../shared/constants";
 import type { TranscriptionResult, WhisperPass } from "../audio/whisper";
+import { TAIL_MERGE_MS } from "./constants";
 import { ChunkSplitter, type CutRule } from "./splitter";
 
 export type TranscribeFn = (
@@ -60,6 +61,8 @@ export class ChunkSession {
   private readonly chunks: Chunk[] = [];
   /** Index of the chunk whose pass runs, or of the next one to get a pass. */
   private next = 0;
+  /** Aborts the pass that runs, which is over `chunks[next]`. */
+  private inFlight: AbortController | null = null;
   /** Settles when no chunk waits for a pass; stays rejected once a pass threw. */
   private passes: Promise<void> | null = null;
   private result: Promise<SessionResult> | null = null;
@@ -114,7 +117,12 @@ export class ChunkSession {
   }
 
   private async complete(): Promise<SessionResult> {
-    this.closeChunk(this.length, "end");
+    const last = this.chunks.at(-1);
+    if (last && ((this.length - last.end) / this.sampleRate) * 1000 < TAIL_MERGE_MS) {
+      this.mergeTail(last);
+    } else {
+      this.closeChunk(this.length, "end");
+    }
     await this.passes;
 
     const chunks = this.chunks.map((chunk, i) => ({
@@ -131,9 +139,30 @@ export class ChunkSession {
     };
   }
 
+  /**
+   * Drops the last cut: the chunk it closed now runs to the recording's end
+   * and gets a new pass, which keeps the whisper time of the passes it replaces.
+   */
+  private mergeTail(last: Chunk): void {
+    const index = this.chunks.length - 1;
+    last.end = this.length;
+    last.cut = "end";
+    last.text = "";
+    if (this.next === index) {
+      this.inFlight?.abort();
+    } else if (this.next > index) {
+      this.next = index;
+    }
+    this.startPasses();
+  }
+
   private closeChunk(end: number, cut: CutRule | "end"): void {
     const start = this.chunks.at(-1)?.end ?? 0;
     this.chunks.push({ start, end, cut, text: "", whisperMs: 0 });
+    this.startPasses();
+  }
+
+  private startPasses(): void {
     if (this.passes) return;
     this.passes = this.runPasses();
     // `finish()` reports a pass that threw.
@@ -143,13 +172,14 @@ export class ChunkSession {
   private async runPasses(): Promise<void> {
     while (this.next < this.chunks.length) {
       await this.runPass(this.chunks[this.next]);
-      this.next++;
     }
     this.passes = null;
   }
 
+  /** One pass over `chunk`, which is `chunks[next]`. A pass the tail merge aborted leaves the chunk for a new one. */
   private async runPass(chunk: Chunk): Promise<void> {
     const abort = new AbortController();
+    this.inFlight = abort;
     const started = performance.now();
     try {
       const result = await this.options.transcribe(
@@ -163,9 +193,15 @@ export class ChunkSession {
           signal: abort.signal,
         },
       );
+      if (abort.signal.aborted) return;
       chunk.text = result.text.trim();
+      this.next++;
+    } catch (error) {
+      if (!abort.signal.aborted) throw error;
+      return;
     } finally {
       chunk.whisperMs += performance.now() - started;
+      this.inFlight = null;
     }
     this.options.onChunkText?.(this.joinedText());
   }
