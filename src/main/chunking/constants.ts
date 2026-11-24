@@ -30,3 +30,9 @@ export const TAIL_MERGE_MS = 5_000;
 
 /** Characters of the previous chunk's text carried into the prompt: a sentence or two of context that still leaves the dictionary most of the prompt. */
 export const CARRY_MAX_CHARS = 200;
+
+/** A repeated phrase has at least this many words: a speaker repeats one or two words on purpose, as in "no, no, no". */
+export const LOOP_MIN_PHRASE_WORDS = 3;
+
+/** A phrase is a loop from this many occurrences in a row: a speaker says a phrase twice for emphasis, hardly three times. */
+export const LOOP_MIN_REPEATS = 3;
