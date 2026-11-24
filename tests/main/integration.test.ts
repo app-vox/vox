@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Pipeline } from "../../src/main/pipeline";
 import { NoopProvider } from "../../src/main/llm/noop";
 import { FoundryProvider } from "../../src/main/llm/foundry";
@@ -9,7 +9,7 @@ import { completedEntry } from "../../src/main/history/entry";
 import { pasteOutcome } from "../../src/main/shortcuts/paste-outcome";
 import { t } from "../../src/shared/i18n";
 import { computeLlmConfigHash } from "../../src/shared/llm-config-hash";
-import { scriptedWhisper, threeChunks } from "./helpers/chunking";
+import { FakeRecorder, scriptedWhisper, threeChunks } from "./helpers/chunking";
 
 // Mock electron-log
 vi.mock("electron-log/main", () => ({
@@ -348,6 +348,48 @@ describe("Whisper-only mode integration", () => {
     expect(pasteOutcome(false, pipeline.lastTranscriptIncomplete())).toBe("insert-failed");
     expect(t("indicator.incompleteTranscript")).toBe("Transcript may be incomplete");
     expect(t("history.status.incomplete")).toBe("Incomplete");
+  });
+});
+
+describe("Transcription while recording", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("chunks closed while recording are transcribed before stop", async () => {
+    const config = createDefaultConfig();
+    const recorder = new FakeRecorder(threeChunks());
+    const whisper = scriptedWhisper(["Alpha one.", "Beta two.", "Gamma three."]);
+    const pipeline = new Pipeline({
+      recorder,
+      transcribe: whisper.transcribe,
+      loadConfig: () => config,
+      createLlmProvider,
+      modelPath: "/fake/path",
+    });
+
+    await pipeline.startRecording();
+    recorder.recordUpTo(45);
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(whisper.calls).toHaveLength(2);
+    expect(recorder.fetches).toEqual([{ offset: 0, returned: 720000 }]);
+
+    recorder.recordUpTo(51.2);
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(recorder.fetches.at(-1)).toEqual({ offset: 720000, returned: 99200 });
+    expect(recorder.fetches).toHaveLength(2);
+
+    await expect(pipeline.stopAndProcess()).resolves.toBe("Alpha one. Beta two. Gamma three.");
+    expect(whisper.calls).toHaveLength(3);
+
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(recorder.fetches).toHaveLength(2);
   });
 });
 
