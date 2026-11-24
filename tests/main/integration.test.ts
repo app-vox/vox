@@ -5,6 +5,9 @@ import { FoundryProvider } from "../../src/main/llm/foundry";
 import { createLlmProvider } from "../../src/main/llm/factory";
 import { createDefaultConfig } from "../../src/shared/config";
 import { WHISPER_PROMPT } from "../../src/shared/constants";
+import { completedEntry } from "../../src/main/history/entry";
+import { pasteOutcome } from "../../src/main/shortcuts/paste-outcome";
+import { t } from "../../src/shared/i18n";
 import { computeLlmConfigHash } from "../../src/shared/llm-config-hash";
 import { scriptedWhisper, threeChunks } from "./helpers/chunking";
 
@@ -314,6 +317,37 @@ describe("Whisper-only mode integration", () => {
     expect(completed).toHaveLength(2);
     expect("incomplete" in completed[1]).toBe(false);
     expect(pipeline.lastTranscriptIncomplete()).toBe(false);
+  });
+
+  it("an incomplete transcript is marked in its history entry and warned about", async () => {
+    const loop = "and then we will see, and then we will see, and then we will see, and then we will see";
+    const config = createDefaultConfig();
+    const whisper = scriptedWhisper(["Alpha one.", loop, loop, loop, "Gamma three."]);
+    const completed: Parameters<NonNullable<ConstructorParameters<typeof Pipeline>[0]["onComplete"]>>[0][] = [];
+
+    const pipeline = new Pipeline({
+      recorder: {
+        start: async () => {},
+        stop: async () => ({ audioBuffer: threeChunks(), sampleRate: 16000 }),
+        cancel: async () => {},
+      },
+      transcribe: whisper.transcribe,
+      loadConfig: () => config,
+      createLlmProvider: () => createLlmProvider(config),
+      modelPath: "/fake/path",
+      onComplete: (result) => completed.push(result),
+    });
+
+    await pipeline.startRecording();
+    const text = await pipeline.stopAndProcess();
+
+    const entry = completedEntry(completed[0], text, { whisperModel: "small", llmEnhanced: false });
+    expect(entry.incomplete).toBe(true);
+    expect(entry.status).toBe("success");
+    expect(pasteOutcome(true, pipeline.lastTranscriptIncomplete())).toBe("incomplete");
+    expect(pasteOutcome(false, pipeline.lastTranscriptIncomplete())).toBe("insert-failed");
+    expect(t("indicator.incompleteTranscript")).toBe("Transcript may be incomplete");
+    expect(t("history.status.incomplete")).toBe("Incomplete");
   });
 });
 
