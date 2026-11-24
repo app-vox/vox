@@ -48,3 +48,12 @@ export const RECORDER_SAMPLE_RATE = 16_000;
 
 /** The recording's new audio is fetched this often: short enough for chunks to close close to their cut, long enough to keep the window calls few. */
 export const FETCH_INTERVAL_MS = 500;
+
+/** The first live pass runs this long after the preview first shows: short enough to feel immediate, long enough for a first word to be recorded. */
+export const LIVE_FIRST_PASS_MS = 400;
+
+/** A live pass starts this long after the previous one ended: the preview follows the speech without keeping the CPU and GPU busy. */
+export const LIVE_PASS_INTERVAL_MS = 1_000;
+
+/** No live pass runs over less audio than this: whisper makes no meaningful text of a fraction of a second. */
+export const LIVE_MIN_AUDIO_MS = 500;
