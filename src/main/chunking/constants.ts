@@ -27,3 +27,6 @@ export const MAX_CUT_OFFSET_FRAMES = 2;
 
 /** A tail shorter than this is merged into the chunk before it: whisper transcribes a few seconds without context poorly. */
 export const TAIL_MERGE_MS = 5_000;
+
+/** Characters of the previous chunk's text carried into the prompt: a sentence or two of context that still leaves the dictionary most of the prompt. */
+export const CARRY_MAX_CHARS = 200;
