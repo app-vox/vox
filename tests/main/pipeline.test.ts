@@ -7,6 +7,7 @@ import { type VoxConfig, createDefaultConfig } from "../../src/shared/config";
 import { computeLlmConfigHash } from "../../src/shared/llm-config-hash";
 import { buildWhisperArgs, buildWhisperPrompt } from "../../src/shared/constants";
 import log from "electron-log/main";
+import { audio, quiet, scriptedWhisper, speech } from "./helpers/chunking";
 
 /** Pipeline deps whose enhancement always uses `provider`, whatever the config says. */
 function enhancingWith(provider: LlmProvider): Pick<PipelineDeps, "loadConfig" | "createLlmProvider"> {
@@ -392,6 +393,34 @@ describe("Pipeline", () => {
     expect(mockProvider.correct).toHaveBeenCalled();
     expect(result).toBe("corrected text");
     expect(onComplete).toHaveBeenCalled();
+  });
+
+  it("retry from history is chunked", async () => {
+    const seventy = audio(speech(21), quiet(0.6), speech(25), quiet(0.4), speech(23));
+    const texts = ["Alpha one.", "Beta two.", "Gamma three."];
+    const whisper = scriptedWhisper([...texts, ...texts]);
+    const config = createDefaultConfig();
+    const pipeline = new Pipeline({
+      recorder: {
+        start: async () => {},
+        stop: async () => ({ audioBuffer: seventy, sampleRate: 16000 }),
+        cancel: async () => {},
+      },
+      transcribe: whisper.transcribe,
+      loadConfig: () => config,
+      createLlmProvider,
+      modelPath: "/models/ggml-small.bin",
+    });
+
+    await pipeline.startRecording();
+    const live = await pipeline.stopAndProcess();
+    const retried = await pipeline.retryFromRecording({ audioBuffer: seventy, sampleRate: 16000 });
+
+    expect(live).toBe("Alpha one. Beta two. Gamma three.");
+    expect(retried).toBe(live);
+    const sizes = whisper.calls.map((call) => call.samples);
+    expect(sizes.slice(0, 3)).toEqual([338240, 409600, 372160]);
+    expect(sizes.slice(3)).toEqual([338240, 409600, 372160]);
   });
 
   it("should track llm_enhancement_failed when LLM errors", async () => {

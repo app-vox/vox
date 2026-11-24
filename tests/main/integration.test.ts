@@ -5,6 +5,7 @@ import { FoundryProvider } from "../../src/main/llm/foundry";
 import { createLlmProvider } from "../../src/main/llm/factory";
 import { createDefaultConfig } from "../../src/shared/config";
 import { computeLlmConfigHash } from "../../src/shared/llm-config-hash";
+import { scriptedWhisper, threeChunks } from "./helpers/chunking";
 
 // Mock electron-log
 vi.mock("electron-log/main", () => ({
@@ -211,6 +212,34 @@ describe("Whisper-only mode integration", () => {
     const result = await pipeline.stopAndProcess();
 
     expect(result).toBe("");
+  });
+
+  it("a recording of three chunks is transcribed chunk by chunk", async () => {
+    const config = createDefaultConfig();
+    const provider = createLlmProvider(config);
+    expect(provider).toBeInstanceOf(NoopProvider);
+    const whisper = scriptedWhisper(["Alpha one.", "Beta two.", "Gamma three."]);
+    const completed: { text: string; originalText: string }[] = [];
+
+    const pipeline = new Pipeline({
+      recorder: {
+        start: async () => {},
+        stop: async () => ({ audioBuffer: threeChunks(), sampleRate: 16000 }),
+        cancel: async () => {},
+      },
+      transcribe: whisper.transcribe,
+      loadConfig: () => config,
+      createLlmProvider: () => provider,
+      modelPath: "/fake/path",
+      onComplete: (result) => completed.push(result),
+    });
+
+    await pipeline.startRecording();
+    const result = await pipeline.stopAndProcess();
+
+    expect(result).toBe("Alpha one. Beta two. Gamma three.");
+    expect(whisper.calls.map((call) => call.samples)).toEqual([338240, 345600, 135360]);
+    expect(completed.map((done) => done.originalText)).toEqual(["Alpha one. Beta two. Gamma three."]);
   });
 });
 

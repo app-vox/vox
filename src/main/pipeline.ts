@@ -5,6 +5,7 @@ import { activeInstructions } from "../shared/prompts";
 import { type RecordingResult } from "./audio/recorder";
 import { type TranscriptionResult, type WhisperPass } from "./audio/whisper";
 import { buildWhisperArgs, buildWhisperPrompt } from "../shared/constants";
+import { ChunkSession, type SessionResult } from "./chunking/session";
 import { existsSync } from "fs";
 import { t } from "../shared/i18n";
 import log from "electron-log/main";
@@ -432,9 +433,20 @@ export class Pipeline {
     this.currentStage = "transcribing";
     this.deps.onStage?.("transcribing");
     const whisperStartTime = performance.now();
-    let transcription: TranscriptionResult;
+    let result: SessionResult;
     try {
-      transcription = await this.runTranscription(recording, gen);
+      const session = new ChunkSession({
+        sampleRate: recording.sampleRate,
+        transcribe: this.deps.transcribe,
+        modelPath: this.deps.modelPath,
+        dictionary: this.deps.dictionary ?? [],
+        speechLanguages: this.deps.speechLanguages ?? [],
+      });
+      session.append(recording.audioBuffer);
+      result = await session.finish();
+      if (this.canceled || gen !== this.generation) {
+        throw new CanceledError();
+      }
     } catch (err: unknown) {
       if (err instanceof CanceledError) throw err;
       this.deps.analytics?.track("transcription_failed", {
@@ -452,7 +464,7 @@ export class Pipeline {
     }
 
     const whisperTimeMs = Number((performance.now() - whisperStartTime).toFixed(1));
-    const rawText = transcription.text.trim();
+    const rawText = result.text;
     this.heldTranscription = rawText;
     const audioDurationMs = Math.round((recording.audioBuffer.length / recording.sampleRate) * 1000);
     this.deps.analytics?.track("transcription_completed", {
