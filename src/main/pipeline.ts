@@ -3,7 +3,8 @@ import { NoopProvider } from "./llm/noop";
 import { type VoxConfig } from "../shared/config";
 import { activeInstructions } from "../shared/prompts";
 import { type RecordingResult } from "./audio/recorder";
-import { type TranscriptionResult } from "./audio/whisper";
+import { type TranscriptionResult, type WhisperPass } from "./audio/whisper";
+import { buildWhisperArgs, buildWhisperPrompt } from "../shared/constants";
 import { existsSync } from "fs";
 import { t } from "../shared/i18n";
 import log from "electron-log/main";
@@ -29,11 +30,7 @@ export interface PipelineDeps {
     audioBuffer: Float32Array,
     sampleRate: number,
     modelPath: string,
-    dictionary?: string[],
-    speechLanguages?: string[],
-    temperature?: number,
-    /** Aborting it stops the transcription; the returned promise then rejects. */
-    signal?: AbortSignal
+    pass: WhisperPass
   ): Promise<TranscriptionResult>;
   /** Reads the current config when an enhancement starts, so a prompt switch applies to the next one. */
   loadConfig(): VoxConfig;
@@ -246,10 +243,7 @@ export class Pipeline {
         snapshot.audioBuffer,
         snapshot.sampleRate,
         this.deps.modelPath,
-        this.deps.dictionary,
-        this.deps.speechLanguages,
-        undefined,
-        preview.signal,
+        this.buildPass({ signal: preview.signal }),
       );
       const text = result.text
         .replace(/\[[^\]]*\]/g, "")
@@ -387,6 +381,20 @@ export class Pipeline {
     return this.cancelingStage !== null;
   }
 
+  /** The pass of this pipeline's dictionary and languages; `skipPrompt` leaves both out. */
+  private buildPass(opts: { skipPrompt?: boolean; temperature?: number; signal?: AbortSignal } = {}): WhisperPass {
+    const dictionary = opts.skipPrompt ? [] : (this.deps.dictionary ?? []);
+    const speechLanguages = opts.skipPrompt ? [] : (this.deps.speechLanguages ?? []);
+    const whisperArgs = buildWhisperArgs(speechLanguages);
+    return {
+      prompt: buildWhisperPrompt(dictionary, whisperArgs.promptPrefix),
+      language: whisperArgs.language,
+      speechLanguages,
+      temperature: opts.temperature,
+      signal: opts.signal,
+    };
+  }
+
   private async runTranscription(
     recording: RecordingResult,
     gen: number,
@@ -396,9 +404,7 @@ export class Pipeline {
       recording.audioBuffer,
       recording.sampleRate,
       this.deps.modelPath,
-      opts?.skipPrompt ? [] : (this.deps.dictionary ?? []),
-      opts?.skipPrompt ? [] : (this.deps.speechLanguages ?? []),
-      opts?.temperature
+      this.buildPass(opts),
     );
 
     if (this.canceled || gen !== this.generation) {

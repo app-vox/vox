@@ -5,6 +5,7 @@ import {
   type LlmProviderType,
   createDefaultConfig,
 } from "../../../src/shared/config";
+import { buildWhisperArgs, buildWhisperPrompt } from "../../../src/shared/constants";
 import type { PipelineTestConfig } from "./config";
 
 export interface PipelineRunnerOptions {
@@ -145,12 +146,17 @@ export async function runFullPipeline(
   // time (the whisper module references `electron.app`).
   const { transcribe } = await import("../../../src/main/audio/whisper");
 
+  const speechLanguages = options.speechLanguages ?? [];
+  const whisperArgs = buildWhisperArgs(speechLanguages);
   const whisperResult = await transcribe(
     audioBuffer,
     sampleRate,
     testConfig.whisper.modelPath,
-    options.dictionary ?? [],
-    options.speechLanguages ?? [],
+    {
+      prompt: buildWhisperPrompt(options.dictionary ?? [], whisperArgs.promptPrefix),
+      language: whisperArgs.language,
+      speechLanguages,
+    },
   );
 
   const rawTranscription = whisperResult.text;

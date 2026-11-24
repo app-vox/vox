@@ -5,6 +5,7 @@ import { type LlmProvider } from "../../src/main/llm/provider";
 import { createLlmProvider } from "../../src/main/llm/factory";
 import { type VoxConfig, createDefaultConfig } from "../../src/shared/config";
 import { computeLlmConfigHash } from "../../src/shared/llm-config-hash";
+import { buildWhisperArgs, buildWhisperPrompt } from "../../src/shared/constants";
 import log from "electron-log/main";
 
 /** Pipeline deps whose enhancement always uses `provider`, whatever the config says. */
@@ -474,6 +475,38 @@ describe("Pipeline", () => {
     expect(onTranscriptionComplete).not.toHaveBeenCalled();
   });
 
+  it("a pass names its prompt and its language", async () => {
+    const recorder: PipelineDeps["recorder"] = {
+      start: async () => {},
+      stop: async () => ({ audioBuffer: new Float32Array(16000), sampleRate: 16000 }),
+      cancel: async () => {},
+    };
+    const calls: unknown[][] = [];
+    const transcribe: PipelineDeps["transcribe"] = (...args) => {
+      calls.push(args);
+      return Promise.resolve({ text: "final transcription" });
+    };
+    const pipeline = new Pipeline({
+      recorder,
+      transcribe,
+      ...enhancingWith(mockProvider),
+      modelPath: "/models/ggml-small.bin",
+      dictionary: ["Kubernetes"],
+      speechLanguages: ["pt", "en"],
+    });
+
+    await pipeline.startRecording();
+    await pipeline.stopAndProcess();
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toHaveLength(4);
+    expect(calls[0][3]).toMatchObject({
+      prompt: buildWhisperPrompt(["Kubernetes"], buildWhisperArgs(["pt", "en"]).promptPrefix),
+      language: "auto",
+      speechLanguages: ["pt", "en"],
+    });
+  });
+
   it("stops the in-flight preview transcription when recording stops", async () => {
     const oneSecond: RecordingResult = { audioBuffer: new Float32Array(16000), sampleRate: 16000 };
     const recorder: PipelineDeps["recorder"] = {
@@ -486,7 +519,7 @@ describe("Pipeline", () => {
     let previewCalls = 0;
     let previewAbortedWhenFinalStarted: boolean | undefined;
     // The preview runs until its signal aborts; the final transcription resolves at once.
-    const transcribe: PipelineDeps["transcribe"] = (_audio, _rate, _model, _dict, _langs, _temp, signal) => {
+    const transcribe: PipelineDeps["transcribe"] = (_audio, _rate, _model, { signal }) => {
       if (previewCalls === 0) {
         previewCalls++;
         previewSignal = signal;
@@ -525,7 +558,7 @@ describe("Pipeline", () => {
       };
       const previewSignals: (AbortSignal | undefined)[] = [];
       // Two previews run until their signals abort; the final transcription resolves at once.
-      const transcribe: PipelineDeps["transcribe"] = (_audio, _rate, _model, _dict, _langs, _temp, signal) => {
+      const transcribe: PipelineDeps["transcribe"] = (_audio, _rate, _model, { signal }) => {
         if (previewSignals.length < 2) {
           previewSignals.push(signal);
           return new Promise((_resolve, reject) => {

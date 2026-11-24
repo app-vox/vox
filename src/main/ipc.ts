@@ -9,6 +9,7 @@ import { AudioRecorder } from "./audio/recorder";
 import { transcribe } from "./audio/whisper";
 import { createLlmProvider } from "./llm/factory";
 import { computeLlmConfigHash } from "../shared/llm-config-hash";
+import { buildWhisperPrompt } from "../shared/constants";
 import { type VoxConfig, type LlmProviderType, type WhisperModelSize } from "../shared/config";
 import { getResourcePath } from "./resources";
 import { SetupChecker } from "./setup/checker";
@@ -186,7 +187,11 @@ export function registerIpcHandlers(
       await new Promise((r) => setTimeout(r, durationSec * 1000));
       const recording = await recorder.stop();
       const samples = resampleTo16kHz(recording.audioBuffer, recording.sampleRate);
-      const result = await transcribe(samples, 16000, modelPath, config.dictionary ?? []);
+      const result = await transcribe(samples, 16000, modelPath, {
+        prompt: buildWhisperPrompt(config.dictionary ?? []),
+        language: "auto",
+        speechLanguages: [],
+      });
       return result.text;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -216,7 +221,11 @@ export function registerIpcHandlers(
       await new Promise((r) => setTimeout(r, durationSec * 1000));
       const recording = await recorder.stop();
       const samples = resampleTo16kHz(recording.audioBuffer, recording.sampleRate);
-      const result = await transcribe(samples, 16000, modelPath, config.dictionary ?? []);
+      const result = await transcribe(samples, 16000, modelPath, {
+        prompt: buildWhisperPrompt(config.dictionary ?? []),
+        language: "auto",
+        speechLanguages: [],
+      });
       const rawText = result.text;
 
       let correctedText: string | null = null;

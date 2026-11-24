@@ -4,11 +4,20 @@ import * as crypto from "crypto";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
-import { buildWhisperPrompt, buildWhisperArgs } from "../../shared/constants";
 import { whisper as whisperConfig } from "../platform";
 
 export interface TranscriptionResult {
   text: string;
+}
+
+/** One whisper-cli run as its caller describes it: the prompt as given, the language before the platform resolves it. */
+export interface WhisperPass {
+  prompt: string;
+  language: string;
+  speechLanguages: string[];
+  temperature?: number;
+  /** Aborting it stops the transcription; the returned promise then rejects. */
+  signal?: AbortSignal;
 }
 
 // In packaged builds, native binaries are copied to extraResources via
@@ -21,10 +30,7 @@ export async function transcribe(
   audioBuffer: Float32Array,
   sampleRate: number,
   modelPath: string,
-  dictionary: string[] = [],
-  speechLanguages: string[] = [],
-  temperature?: number,
-  signal?: AbortSignal
+  pass: WhisperPass
 ): Promise<TranscriptionResult> {
   const tempPath = path.join(os.tmpdir(), `vox-recording-${crypto.randomUUID()}.wav`);
 
@@ -33,12 +39,10 @@ export async function transcribe(
     const wavBuffer = encodeWav(normalized, sampleRate);
     fs.writeFileSync(tempPath, wavBuffer);
 
-    const whisperArgs = buildWhisperArgs(speechLanguages);
-    const prompt = buildWhisperPrompt(dictionary, whisperArgs.promptPrefix);
-    const language = whisperConfig.resolveLanguage(whisperArgs.language, speechLanguages);
+    const language = whisperConfig.resolveLanguage(pass.language, pass.speechLanguages);
 
     const timeoutMs = whisperTimeoutMs(audioBuffer.length / sampleRate);
-    const stdout = await runWhisperCli(modelPath, tempPath, prompt, language, temperature, timeoutMs, signal);
+    const stdout = await runWhisperCli(modelPath, tempPath, pass.prompt, language, pass.temperature, timeoutMs, pass.signal);
     const text = parseWhisperOutput(stdout);
 
     return { text };

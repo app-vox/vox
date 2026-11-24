@@ -5,6 +5,7 @@ import { loadPipelineTestConfig } from "./helpers/config";
 import { readWav } from "./helpers/wav-reader";
 import { transcribe } from "../../src/main/audio/whisper";
 import { detectGarbage } from "../../src/main/pipeline";
+import { buildWhisperPrompt } from "../../src/shared/constants";
 
 const AUDIO_DIR = join(__dirname, "audio", "hallucination-loops");
 const config = loadPipelineTestConfig();
@@ -36,6 +37,7 @@ describe.skipIf(!config || !whisperAvailable)(
             samples,
             sampleRate,
             config!.whisper.modelPath,
+            { prompt: buildWhisperPrompt([]), language: "auto", speechLanguages: [] },
           );
           text = result.text;
         } catch (err: unknown) {
