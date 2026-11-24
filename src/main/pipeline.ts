@@ -327,6 +327,7 @@ export class Pipeline {
       if (this.canceled || gen !== this.generation) {
         throw new CanceledError();
       }
+      if (!result.text && result.error) throw result.error;
     } catch (err: unknown) {
       if (err instanceof CanceledError) throw err;
       this.deps.analytics?.track("transcription_failed", {
@@ -372,10 +373,9 @@ export class Pipeline {
       return rawText;
     }
 
-    slog.info("Checking for garbage transcription");
-    const garbageReason = rawText ? detectGarbage(rawText) : "short";
-
-    if (garbageReason) {
+    if (!rawText) {
+      const dropped = result.chunks.find((chunk) => chunk.outcome.startsWith("dropped:"));
+      const garbageReason = dropped ? dropped.outcome.slice("dropped:".length) : "short";
       slog.info("Transcription rejected as garbage", { reason: garbageReason });
       this.deps.analytics?.track("transcription_garbage_detected", {
         whisper_model: this.whisperModelName,

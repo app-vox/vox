@@ -7,7 +7,8 @@ import { type VoxConfig, createDefaultConfig } from "../../src/shared/config";
 import { computeLlmConfigHash } from "../../src/shared/llm-config-hash";
 import { buildWhisperArgs, buildWhisperPrompt } from "../../src/shared/constants";
 import log from "electron-log/main";
-import { audio, quiet, scriptedWhisper, speech } from "./helpers/chunking";
+import { detectGarbage } from "../../src/main/garbage";
+import { audio, quiet, scriptedWhisper, speech, threeChunks } from "./helpers/chunking";
 
 /** Pipeline deps whose enhancement always uses `provider`, whatever the config says. */
 function enhancingWith(provider: LlmProvider): Pick<PipelineDeps, "loadConfig" | "createLlmProvider"> {
@@ -651,6 +652,100 @@ describe("Pipeline", () => {
     expect(attempts).toBe(2);
     expect(timing).toMatchObject({ whisperMs: 2000, llmMs: 500 });
     expect(timing.totalMs).toBeGreaterThanOrEqual(timing.whisperMs + timing.llmMs);
+  });
+
+  describe("chunks without text", () => {
+    /** A config whose enhancement the real `createLlmProvider` turns on. */
+    function enhancingConfig(): VoxConfig {
+      const config = createDefaultConfig();
+      config.enableLlmEnhancement = true;
+      config.llmConnectionTested = true;
+      config.llm.endpoint = "http://127.0.0.1:9";
+      config.llm.apiKey = "test-key";
+      config.llmConfigHash = computeLlmConfigHash(config);
+      return config;
+    }
+
+    function recorderOf(audioBuffer: Float32Array): PipelineDeps["recorder"] {
+      return {
+        start: async () => {},
+        stop: async () => ({ audioBuffer, sampleRate: 16000 }),
+        cancel: async () => {},
+      };
+    }
+
+    it("no chunk contributes text", async () => {
+      const forty = audio(speech(21), quiet(0.6), speech(18.4));
+      const whisper = scriptedWhisper(["Thank you", "Thank you"]);
+      const config = enhancingConfig();
+      const onFailure = vi.fn();
+      const onComplete = vi.fn();
+      const pipeline = new Pipeline({
+        recorder: recorderOf(forty),
+        transcribe: whisper.transcribe,
+        loadConfig: () => config,
+        createLlmProvider,
+        modelPath: "/models/ggml-small.bin",
+        onFailure,
+        onComplete,
+      });
+
+      await pipeline.startRecording();
+      const result = await pipeline.stopAndProcess();
+
+      expect(forty.length).toBe(640000);
+      expect(whisper.calls).toHaveLength(2);
+      expect(result).toBe("");
+      expect(onFailure).toHaveBeenCalledTimes(1);
+      expect(onFailure).toHaveBeenCalledWith(expect.objectContaining({ failedStep: "garbage" }));
+      expect(onComplete).not.toHaveBeenCalled();
+    });
+
+    it("no text and a failed chunk fails at the whisper step", async () => {
+      const lost = new Error("gpu lost again");
+      const whisper = scriptedWhisper(["Thank you", "Thank you", new Error("gpu lost"), lost]);
+      const config = enhancingConfig();
+      const onFailure = vi.fn();
+      const pipeline = new Pipeline({
+        recorder: recorderOf(threeChunks()),
+        transcribe: whisper.transcribe,
+        loadConfig: () => config,
+        createLlmProvider,
+        modelPath: "/models/ggml-small.bin",
+        onFailure,
+      });
+
+      await pipeline.startRecording();
+      await expect(pipeline.stopAndProcess()).rejects.toThrow("gpu lost again");
+
+      expect(whisper.calls).toHaveLength(4);
+      expect(onFailure).toHaveBeenCalledTimes(1);
+      expect(onFailure).toHaveBeenCalledWith(expect.objectContaining({ failedStep: "whisper", error: lost }));
+    });
+
+    it("chunk texts whose joined text today's check rejects all reach the raw transcript", async () => {
+      const sentence = "We need to ship it today.";
+      const joined = [sentence, sentence, sentence].join(" ");
+      const whisper = scriptedWhisper([sentence, sentence, sentence]);
+      let seen: string | undefined;
+      const pipeline: Pipeline = new Pipeline({
+        recorder: recorderOf(threeChunks()),
+        transcribe: whisper.transcribe,
+        ...enhancingWith(mockProvider),
+        modelPath: "/models/ggml-small.bin",
+        onTranscriptionComplete: (raw) => {
+          seen = raw;
+          void pipeline.cancel();
+        },
+      });
+
+      await pipeline.startRecording();
+      await expect(pipeline.stopAndProcess()).rejects.toThrow("Operation was canceled");
+
+      expect(detectGarbage(joined)).toBe("loop");
+      expect(seen).toBe(joined);
+      expect(mockProvider.correct).not.toHaveBeenCalled();
+    });
   });
 
   describe("active prompt", () => {

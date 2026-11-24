@@ -33,9 +33,10 @@ export interface ChunkSessionOptions {
 }
 
 /**
- * How a chunk's passes ended: `ok` with the first pass's text, `retried` with
- * a later pass's, `collapsed` with a loop no retry broke, `failed` without a
- * text, `dropped` with a text the garbage check rejected.
+ * How a chunk's passes ended: `ok` with the first pass's text or with none,
+ * `retried` with a later pass's, `collapsed` with a loop no retry broke,
+ * `failed` with no text because its passes threw, `dropped` with a text the
+ * garbage check rejected.
  */
 export type ChunkOutcome = "ok" | "retried" | "collapsed" | "failed" | `dropped:${GarbageReason}`;
 
@@ -68,8 +69,10 @@ export interface SessionResult {
   text: string;
   chunks: ChunkReport[];
   whisperMs: number;
-  /** A chunk's text is a collapsed loop. */
+  /** A chunk's text is a collapsed loop, or a chunk failed. */
   incomplete: boolean;
+  /** The error of the first failed chunk's last pass. */
+  error?: Error;
 }
 
 /** What a chunk's passes have come to; a tail merge starts it anew. */
@@ -82,6 +85,8 @@ interface PassState {
   passes: PassRecord[];
   /** Passes that ran to their end: `passes` without the aborted ones. */
   used: number;
+  /** What the chunk's last pass that threw threw. */
+  error: Error | null;
   /** `ok` until the passes end. */
   outcome: ChunkOutcome;
 }
@@ -96,7 +101,7 @@ interface Chunk extends PassState {
 }
 
 function noPasses(): PassState {
-  return { text: "", retry: 0, loopText: null, passes: [], used: 0, outcome: "ok" };
+  return { text: "", retry: 0, loopText: null, passes: [], used: 0, error: null, outcome: "ok" };
 }
 
 /**
@@ -105,8 +110,9 @@ function noPasses(): PassState {
  * whisper passes one at a time, chunk by chunk in recording order. A pass
  * runs in the language the first one reported, when none is configured, and
  * its prompt carries the end of the text of the chunk before it. A chunk
- * whose text is a loop is retried alone, up to `MAX_CHUNK_PASSES` passes; a
- * loop that no retry broke is collapsed.
+ * gets up to `MAX_CHUNK_PASSES` passes: one whose text is a loop is retried
+ * alone, and a pass that throws is repeated once. A loop that no retry broke
+ * is collapsed; a chunk without usable text is left out, and the rest goes on.
  */
 export class ChunkSession {
   readonly sampleRate: number;
@@ -124,7 +130,7 @@ export class ChunkSession {
   private next = 0;
   /** Aborts the pass that runs, which is over `chunks[next]`. */
   private inFlight: AbortController | null = null;
-  /** Settles when no chunk waits for a pass; stays rejected once a pass threw. */
+  /** Settles when no chunk waits for a pass. */
   private passes: Promise<void> | null = null;
   private result: Promise<SessionResult> | null = null;
 
@@ -198,7 +204,8 @@ export class ChunkSession {
       text: this.joinedText(),
       chunks,
       whisperMs: chunks.reduce((sum, chunk) => sum + chunk.whisperMs, 0),
-      incomplete: chunks.some((chunk) => chunk.outcome === "collapsed"),
+      incomplete: chunks.some((chunk) => chunk.outcome === "collapsed" || chunk.outcome === "failed"),
+      error: this.chunks.find((chunk) => chunk.outcome === "failed")?.error ?? undefined,
     };
   }
 
@@ -228,7 +235,7 @@ export class ChunkSession {
   private startPasses(): void {
     if (this.passes) return;
     this.passes = this.runPasses();
-    // `finish()` reports a pass that threw.
+    // `finish()` reports what stopped the passes; a pass that throws does not.
     this.passes.catch(() => {});
   }
 
@@ -239,7 +246,10 @@ export class ChunkSession {
     this.passes = null;
   }
 
-  /** One pass over `chunk`, which is `chunks[next]`. A pass the tail merge aborted leaves the chunk for a new one. */
+  /**
+   * One pass over `chunk`, which is `chunks[next]`. A pass the tail merge
+   * aborted leaves the chunk for a new one and counts as no pass of it.
+   */
   private async runPass(chunk: Chunk): Promise<void> {
     const index = this.next;
     const abort = new AbortController();
@@ -256,9 +266,9 @@ export class ChunkSession {
     });
     const record: PassRecord = { temperature: settings.temperature, bare: settings.bare, ms: 0, result: "aborted" };
     const started = performance.now();
-    let transcription: TranscriptionResult;
+    let answer: TranscriptionResult | Error;
     try {
-      transcription = await this.options.transcribe(
+      answer = await this.options.transcribe(
         this.samples.subarray(chunk.start, chunk.end),
         this.sampleRate,
         this.options.modelPath,
@@ -271,21 +281,29 @@ export class ChunkSession {
         },
       );
     } catch (error) {
-      if (abort.signal.aborted) return;
-      record.result = "threw";
-      chunk.used++;
-      throw error;
-    } finally {
-      record.ms = performance.now() - started;
-      chunk.whisperMs += record.ms;
-      chunk.passes.push(record);
-      this.inFlight = null;
+      answer = error instanceof Error ? error : new Error(String(error));
     }
+    record.ms = performance.now() - started;
+    chunk.whisperMs += record.ms;
+    chunk.passes.push(record);
+    this.inFlight = null;
     if (abort.signal.aborted) return;
 
     chunk.used++;
-    if (settings.language === "auto") this.pinLanguage(transcription.language, chunk, index);
-    record.result = this.takeText(chunk, transcription.text.trim());
+    if (answer instanceof Error) {
+      record.result = "threw";
+      this.passThrew(chunk, answer);
+      return;
+    }
+    if (settings.language === "auto") this.pinLanguage(answer.language, chunk, index);
+    record.result = this.takeText(chunk, answer.text.trim());
+  }
+
+  /** Leaves `chunk` for a repeat of the pass that threw, with the same settings; a chunk gets one repeat. */
+  private passThrew(chunk: Chunk, error: Error): void {
+    const repeat = chunk.error === null && chunk.used < MAX_CHUNK_PASSES;
+    chunk.error = error;
+    if (!repeat) this.giveUp(chunk);
   }
 
   /** Takes the text of a pass over `chunk`: it ends the chunk's passes or leaves the chunk for a retry. */
@@ -293,28 +311,43 @@ export class ChunkSession {
     const reason = text === "" ? null : detectGarbage(text);
     if (reason === "loop") {
       chunk.loopText ??= text;
-      this.retryOrCollapse(chunk, chunk.loopText);
+      this.retryOrGiveUp(chunk);
       return "loop";
     }
+    // Enhancement, when it is on, takes no garbage.
+    const rejected = this.enhancing && reason;
     if (chunk.loopText === null) {
-      this.endPasses(chunk, text, "ok");
+      if (rejected) {
+        this.endPasses(chunk, "", `dropped:${rejected}`);
+        return "rejected";
+      }
+      this.endPasses(chunk, text, text !== "" && chunk.error ? "retried" : "ok");
       return text === "" ? "empty" : "text";
     }
-    // A retry's text replaces the loop when enhancement, if it is on, would take it.
-    if (text !== "" && !(this.enhancing && reason)) {
+    // Only a text replaces the loop.
+    if (text !== "" && !rejected) {
       this.endPasses(chunk, text, "retried");
       return "text";
     }
-    this.retryOrCollapse(chunk, chunk.loopText);
+    this.retryOrGiveUp(chunk);
     return text === "" ? "empty" : "rejected";
   }
 
-  /** Moves a chunk that looped to its next retry, or, its passes used up, ends them with the collapsed loop. */
-  private retryOrCollapse(chunk: Chunk, loopText: string): void {
+  /** Moves a chunk that looped to its next retry, or gives it up once its passes are used up. */
+  private retryOrGiveUp(chunk: Chunk): void {
     if (chunk.used < MAX_CHUNK_PASSES) {
       chunk.retry = chunk.retry === 0 ? 1 : 2;
     } else {
-      this.endPasses(chunk, collapseLoops(loopText), "collapsed");
+      this.giveUp(chunk);
+    }
+  }
+
+  /** Ends the passes of a chunk that no pass gave a text: with its loop, collapsed, or with nothing. */
+  private giveUp(chunk: Chunk): void {
+    if (chunk.loopText !== null) {
+      this.endPasses(chunk, collapseLoops(chunk.loopText), "collapsed");
+    } else {
+      this.endPasses(chunk, "", "failed");
     }
   }
 

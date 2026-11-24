@@ -159,3 +159,121 @@ describe("ChunkSession loop retries", () => {
     expect(asked).toBe(1);
   });
 });
+
+describe("ChunkSession chunks without usable text", () => {
+  it("garbage chunk contributes no text", async () => {
+    const whisper = scriptedWhisper(["Alpha one.", "Thank you", "Gamma three."]);
+    const session = newSession(whisper, { enhancing: () => true });
+
+    session.append(threeChunks());
+    const result = await session.finish();
+
+    expect(result.text).toBe("Alpha one. Gamma three.");
+    expect(result.incomplete).toBe(false);
+    expect(result.chunks[1].outcome).toBe("dropped:hallucination");
+    expect(result.chunks[1].chars).toBe(0);
+    expect(result.chunks[1].passes.map((pass) => pass.result)).toEqual(["rejected"]);
+    expect(result.error).toBeUndefined();
+    expect(whisper.calls).toHaveLength(3);
+  });
+
+  it("nothing is carried from a dropped chunk", async () => {
+    const whisper = scriptedWhisper(["Alpha one.", "Thank you", "Gamma three."]);
+    const session = newSession(whisper, { enhancing: () => true });
+
+    session.append(threeChunks());
+    await session.finish();
+
+    expect(whisper.calls[1].prompt).toBe(`${WHISPER_PROMPT} Alpha one.`);
+    expect(whisper.calls[2].prompt).toBe(WHISPER_PROMPT);
+  });
+
+  it("whisper-only mode keeps a filler chunk", async () => {
+    const whisper = scriptedWhisper(["Alpha one.", "Um", "Gamma three."]);
+    const session = newSession(whisper, { enhancing: () => false });
+
+    session.append(threeChunks());
+    const result = await session.finish();
+
+    expect(result.text).toBe("Alpha one. Um Gamma three.");
+    expect(result.chunks[1].outcome).toBe("ok");
+  });
+
+  it("chunk that fails once is retried", async () => {
+    const whisper = scriptedWhisper(["Alpha one.", new Error("boom"), "Beta two.", "Gamma three."]);
+    const session = newSession(whisper);
+
+    session.append(threeChunks());
+    const result = await session.finish();
+
+    expect(result.text).toBe("Alpha one. Beta two. Gamma three.");
+    expect(whisper.calls).toHaveLength(4);
+    expect(whisper.calls[2].prompt).toBe(whisper.calls[1].prompt);
+    expect(whisper.calls[2].samples).toBe(whisper.calls[1].samples);
+    expect([whisper.calls[1].temperature, whisper.calls[2].temperature]).toEqual([undefined, undefined]);
+    expect(result.incomplete).toBe(false);
+    expect(result.chunks[1].outcome).toBe("retried");
+    expect(result.chunks[1].retries).toBe(1);
+    expect(result.chunks[1].loop).toBe(false);
+    expect(result.error).toBeUndefined();
+  });
+
+  it("chunk that fails twice is left out", async () => {
+    const whisper = scriptedWhisper(["Alpha one.", new Error("boom"), new Error("boom again"), "Gamma three."]);
+    const session = newSession(whisper);
+
+    session.append(threeChunks());
+    const result = await session.finish();
+
+    expect(result.text).toBe("Alpha one. Gamma three.");
+    expect(result.incomplete).toBe(true);
+    expect(whisper.calls).toHaveLength(4);
+    expect(result.chunks[1].outcome).toBe("failed");
+    expect(result.chunks[1].passes.map((pass) => pass.result)).toEqual(["threw", "threw"]);
+    expect(result.error?.message).toBe("boom again");
+    expect(whisper.calls[3].prompt).toBe(WHISPER_PROMPT);
+  });
+
+  it("loop retry that throws uses up a pass", async () => {
+    const whisper = scriptedWhisper([LOOP, new Error("boom"), "Clean text here."]);
+    const session = newSession(whisper);
+
+    session.append(speech(3));
+    const result = await session.finish();
+
+    expect(whisper.calls).toHaveLength(3);
+    expect(whisper.calls.map((call) => call.temperature)).toEqual([undefined, 0.4, 0.4]);
+    expect(result.text).toBe("Clean text here.");
+    expect(result.incomplete).toBe(false);
+    expect(result.chunks[0].outcome).toBe("retried");
+  });
+
+  it("an empty text without a throw gives no text and no flag", async () => {
+    const whisper = scriptedWhisper([""]);
+    const session = newSession(whisper, { enhancing: () => true });
+
+    session.append(speech(3));
+    const result = await session.finish();
+
+    expect(result.text).toBe("");
+    expect(result.incomplete).toBe(false);
+    expect(result.chunks[0].outcome).toBe("ok");
+    expect(result.error).toBeUndefined();
+  });
+
+  it("an aborted pass is not repeated", async () => {
+    const whisper = scriptedWhisper(["hang", new Error("boom"), "Whole text."]);
+    const session = newSession(whisper);
+
+    // The tail merge aborts the first pass, which is no throw: the chunk still has its one repeat.
+    session.append(audio(speech(24.86), quiet(0.6), speech(2.54)));
+    const result = await session.finish();
+
+    expect(whisper.calls.map((call) => call.samples)).toEqual([400000, 448000, 448000]);
+    expect(result.text).toBe("Whole text.");
+    expect(result.incomplete).toBe(false);
+    expect(result.chunks[0].outcome).toBe("retried");
+    expect(result.chunks[0].retries).toBe(1);
+    expect(result.chunks[0].passes.map((pass) => pass.result)).toEqual(["aborted", "threw", "text"]);
+  });
+});
