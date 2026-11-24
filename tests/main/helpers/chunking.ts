@@ -218,6 +218,7 @@ export class FakeRecorder {
     if (this.failure) {
       const error = this.failure;
       this.failure = null;
+      this.fetches.push({ offset, returned: 0 });
       throw error;
     }
     const samples = Float32Array.from(recordedSamplesFrom(this.blocks, offset));

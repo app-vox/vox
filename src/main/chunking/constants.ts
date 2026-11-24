@@ -45,3 +45,6 @@ export const LOOP_RETRY_TEMPERATURES = [0.4, 0.8] as const;
 
 /** Sample rate of the recorder window's audio context: whisper-cli reads 16 kHz audio, so no resampling follows. */
 export const RECORDER_SAMPLE_RATE = 16_000;
+
+/** The recording's new audio is fetched this often: short enough for chunks to close close to their cut, long enough to keep the window calls few. */
+export const FETCH_INTERVAL_MS = 500;
