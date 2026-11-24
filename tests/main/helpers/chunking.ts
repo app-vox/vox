@@ -1,5 +1,6 @@
 import {
   ChunkSession,
+  type ChunkLog,
   type ChunkSessionOptions,
   type TranscribeFn,
 } from "../../../src/main/chunking/session";
@@ -98,6 +99,35 @@ export function threeChunks(): Float32Array {
   return audio(speech(21), quiet(0.6), speech(21), quiet(0.6), speech(8));
 }
 
+/** `count` words `<prefix>000`, `<prefix>001`, … joined by one space. */
+export function words(prefix: string, count: number): string {
+  return Array.from({ length: count }, (_, i) => `${prefix}${String(i).padStart(3, "0")}`).join(" ");
+}
+
+/** 503 characters: `token000` to `token055`. A window of 200 characters starts inside `token033`. */
+export const tokens = words("token", 56);
+
+/** 300 characters: `w000` to `w059` and a full stop. A window of 200 characters starts at `w020`. */
+export const text300 = `${words("w", 60)}.`;
+
+/** 80 characters: shorter than the carried window. */
+export const text80 = words("word", 10).padEnd(80, "!");
+
+export interface LogLine {
+  level: "info" | "warn" | "debug";
+  message: string;
+  fields: Record<string, unknown>;
+}
+
+/** A session log that keeps its lines, in the order they were written. */
+export function collectLog(): { log: ChunkLog; lines: LogLine[] } {
+  const lines: LogLine[] = [];
+  const write = (level: LogLine["level"]) => (message: string, fields: Record<string, unknown>) => {
+    lines.push({ level, message, fields });
+  };
+  return { log: { info: write("info"), warn: write("warn"), debug: write("debug") }, lines };
+}
+
 /** The options of a test session: the one place an option gets its default. */
 export function sessionOptions(
   whisper: { transcribe: TranscribeFn },
@@ -109,6 +139,7 @@ export function sessionOptions(
     modelPath: "/models/test.bin",
     dictionary: [],
     speechLanguages: [],
+    log: collectLog().log,
     ...overrides,
   };
 }

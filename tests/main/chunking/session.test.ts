@@ -75,7 +75,7 @@ describe("ChunkSession", () => {
     expect(whisper.calls.map((call) => call.samples)).toEqual(THREE_SAMPLES);
   });
 
-  it("each pass gets the usual prompt and the configured language", async () => {
+  it("each pass gets the usual prompt, the text before it and the configured language", async () => {
     const whisper = scriptedWhisper(THREE_TEXTS);
     const session = newSession(whisper, { dictionary: ["Kubernetes"], speechLanguages: ["de"] });
 
@@ -83,8 +83,12 @@ describe("ChunkSession", () => {
     await session.finish();
 
     expect(whisper.calls).toHaveLength(3);
+    expect(whisper.calls.map((call) => call.prompt)).toEqual([
+      buildWhisperPrompt(["Kubernetes"], ""),
+      buildWhisperPrompt(["Kubernetes"], "", "Alpha one."),
+      buildWhisperPrompt(["Kubernetes"], "", "Beta two."),
+    ]);
     for (const call of whisper.calls) {
-      expect(call.prompt).toBe(buildWhisperPrompt(["Kubernetes"], ""));
       expect(call.language).toBe("de");
       expect(call.temperature).toBeUndefined();
     }
@@ -157,6 +161,17 @@ describe("ChunkSession tail merge", () => {
     const result = await session.finish();
 
     expect(whisper.calls.map((call) => call.samples)).toEqual([400000, 96000]);
+    expect(result.text).toBe("First. Second.");
+  });
+
+  it("a tail of exactly 5 s stands alone", async () => {
+    const whisper = scriptedWhisper(["First.", "Second."]);
+    const session = newSession(whisper);
+
+    session.append(audio(speech(24.86), quiet(0.6), speech(4.54)));
+    const result = await session.finish();
+
+    expect(whisper.calls.map((call) => call.samples)).toEqual([400000, 80000]);
     expect(result.text).toBe("First. Second.");
   });
 

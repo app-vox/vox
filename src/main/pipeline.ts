@@ -441,6 +441,7 @@ export class Pipeline {
         modelPath: this.deps.modelPath,
         dictionary: this.deps.dictionary ?? [],
         speechLanguages: this.deps.speechLanguages ?? [],
+        log: slog,
       });
       session.append(recording.audioBuffer);
       result = await session.finish();

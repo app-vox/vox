@@ -1,6 +1,7 @@
-import { buildWhisperArgs, buildWhisperPrompt } from "../../shared/constants";
+import { buildWhisperArgs, buildWhisperPrompt, type WhisperArgs } from "../../shared/constants";
 import type { TranscriptionResult, WhisperPass } from "../audio/whisper";
 import { TAIL_MERGE_MS } from "./constants";
+import { carriedText } from "./prompt";
 import { ChunkSplitter, type CutRule } from "./splitter";
 
 export type TranscribeFn = (
@@ -10,12 +11,20 @@ export type TranscribeFn = (
   pass: WhisperPass,
 ) => Promise<TranscriptionResult>;
 
+/** Where the session writes its log lines. */
+export interface ChunkLog {
+  info(message: string, fields: Record<string, unknown>): void;
+  warn(message: string, fields: Record<string, unknown>): void;
+  debug(message: string, fields: Record<string, unknown>): void;
+}
+
 export interface ChunkSessionOptions {
   sampleRate: number;
   transcribe: TranscribeFn;
   modelPath: string;
   dictionary: string[];
   speechLanguages: string[];
+  log: ChunkLog;
   /** Gets the chunk texts so far, joined, each time a chunk's text is final. */
   onChunkText?: (joined: string) => void;
 }
@@ -42,19 +51,25 @@ interface Chunk {
   cut: CutRule | "end";
   text: string;
   whisperMs: number;
+  /** Set once the log says that a pass over the chunk reported no language. */
+  noLanguageWarned: boolean;
 }
 
 /**
  * Transcribes a recording chunk by chunk while it is still being made: it
  * keeps the samples, closes a chunk at each cut of the splitter and runs one
- * whisper pass per chunk, one at a time, in recording order.
+ * whisper pass per chunk, one at a time, in recording order. A pass runs in
+ * the language the first one reported, when none is configured, and its
+ * prompt carries the end of the text of the chunk before it.
  */
 export class ChunkSession {
   readonly sampleRate: number;
   private readonly options: ChunkSessionOptions;
   private readonly splitter: ChunkSplitter;
-  private readonly prompt: string;
-  private readonly language: string;
+  /** The configured language, `auto` when there is none or several, and the prompt prefix that names several. */
+  private readonly args: WhisperArgs;
+  /** The first language a pass that asked for `auto` reported; later passes run in it. */
+  private pinned: string | undefined;
   /** The recording so far, in the first `length` samples. */
   private samples = new Float32Array(0);
   private length = 0;
@@ -71,9 +86,7 @@ export class ChunkSession {
     this.options = options;
     this.sampleRate = options.sampleRate;
     this.splitter = new ChunkSplitter(options.sampleRate);
-    const args = buildWhisperArgs(options.speechLanguages);
-    this.prompt = buildWhisperPrompt(options.dictionary, args.promptPrefix);
-    this.language = args.language;
+    this.args = buildWhisperArgs(options.speechLanguages);
   }
 
   get sampleCount(): number {
@@ -158,7 +171,7 @@ export class ChunkSession {
 
   private closeChunk(end: number, cut: CutRule | "end"): void {
     const start = this.chunks.at(-1)?.end ?? 0;
-    this.chunks.push({ start, end, cut, text: "", whisperMs: 0 });
+    this.chunks.push({ start, end, cut, text: "", whisperMs: 0, noLanguageWarned: false });
     this.startPasses();
   }
 
@@ -178,8 +191,11 @@ export class ChunkSession {
 
   /** One pass over `chunk`, which is `chunks[next]`. A pass the tail merge aborted leaves the chunk for a new one. */
   private async runPass(chunk: Chunk): Promise<void> {
+    const index = this.next;
     const abort = new AbortController();
     this.inFlight = abort;
+    // Only a pass that asked for `auto` pins a language, so a configured single language is never replaced.
+    const language = this.pinned ?? this.args.language;
     const started = performance.now();
     try {
       const result = await this.options.transcribe(
@@ -187,13 +203,18 @@ export class ChunkSession {
         this.sampleRate,
         this.options.modelPath,
         {
-          prompt: this.prompt,
-          language: this.language,
+          prompt: buildWhisperPrompt(
+            this.options.dictionary,
+            this.args.promptPrefix,
+            carriedText(this.chunks[index - 1]?.text ?? ""),
+          ),
+          language,
           speechLanguages: this.options.speechLanguages,
           signal: abort.signal,
         },
       );
       if (abort.signal.aborted) return;
+      if (language === "auto") this.pinLanguage(result.language, chunk, index);
       chunk.text = result.text.trim();
       this.next++;
     } catch (error) {
@@ -204,5 +225,15 @@ export class ChunkSession {
       this.inFlight = null;
     }
     this.options.onChunkText?.(this.joinedText());
+  }
+
+  /** Takes what a pass over `chunk` that asked for `auto` reported. */
+  private pinLanguage(reported: string | undefined, chunk: Chunk, index: number): void {
+    if (reported !== undefined) {
+      this.pinned ??= reported;
+    } else if (!chunk.noLanguageWarned) {
+      chunk.noLanguageWarned = true;
+      this.options.log.warn("Chunk reported no language", { index: index + 1 });
+    }
   }
 }
