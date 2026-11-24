@@ -334,10 +334,11 @@ export class Pipeline {
         enhancing: () => !(this.deps.createLlmProvider(this.deps.loadConfig()) instanceof NoopProvider),
       });
       session.append(recording.audioBuffer);
-      result = await session.finish();
-      if (this.canceled || gen !== this.generation) {
+      const finished = await session.finish();
+      if (finished === null || this.canceled || gen !== this.generation) {
         throw new CanceledError();
       }
+      result = finished;
       if (!result.text && result.error) throw result.error;
     } catch (err: unknown) {
       if (err instanceof CanceledError) throw err;

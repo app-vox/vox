@@ -154,6 +154,12 @@ export class ChunkSession {
   private enhancing: boolean | null = null;
   /** `finish()` was called. */
   private stopped = false;
+  /** `pause()` was called and `resume()` has not been since: no new pass starts. */
+  private paused = false;
+  /** `abort()` was called: the session is dropped for good. */
+  private aborted = false;
+  /** Ends the wait of a `finish()` that waits for the passes, when the session pauses or aborts. */
+  private wake: (() => void) | null = null;
   /** The recording so far, in the first `length` samples. */
   private samples = new Float32Array(0);
   private length = 0;
@@ -164,7 +170,7 @@ export class ChunkSession {
   private inFlight: AbortController | null = null;
   /** Settles when no chunk waits for a pass. */
   private passes: Promise<void> | null = null;
-  private result: Promise<SessionResult> | null = null;
+  private result: Promise<SessionResult | null> | null = null;
 
   constructor(options: ChunkSessionOptions) {
     this.options = options;
@@ -181,8 +187,9 @@ export class ChunkSession {
     return this.chunks.filter((chunk) => chunk.cut !== "end").length;
   }
 
-  /** Takes the next samples of the recording and starts a pass over each chunk they close. */
+  /** Takes the next samples of the recording and starts a pass over each chunk they close; a finished, paused or aborted session ignores them. */
   append(samples: Float32Array): void {
+    if (this.stopped || this.paused || this.aborted) return;
     const needed = this.length + samples.length;
     if (needed > this.samples.length) {
       // Passes in flight keep reading the old buffer, whose samples never change.
@@ -198,10 +205,38 @@ export class ChunkSession {
     }
   }
 
-  /** Ends the recording: transcribes what no pass has covered and resolves once every pass has ended. */
-  finish(): Promise<SessionResult> {
-    this.result ??= this.complete();
+  /**
+   * Ends the recording: transcribes what no pass has covered and resolves once
+   * every pass has ended, or with null when the session is paused or aborted
+   * before every chunk has its text. A `finish()` after `resume()` goes on.
+   */
+  finish(): Promise<SessionResult | null> {
+    this.result ??= this.complete().then((result) => {
+      if (result === null) this.result = null;
+      return result;
+    });
     return this.result;
+  }
+
+  /** Keeps the texts and the pass in flight, and starts no new pass until `resume()`. */
+  pause(): void {
+    this.paused = true;
+    this.wake?.();
+  }
+
+  /** Starts the next chunk that is missing its text. */
+  resume(): void {
+    if (this.aborted) return;
+    this.paused = false;
+    this.startPasses();
+  }
+
+  /** Aborts the pass in flight, drops the chunk texts and starts nothing again. */
+  abort(): void {
+    this.aborted = true;
+    this.inFlight?.abort();
+    for (const chunk of this.chunks) chunk.text = "";
+    this.wake?.();
   }
 
   /** The texts of the chunks transcribed so far, in recording order. */
@@ -212,15 +247,22 @@ export class ChunkSession {
       .join(" ");
   }
 
-  private async complete(): Promise<SessionResult> {
-    this.stopped = true;
-    const last = this.chunks.at(-1);
-    if (last && ((this.length - last.end) / this.sampleRate) * 1000 < TAIL_MERGE_MS) {
-      this.mergeTail(last);
-    } else {
-      this.closeChunk(this.length, "end");
+  private async complete(): Promise<SessionResult | null> {
+    if (this.aborted) return null;
+    if (!this.stopped) {
+      this.stopped = true;
+      const last = this.chunks.at(-1);
+      if (last && ((this.length - last.end) / this.sampleRate) * 1000 < TAIL_MERGE_MS) {
+        this.mergeTail(last);
+      } else {
+        this.closeChunk(this.length, "end");
+      }
     }
-    await this.passes;
+    while (!this.paused && !this.aborted && this.passes) {
+      await Promise.race([this.passes, new Promise<void>((resolve) => (this.wake = resolve))]);
+    }
+    this.wake = null;
+    if (this.aborted || (this.paused && this.next < this.chunks.length)) return null;
 
     const chunks = this.chunks.map((chunk, i) => {
       const fields = {
@@ -271,14 +313,14 @@ export class ChunkSession {
   }
 
   private startPasses(): void {
-    if (this.passes) return;
+    if (this.passes || this.paused || this.aborted || this.next >= this.chunks.length) return;
     this.passes = this.runPasses();
     // `finish()` reports what stopped the passes; a pass that throws does not.
     this.passes.catch(() => {});
   }
 
   private async runPasses(): Promise<void> {
-    while (this.next < this.chunks.length) {
+    while (!this.paused && !this.aborted && this.next < this.chunks.length) {
       await this.runPass(this.chunks[this.next]);
     }
     this.passes = null;
