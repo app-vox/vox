@@ -4,7 +4,7 @@ import { deleteAudioFile } from "../audio/persistence";
 
 const RETENTION_DAYS = 30;
 
-type AddEntryInput = Omit<TranscriptionEntry, "id" | "timestamp">;
+export type AddEntryInput = Omit<TranscriptionEntry, "id" | "timestamp">;
 
 interface HistoryStore {
   get(key: "entries", defaultValue: TranscriptionEntry[]): TranscriptionEntry[];
@@ -52,7 +52,7 @@ export class HistoryManager {
 
   updateEntry(
     id: string,
-    updates: Partial<Omit<TranscriptionEntry, "id" | "timestamp">>,
+    updates: Partial<AddEntryInput>,
   ): TranscriptionEntry {
     const entries = this.getAllEntries();
     const index = entries.findIndex((e) => e.id === id);

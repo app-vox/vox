@@ -20,6 +20,7 @@ import { PromptSwitch } from "./prompt-switch";
 import { paster, permissions, applyCase, stripTrailingPeriod } from "./platform";
 import { SetupChecker } from "./setup/checker";
 import { HistoryManager } from "./history/manager";
+import { completedEntry } from "./history/entry";
 import { type AudioCueType, type VoxConfig } from "../shared/config";
 import { generateCueSamples, isWavCue, getWavFilename, parseWavSamples } from "../shared/audio-cue";
 import { t, setLanguage, resolveSystemLanguage } from "../shared/i18n";
@@ -100,21 +101,12 @@ function setupPipeline(): void {
 
         shortcutManager?.getHud().stopEnhancingEffect();
 
-        const status = result.llmFailed ? "llm_failed" as const : "success" as const;
-
-          const entry = historyManager.add({
-            text: finalText,
-            originalText: result.originalText,
-            audioDurationMs: result.audioDurationMs,
-            wordCount: finalText.split(/\s+/).filter(Boolean).length,
+          const entry = historyManager.add(completedEntry(result, finalText, {
             whisperModel: config.whisper.model || "unknown",
             llmEnhanced: config.enableLlmEnhancement,
             llmProvider: config.enableLlmEnhancement ? config.llm.provider : undefined,
             llmModel: config.enableLlmEnhancement ? getLlmModelName(config.llm) : undefined,
-            status,
-            errorMessage: result.errorMessage,
-            failedStep: result.llmFailed ? "llm" : undefined,
-          });
+          }));
 
           if (latestConfig.audioRetentionCount > 0) {
             const audioFilePath = getAudioFilePath(entry.id);

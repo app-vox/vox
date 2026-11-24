@@ -4,6 +4,7 @@ import log from "electron-log/main";
 import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
 import { HistoryManager } from "./history/manager";
+import { retryUpdate } from "./history/entry";
 import { AnalyticsService } from "./analytics/service";
 import { AudioRecorder } from "./audio/recorder";
 import { transcribe } from "./audio/whisper";
@@ -378,29 +379,14 @@ export function registerIpcHandlers(
     try {
       const text = await retryPipeline.retryFromRecording(recording);
 
-      if (!text.trim()) {
-        historyManager.updateEntry(entryId, {
-          status: "whisper_failed",
-          errorMessage: "No speech detected",
-          failedStep: "garbage",
-        });
-        return historyManager.getEntry(entryId);
-      }
-
       const finalText = applyCase(stripTrailingPeriod(text), config.lowercaseStart);
 
-      historyManager.updateEntry(entryId, {
-        text: finalText,
-        originalText: text,
-        wordCount: finalText.split(/\s+/).filter(Boolean).length,
-        status: "success",
-        errorMessage: undefined,
-        failedStep: undefined,
+      historyManager.updateEntry(entryId, retryUpdate(text, finalText, retryPipeline.lastTranscriptIncomplete(), {
         whisperModel: config.whisper.model || "unknown",
         llmEnhanced: config.enableLlmEnhancement,
         llmProvider: config.enableLlmEnhancement ? config.llm.provider : undefined,
         llmModel: config.enableLlmEnhancement ? getLlmModelName(config.llm) : undefined,
-      });
+      }));
 
       return historyManager.getEntry(entryId);
     } catch (err) {
