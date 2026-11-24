@@ -50,6 +50,8 @@ export interface PipelineDeps {
     recording: RecordingResult;
     llmFailed?: boolean;
     errorMessage?: string;
+    /** The transcript holds a collapsed loop or lacks a chunk that failed; present only as `true`. */
+    incomplete?: boolean;
   }) => void;
   onLlmFailed?: () => void;
   onFailure?: (result: {
@@ -88,6 +90,8 @@ export class Pipeline {
   private cancelingStage: PipelineStage | "listening" | null = null;
   private heldRecording: RecordingResult | null = null;
   private heldTranscription: string | null = null;
+  /** What the session said of the held transcription: a chunk's text is a collapsed loop, or a chunk failed. */
+  private heldIncomplete = false;
   /** Stops the live-preview transcriptions in flight, so they do not share the GPU with the final one. */
   private readonly previewAborts = new Set<AbortController>();
 
@@ -158,6 +162,7 @@ export class Pipeline {
     this.cancelingStage = null;
     this.heldRecording = null;
     this.heldTranscription = null;
+    this.heldIncomplete = false;
     this.currentStage = "listening";
     this.generation++;
     await this.deps.recorder.start();
@@ -248,6 +253,7 @@ export class Pipeline {
     this.cancelingStage = null;
     this.heldRecording = recording;
     this.heldTranscription = null;
+    this.heldIncomplete = false;
     this.currentStage = null;
     this.generation++;
     const gen = this.generation;
@@ -265,6 +271,11 @@ export class Pipeline {
 
   isCanceling(): boolean {
     return this.cancelingStage !== null;
+  }
+
+  /** Whether the transcript of the last transcribed recording is incomplete. */
+  lastTranscriptIncomplete(): boolean {
+    return this.heldIncomplete;
   }
 
   /** The pass of this pipeline's dictionary and languages. */
@@ -348,6 +359,7 @@ export class Pipeline {
     this.trackLoopRetries(result.chunks);
     const rawText = result.text;
     this.heldTranscription = rawText;
+    this.heldIncomplete = result.incomplete;
     const audioDurationMs = Math.round((recording.audioBuffer.length / recording.sampleRate) * 1000);
     this.deps.analytics?.track("transcription_completed", {
       whisper_model: this.whisperModelName,
@@ -369,7 +381,13 @@ export class Pipeline {
       if (!rawText) return "";
       this.deps.onTranscriptionComplete?.(rawText);
       this.currentStage = null;
-      this.deps.onComplete?.({ text: rawText, originalText: rawText, audioDurationMs, recording });
+      this.deps.onComplete?.({
+        text: rawText,
+        originalText: rawText,
+        audioDurationMs,
+        recording,
+        ...(this.heldIncomplete && { incomplete: true }),
+      });
       return rawText;
     }
 
@@ -486,6 +504,7 @@ export class Pipeline {
         recording,
         llmFailed: true,
         errorMessage: err instanceof Error ? err.message : String(err),
+        ...(this.heldIncomplete && { incomplete: true }),
       });
       return finalText;
     }
@@ -499,7 +518,13 @@ export class Pipeline {
     slog.info("Pipeline timing", { whisperModel: this.whisperModelName, llmProvider: llmProviderName, llmModel: this.deps.llmModelName, audioDurationMs, whisperMs: whisperTimeMs, llmMs: llmTimeMs, totalMs: totalTimeMs });
     this.currentStage = null;
 
-    this.deps.onComplete?.({ text: finalText, originalText: rawText, audioDurationMs, recording });
+    this.deps.onComplete?.({
+      text: finalText,
+      originalText: rawText,
+      audioDurationMs,
+      recording,
+      ...(this.heldIncomplete && { incomplete: true }),
+    });
     return finalText;
   }
 }

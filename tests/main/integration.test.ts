@@ -273,6 +273,48 @@ describe("Whisper-only mode integration", () => {
     expect(whisper.calls[1].prompt).toBe(`${WHISPER_PROMPT} Olá, este é o primeiro bloco.`);
     expect(result).toBe("Olá, este é o primeiro bloco. Segundo bloco aqui. Terceiro bloco aqui.");
   });
+
+  it("a surviving loop is collapsed, pasted and flagged", async () => {
+    const loop = "and then we will see, and then we will see, and then we will see, and then we will see";
+    const config = createDefaultConfig();
+    const provider = createLlmProvider(config);
+    expect(provider).toBeInstanceOf(NoopProvider);
+    const whisper = scriptedWhisper(["Alpha one.", loop, loop, loop, "Gamma three.", "Alpha one.", "Beta two.", "Gamma three."]);
+    const completed: { text: string; incomplete?: boolean }[] = [];
+
+    const pipeline = new Pipeline({
+      recorder: {
+        start: async () => {},
+        stop: async () => ({ audioBuffer: threeChunks(), sampleRate: 16000 }),
+        cancel: async () => {},
+      },
+      transcribe: whisper.transcribe,
+      loadConfig: () => config,
+      createLlmProvider: () => provider,
+      modelPath: "/fake/path",
+      onComplete: (result) => completed.push(result),
+    });
+
+    await pipeline.startRecording();
+    const result = await pipeline.stopAndProcess();
+
+    expect(result).toBe("Alpha one. and then we will see, Gamma three.");
+    expect(whisper.calls).toHaveLength(5);
+    expect(whisper.calls.map((call) => call.temperature)).toEqual([undefined, undefined, 0.4, 0.8, undefined]);
+    expect(completed).toHaveLength(1);
+    expect(completed[0].text).toBe(result);
+    expect(completed[0].incomplete).toBe(true);
+    expect(pipeline.lastTranscriptIncomplete()).toBe(true);
+
+    await pipeline.startRecording();
+    expect(pipeline.lastTranscriptIncomplete()).toBe(false);
+    const clean = await pipeline.stopAndProcess();
+
+    expect(clean).toBe("Alpha one. Beta two. Gamma three.");
+    expect(completed).toHaveLength(2);
+    expect("incomplete" in completed[1]).toBe(false);
+    expect(pipeline.lastTranscriptIncomplete()).toBe(false);
+  });
 });
 
 describe("App startup without auto-download", () => {
