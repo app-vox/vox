@@ -110,6 +110,84 @@ describe("ChunkSession log", () => {
     expect(chunkLines(mergedLog.lines).map((fields) => fields.whisperMs)).toEqual([2000]);
   });
 
+  it("an aborted pass's time is in the chunk's whisper milliseconds", async () => {
+    vi.useFakeTimers({ toFake: ["performance"] });
+    const whisper = scriptedWhisper(["hang", afterOneSecond("Whole text.")]);
+    const { log, lines } = collectLog();
+    const session = newSession(whisper, { log });
+
+    session.append(shortTail());
+    expect(whisper.calls).toHaveLength(1);
+    vi.advanceTimersByTime(1500);
+    const result = await session.finish();
+
+    expect(whisper.calls[0].signal?.aborted).toBe(true);
+    expect(result.chunks[0].passes.map((pass) => pass.result)).toEqual(["aborted", "text"]);
+    expect(chunkLines(lines).map((fields) => fields.whisperMs)).toEqual([2500]);
+  });
+
+  it("whisper milliseconds are rounded to one decimal", async () => {
+    vi.useFakeTimers({ toFake: ["performance"] });
+    const whisper = scriptedWhisper([
+      () => {
+        vi.advanceTimersByTime(1000.26);
+        return "Clean text here.";
+      },
+    ]);
+    const { log, lines } = collectLog();
+    const session = newSession(whisper, { log });
+
+    session.append(speech(3));
+    const result = await session.finish();
+
+    expect(chunkLines(lines).map((fields) => fields.whisperMs)).toEqual([1000.3]);
+    expect(result.chunks.map((chunk) => chunk.whisperMs)).toEqual([1000.3]);
+  });
+
+  it("a rejected text is logged at debug with its reason", async () => {
+    const rejectedLines = (lines: LogLine[]) => lines.filter((line) => line.message === "Chunk text rejected");
+
+    const dropped = scriptedWhisper(["Alpha one.", "Thank you", "Gamma three."]);
+    const droppedLog = collectLog();
+    const droppedSession = newSession(dropped, { log: droppedLog.log, enhancing: () => true });
+    droppedSession.append(threeChunks());
+    await droppedSession.finish();
+
+    expect(rejectedLines(droppedLog.lines)).toEqual([
+      { level: "debug", message: "Chunk text rejected", fields: { index: 2, pass: 1, reason: "hallucination", text: "Thank you" } },
+    ]);
+
+    const looping = scriptedWhisper([LOOP, "Clean text here."]);
+    const loopingLog = collectLog();
+    const loopingSession = newSession(looping, { log: loopingLog.log });
+    loopingSession.append(speech(3));
+    await loopingSession.finish();
+
+    expect(rejectedLines(loopingLog.lines)).toEqual([
+      { level: "debug", message: "Chunk text rejected", fields: { index: 1, pass: 1, reason: "loop", text: LOOP } },
+    ]);
+
+    // A retry's text that enhancement would not take is rejected too, and a text whisper-only mode keeps is not.
+    const retried = scriptedWhisper([LOOP, "Thank you", "Clean text here."]);
+    const retriedLog = collectLog();
+    const retriedSession = newSession(retried, { log: retriedLog.log, enhancing: () => true });
+    retriedSession.append(speech(3));
+    await retriedSession.finish();
+
+    expect(rejectedLines(retriedLog.lines).map((line) => line.fields)).toEqual([
+      { index: 1, pass: 1, reason: "loop", text: LOOP },
+      { index: 1, pass: 2, reason: "hallucination", text: "Thank you" },
+    ]);
+
+    const kept = scriptedWhisper(["Alpha one.", "Um", "Gamma three."]);
+    const keptLog = collectLog();
+    const keptSession = newSession(kept, { log: keptLog.log, enhancing: () => false });
+    keptSession.append(threeChunks());
+    await keptSession.finish();
+
+    expect(rejectedLines(keptLog.lines)).toEqual([]);
+  });
+
   it("the language field names what whisper reported after auto", async () => {
     const reporting = scriptedWhisper([{ text: "Olá, primeiro bloco.", language: "pt" }, "Segundo bloco.", "Terceiro bloco."]);
     const reportingLog = collectLog();

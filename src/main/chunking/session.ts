@@ -56,7 +56,7 @@ export interface ChunkReport {
   audioSeconds: number;
   /** What closed the chunk: a cut of the splitter, or the recording's end. */
   cut: CutRule | "end";
-  /** Every pass over the chunk's audio: an aborted one and those of a chunk the tail merge replaced included. */
+  /** Every pass over the chunk's audio: an aborted one and those of a chunk the tail merge replaced included. Rounded to 1 decimal. */
   whisperMs: number;
   /** The language the passes asked for; after `auto`, a colon and the one whisper reported, or `none`. */
   language: string;
@@ -227,7 +227,7 @@ export class ChunkSession {
         index: i + 1,
         audioSeconds: Math.round(((chunk.end - chunk.start) / this.sampleRate) * 100) / 100,
         cut: chunk.cut,
-        whisperMs: chunk.whisperMs,
+        whisperMs: Number(chunk.whisperMs.toFixed(1)),
         language: chunk.language === "auto" ? `auto:${chunk.reported ?? "none"}` : chunk.language,
         loop: chunk.loopText !== null,
         outcome: chunk.outcome,
@@ -343,7 +343,7 @@ export class ChunkSession {
       return;
     }
     if (settings.language === "auto") this.pinLanguage(answer.language, chunk, index);
-    record.result = this.takeText(chunk, answer.text.trim());
+    record.result = this.takeText(chunk, index, answer.text.trim());
   }
 
   /** Leaves `chunk` for a repeat of the pass that threw, with the same settings; a chunk gets one repeat. */
@@ -354,8 +354,13 @@ export class ChunkSession {
   }
 
   /** Takes the text of a pass over `chunk`: it ends the chunk's passes or leaves the chunk for a retry. */
-  private takeText(chunk: Chunk, text: string): PassRecord["result"] {
+  private takeText(chunk: Chunk, index: number, text: string): PassRecord["result"] {
     const reason = text === "" ? null : detectGarbage(text);
+    // A loop is never taken; enhancement, when it is on, takes no garbage.
+    const rejected = reason === "loop" || this.enhancing ? reason : null;
+    if (rejected) {
+      this.options.log.debug("Chunk text rejected", { index: index + 1, pass: chunk.used, reason: rejected, text });
+    }
     if (reason === "loop") {
       if (chunk.loopText === null) {
         chunk.loopText = text;
@@ -364,8 +369,6 @@ export class ChunkSession {
       this.retryOrGiveUp(chunk);
       return "loop";
     }
-    // Enhancement, when it is on, takes no garbage.
-    const rejected = this.enhancing && reason;
     if (chunk.loopText === null) {
       if (rejected) {
         this.endPasses(chunk, "", `dropped:${rejected}`);
