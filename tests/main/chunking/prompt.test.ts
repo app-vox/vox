@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { carriedText } from "../../../src/main/chunking/prompt";
+import { carriedText, passSettings } from "../../../src/main/chunking/prompt";
+import { WHISPER_PROMPT, buildWhisperArgs, buildWhisperPrompt } from "../../../src/shared/constants";
 import { text300, text80, tokens } from "../helpers/chunking";
 
 describe("carriedText", () => {
@@ -34,5 +35,38 @@ describe("carriedText", () => {
 
   it("an empty text carries nothing", () => {
     expect(carriedText("")).toBe("");
+  });
+});
+
+describe("passSettings", () => {
+  it("pass settings by retry", () => {
+    const input = {
+      dictionary: ["Kubernetes"],
+      speechLanguages: ["pt", "en"],
+      pinnedLanguage: "pt",
+      carried: "last words",
+    };
+    const prefix = buildWhisperArgs(["pt", "en"]).promptPrefix;
+    const usual = buildWhisperPrompt(["Kubernetes"], prefix, "last words");
+    expect(prefix).not.toBe("");
+
+    expect(passSettings({ ...input, retry: 0 })).toEqual({ prompt: usual, language: "pt", bare: false });
+    expect(passSettings({ ...input, retry: 1 })).toEqual({ prompt: usual, language: "pt", temperature: 0.4, bare: false });
+    expect(passSettings({ ...input, retry: 2 })).toEqual({
+      prompt: WHISPER_PROMPT,
+      language: "pt",
+      temperature: 0.8,
+      bare: true,
+    });
+
+    const retries = [0, 1, 2] as const;
+    expect(retries.map((retry) => passSettings({ ...input, speechLanguages: ["de"], retry }).language)).toEqual([
+      "de",
+      "de",
+      "de",
+    ]);
+    expect(
+      retries.map((retry) => passSettings({ ...input, speechLanguages: [], pinnedLanguage: null, retry }).language),
+    ).toEqual(["auto", "auto", "auto"]);
   });
 });

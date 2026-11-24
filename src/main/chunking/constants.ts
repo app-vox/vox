@@ -36,3 +36,9 @@ export const LOOP_MIN_PHRASE_WORDS = 3;
 
 /** A phrase is a loop from this many occurrences in a row: a speaker says a phrase twice for emphasis, hardly three times. */
 export const LOOP_MIN_REPEATS = 3;
+
+/** Passes one chunk gets at most: the first and two retries, so a chunk that keeps looping or failing holds the rest up only briefly. */
+export const MAX_CHUNK_PASSES = 3;
+
+/** Temperatures of the retries after a loop: 0.4 lets whisper leave the loop, 0.8 is the last and strongest try. */
+export const LOOP_RETRY_TEMPERATURES = [0.4, 0.8] as const;

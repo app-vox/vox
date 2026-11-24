@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Pipeline } from "../../src/main/pipeline";
 import { type LlmProvider } from "../../src/main/llm/provider";
 import { createDefaultConfig } from "../../src/shared/config";
+import { detectGarbage } from "../../src/main/garbage";
 
 vi.mock("electron-log/main", () => ({
   default: {
@@ -134,8 +135,9 @@ describe("Pipeline garbage/hallucination detection", () => {
       await pipeline.startRecording();
       const result = await pipeline.stopAndProcess();
 
-      expect(result).toBe("");
-      expect(mockProvider.correct).not.toHaveBeenCalled();
+      expect(detectGarbage(repeated)).toBe("loop");
+      expect(result).toBe("corrected");
+      expect(mockProvider.correct).toHaveBeenCalledWith("Please subscribe to our channel.");
     });
 
     it("should reject repetition loops without trailing punctuation", async () => {
@@ -144,8 +146,9 @@ describe("Pipeline garbage/hallucination detection", () => {
       await pipeline.startRecording();
       const result = await pipeline.stopAndProcess();
 
-      expect(result).toBe("");
-      expect(mockProvider.correct).not.toHaveBeenCalled();
+      expect(detectGarbage(repeated)).toBe("loop");
+      expect(result).toBe("corrected");
+      expect(mockProvider.correct).toHaveBeenCalledWith("Thank you for watching.");
     });
 
     it("should reject n-gram repetition loops (partial sentence loops)", async () => {
@@ -154,8 +157,9 @@ describe("Pipeline garbage/hallucination detection", () => {
       await pipeline.startRecording();
       const result = await pipeline.stopAndProcess();
 
-      expect(result).toBe("");
-      expect(mockProvider.correct).not.toHaveBeenCalled();
+      expect(detectGarbage(repeated)).toBe("loop");
+      expect(result).toBe("corrected");
+      expect(mockProvider.correct).toHaveBeenCalledWith("hello world test");
     });
 
     it("should allow text with some natural repetition", async () => {
@@ -210,8 +214,9 @@ describe("Pipeline garbage/hallucination detection", () => {
       await pipeline.startRecording();
       const result = await pipeline.stopAndProcess();
 
-      expect(result).toBe("");
-      expect(mockProvider.correct).not.toHaveBeenCalled();
+      expect(detectGarbage(loopText)).toBe("loop");
+      expect(result).toBe("corrected");
+      expect(mockProvider.correct).toHaveBeenCalledWith("Please subscribe to our channel.");
     });
 
     it("should not retry for non-loop garbage types", async () => {
@@ -275,8 +280,9 @@ describe("Pipeline garbage/hallucination detection", () => {
       await pipeline.startRecording();
       const result = await pipeline.stopAndProcess();
 
-      expect(result).toBe("");
-      expect(mockProvider.correct).not.toHaveBeenCalled();
+      expect(detectGarbage(realWhisperOutput)).toBe("loop");
+      expect(result).toBe("corrected");
+      expect(mockProvider.correct).toHaveBeenCalledWith("Transcribe em estático.");
     });
   });
 

@@ -5,7 +5,7 @@ import { activeInstructions } from "../shared/prompts";
 import { type RecordingResult } from "./audio/recorder";
 import { type TranscriptionResult, type WhisperPass } from "./audio/whisper";
 import { buildWhisperArgs, buildWhisperPrompt } from "../shared/constants";
-import { ChunkSession, type SessionResult } from "./chunking/session";
+import { ChunkSession, type ChunkReport, type SessionResult } from "./chunking/session";
 import { detectGarbage } from "./garbage";
 import { existsSync } from "fs";
 import { t } from "../shared/i18n";
@@ -14,7 +14,6 @@ import log from "electron-log/main";
 const slog = log.scope("Pipeline");
 
 const GARBAGE_AUDIO_THRESHOLD_MS = 5000;
-const LOOP_RETRY_TEMPERATURES = [0.4, 0.8];
 
 export type PipelineStage = "transcribing" | "enhancing";
 
@@ -130,7 +129,7 @@ export class Pipeline {
         snapshot.audioBuffer,
         snapshot.sampleRate,
         this.deps.modelPath,
-        this.buildPass({ signal: preview.signal }),
+        this.buildPass(preview.signal),
       );
       const text = result.text
         .replace(/\[[^\]]*\]/g, "")
@@ -268,37 +267,31 @@ export class Pipeline {
     return this.cancelingStage !== null;
   }
 
-  /** The pass of this pipeline's dictionary and languages; `skipPrompt` leaves both out. */
-  private buildPass(opts: { skipPrompt?: boolean; temperature?: number; signal?: AbortSignal } = {}): WhisperPass {
-    const dictionary = opts.skipPrompt ? [] : (this.deps.dictionary ?? []);
-    const speechLanguages = opts.skipPrompt ? [] : (this.deps.speechLanguages ?? []);
+  /** The pass of this pipeline's dictionary and languages. */
+  private buildPass(signal: AbortSignal): WhisperPass {
+    const speechLanguages = this.deps.speechLanguages ?? [];
     const whisperArgs = buildWhisperArgs(speechLanguages);
     return {
-      prompt: buildWhisperPrompt(dictionary, whisperArgs.promptPrefix),
+      prompt: buildWhisperPrompt(this.deps.dictionary ?? [], whisperArgs.promptPrefix),
       language: whisperArgs.language,
       speechLanguages,
-      temperature: opts.temperature,
-      signal: opts.signal,
+      signal,
     };
   }
 
-  private async runTranscription(
-    recording: RecordingResult,
-    gen: number,
-    opts?: { temperature?: number; skipPrompt?: boolean },
-  ): Promise<TranscriptionResult> {
-    const transcription = await this.deps.transcribe(
-      recording.audioBuffer,
-      recording.sampleRate,
-      this.deps.modelPath,
-      this.buildPass(opts),
-    );
-
-    if (this.canceled || gen !== this.generation) {
-      throw new CanceledError();
+  /** Sends the loop retry events of the chunks' passes: one for each pass with a temperature, and one more for the pass that gave its chunk the text. */
+  private trackLoopRetries(chunks: ChunkReport[]): void {
+    for (const chunk of chunks) {
+      const passes = chunk.passes.filter((pass) => pass.result !== "aborted");
+      passes.forEach((pass, i) => {
+        if (pass.temperature === undefined) return;
+        const retry = { attempt: i + 1, temperature: pass.temperature, skip_prompt: pass.bare };
+        this.deps.analytics?.track("transcription_loop_retry", { whisper_model: this.whisperModelName, ...retry });
+        if (pass.result === "text") {
+          this.deps.analytics?.track("transcription_loop_retry_succeeded", retry);
+        }
+      });
     }
-
-    return transcription;
   }
 
   private async processFromRecording(
@@ -318,7 +311,6 @@ export class Pipeline {
 
     this.currentStage = "transcribing";
     this.deps.onStage?.("transcribing");
-    const whisperStartTime = performance.now();
     let result: SessionResult;
     try {
       const session = new ChunkSession({
@@ -328,6 +320,7 @@ export class Pipeline {
         dictionary: this.deps.dictionary ?? [],
         speechLanguages: this.deps.speechLanguages ?? [],
         log: slog,
+        enhancing: () => !(this.deps.createLlmProvider(this.deps.loadConfig()) instanceof NoopProvider),
       });
       session.append(recording.audioBuffer);
       result = await session.finish();
@@ -350,7 +343,8 @@ export class Pipeline {
       throw err;
     }
 
-    const whisperTimeMs = Number((performance.now() - whisperStartTime).toFixed(1));
+    const whisperTimeMs = Number(result.whisperMs.toFixed(1));
+    this.trackLoopRetries(result.chunks);
     const rawText = result.text;
     this.heldTranscription = rawText;
     const audioDurationMs = Math.round((recording.audioBuffer.length / recording.sampleRate) * 1000);
@@ -382,15 +376,6 @@ export class Pipeline {
     const garbageReason = rawText ? detectGarbage(rawText) : "short";
 
     if (garbageReason) {
-      if (garbageReason === "loop") {
-        const retryStartTime = performance.now();
-        const retried = await this.retryWithTemperature(recording, gen);
-        if (retried !== null) {
-          const allPassesMs = Number((whisperTimeMs + performance.now() - retryStartTime).toFixed(1));
-          return this.processFromTranscription(retried, recording, gen, enhancement, allPassesMs, processingStartTime);
-        }
-      }
-
       slog.info("Transcription rejected as garbage", { reason: garbageReason });
       this.deps.analytics?.track("transcription_garbage_detected", {
         whisper_model: this.whisperModelName,
@@ -423,51 +408,6 @@ export class Pipeline {
       llmProvider: this.deps.createLlmProvider(config),
       hasCustomPrompt: activeInstructions(config) !== null,
     };
-  }
-
-  private async retryWithTemperature(
-    recording: RecordingResult,
-    gen: number,
-  ): Promise<string | null> {
-    for (let i = 0; i < LOOP_RETRY_TEMPERATURES.length; i++) {
-      const temp = LOOP_RETRY_TEMPERATURES[i];
-      const attempt = i + 2;
-      const skipPrompt = i === LOOP_RETRY_TEMPERATURES.length - 1;
-      slog.info("Retrying transcription to break hallucination loop", {
-        attempt, temperature: temp, skipPrompt,
-      });
-      this.deps.analytics?.track("transcription_loop_retry", {
-        whisper_model: this.whisperModelName,
-        attempt,
-        temperature: temp,
-        skip_prompt: skipPrompt,
-      });
-
-      try {
-        const retryResult = await this.runTranscription(recording, gen, { temperature: temp, skipPrompt });
-        const retryText = retryResult.text.trim();
-
-        if (!retryText) continue;
-        const retryReason = detectGarbage(retryText);
-
-        if (!retryReason) {
-          slog.info("Retry succeeded", { attempt, temperature: temp, skipPrompt });
-          this.deps.analytics?.track("transcription_loop_retry_succeeded", {
-            attempt, temperature: temp, skip_prompt: skipPrompt,
-          });
-          this.heldTranscription = retryText;
-          return retryText;
-        }
-
-        slog.info("Retry still garbage", { attempt, temperature: temp, reason: retryReason });
-      } catch (err: unknown) {
-        if (err instanceof CanceledError) throw err;
-        slog.warn("Retry transcription failed", { attempt, error: err instanceof Error ? err.message : err });
-      }
-    }
-
-    slog.info("All retry attempts failed, giving up");
-    return null;
   }
 
   private async processFromTranscription(

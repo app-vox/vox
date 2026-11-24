@@ -140,6 +140,7 @@ export function sessionOptions(
     dictionary: [],
     speechLanguages: [],
     log: collectLog().log,
+    enhancing: () => false,
     ...overrides,
   };
 }

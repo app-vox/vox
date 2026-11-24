@@ -1,7 +1,8 @@
-import { buildWhisperArgs, buildWhisperPrompt, type WhisperArgs } from "../../shared/constants";
 import type { TranscriptionResult, WhisperPass } from "../audio/whisper";
-import { TAIL_MERGE_MS } from "./constants";
-import { carriedText } from "./prompt";
+import { detectGarbage, type GarbageReason } from "../garbage";
+import { MAX_CHUNK_PASSES, TAIL_MERGE_MS } from "./constants";
+import { collapseLoops } from "./loops";
+import { carriedText, passSettings } from "./prompt";
 import { ChunkSplitter, type CutRule } from "./splitter";
 
 export type TranscribeFn = (
@@ -25,8 +26,25 @@ export interface ChunkSessionOptions {
   dictionary: string[];
   speechLanguages: string[];
   log: ChunkLog;
+  /** Whether the transcript goes on to enhancement, which takes no garbage. Asked once, when the first pass starts. */
+  enhancing: () => boolean;
   /** Gets the chunk texts so far, joined, each time a chunk's text is final. */
   onChunkText?: (joined: string) => void;
+}
+
+/**
+ * How a chunk's passes ended: `ok` with the first pass's text, `retried` with
+ * a later pass's, `collapsed` with a loop no retry broke, `failed` without a
+ * text, `dropped` with a text the garbage check rejected.
+ */
+export type ChunkOutcome = "ok" | "retried" | "collapsed" | "failed" | `dropped:${GarbageReason}`;
+
+export interface PassRecord {
+  temperature?: number;
+  /** The pass ran on the usual prompt alone. */
+  bare: boolean;
+  ms: number;
+  result: "text" | "loop" | "rejected" | "empty" | "threw" | "aborted";
 }
 
 export interface ChunkReport {
@@ -37,39 +55,67 @@ export interface ChunkReport {
   cut: CutRule | "end";
   whisperMs: number;
   chars: number;
+  /** A pass over the chunk gave a loop. */
+  loop: boolean;
+  outcome: ChunkOutcome;
+  /** The chunk's passes beyond the first, an aborted one not counted. */
+  retries: number;
+  /** The passes over the chunk as finally cut. */
+  passes: PassRecord[];
 }
 
 export interface SessionResult {
   text: string;
   chunks: ChunkReport[];
   whisperMs: number;
+  /** A chunk's text is a collapsed loop. */
+  incomplete: boolean;
 }
 
-interface Chunk {
+/** What a chunk's passes have come to; a tail merge starts it anew. */
+interface PassState {
+  text: string;
+  /** The retry the next pass runs at. */
+  retry: 0 | 1 | 2;
+  /** The text of the first pass that gave a loop. */
+  loopText: string | null;
+  passes: PassRecord[];
+  /** Passes that ran to their end: `passes` without the aborted ones. */
+  used: number;
+  /** `ok` until the passes end. */
+  outcome: ChunkOutcome;
+}
+
+interface Chunk extends PassState {
   start: number;
   end: number;
   cut: CutRule | "end";
-  text: string;
   whisperMs: number;
   /** Set once the log says that a pass over the chunk reported no language. */
   noLanguageWarned: boolean;
 }
 
+function noPasses(): PassState {
+  return { text: "", retry: 0, loopText: null, passes: [], used: 0, outcome: "ok" };
+}
+
 /**
  * Transcribes a recording chunk by chunk while it is still being made: it
- * keeps the samples, closes a chunk at each cut of the splitter and runs one
- * whisper pass per chunk, one at a time, in recording order. A pass runs in
- * the language the first one reported, when none is configured, and its
- * prompt carries the end of the text of the chunk before it.
+ * keeps the samples, closes a chunk at each cut of the splitter and runs the
+ * whisper passes one at a time, chunk by chunk in recording order. A pass
+ * runs in the language the first one reported, when none is configured, and
+ * its prompt carries the end of the text of the chunk before it. A chunk
+ * whose text is a loop is retried alone, up to `MAX_CHUNK_PASSES` passes; a
+ * loop that no retry broke is collapsed.
  */
 export class ChunkSession {
   readonly sampleRate: number;
   private readonly options: ChunkSessionOptions;
   private readonly splitter: ChunkSplitter;
-  /** The configured language, `auto` when there is none or several, and the prompt prefix that names several. */
-  private readonly args: WhisperArgs;
   /** The first language a pass that asked for `auto` reported; later passes run in it. */
-  private pinned: string | undefined;
+  private pinned: string | null = null;
+  /** What `options.enhancing` answered, once the first pass has asked. */
+  private enhancing: boolean | null = null;
   /** The recording so far, in the first `length` samples. */
   private samples = new Float32Array(0);
   private length = 0;
@@ -86,7 +132,6 @@ export class ChunkSession {
     this.options = options;
     this.sampleRate = options.sampleRate;
     this.splitter = new ChunkSplitter(options.sampleRate);
-    this.args = buildWhisperArgs(options.speechLanguages);
   }
 
   get sampleCount(): number {
@@ -144,23 +189,28 @@ export class ChunkSession {
       cut: chunk.cut,
       whisperMs: chunk.whisperMs,
       chars: chunk.text.length,
+      loop: chunk.loopText !== null,
+      outcome: chunk.outcome,
+      retries: Math.max(0, chunk.used - 1),
+      passes: chunk.passes,
     }));
     return {
       text: this.joinedText(),
       chunks,
       whisperMs: chunks.reduce((sum, chunk) => sum + chunk.whisperMs, 0),
+      incomplete: chunks.some((chunk) => chunk.outcome === "collapsed"),
     };
   }
 
   /**
    * Drops the last cut: the chunk it closed now runs to the recording's end
-   * and gets a new pass, which keeps the whisper time of the passes it replaces.
+   * and gets its passes anew, which keep the whisper time of the ones they replace.
    */
   private mergeTail(last: Chunk): void {
     const index = this.chunks.length - 1;
     last.end = this.length;
     last.cut = "end";
-    last.text = "";
+    Object.assign(last, noPasses());
     if (this.next === index) {
       this.inFlight?.abort();
     } else if (this.next > index) {
@@ -171,7 +221,7 @@ export class ChunkSession {
 
   private closeChunk(end: number, cut: CutRule | "end"): void {
     const start = this.chunks.at(-1)?.end ?? 0;
-    this.chunks.push({ start, end, cut, text: "", whisperMs: 0, noLanguageWarned: false });
+    this.chunks.push({ start, end, cut, whisperMs: 0, noLanguageWarned: false, ...noPasses() });
     this.startPasses();
   }
 
@@ -194,36 +244,84 @@ export class ChunkSession {
     const index = this.next;
     const abort = new AbortController();
     this.inFlight = abort;
+    this.enhancing ??= this.options.enhancing();
+    const previous = this.chunks[index - 1];
     // Only a pass that asked for `auto` pins a language, so a configured single language is never replaced.
-    const language = this.pinned ?? this.args.language;
+    const settings = passSettings({
+      dictionary: this.options.dictionary,
+      speechLanguages: this.options.speechLanguages,
+      pinnedLanguage: this.pinned,
+      carried: previous && previous.outcome !== "collapsed" ? carriedText(previous.text) : "",
+      retry: chunk.retry,
+    });
+    const record: PassRecord = { temperature: settings.temperature, bare: settings.bare, ms: 0, result: "aborted" };
     const started = performance.now();
+    let transcription: TranscriptionResult;
     try {
-      const result = await this.options.transcribe(
+      transcription = await this.options.transcribe(
         this.samples.subarray(chunk.start, chunk.end),
         this.sampleRate,
         this.options.modelPath,
         {
-          prompt: buildWhisperPrompt(
-            this.options.dictionary,
-            this.args.promptPrefix,
-            carriedText(this.chunks[index - 1]?.text ?? ""),
-          ),
-          language,
+          prompt: settings.prompt,
+          language: settings.language,
           speechLanguages: this.options.speechLanguages,
+          temperature: settings.temperature,
           signal: abort.signal,
         },
       );
-      if (abort.signal.aborted) return;
-      if (language === "auto") this.pinLanguage(result.language, chunk, index);
-      chunk.text = result.text.trim();
-      this.next++;
     } catch (error) {
-      if (!abort.signal.aborted) throw error;
-      return;
+      if (abort.signal.aborted) return;
+      record.result = "threw";
+      chunk.used++;
+      throw error;
     } finally {
-      chunk.whisperMs += performance.now() - started;
+      record.ms = performance.now() - started;
+      chunk.whisperMs += record.ms;
+      chunk.passes.push(record);
       this.inFlight = null;
     }
+    if (abort.signal.aborted) return;
+
+    chunk.used++;
+    if (settings.language === "auto") this.pinLanguage(transcription.language, chunk, index);
+    record.result = this.takeText(chunk, transcription.text.trim());
+  }
+
+  /** Takes the text of a pass over `chunk`: it ends the chunk's passes or leaves the chunk for a retry. */
+  private takeText(chunk: Chunk, text: string): PassRecord["result"] {
+    const reason = text === "" ? null : detectGarbage(text);
+    if (reason === "loop") {
+      chunk.loopText ??= text;
+      this.retryOrCollapse(chunk, chunk.loopText);
+      return "loop";
+    }
+    if (chunk.loopText === null) {
+      this.endPasses(chunk, text, "ok");
+      return text === "" ? "empty" : "text";
+    }
+    // A retry's text replaces the loop when enhancement, if it is on, would take it.
+    if (text !== "" && !(this.enhancing && reason)) {
+      this.endPasses(chunk, text, "retried");
+      return "text";
+    }
+    this.retryOrCollapse(chunk, chunk.loopText);
+    return text === "" ? "empty" : "rejected";
+  }
+
+  /** Moves a chunk that looped to its next retry, or, its passes used up, ends them with the collapsed loop. */
+  private retryOrCollapse(chunk: Chunk, loopText: string): void {
+    if (chunk.used < MAX_CHUNK_PASSES) {
+      chunk.retry = chunk.retry === 0 ? 1 : 2;
+    } else {
+      this.endPasses(chunk, collapseLoops(loopText), "collapsed");
+    }
+  }
+
+  private endPasses(chunk: Chunk, text: string, outcome: ChunkOutcome): void {
+    chunk.text = text;
+    chunk.outcome = outcome;
+    this.next++;
     this.options.onChunkText?.(this.joinedText());
   }
 
