@@ -89,6 +89,11 @@ function setupPipeline(): void {
     onTranscriptionComplete: (rawText) => {
       shortcutManager?.getHud().updateTextPanel(rawText);
     },
+    onPreviewText: (text, source) => {
+      const hud = shortcutManager?.getHud();
+      if (source === "live") hud?.updateTextPanel(text);
+      else hud?.restoreTextPanel(text);
+    },
     onLlmFailed: () => promptSwitch.markConnectionUntested(),
     onComplete: (result) => {
       // Defer all side effects so the pipeline can return finalText immediately

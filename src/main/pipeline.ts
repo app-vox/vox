@@ -47,6 +47,8 @@ export interface PipelineDeps {
   };
   onStage?: (stage: PipelineStage) => void;
   onTranscriptionComplete?: (rawText: string) => void;
+  /** The preview text of the recording being made: `live` text is of the audio so far, `chunks` text is every closed chunk's text joined. */
+  onPreviewText?: (text: string, source: "live" | "chunks") => void;
   onComplete?: (result: {
     text: string;
     originalText: string;
@@ -170,6 +172,11 @@ export class Pipeline {
 
   private abortPreviews(): void {
     for (const preview of this.previewAborts) preview.abort();
+  }
+
+  /** Shows or hides the preview of the recording being made; no recording, no effect. */
+  setPreviewShown(shown: boolean): void {
+    this.chunked?.setPreviewShown(shown);
   }
 
   async startRecording(): Promise<void> {
@@ -356,6 +363,7 @@ export class Pipeline {
       speechLanguages: this.deps.speechLanguages ?? [],
       log: slog,
       enhancing: () => !(this.deps.createLlmProvider(config) instanceof NoopProvider),
+      onPreviewText: this.deps.onPreviewText,
     });
   }
 

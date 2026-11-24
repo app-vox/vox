@@ -928,16 +928,39 @@ describe("Pipeline chunks while recording", () => {
 
   it("new recording drops the earlier chunk texts", async () => {
     const recorder = new FakeRecorder(threeChunks());
-    const { whisper, pipeline } = setup(["Old one.", "hang", "New text."], {}, recorder);
+    const previews: string[] = [];
+    const { whisper, pipeline } = setup(["Old one.", "hang", "New text."], { onPreviewText: (text) => previews.push(text) }, recorder);
 
     await recordTwoChunks(recorder, pipeline);
     expect(whisper.calls).toHaveLength(2);
     recorder.load(speech(3));
     await pipeline.startRecording();
+    pipeline.setPreviewShown(true);
     expect(whisper.calls[1].signal?.aborted).toBe(true);
     recorder.recordUpTo(3);
 
     await expect(pipeline.stopAndProcess()).resolves.toBe("New text.");
+    expect(previews.filter((text) => text.includes("Old one."))).toEqual([]);
+  });
+
+  it("the preview text of a shown recording reaches onPreviewText", async () => {
+    const recorder = new FakeRecorder(threeChunks());
+    const previews: [string, string][] = [];
+    const { pipeline } = setup(["Hello wor"], { onPreviewText: (text, source) => previews.push([text, source]) }, recorder);
+
+    await pipeline.startRecording();
+    pipeline.setPreviewShown(true);
+    recorder.recordUpTo(6);
+    await vi.advanceTimersByTimeAsync(1400);
+
+    expect(previews).toEqual([["Hello wor", "live"]]);
+  });
+
+  it("setPreviewShown without a recording does nothing", () => {
+    const { whisper, pipeline } = setup([]);
+
+    expect(() => pipeline.setPreviewShown(true)).not.toThrow();
+    expect(whisper.calls).toHaveLength(0);
   });
 
   it("timing line reports chunks and the wait after stop", async () => {
