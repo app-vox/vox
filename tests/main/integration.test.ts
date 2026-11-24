@@ -391,6 +391,41 @@ describe("Transcription while recording", () => {
     await vi.advanceTimersByTimeAsync(5000);
     expect(recorder.fetches).toHaveLength(2);
   });
+
+  it("the preview is live until the first cut and block by block after it", async () => {
+    const config = createDefaultConfig();
+    config.enableLlmEnhancement = false;
+    const recorder = new FakeRecorder(threeChunks());
+    const whisper = scriptedWhisper(["Hello wor", "Alpha one.", "Beta two.", "Gamma three."]);
+    const previews: [string, string][] = [];
+    const pipeline = new Pipeline({
+      recorder,
+      transcribe: whisper.transcribe,
+      loadConfig: () => config,
+      createLlmProvider,
+      modelPath: "/fake/path",
+      onPreviewText: (text, source) => previews.push([text, source]),
+    });
+
+    await pipeline.startRecording();
+    pipeline.setPreviewShown(true);
+    recorder.recordUpTo(6);
+    await vi.advanceTimersByTimeAsync(1400);
+    expect(previews).toEqual([["Hello wor", "live"]]);
+    expect(whisper.calls).toHaveLength(1);
+    expect(whisper.calls[0].samples).toBe(96000);
+
+    recorder.recordUpTo(45);
+    await vi.advanceTimersByTimeAsync(100);
+    expect(previews.slice(1)).toEqual([["Alpha one.", "chunks"], ["Alpha one. Beta two.", "chunks"]]);
+    expect(whisper.calls.slice(1).map((call) => call.samples)).toEqual([338240, 345600]);
+
+    recorder.recordUpTo(51.2);
+    const text = await pipeline.stopAndProcess();
+    expect(text).toBe("Alpha one. Beta two. Gamma three.");
+    expect(text).not.toContain("Hello wor");
+    expect(whisper.calls).toHaveLength(4);
+  });
 });
 
 describe("App startup without auto-download", () => {
