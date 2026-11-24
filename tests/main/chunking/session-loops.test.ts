@@ -91,6 +91,33 @@ describe("ChunkSession loop retries", () => {
     expect(whisper.calls[4].prompt).toBe(WHISPER_PROMPT);
   });
 
+  it("a surviving loop that collapsing leaves unchanged is pasted whole and not flagged", async () => {
+    const sentences = "Test. Test. Test.";
+    const whisper = scriptedWhisper([sentences, sentences, sentences]);
+    const session = newSession(whisper);
+
+    session.append(speech(3));
+    const result = await session.finish();
+
+    expect(whisper.calls).toHaveLength(3);
+    expect(result.text).toBe(sentences);
+    expect(result.incomplete).toBe(false);
+    expect(result.chunks[0].outcome).toBe("ok");
+    expect(result.chunks[0].loop).toBe(true);
+    expect(result.chunks[0].retries).toBe(2);
+
+    const between = scriptedWhisper(["Alpha one.", sentences, sentences, sentences, "Gamma three."]);
+    const betweenSession = newSession(between);
+
+    betweenSession.append(threeChunks());
+    const betweenResult = await betweenSession.finish();
+
+    expect(between.calls).toHaveLength(5);
+    expect(between.calls[4].prompt).toBe(WHISPER_PROMPT);
+    expect(betweenResult.text).toBe("Alpha one. Test. Test. Test. Gamma three.");
+    expect(betweenResult.incomplete).toBe(false);
+  });
+
   it("a retry text rejected for another reason does not break the loop with enhancement on", async () => {
     const whisper = scriptedWhisper([LOOP, "Thank you", "Clean text here."]);
     const session = newSession(whisper, { enhancing: () => true });

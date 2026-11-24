@@ -33,8 +33,9 @@ export interface ChunkSessionOptions {
 }
 
 /**
- * How a chunk's passes ended: `ok` with the first pass's text or with none,
- * `retried` with a later pass's, `collapsed` with a loop no retry broke,
+ * How a chunk's passes ended: `ok` with the first pass's text, with none or
+ * with a loop no retry broke that collapsing leaves as it is, `retried` with
+ * a later pass's, `collapsed` with a loop no retry broke, shortened,
  * `failed` with no text because its passes threw, `dropped` with a text the
  * garbage check rejected.
  */
@@ -101,6 +102,8 @@ interface PassState {
   whileRecording: boolean;
   /** `whileRecording` of the first pass that gave a loop. */
   loopWhileRecording: boolean;
+  /** The chunk's text is its loop, which no retry broke: nothing of it is carried on. */
+  loopSurvived: boolean;
   /** `ok` until the passes end. */
   outcome: ChunkOutcome;
 }
@@ -126,6 +129,7 @@ function noPasses(): PassState {
     reported: null,
     whileRecording: false,
     loopWhileRecording: false,
+    loopSurvived: false,
     outcome: "ok",
   };
 }
@@ -296,7 +300,7 @@ export class ChunkSession {
       dictionary: this.options.dictionary,
       speechLanguages: this.options.speechLanguages,
       pinnedLanguage: this.pinned,
-      carried: previous && previous.outcome !== "collapsed" ? carriedText(previous.text) : "",
+      carried: previous && !previous.loopSurvived ? carriedText(previous.text) : "",
       retry: chunk.retry,
     });
     const record: PassRecord = { temperature: settings.temperature, bare: settings.bare, ms: 0, result: "aborted" };
@@ -388,11 +392,17 @@ export class ChunkSession {
     }
   }
 
-  /** Ends the passes of a chunk that no pass gave a text: with its loop, collapsed, or with nothing. */
+  /**
+   * Ends the passes of a chunk that no pass gave a text: with its loop,
+   * collapsed, or with nothing. A loop that collapsing leaves as it is has
+   * lost no words, so its chunk ends `ok`.
+   */
   private giveUp(chunk: Chunk): void {
     if (chunk.loopText !== null) {
       chunk.whileRecording = chunk.loopWhileRecording;
-      this.endPasses(chunk, collapseLoops(chunk.loopText), "collapsed");
+      chunk.loopSurvived = true;
+      const collapsed = collapseLoops(chunk.loopText);
+      this.endPasses(chunk, collapsed, collapsed === chunk.loopText ? "ok" : "collapsed");
     } else {
       this.endPasses(chunk, "", "failed");
     }
