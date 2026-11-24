@@ -4,11 +4,9 @@ import { type VoxConfig } from "../shared/config";
 import { activeInstructions } from "../shared/prompts";
 import { type RecordingResult } from "./audio/recorder";
 import { type TranscriptionResult, type WhisperPass } from "./audio/whisper";
-import { buildWhisperArgs, buildWhisperPrompt } from "../shared/constants";
 import { RECORDER_SAMPLE_RATE } from "./chunking/constants";
 import { ChunkedRecording } from "./chunking/recording";
 import { type ChunkReport, type SessionResult } from "./chunking/session";
-import { detectGarbage } from "./garbage";
 import { existsSync } from "fs";
 import { t } from "../shared/i18n";
 import log from "electron-log/main";
@@ -24,7 +22,6 @@ export interface PipelineDeps {
     start(): Promise<void>;
     stop(): Promise<RecordingResult>;
     cancel(): Promise<void>;
-    snapshot?(maxSeconds?: number): Promise<RecordingResult | null>;
     /** The samples recorded after the first `offset`; a recorder without it is transcribed once it stops. */
     samplesFrom?(offset: number): Promise<Float32Array>;
     playAudioCue?(samples: number[], sampleRate?: number): Promise<void>;
@@ -111,8 +108,6 @@ export class Pipeline {
   private chunked: ChunkedRecording | null = null;
   /** The recorder's stop, started by a cancel while listening. */
   private stopping: Promise<void> | null = null;
-  /** Stops the live-preview transcriptions in flight, so they do not share the GPU with the final one. */
-  private readonly previewAborts = new Set<AbortController>();
 
   private get whisperModelName(): string {
     return this.deps.modelPath.split("/").pop()?.replace("ggml-", "").replace(".bin", "") ?? "unknown";
@@ -137,41 +132,6 @@ export class Pipeline {
 
   async playAudioCue(samples: number[], sampleRate?: number): Promise<void> {
     await this.deps.recorder.playAudioCue?.(samples, sampleRate);
-  }
-
-  async snapshotAndTranscribe(): Promise<string | null> {
-    const preview = new AbortController();
-    this.previewAborts.add(preview);
-    try {
-      // Full buffer — gives Whisper all context for the most accurate preview
-      const snapshot = await this.deps.recorder.snapshot?.();
-      if (!snapshot || snapshot.audioBuffer.length === 0) return null;
-      // Require at least 0.5s of audio for meaningful transcription
-      const durationMs = (snapshot.audioBuffer.length / snapshot.sampleRate) * 1000;
-      if (durationMs < 500) return null;
-      const result = await this.deps.transcribe(
-        snapshot.audioBuffer,
-        snapshot.sampleRate,
-        this.deps.modelPath,
-        this.buildPass(preview.signal),
-      );
-      const text = result.text
-        .replace(/\[[^\]]*\]/g, "")
-        .replace(/\([^)]*\)/g, "")
-        .replace(/\*[^*]*\*/g, "")
-        .replace(/\s{2,}/g, " ")
-        .trim();
-      if (!text || !!detectGarbage(text)) return null;
-      return text;
-    } catch {
-      return null;
-    } finally {
-      this.previewAborts.delete(preview);
-    }
-  }
-
-  private abortPreviews(): void {
-    for (const preview of this.previewAborts) preview.abort();
   }
 
   /** Shows or hides the preview of the recording being made; no recording, no effect. */
@@ -201,7 +161,6 @@ export class Pipeline {
   async stopAndProcess(): Promise<string> {
     const stopStart = performance.now();
     const gen = this.generation;
-    this.abortPreviews();
     await this.chunked?.endCapture();
     const recording = await this.deps.recorder.stop();
     this.heldRecording = recording;
@@ -211,41 +170,6 @@ export class Pipeline {
     }
 
     return this.processFromRecording(recording, gen, stopStart);
-  }
-
-  /**
-   * Stop recording and process using pre-accumulated live preview text,
-   * skipping the Whisper transcription step entirely. Falls back to full
-   * Whisper transcription if the hint is empty or detected as garbage.
-   */
-  async stopAndProcessWithHint(hintText: string): Promise<string> {
-    const stopStart = performance.now();
-    const gen = this.generation;
-    this.abortPreviews();
-    await this.chunked?.endCapture();
-    const recording = await this.deps.recorder.stop();
-    this.heldRecording = recording;
-
-    if (this.canceled || gen !== this.generation) {
-      throw new CanceledError();
-    }
-
-    const rawText = hintText.trim();
-    if (!rawText || !!detectGarbage(rawText)) {
-      slog.info("Preview hint empty or garbage — falling back to Whisper");
-      return this.processFromRecording(recording, gen, stopStart);
-    }
-
-    slog.info("Using live preview as transcript, skipping Whisper: %s", rawText.slice(0, 80));
-    this.heldTranscription = rawText;
-    this.dropRecording();
-    this.deps.onTranscriptionComplete?.(rawText);
-
-    if (this.canceled || gen !== this.generation) {
-      throw new CanceledError();
-    }
-
-    return this.processFromTranscription(rawText, recording, gen, this.startEnhancement());
   }
 
   gracefulCancel(): { stage: PipelineStage | "listening" } {
@@ -323,18 +247,6 @@ export class Pipeline {
   /** Whether the transcript of the last transcribed recording is incomplete. */
   lastTranscriptIncomplete(): boolean {
     return this.heldIncomplete;
-  }
-
-  /** The pass of this pipeline's dictionary and languages. */
-  private buildPass(signal: AbortSignal): WhisperPass {
-    const speechLanguages = this.deps.speechLanguages ?? [];
-    const whisperArgs = buildWhisperArgs(speechLanguages);
-    return {
-      prompt: buildWhisperPrompt(this.deps.dictionary ?? [], whisperArgs.promptPrefix),
-      language: whisperArgs.language,
-      speechLanguages,
-      signal,
-    };
   }
 
   /** Sends the loop retry events of the chunks' passes: one for each pass with a temperature, and one more for the pass that gave its chunk the text. */

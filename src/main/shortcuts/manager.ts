@@ -124,15 +124,7 @@ export class ShortcutManager {
   private canceledAtStage: string | null = null;
   private devModelOverride: boolean | null = null;
   private lastUnpastedText: string | null = null;
-  private liveTranscriptionTimer: ReturnType<typeof setTimeout> | null = null;
-  private lastSnapshotText = "";
   private livePreviewClosedForSession = false;
-  private activePipeline: Pipeline | null = null;
-  private activePipelineGen = 0;
-  // How often to re-transcribe the full audio buffer during live preview
-  private static readonly LIVE_PREVIEW_INTERVAL_MS = 1000;
-  // Delay before the first snapshot after recording starts
-  private static readonly LIVE_PREVIEW_FIRST_SNAPSHOT_MS = 400;
   private isShiftHeld = false;
   private shiftAlone = false;
   private shiftTrackingActive = false;
@@ -352,7 +344,6 @@ export class ShortcutManager {
     }
     if (state === RecordingState.Hold || state === RecordingState.Toggle || state === RecordingState.Processing) {
       slog.info("Graceful cancel requested");
-      this.stopLiveTranscription();
       this.micActiveAt = 0;
       this.recordingGeneration++;
       const pipeline = this.deps.getPipeline();
@@ -1045,8 +1036,6 @@ export class ShortcutManager {
     const pipeline = this.deps.getPipeline();
     this.recordingGeneration++;
     this.livePreviewClosedForSession = false;
-    this.activePipeline = null;
-    this.activePipelineGen = 0;
     this.hud.resetPreviewSession();
     this.lastUnpastedText = null;
     this.shiftTrackingActive = false;
@@ -1082,7 +1071,8 @@ export class ShortcutManager {
 
       this.hud.setState("listening");
       if (config.alwaysShowPreview !== false && !this.livePreviewClosedForSession) {
-        this.startLiveTranscription(pipeline, gen);
+        this.hud.showTextPanelEmpty();
+        pipeline.setPreviewShown(true);
       }
     }).catch((err: Error) => {
       if (gen !== this.recordingGeneration) {
@@ -1110,7 +1100,6 @@ export class ShortcutManager {
   }
 
   private async onRecordingStop(): Promise<void> {
-    this.stopLiveTranscription();
     const elapsed = this.micActiveAt > 0 ? Date.now() - this.micActiveAt : 0;
     if (this.micActiveAt === 0 || elapsed < ShortcutManager.MIN_RECORDING_MS) {
       slog.info("Recording too short (%dms) or mic not ready — canceling", elapsed);
@@ -1145,10 +1134,7 @@ export class ShortcutManager {
 
     let hudEndState: "idle" | "error" | "canceled" | "warning" = "idle";
     try {
-      const hint = this.lastSnapshotText;
-      const text = hint
-        ? await pipeline.stopAndProcessWithHint(hint)
-        : await pipeline.stopAndProcess();
+      const text = await pipeline.stopAndProcess();
 
       // If generation changed, a restart/cancel happened — abandon this result
       if (gen !== this.recordingGeneration) {
@@ -1228,78 +1214,19 @@ export class ShortcutManager {
     }
   }
 
-  private startLiveTranscription(pipeline: Pipeline, gen: number): void {
-    this.stopLiveTranscription();
-    this.activePipeline = pipeline;
-    this.activePipelineGen = gen;
-    this.lastSnapshotText = "";
-    let running = false;
-    this.hud.showTextPanelEmpty();
-
-    const tick = async (): Promise<void> => {
-      if (gen !== this.recordingGeneration) return;
-      if (running) {
-        // Previous transcription still in progress — retry shortly
-        this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 300);
-        return;
-      }
-      running = true;
-      try {
-        const text = await pipeline.snapshotAndTranscribe();
-        if (gen !== this.recordingGeneration) return;
-        if (text) {
-          this.lastSnapshotText = text;
-          this.hud.updateTextPanel(text);
-        }
-      } catch {
-        // Ignore errors during live transcription
-      } finally {
-        running = false;
-      }
-      if (gen !== this.recordingGeneration) return;
-      this.liveTranscriptionTimer = setTimeout(
-        () => { tick(); },
-        ShortcutManager.LIVE_PREVIEW_INTERVAL_MS,
-      );
-    };
-
-    // First snapshot
-    this.liveTranscriptionTimer = setTimeout(() => { tick(); }, ShortcutManager.LIVE_PREVIEW_FIRST_SNAPSHOT_MS);
-  }
-
-  private stopLiveTranscription(): void {
-    if (this.liveTranscriptionTimer) {
-      clearTimeout(this.liveTranscriptionTimer);
-      this.liveTranscriptionTimer = null;
-    }
-    this.lastSnapshotText = "";
-  }
-
   private closeLivePreview(): void {
     this.livePreviewClosedForSession = true;
-    this.stopLiveTranscription();
+    this.deps.getPipeline().setPreviewShown(false);
     this.hud.hideTextPanel();
   }
 
   private restoreLivePreview(): void {
-    // If we're in a recording state but no active pipeline, start one
     const state = this.stateMachine.getState();
     const isRecording = state === RecordingState.Hold || state === RecordingState.Toggle || state === RecordingState.Processing;
-
-    if (!this.activePipeline || this.activePipelineGen !== this.recordingGeneration) {
-      // No active pipeline - need to start live transcription if we're recording
-      if (isRecording && this.recordingGeneration > 0) {
-        const pipeline = this.deps.getPipeline();
-        this.livePreviewClosedForSession = false;
-        this.startLiveTranscription(pipeline, this.recordingGeneration);
-        return;
-      }
-      return;
-    }
+    if (!isRecording) return;
 
     this.livePreviewClosedForSession = false;
-    // Show existing text immediately without animation
-    this.hud.restoreTextPanel(this.lastSnapshotText);
-    this.startLiveTranscription(this.activePipeline, this.activePipelineGen);
+    this.hud.restoreTextPanel("");
+    this.deps.getPipeline().setPreviewShown(true);
   }
 }

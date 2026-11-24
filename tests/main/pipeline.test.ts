@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach, onTestFinished } from "vitest";
 import { Pipeline, type PipelineDeps } from "../../src/main/pipeline";
-import { type RecordingResult } from "../../src/main/audio/recorder";
 import { type LlmProvider } from "../../src/main/llm/provider";
 import { createLlmProvider } from "../../src/main/llm/factory";
 import { type VoxConfig, createDefaultConfig } from "../../src/shared/config";
@@ -571,86 +570,10 @@ describe("Pipeline", () => {
     });
   });
 
-  it("stops the in-flight preview transcription when recording stops", async () => {
-    const oneSecond: RecordingResult = { audioBuffer: new Float32Array(16000), sampleRate: 16000 };
-    const recorder: PipelineDeps["recorder"] = {
-      start: async () => {},
-      stop: async () => oneSecond,
-      cancel: async () => {},
-      snapshot: async () => oneSecond,
-    };
-    let previewSignal: AbortSignal | undefined;
-    let previewCalls = 0;
-    let previewAbortedWhenFinalStarted: boolean | undefined;
-    // The preview runs until its signal aborts; the final transcription resolves at once.
-    const transcribe: PipelineDeps["transcribe"] = (_audio, _rate, _model, { signal }) => {
-      if (previewCalls === 0) {
-        previewCalls++;
-        previewSignal = signal;
-        return new Promise((_resolve, reject) => {
-          signal?.addEventListener("abort", () => reject(signal.reason));
-        });
-      }
-      previewAbortedWhenFinalStarted = previewSignal?.aborted;
-      return Promise.resolve({ text: "final transcription" });
-    };
-    const pipeline = new Pipeline({
-      recorder,
-      transcribe,
-      ...enhancingWith(mockProvider),
-      modelPath: "/models/ggml-small.bin",
-    });
-
-    await pipeline.startRecording();
-    const preview = pipeline.snapshotAndTranscribe();
-    await vi.waitFor(() => expect(previewCalls).toBe(1));
-    await pipeline.stopAndProcess();
-
-    expect(previewAbortedWhenFinalStarted).toBe(true);
-    await expect(preview).resolves.toBeNull();
+  it("the pipeline has no whole-recording preview pass", () => {
+    expect(Pipeline.prototype).not.toHaveProperty("snapshotAndTranscribe");
+    expect(Pipeline.prototype).not.toHaveProperty("stopAndProcessWithHint");
   });
-
-  it.each(["stopAndProcess", "stopAndProcessWithHint"] as const)(
-    "%s stops every preview transcription in flight",
-    async (stopMethod) => {
-      const oneSecond: RecordingResult = { audioBuffer: new Float32Array(16000), sampleRate: 16000 };
-      const recorder: PipelineDeps["recorder"] = {
-        start: async () => {},
-        stop: async () => oneSecond,
-        cancel: async () => {},
-        snapshot: async () => oneSecond,
-      };
-      const previewSignals: (AbortSignal | undefined)[] = [];
-      // Two previews run until their signals abort; the final transcription resolves at once.
-      const transcribe: PipelineDeps["transcribe"] = (_audio, _rate, _model, { signal }) => {
-        if (previewSignals.length < 2) {
-          previewSignals.push(signal);
-          return new Promise((_resolve, reject) => {
-            signal?.addEventListener("abort", () => reject(signal.reason));
-          });
-        }
-        return Promise.resolve({ text: "final transcription" });
-      };
-      const pipeline = new Pipeline({
-        recorder,
-        transcribe,
-        ...enhancingWith(mockProvider),
-        modelPath: "/models/ggml-small.bin",
-      });
-
-      await pipeline.startRecording();
-      const first = pipeline.snapshotAndTranscribe();
-      const second = pipeline.snapshotAndTranscribe();
-      await vi.waitFor(() => expect(previewSignals).toHaveLength(2));
-      await (stopMethod === "stopAndProcess"
-        ? pipeline.stopAndProcess()
-        : pipeline.stopAndProcessWithHint("final transcription"));
-
-      expect(previewSignals.map((signal) => signal?.aborted)).toEqual([true, true]);
-      await expect(first).resolves.toBeNull();
-      await expect(second).resolves.toBeNull();
-    }
-  );
 
   it("timing record counts loop retries in whisper time", async () => {
     // Each peer moves the fake clock by the time its step takes, so the record is exact.
