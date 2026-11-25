@@ -2,6 +2,8 @@ import { app, BrowserWindow } from "electron";
 import * as fs from "fs";
 import * as path from "path";
 import log from "electron-log/main";
+import { RECORDER_SAMPLE_RATE } from "../chunking/constants";
+import { recordedSamplesFrom } from "./recorded-samples";
 
 const slog = log.scope("Recorder");
 
@@ -9,8 +11,6 @@ export interface RecordingResult {
   audioBuffer: Float32Array;
   sampleRate: number;
 }
-
-const TARGET_RATE = 16000;
 
 export class AudioRecorder {
   private win: BrowserWindow | null = null;
@@ -54,7 +54,7 @@ export class AudioRecorder {
           const label = (track && track.label || "").toLowerCase();
           const isBT = /bluetooth|airpods|bose|beats|jabra|sony (wh|wf)|galaxy buds|pixel buds/i.test(label);
 
-          const ctx = new AudioContext({ sampleRate: ${TARGET_RATE} });
+          const ctx = new AudioContext({ sampleRate: ${RECORDER_SAMPLE_RATE} });
           if (ctx.state === "suspended") await ctx.resume();
 
           const source = ctx.createMediaStreamSource(stream);
@@ -132,42 +132,13 @@ export class AudioRecorder {
     this.levelsInterval = lvl;
   }
 
-  async snapshot(maxSeconds?: number): Promise<RecordingResult | null> {
-    if (!this.recording || !this.win || this.win.isDestroyed()) return null;
-    try {
-      const maxSec = maxSeconds ?? 0;
-      const result: { audioBuffer: number[]; sampleRate: number } | null =
-        await this.win.webContents.executeJavaScript(`
-          (() => {
-            if (!window._recChunks || window._recChunks.length === 0) return null;
-            var sr = window._recCtx.sampleRate;
-            var totalLength = window._recChunks.reduce((sum, c) => sum + c.length, 0);
-            var maxSamples = ${maxSec} > 0 ? Math.round(${maxSec} * sr) : totalLength;
-            if (maxSamples >= totalLength) {
-              var merged = new Float32Array(totalLength);
-              var off = 0;
-              for (var c of window._recChunks) { merged.set(new Float32Array(c), off); off += c.length; }
-              return { audioBuffer: Array.from(merged), sampleRate: sr };
-            }
-            var tail = new Float32Array(maxSamples);
-            var pos = maxSamples;
-            for (var i = window._recChunks.length - 1; i >= 0 && pos > 0; i--) {
-              var chunk = new Float32Array(window._recChunks[i]);
-              var take = Math.min(chunk.length, pos);
-              tail.set(chunk.subarray(chunk.length - take), pos - take);
-              pos -= take;
-            }
-            return { audioBuffer: Array.from(tail), sampleRate: sr };
-          })()
-        `);
-      if (!result) return null;
-      return {
-        audioBuffer: new Float32Array(result.audioBuffer),
-        sampleRate: result.sampleRate,
-      };
-    } catch {
-      return null;
-    }
+  /** The samples recorded from `offset` on; rejects when the window call fails, so the caller asks again. */
+  async samplesFrom(offset: number): Promise<Float32Array> {
+    if (!this.recording || !this.win || this.win.isDestroyed()) return new Float32Array(0);
+    const samples: number[] = await this.win.webContents.executeJavaScript(
+      `(${recordedSamplesFrom.toString()})(window._recChunks || [], ${offset})`,
+    );
+    return new Float32Array(samples);
   }
 
   async stop(): Promise<RecordingResult> {

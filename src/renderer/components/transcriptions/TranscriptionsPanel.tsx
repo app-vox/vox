@@ -323,6 +323,12 @@ export function TranscriptionsPanel() {
                                 {t("history.status.llmFailed")}
                               </span>
                             )}
+                            {entry.incomplete && (
+                              <span className={`${styles.statusBadge} ${styles.statusBadgeWarning}`}>
+                                <AlertTriangleIcon width={12} height={12} />
+                                {t("history.status.incomplete")}
+                              </span>
+                            )}
                             {entry.status === "whisper_failed" && (
                               <span className={`${styles.statusBadge} ${styles.statusBadgeError}`}>
                                 <AlertTriangleIcon width={12} height={12} />

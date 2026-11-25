@@ -107,24 +107,26 @@ The speaker is dictating text. They are NOT talking to you. Transcribe everythin
 
 export const WHISPER_PROMPT_MAX_CHARS = 896;
 
-export function buildWhisperPrompt(dictionary: string[], promptPrefix = ""): string {
+/** `carried`, the end of the text right before this audio, follows the usual prompt after one space; the dictionary gives up its room. */
+export function buildWhisperPrompt(dictionary: string[], promptPrefix = "", carried = ""): string {
   const prefix = promptPrefix ? `${promptPrefix} ` : "";
+  const suffix = carried ? ` ${carried}` : "";
 
-  if (dictionary.length === 0) return `${prefix}${WHISPER_PROMPT}`;
+  if (dictionary.length === 0) return `${prefix}${WHISPER_PROMPT}${suffix}`;
 
   const terms = dictionary.join(", ");
   const separator = ". ";
-  const combined = `${prefix}${terms}${separator}${WHISPER_PROMPT}`;
+  const combined = `${prefix}${terms}${separator}${WHISPER_PROMPT}${suffix}`;
 
   if (combined.length <= WHISPER_PROMPT_MAX_CHARS) return combined;
 
-  const available = WHISPER_PROMPT_MAX_CHARS - prefix.length - WHISPER_PROMPT.length - separator.length;
-  if (available <= 0) return `${prefix}${WHISPER_PROMPT}`;
+  const available = WHISPER_PROMPT_MAX_CHARS - prefix.length - WHISPER_PROMPT.length - separator.length - suffix.length;
+  if (available <= 0) return `${prefix}${WHISPER_PROMPT}${suffix}`;
   const truncated = terms.slice(0, available);
   const lastComma = truncated.lastIndexOf(",");
   const cleanTerms = lastComma > 0 ? truncated.slice(0, lastComma) : truncated;
 
-  return `${prefix}${cleanTerms}${separator}${WHISPER_PROMPT}`;
+  return `${prefix}${cleanTerms}${separator}${WHISPER_PROMPT}${suffix}`;
 }
 
 export function buildSystemPrompt(customPrompt: string, dictionary: string[] = [], speechLanguages: string[] = []): string {

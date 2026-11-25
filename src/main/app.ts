@@ -20,6 +20,7 @@ import { PromptSwitch } from "./prompt-switch";
 import { paster, permissions, applyCase, stripTrailingPeriod } from "./platform";
 import { SetupChecker } from "./setup/checker";
 import { HistoryManager } from "./history/manager";
+import { completedEntry } from "./history/entry";
 import { type AudioCueType, type VoxConfig } from "../shared/config";
 import { generateCueSamples, isWavCue, getWavFilename, parseWavSamples } from "../shared/audio-cue";
 import { t, setLanguage, resolveSystemLanguage } from "../shared/i18n";
@@ -88,6 +89,11 @@ function setupPipeline(): void {
     onTranscriptionComplete: (rawText) => {
       shortcutManager?.getHud().updateTextPanel(rawText);
     },
+    onPreviewText: (text, source) => {
+      const hud = shortcutManager?.getHud();
+      if (source === "live") hud?.updateTextPanel(text);
+      else hud?.restoreTextPanel(text);
+    },
     onLlmFailed: () => promptSwitch.markConnectionUntested(),
     onComplete: (result) => {
       // Defer all side effects so the pipeline can return finalText immediately
@@ -100,21 +106,12 @@ function setupPipeline(): void {
 
         shortcutManager?.getHud().stopEnhancingEffect();
 
-        const status = result.llmFailed ? "llm_failed" as const : "success" as const;
-
-          const entry = historyManager.add({
-            text: finalText,
-            originalText: result.originalText,
-            audioDurationMs: result.audioDurationMs,
-            wordCount: finalText.split(/\s+/).filter(Boolean).length,
+          const entry = historyManager.add(completedEntry(result, finalText, {
             whisperModel: config.whisper.model || "unknown",
             llmEnhanced: config.enableLlmEnhancement,
             llmProvider: config.enableLlmEnhancement ? config.llm.provider : undefined,
             llmModel: config.enableLlmEnhancement ? getLlmModelName(config.llm) : undefined,
-            status,
-            errorMessage: result.errorMessage,
-            failedStep: result.llmFailed ? "llm" : undefined,
-          });
+          }));
 
           if (latestConfig.audioRetentionCount > 0) {
             const audioFilePath = getAudioFilePath(entry.id);

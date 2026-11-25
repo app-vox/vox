@@ -1,11 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach, onTestFinished } from "vitest";
 import { Pipeline, type PipelineDeps } from "../../src/main/pipeline";
-import { type RecordingResult } from "../../src/main/audio/recorder";
 import { type LlmProvider } from "../../src/main/llm/provider";
 import { createLlmProvider } from "../../src/main/llm/factory";
 import { type VoxConfig, createDefaultConfig } from "../../src/shared/config";
 import { computeLlmConfigHash } from "../../src/shared/llm-config-hash";
+import { buildWhisperArgs, buildWhisperPrompt } from "../../src/shared/constants";
 import log from "electron-log/main";
+import { detectGarbage } from "../../src/main/garbage";
+import { FakeRecorder, type Reply, audio, deferred, quiet, scriptedWhisper, speech, threeChunks } from "./helpers/chunking";
+import { pasteOutcome } from "../../src/main/shortcuts/paste-outcome";
 
 /** Pipeline deps whose enhancement always uses `provider`, whatever the config says. */
 function enhancingWith(provider: LlmProvider): Pick<PipelineDeps, "loadConfig" | "createLlmProvider"> {
@@ -268,6 +271,39 @@ describe("Pipeline", () => {
     expect(onComplete).toHaveBeenCalled();
   });
 
+  it("undo of a cancel warns on an incomplete transcript", async () => {
+    const LOOP = "and then we will see, and then we will see, and then we will see, and then we will see";
+    const whisper = scriptedWhisper([LOOP, LOOP, LOOP]);
+    const config = createDefaultConfig();
+    const stopped = deferred<void>();
+    const pipeline = new Pipeline({
+      recorder: {
+        start: async () => {},
+        stop: async () => {
+          queueMicrotask(() => stopped.resolve());
+          return { audioBuffer: speech(3), sampleRate: 16000 };
+        },
+        cancel: async () => {},
+      },
+      transcribe: whisper.transcribe,
+      loadConfig: () => config,
+      createLlmProvider,
+      modelPath: "/models/ggml-small.bin",
+    });
+
+    await pipeline.startRecording();
+    pipeline.gracefulCancel();
+    await stopped.promise;
+    const text = await pipeline.undoCancel();
+
+    expect(text).toBe("and then we will see,");
+    expect(pipeline.lastTranscriptIncomplete()).toBe(true);
+    expect(pasteOutcome(true, pipeline.lastTranscriptIncomplete())).toBe("incomplete");
+
+    pipeline.confirmCancel();
+    expect(pipeline.lastTranscriptIncomplete()).toBe(false);
+  });
+
   it("should fully discard when confirmCancel is called", async () => {
     const recorder = {
       start: vi.fn(),
@@ -393,6 +429,34 @@ describe("Pipeline", () => {
     expect(onComplete).toHaveBeenCalled();
   });
 
+  it("retry from history is chunked", async () => {
+    const seventy = audio(speech(21), quiet(0.6), speech(25), quiet(0.4), speech(23));
+    const texts = ["Alpha one.", "Beta two.", "Gamma three."];
+    const whisper = scriptedWhisper([...texts, ...texts]);
+    const config = createDefaultConfig();
+    const pipeline = new Pipeline({
+      recorder: {
+        start: async () => {},
+        stop: async () => ({ audioBuffer: seventy, sampleRate: 16000 }),
+        cancel: async () => {},
+      },
+      transcribe: whisper.transcribe,
+      loadConfig: () => config,
+      createLlmProvider,
+      modelPath: "/models/ggml-small.bin",
+    });
+
+    await pipeline.startRecording();
+    const live = await pipeline.stopAndProcess();
+    const retried = await pipeline.retryFromRecording({ audioBuffer: seventy, sampleRate: 16000 });
+
+    expect(live).toBe("Alpha one. Beta two. Gamma three.");
+    expect(retried).toBe(live);
+    const sizes = whisper.calls.map((call) => call.samples);
+    expect(sizes.slice(0, 3)).toEqual([338240, 409600, 372160]);
+    expect(sizes.slice(3)).toEqual([338240, 409600, 372160]);
+  });
+
   it("should track llm_enhancement_failed when LLM errors", async () => {
     const failingProvider: LlmProvider = {
       correct: vi.fn().mockRejectedValue(new Error("LLM unavailable")),
@@ -474,27 +538,15 @@ describe("Pipeline", () => {
     expect(onTranscriptionComplete).not.toHaveBeenCalled();
   });
 
-  it("stops the in-flight preview transcription when recording stops", async () => {
-    const oneSecond: RecordingResult = { audioBuffer: new Float32Array(16000), sampleRate: 16000 };
+  it("a pass names its prompt and its language", async () => {
     const recorder: PipelineDeps["recorder"] = {
       start: async () => {},
-      stop: async () => oneSecond,
+      stop: async () => ({ audioBuffer: new Float32Array(16000), sampleRate: 16000 }),
       cancel: async () => {},
-      snapshot: async () => oneSecond,
     };
-    let previewSignal: AbortSignal | undefined;
-    let previewCalls = 0;
-    let previewAbortedWhenFinalStarted: boolean | undefined;
-    // The preview runs until its signal aborts; the final transcription resolves at once.
-    const transcribe: PipelineDeps["transcribe"] = (_audio, _rate, _model, _dict, _langs, _temp, signal) => {
-      if (previewCalls === 0) {
-        previewCalls++;
-        previewSignal = signal;
-        return new Promise((_resolve, reject) => {
-          signal?.addEventListener("abort", () => reject(signal.reason));
-        });
-      }
-      previewAbortedWhenFinalStarted = previewSignal?.aborted;
+    const calls: unknown[][] = [];
+    const transcribe: PipelineDeps["transcribe"] = (...args) => {
+      calls.push(args);
       return Promise.resolve({ text: "final transcription" });
     };
     const pipeline = new Pipeline({
@@ -502,58 +554,26 @@ describe("Pipeline", () => {
       transcribe,
       ...enhancingWith(mockProvider),
       modelPath: "/models/ggml-small.bin",
+      dictionary: ["Kubernetes"],
+      speechLanguages: ["pt", "en"],
     });
 
     await pipeline.startRecording();
-    const preview = pipeline.snapshotAndTranscribe();
-    await vi.waitFor(() => expect(previewCalls).toBe(1));
     await pipeline.stopAndProcess();
 
-    expect(previewAbortedWhenFinalStarted).toBe(true);
-    await expect(preview).resolves.toBeNull();
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toHaveLength(4);
+    expect(calls[0][3]).toMatchObject({
+      prompt: buildWhisperPrompt(["Kubernetes"], buildWhisperArgs(["pt", "en"]).promptPrefix),
+      language: "auto",
+      speechLanguages: ["pt", "en"],
+    });
   });
 
-  it.each(["stopAndProcess", "stopAndProcessWithHint"] as const)(
-    "%s stops every preview transcription in flight",
-    async (stopMethod) => {
-      const oneSecond: RecordingResult = { audioBuffer: new Float32Array(16000), sampleRate: 16000 };
-      const recorder: PipelineDeps["recorder"] = {
-        start: async () => {},
-        stop: async () => oneSecond,
-        cancel: async () => {},
-        snapshot: async () => oneSecond,
-      };
-      const previewSignals: (AbortSignal | undefined)[] = [];
-      // Two previews run until their signals abort; the final transcription resolves at once.
-      const transcribe: PipelineDeps["transcribe"] = (_audio, _rate, _model, _dict, _langs, _temp, signal) => {
-        if (previewSignals.length < 2) {
-          previewSignals.push(signal);
-          return new Promise((_resolve, reject) => {
-            signal?.addEventListener("abort", () => reject(signal.reason));
-          });
-        }
-        return Promise.resolve({ text: "final transcription" });
-      };
-      const pipeline = new Pipeline({
-        recorder,
-        transcribe,
-        ...enhancingWith(mockProvider),
-        modelPath: "/models/ggml-small.bin",
-      });
-
-      await pipeline.startRecording();
-      const first = pipeline.snapshotAndTranscribe();
-      const second = pipeline.snapshotAndTranscribe();
-      await vi.waitFor(() => expect(previewSignals).toHaveLength(2));
-      await (stopMethod === "stopAndProcess"
-        ? pipeline.stopAndProcess()
-        : pipeline.stopAndProcessWithHint("final transcription"));
-
-      expect(previewSignals.map((signal) => signal?.aborted)).toEqual([true, true]);
-      await expect(first).resolves.toBeNull();
-      await expect(second).resolves.toBeNull();
-    }
-  );
+  it("the pipeline has no whole-recording preview pass", () => {
+    expect(Pipeline.prototype).not.toHaveProperty("snapshotAndTranscribe");
+    expect(Pipeline.prototype).not.toHaveProperty("stopAndProcessWithHint");
+  });
 
   it("timing record counts loop retries in whisper time", async () => {
     // Each peer moves the fake clock by the time its step takes, so the record is exact.
@@ -589,6 +609,100 @@ describe("Pipeline", () => {
     expect(attempts).toBe(2);
     expect(timing).toMatchObject({ whisperMs: 2000, llmMs: 500 });
     expect(timing.totalMs).toBeGreaterThanOrEqual(timing.whisperMs + timing.llmMs);
+  });
+
+  describe("chunks without text", () => {
+    /** A config whose enhancement the real `createLlmProvider` turns on. */
+    function enhancingConfig(): VoxConfig {
+      const config = createDefaultConfig();
+      config.enableLlmEnhancement = true;
+      config.llmConnectionTested = true;
+      config.llm.endpoint = "http://127.0.0.1:9";
+      config.llm.apiKey = "test-key";
+      config.llmConfigHash = computeLlmConfigHash(config);
+      return config;
+    }
+
+    function recorderOf(audioBuffer: Float32Array): PipelineDeps["recorder"] {
+      return {
+        start: async () => {},
+        stop: async () => ({ audioBuffer, sampleRate: 16000 }),
+        cancel: async () => {},
+      };
+    }
+
+    it("no chunk contributes text", async () => {
+      const forty = audio(speech(21), quiet(0.6), speech(18.4));
+      const whisper = scriptedWhisper(["Thank you", "Thank you"]);
+      const config = enhancingConfig();
+      const onFailure = vi.fn();
+      const onComplete = vi.fn();
+      const pipeline = new Pipeline({
+        recorder: recorderOf(forty),
+        transcribe: whisper.transcribe,
+        loadConfig: () => config,
+        createLlmProvider,
+        modelPath: "/models/ggml-small.bin",
+        onFailure,
+        onComplete,
+      });
+
+      await pipeline.startRecording();
+      const result = await pipeline.stopAndProcess();
+
+      expect(forty.length).toBe(640000);
+      expect(whisper.calls).toHaveLength(2);
+      expect(result).toBe("");
+      expect(onFailure).toHaveBeenCalledTimes(1);
+      expect(onFailure).toHaveBeenCalledWith(expect.objectContaining({ failedStep: "garbage" }));
+      expect(onComplete).not.toHaveBeenCalled();
+    });
+
+    it("no text and a failed chunk fails at the whisper step", async () => {
+      const lost = new Error("gpu lost again");
+      const whisper = scriptedWhisper(["Thank you", "Thank you", new Error("gpu lost"), lost]);
+      const config = enhancingConfig();
+      const onFailure = vi.fn();
+      const pipeline = new Pipeline({
+        recorder: recorderOf(threeChunks()),
+        transcribe: whisper.transcribe,
+        loadConfig: () => config,
+        createLlmProvider,
+        modelPath: "/models/ggml-small.bin",
+        onFailure,
+      });
+
+      await pipeline.startRecording();
+      await expect(pipeline.stopAndProcess()).rejects.toThrow("gpu lost again");
+
+      expect(whisper.calls).toHaveLength(4);
+      expect(onFailure).toHaveBeenCalledTimes(1);
+      expect(onFailure).toHaveBeenCalledWith(expect.objectContaining({ failedStep: "whisper", error: lost }));
+    });
+
+    it("chunk texts whose joined text today's check rejects all reach the raw transcript", async () => {
+      const sentence = "We need to ship it today.";
+      const joined = [sentence, sentence, sentence].join(" ");
+      const whisper = scriptedWhisper([sentence, sentence, sentence]);
+      let seen: string | undefined;
+      const pipeline: Pipeline = new Pipeline({
+        recorder: recorderOf(threeChunks()),
+        transcribe: whisper.transcribe,
+        ...enhancingWith(mockProvider),
+        modelPath: "/models/ggml-small.bin",
+        onTranscriptionComplete: (raw) => {
+          seen = raw;
+          void pipeline.cancel();
+        },
+      });
+
+      await pipeline.startRecording();
+      await expect(pipeline.stopAndProcess()).rejects.toThrow("Operation was canceled");
+
+      expect(detectGarbage(joined)).toBe("loop");
+      expect(seen).toBe(joined);
+      expect(mockProvider.correct).not.toHaveBeenCalled();
+    });
   });
 
   describe("active prompt", () => {
@@ -679,5 +793,213 @@ describe("Pipeline", () => {
 
       expect(analytics.track.mock.calls.map((c) => c[0])).toContain("custom_prompt_used");
     });
+  });
+});
+
+describe("Pipeline chunks while recording", () => {
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    const fs = await import("fs");
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const THREE_TEXTS = ["Alpha one.", "Beta two.", "Gamma three."];
+
+  function setup(
+    replies: Reply[],
+    overrides: Partial<PipelineDeps> = {},
+    recorder: PipelineDeps["recorder"] = new FakeRecorder(threeChunks()),
+  ) {
+    const whisper = scriptedWhisper(replies);
+    const pipeline = new Pipeline({
+      recorder,
+      transcribe: whisper.transcribe,
+      loadConfig: createDefaultConfig,
+      createLlmProvider,
+      modelPath: "/models/ggml-small.bin",
+      ...overrides,
+    });
+    return { whisper, pipeline };
+  }
+
+  /** Records 45 s and lets one fetch run: the first two chunks are closed. */
+  async function recordTwoChunks(recorder: FakeRecorder, pipeline: Pipeline): Promise<void> {
+    await pipeline.startRecording();
+    recorder.recordUpTo(45);
+    await vi.advanceTimersByTimeAsync(500);
+  }
+
+  it("undo of a cancel reuses transcribed chunks", async () => {
+    const recorder = new FakeRecorder(threeChunks());
+    const { whisper, pipeline } = setup(THREE_TEXTS, {}, recorder);
+
+    await recordTwoChunks(recorder, pipeline);
+    expect(whisper.calls).toHaveLength(2);
+    recorder.recordUpTo(51.2);
+    pipeline.gracefulCancel();
+    const result = await pipeline.undoCancel();
+
+    expect(result).toBe("Alpha one. Beta two. Gamma three.");
+    expect(whisper.calls).toHaveLength(3);
+    expect(whisper.calls[2].samples).toBe(135360);
+  });
+
+  it("new recording drops the earlier chunk texts", async () => {
+    const recorder = new FakeRecorder(threeChunks());
+    const previews: string[] = [];
+    const { whisper, pipeline } = setup(["Old one.", "hang", "New text."], { onPreviewText: (text) => previews.push(text) }, recorder);
+
+    await recordTwoChunks(recorder, pipeline);
+    expect(whisper.calls).toHaveLength(2);
+    recorder.load(speech(3));
+    await pipeline.startRecording();
+    pipeline.setPreviewShown(true);
+    expect(whisper.calls[1].signal?.aborted).toBe(true);
+    recorder.recordUpTo(3);
+
+    await expect(pipeline.stopAndProcess()).resolves.toBe("New text.");
+    expect(previews.filter((text) => text.includes("Old one."))).toEqual([]);
+  });
+
+  it("the preview text of a shown recording reaches onPreviewText", async () => {
+    const recorder = new FakeRecorder(threeChunks());
+    const previews: [string, string][] = [];
+    const { pipeline } = setup(["Hello wor"], { onPreviewText: (text, source) => previews.push([text, source]) }, recorder);
+
+    await pipeline.startRecording();
+    pipeline.setPreviewShown(true);
+    recorder.recordUpTo(6);
+    await vi.advanceTimersByTimeAsync(1400);
+
+    expect(previews).toEqual([["Hello wor", "live"]]);
+  });
+
+  it("setPreviewShown without a recording does nothing", () => {
+    const { whisper, pipeline } = setup([]);
+
+    expect(() => pipeline.setPreviewShown(true)).not.toThrow();
+    expect(whisper.calls).toHaveLength(0);
+  });
+
+  it("timing line reports chunks and the wait after stop", async () => {
+    vi.useRealTimers();
+    // The fake clock moves by the time each reply takes, so the record is exact.
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "setTimeout", "clearTimeout", "performance"] });
+    const tick = (text: string) => () => {
+      vi.advanceTimersByTime(1000);
+      return text;
+    };
+    const recorder = new FakeRecorder(threeChunks());
+    const { whisper, pipeline } = setup(THREE_TEXTS.map(tick), {}, recorder);
+
+    await recordTwoChunks(recorder, pipeline);
+    recorder.recordUpTo(51.2);
+    await pipeline.stopAndProcess();
+
+    const timing = vi.mocked(log.scope("Pipeline").info).mock.calls
+      .find(([message]) => message === "Pipeline timing")?.[1];
+    expect(whisper.calls).toHaveLength(3);
+    expect(timing).toMatchObject({ chunks: 3, waitAfterStopMs: 1000, whisperMs: 3000 });
+  });
+
+  it("a first cancel lets the pass in flight finish and starts no new pass", async () => {
+    const recorder = new FakeRecorder(threeChunks());
+    const first = deferred<string>();
+    const { whisper, pipeline } = setup([first.promise, ...THREE_TEXTS.slice(1)], {}, recorder);
+
+    await recordTwoChunks(recorder, pipeline);
+    pipeline.gracefulCancel();
+    expect(whisper.calls[0].signal?.aborted).toBe(false);
+    first.resolve("Alpha one.");
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(whisper.calls).toHaveLength(1);
+  });
+
+  it("a confirmed cancel aborts the pass in flight", async () => {
+    const recorder = new FakeRecorder(threeChunks());
+    const onComplete = vi.fn();
+    const { whisper, pipeline } = setup(["hang"], { onComplete }, recorder);
+
+    await recordTwoChunks(recorder, pipeline);
+    const stopped = pipeline.stopAndProcess();
+    const rejected = expect(stopped).rejects.toThrow("Operation was canceled");
+    await vi.advanceTimersByTimeAsync(0);
+    pipeline.gracefulCancel();
+    pipeline.confirmCancel();
+
+    await rejected;
+    expect(whisper.calls[0].signal?.aborted).toBe(true);
+    expect(onComplete).not.toHaveBeenCalled();
+  });
+
+  it("an undo right after the cancel waits for the recorder's stop", async () => {
+    const fake = new FakeRecorder(threeChunks());
+    const stopGate = deferred<void>();
+    const recorder: PipelineDeps["recorder"] & { samplesFrom(offset: number): Promise<Float32Array> } = {
+      start: () => fake.start(),
+      stop: async () => {
+        await stopGate.promise;
+        return fake.stop();
+      },
+      cancel: () => fake.cancel(),
+      samplesFrom: (offset) => fake.samplesFrom(offset),
+    };
+    const { whisper, pipeline } = setup(THREE_TEXTS, {}, recorder);
+
+    await pipeline.startRecording();
+    fake.recordUpTo(51.2);
+    pipeline.gracefulCancel();
+    const undone = pipeline.undoCancel();
+    stopGate.resolve();
+
+    await expect(undone).resolves.toBe("Alpha one. Beta two. Gamma three.");
+    expect(whisper.calls.reduce((sum, call) => sum + call.samples, 0)).toBe(819200);
+  });
+
+  it("a recording at another sample rate is transcribed afresh at its own rate", async () => {
+    const recorder = new FakeRecorder(speech(3, 0.1, 48000), 48000);
+    const { whisper, pipeline } = setup(["Hello there."], {}, recorder);
+
+    await pipeline.startRecording();
+    recorder.recordUpTo(3);
+    await vi.advanceTimersByTimeAsync(500);
+    await expect(pipeline.stopAndProcess()).resolves.toBe("Hello there.");
+
+    expect(whisper.calls).toHaveLength(1);
+    expect(whisper.calls[0].sampleRate).toBe(48000);
+    expect(whisper.calls[0].samples).toBe(144000);
+  });
+
+  it("a retry on its own pipeline is not aborted by a new recording", async () => {
+    const retrying = setup(["hang"]);
+    const other = setup([]);
+
+    const retry = retrying.pipeline.retryFromRecording({ audioBuffer: speech(3), sampleRate: 16000 });
+    const canceled = expect(retry).rejects.toThrow("Operation was canceled");
+    await vi.advanceTimersByTimeAsync(0);
+    await other.pipeline.startRecording();
+
+    expect(retrying.whisper.calls[0].signal?.aborted).toBe(false);
+    await retrying.pipeline.cancel();
+    await canceled;
+  });
+
+  it("the timing line is written when the run has no text", async () => {
+    const recorder = new FakeRecorder(speech(3));
+    const { pipeline } = setup([""], {}, recorder);
+
+    await pipeline.startRecording();
+    recorder.recordUpTo(3);
+    await expect(pipeline.stopAndProcess()).resolves.toBe("");
+
+    const timing = vi.mocked(log.scope("Pipeline").info).mock.calls
+      .find(([message]) => message === "Pipeline timing")?.[1];
+    expect(timing).toMatchObject({ chunks: 1 });
   });
 });

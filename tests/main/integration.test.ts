@@ -1,10 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Pipeline } from "../../src/main/pipeline";
 import { NoopProvider } from "../../src/main/llm/noop";
 import { FoundryProvider } from "../../src/main/llm/foundry";
 import { createLlmProvider } from "../../src/main/llm/factory";
 import { createDefaultConfig } from "../../src/shared/config";
+import { WHISPER_PROMPT } from "../../src/shared/constants";
+import { completedEntry } from "../../src/main/history/entry";
+import { pasteOutcome } from "../../src/main/shortcuts/paste-outcome";
+import { t } from "../../src/shared/i18n";
 import { computeLlmConfigHash } from "../../src/shared/llm-config-hash";
+import { FakeRecorder, scriptedWhisper, threeChunks } from "./helpers/chunking";
 
 // Mock electron-log
 vi.mock("electron-log/main", () => ({
@@ -211,6 +216,215 @@ describe("Whisper-only mode integration", () => {
     const result = await pipeline.stopAndProcess();
 
     expect(result).toBe("");
+  });
+
+  it("a recording of three chunks is transcribed chunk by chunk", async () => {
+    const config = createDefaultConfig();
+    const provider = createLlmProvider(config);
+    expect(provider).toBeInstanceOf(NoopProvider);
+    const whisper = scriptedWhisper(["Alpha one.", "Beta two.", "Gamma three."]);
+    const completed: { text: string; originalText: string }[] = [];
+
+    const pipeline = new Pipeline({
+      recorder: {
+        start: async () => {},
+        stop: async () => ({ audioBuffer: threeChunks(), sampleRate: 16000 }),
+        cancel: async () => {},
+      },
+      transcribe: whisper.transcribe,
+      loadConfig: () => config,
+      createLlmProvider: () => provider,
+      modelPath: "/fake/path",
+      onComplete: (result) => completed.push(result),
+    });
+
+    await pipeline.startRecording();
+    const result = await pipeline.stopAndProcess();
+
+    expect(result).toBe("Alpha one. Beta two. Gamma three.");
+    expect(whisper.calls.map((call) => call.samples)).toEqual([338240, 345600, 135360]);
+    expect(completed.map((done) => done.originalText)).toEqual(["Alpha one. Beta two. Gamma three."]);
+  });
+
+  it("the first chunk's language and text reach the second pass", async () => {
+    const config = createDefaultConfig();
+    const provider = createLlmProvider(config);
+    expect(provider).toBeInstanceOf(NoopProvider);
+    const whisper = scriptedWhisper([
+      { text: "Olá, este é o primeiro bloco.", language: "pt" },
+      "Segundo bloco aqui.",
+      "Terceiro bloco aqui.",
+    ]);
+
+    const pipeline = new Pipeline({
+      recorder: {
+        start: async () => {},
+        stop: async () => ({ audioBuffer: threeChunks(), sampleRate: 16000 }),
+        cancel: async () => {},
+      },
+      transcribe: whisper.transcribe,
+      loadConfig: () => config,
+      createLlmProvider: () => provider,
+      modelPath: "/fake/path",
+    });
+
+    await pipeline.startRecording();
+    const result = await pipeline.stopAndProcess();
+
+    expect(whisper.calls.map((call) => call.language)).toEqual(["auto", "pt", "pt"]);
+    expect(whisper.calls[0].prompt).toBe(WHISPER_PROMPT);
+    expect(whisper.calls[1].prompt).toBe(`${WHISPER_PROMPT} Olá, este é o primeiro bloco.`);
+    expect(result).toBe("Olá, este é o primeiro bloco. Segundo bloco aqui. Terceiro bloco aqui.");
+  });
+
+  it("a surviving loop is collapsed, pasted and flagged", async () => {
+    const loop = "and then we will see, and then we will see, and then we will see, and then we will see";
+    const config = createDefaultConfig();
+    const provider = createLlmProvider(config);
+    expect(provider).toBeInstanceOf(NoopProvider);
+    const whisper = scriptedWhisper(["Alpha one.", loop, loop, loop, "Gamma three.", "Alpha one.", "Beta two.", "Gamma three."]);
+    const completed: { text: string; incomplete?: boolean }[] = [];
+
+    const pipeline = new Pipeline({
+      recorder: {
+        start: async () => {},
+        stop: async () => ({ audioBuffer: threeChunks(), sampleRate: 16000 }),
+        cancel: async () => {},
+      },
+      transcribe: whisper.transcribe,
+      loadConfig: () => config,
+      createLlmProvider: () => provider,
+      modelPath: "/fake/path",
+      onComplete: (result) => completed.push(result),
+    });
+
+    await pipeline.startRecording();
+    const result = await pipeline.stopAndProcess();
+
+    expect(result).toBe("Alpha one. and then we will see, Gamma three.");
+    expect(whisper.calls).toHaveLength(5);
+    expect(whisper.calls.map((call) => call.temperature)).toEqual([undefined, undefined, 0.4, 0.8, undefined]);
+    expect(completed).toHaveLength(1);
+    expect(completed[0].text).toBe(result);
+    expect(completed[0].incomplete).toBe(true);
+    expect(pipeline.lastTranscriptIncomplete()).toBe(true);
+
+    await pipeline.startRecording();
+    expect(pipeline.lastTranscriptIncomplete()).toBe(false);
+    const clean = await pipeline.stopAndProcess();
+
+    expect(clean).toBe("Alpha one. Beta two. Gamma three.");
+    expect(completed).toHaveLength(2);
+    expect("incomplete" in completed[1]).toBe(false);
+    expect(pipeline.lastTranscriptIncomplete()).toBe(false);
+  });
+
+  it("an incomplete transcript is marked in its history entry and warned about", async () => {
+    const loop = "and then we will see, and then we will see, and then we will see, and then we will see";
+    const config = createDefaultConfig();
+    const whisper = scriptedWhisper(["Alpha one.", loop, loop, loop, "Gamma three."]);
+    const completed: Parameters<NonNullable<ConstructorParameters<typeof Pipeline>[0]["onComplete"]>>[0][] = [];
+
+    const pipeline = new Pipeline({
+      recorder: {
+        start: async () => {},
+        stop: async () => ({ audioBuffer: threeChunks(), sampleRate: 16000 }),
+        cancel: async () => {},
+      },
+      transcribe: whisper.transcribe,
+      loadConfig: () => config,
+      createLlmProvider: () => createLlmProvider(config),
+      modelPath: "/fake/path",
+      onComplete: (result) => completed.push(result),
+    });
+
+    await pipeline.startRecording();
+    const text = await pipeline.stopAndProcess();
+
+    const entry = completedEntry(completed[0], text, { whisperModel: "small", llmEnhanced: false });
+    expect(entry.incomplete).toBe(true);
+    expect(entry.status).toBe("success");
+    expect(pasteOutcome(true, pipeline.lastTranscriptIncomplete())).toBe("incomplete");
+    expect(pasteOutcome(false, pipeline.lastTranscriptIncomplete())).toBe("insert-failed");
+    expect(t("indicator.incompleteTranscript")).toBe("Transcript may be incomplete");
+    expect(t("history.status.incomplete")).toBe("Incomplete");
+  });
+});
+
+describe("Transcription while recording", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("chunks closed while recording are transcribed before stop", async () => {
+    const config = createDefaultConfig();
+    const recorder = new FakeRecorder(threeChunks());
+    const whisper = scriptedWhisper(["Alpha one.", "Beta two.", "Gamma three."]);
+    const pipeline = new Pipeline({
+      recorder,
+      transcribe: whisper.transcribe,
+      loadConfig: () => config,
+      createLlmProvider,
+      modelPath: "/fake/path",
+    });
+
+    await pipeline.startRecording();
+    recorder.recordUpTo(45);
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(whisper.calls).toHaveLength(2);
+    expect(recorder.fetches).toEqual([{ offset: 0, returned: 720000 }]);
+
+    recorder.recordUpTo(51.2);
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(recorder.fetches.at(-1)).toEqual({ offset: 720000, returned: 99200 });
+    expect(recorder.fetches).toHaveLength(2);
+
+    await expect(pipeline.stopAndProcess()).resolves.toBe("Alpha one. Beta two. Gamma three.");
+    expect(whisper.calls).toHaveLength(3);
+
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(recorder.fetches).toHaveLength(2);
+  });
+
+  it("the preview is live until the first cut and block by block after it", async () => {
+    const config = createDefaultConfig();
+    config.enableLlmEnhancement = false;
+    const recorder = new FakeRecorder(threeChunks());
+    const whisper = scriptedWhisper(["Hello wor", "Alpha one.", "Beta two.", "Gamma three."]);
+    const previews: [string, string][] = [];
+    const pipeline = new Pipeline({
+      recorder,
+      transcribe: whisper.transcribe,
+      loadConfig: () => config,
+      createLlmProvider,
+      modelPath: "/fake/path",
+      onPreviewText: (text, source) => previews.push([text, source]),
+    });
+
+    await pipeline.startRecording();
+    pipeline.setPreviewShown(true);
+    recorder.recordUpTo(6);
+    await vi.advanceTimersByTimeAsync(1400);
+    expect(previews).toEqual([["Hello wor", "live"]]);
+    expect(whisper.calls).toHaveLength(1);
+    expect(whisper.calls[0].samples).toBe(96000);
+
+    recorder.recordUpTo(45);
+    await vi.advanceTimersByTimeAsync(100);
+    expect(previews.slice(1)).toEqual([["Alpha one.", "chunks"], ["Alpha one. Beta two.", "chunks"]]);
+    expect(whisper.calls.slice(1).map((call) => call.samples)).toEqual([338240, 345600]);
+
+    recorder.recordUpTo(51.2);
+    const text = await pipeline.stopAndProcess();
+    expect(text).toBe("Alpha one. Beta two. Gamma three.");
+    expect(text).not.toContain("Hello wor");
+    expect(whisper.calls).toHaveLength(4);
   });
 });
 

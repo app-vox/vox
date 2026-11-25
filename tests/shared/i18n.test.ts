@@ -81,6 +81,20 @@ describe("i18n", () => {
     }
   });
 
+  it("new strings exist in every locale", () => {
+    const newKeys = ["indicator.incompleteTranscript", "history.status.incomplete"];
+    const enKeys = Object.keys(en).sort();
+    for (const lang of SUPPORTED_LANGUAGES) {
+      const trans: Record<string, string> = allTranslations[lang];
+      for (const key of newKeys) {
+        expect(trans[key], `${lang}.${key} is missing or empty`).toBeTruthy();
+      }
+      expect(Object.keys(trans).sort(), `${lang} has different keys than en`).toEqual(enKeys);
+    }
+    expect(en["indicator.incompleteTranscript"]).toBe("Transcript may be incomplete");
+    expect(en["history.status.incomplete"]).toBe("Incomplete");
+  });
+
   describe("getDocsUrl", () => {
     it("returns base docs URL for English", () => {
       expect(getDocsUrl("en")).toBe("https://usevox.app/docs/");

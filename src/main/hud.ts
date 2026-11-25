@@ -1917,6 +1917,10 @@ export class HudWindow {
     this.setState("warning", customText);
   }
 
+  showIncompleteWarning(): void {
+    this.setState("warning", t("indicator.incompleteTranscript"));
+  }
+
   showTextPanelEmpty(): void {
     if (!this.window || this.window.isDestroyed() || !this.contentReady) return;
     if (this.textPanelResizeTimer) {
@@ -2132,7 +2136,7 @@ export class HudWindow {
       const base = PILL_MODES[state] || PILL_MODES.initializing;
       const labelText = customLabel ?? t(INDICATOR_KEYS[state] || "indicator.transcribing");
       mode = { ...base, labelText };
-      if (state === "warning") {
+      if (state === "warning" && customLabel === undefined) {
         mode = { ...mode, showCopy: true, copyText: t("notification.copyLatest") };
       }
       if (this.reduceAnimations && state === "listening") {

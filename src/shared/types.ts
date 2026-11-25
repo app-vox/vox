@@ -15,6 +15,8 @@ export interface TranscriptionEntry {
   audioFilePath?: string;
   errorMessage?: string;
   failedStep?: "whisper" | "llm" | "garbage";
+  /** True when a chunk of the transcript was collapsed or failed; absent on a complete transcript. */
+  incomplete?: boolean;
 }
 
 export interface PaginatedResult<T> {

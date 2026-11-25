@@ -68,6 +68,8 @@ describe("Next-prompt shortcut", () => {
     cancel: () => Promise.resolve(),
     startRecording: () => Promise.resolve(),
     playAudioCue: () => Promise.resolve(),
+    setPreviewShown: () => {},
+    lastTranscriptIncomplete: () => false,
   };
 
   function saveConfig(edit: (config: VoxConfig) => void): void {

@@ -271,4 +271,48 @@ describe("HudWindow", () => {
       vi.useRealTimers();
     });
   });
+
+  describe("warning", () => {
+    function readyHud(): HudWindow {
+      const hud = createHudWithWindow();
+      // `contentReady` is private and the window's content never loads in a test.
+      const loaded = hud as unknown as { contentReady: boolean };
+      loaded.contentReady = true;
+      return hud;
+    }
+
+    function warningScript(): string | undefined {
+      return mockWindow.webContents.executeJavaScript.mock.calls
+        .map(([js]) => js as string)
+        .find((js) => js.startsWith('setState("warning"'));
+    }
+
+    it("the incomplete warning shows its label for 5 s and no copy link", () => {
+      vi.useFakeTimers();
+      const hud = readyHud();
+
+      hud.showIncompleteWarning();
+
+      const shown = warningScript();
+      expect(shown).toContain('"labelText":"indicator.incompleteTranscript"');
+      expect(shown).not.toContain("showCopy");
+      expect(hud.getState()).toBe("warning");
+
+      vi.advanceTimersByTime(4999);
+      expect(hud.getState()).toBe("warning");
+      vi.advanceTimersByTime(1);
+      expect(hud.getState()).toBe("idle");
+      vi.useRealTimers();
+    });
+
+    it("the insert-failed warning keeps its copy link", () => {
+      const hud = readyHud();
+
+      hud.showWarning();
+
+      const shown = warningScript();
+      expect(shown).toContain('"showCopy":true');
+      expect(shown).toContain('"labelText":"notification.insertFailed"');
+    });
+  });
 });
