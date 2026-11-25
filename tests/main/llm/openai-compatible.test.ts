@@ -142,7 +142,7 @@ describe("OpenAICompatibleProvider", () => {
       { role: "user", content: wrapTranscription("raw text") },
     ]);
     expect(body.model).toBe("gpt-4o");
-    expect(body.temperature).toBe(0.1);
+    expect(body).not.toHaveProperty("temperature");
     expect(body.max_tokens).toBe(4096);
   });
 
