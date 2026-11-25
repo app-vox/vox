@@ -1,5 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "mode=full is required: the org-level Renovate app defaults to silent, which suppresses all PRs and the dashboard",
+  "mode": "full",
   "extends": [
     "config:best-practices",
     ":automergeStableNonMajor",
@@ -116,6 +118,13 @@
       "description": "Pin Node/npm engine bumps — they touch CI and the preinstall guard",
       "matchDepTypes": ["engines"],
       "matchPackageNames": ["node", "npm"],
+      "automerge": false
+    },
+    {
+      "description": "GitHub Actions digests have no release timestamp, so minimumReleaseAge keeps stability-days pending forever — skip it and require manual review instead",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["digest", "pinDigest"],
+      "minimumReleaseAge": null,
       "automerge": false
     }
   ]
