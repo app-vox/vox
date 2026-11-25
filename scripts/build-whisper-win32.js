@@ -41,14 +41,16 @@ async function main() {
   await downloadFile(DOWNLOAD_URL, zipPath);
   console.log("[postinstall] Download complete. Extracting...");
 
-  // Extract using PowerShell (available on all modern Windows)
+  // Extract using PowerShell (available on all modern Windows). Expand-Archive is
+  // avoided on purpose: it calls the 3-argument ZipFile.ExtractToDirectory, which
+  // is missing on some runner images; the 2-argument overload exists everywhere.
   const extractDir = path.join(VENDOR_DIR, "_whisper-bin");
   if (fs.existsSync(extractDir)) {
     fs.rmSync(extractDir, { recursive: true });
   }
 
   execSync(
-    `powershell.exe -NoProfile -Command "Expand-Archive -Path '${zipPath}' -DestinationPath '${extractDir}' -Force"`,
+    `powershell.exe -NoProfile -Command "Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory('${zipPath}', '${extractDir}')"`,
     { stdio: "inherit" }
   );
 
