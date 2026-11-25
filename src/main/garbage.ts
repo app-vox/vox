@@ -1,6 +1,7 @@
+import { WHISPER_PROMPT } from "../shared/constants";
 import { hasPhraseLoop } from "./chunking/loops";
 
-export type GarbageReason = "short" | "hallucination" | "description" | "char-frequency" | "char-diversity" | "loop";
+export type GarbageReason = "short" | "hallucination" | "description" | "char-frequency" | "char-diversity" | "loop" | "prompt-echo";
 
 const COMMON_HALLUCINATIONS = [
   "thank you", "thanks for watching", "thank you for watching",
@@ -23,12 +24,28 @@ const COMMON_HALLUCINATIONS = [
   "copyright", "all rights reserved",
 ];
 
+const PROMPT_SENTENCES = WHISPER_PROMPT.toLowerCase()
+  .split(/[.!?]+/)
+  .map((sentence) => sentence.trim())
+  .filter((sentence) => sentence.length > 0);
+
+/**
+ * On silence whisper parrots the initial prompt back, often cut short ("...multiple languages."),
+ * so any whole sentence of the prompt appearing in the text counts as an echo.
+ */
+function echoesPrompt(normalized: string): boolean {
+  const flat = normalized.replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ");
+  return PROMPT_SENTENCES.some((sentence) => flat.includes(sentence));
+}
+
 export function detectGarbage(text: string): GarbageReason | null {
   const normalized = text.toLowerCase().trim();
 
   if (normalized.length < 5) return "short";
 
   if (COMMON_HALLUCINATIONS.includes(normalized)) return "hallucination";
+
+  if (echoesPrompt(normalized)) return "prompt-echo";
 
   const withoutDescriptions = text
     .replace(/\([^)]*\)/g, "")
