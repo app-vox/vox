@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { app } from "electron";
-import { type VoxConfig, type LlmConfig, type LlmConfigFlat, type LlmProviderType, type WidgetPosition, createDefaultConfig, createDefaultLlmFlat, narrowLlmConfig, spreadLlmToFlat } from "../../shared/config";
+import { type VoxConfig, type LlmConfig, type LlmConfigFlat, type LlmProviderType, type Prompt, type WidgetPosition, createDefaultConfig, createDefaultLlmFlat, narrowLlmConfig, spreadLlmToFlat } from "../../shared/config";
 import { resolveWhisperLanguage } from "../../shared/constants";
 import { ENCRYPTED_PREFIX } from "./secrets";
 
@@ -38,6 +38,28 @@ export function migrateHudPosition(raw: string | undefined): WidgetPosition {
     right: "bottom-right",
   };
   return map[raw] ?? "bottom-center";
+}
+
+/** A saved config from before the prompt list holds a single `customPrompt` instead. */
+function isPrePromptsConfig(saved: Record<string, unknown>): boolean {
+  return !Array.isArray(saved.prompts) && typeof saved.customPrompt === "string" && saved.customPrompt.trim() !== "";
+}
+
+/**
+ * One-time migration: a saved config without a prompt list turns its non-blank
+ * `customPrompt` into an active prompt named "Default". A saved list always wins.
+ */
+export function migratePrompts(saved: Record<string, unknown>): { prompts: Prompt[]; activePromptId: string | null } {
+  if (Array.isArray(saved.prompts)) {
+    return { prompts: saved.prompts, activePromptId: typeof saved.activePromptId === "string" ? saved.activePromptId : null };
+  }
+  if (isPrePromptsConfig(saved)) {
+    return {
+      prompts: [{ id: "default", name: "Default", icon: "📝", instructions: saved.customPrompt as string }],
+      activePromptId: "default",
+    };
+  }
+  return { prompts: [], activePromptId: null };
 }
 
 export interface SecretStore {
@@ -86,7 +108,7 @@ export class ConfigManager {
           shortcuts: { ...defaults.shortcuts, ...saved.shortcuts },
           theme: saved.theme ?? defaults.theme,
           enableLlmEnhancement: saved.enableLlmEnhancement ?? defaults.enableLlmEnhancement,
-          customPrompt: saved.customPrompt ?? defaults.customPrompt,
+          ...migratePrompts(saved),
           launchAtLogin: saved.launchAtLogin ?? defaults.launchAtLogin,
           dictionary: Array.isArray(saved.dictionary) ? saved.dictionary : defaults.dictionary,
           speechLanguages: Array.isArray(saved.speechLanguages) ? saved.speechLanguages : defaults.speechLanguages,
@@ -139,20 +161,27 @@ export class ConfigManager {
     const dir = path.dirname(this.configPath);
     fs.mkdirSync(dir, { recursive: true });
 
-    let existingLlmFlat: LlmConfigFlat = createDefaultLlmFlat();
+    let existing: Record<string, unknown> | null = null;
     if (fs.existsSync(this.configPath)) {
       try {
-        const raw = JSON.parse(fs.readFileSync(this.configPath, "utf-8"));
-        if (raw.llm) {
-          existingLlmFlat = { ...existingLlmFlat, ...raw.llm };
-          for (const field of SENSITIVE_FIELDS) {
-            const value = (existingLlmFlat as unknown as Record<string, unknown>)[field];
-            if (typeof value === "string" && value) {
-              (existingLlmFlat as unknown as Record<string, string>)[field] = this.secrets.decrypt(value);
-            }
-          }
-        }
+        existing = JSON.parse(fs.readFileSync(this.configPath, "utf-8"));
       } catch { /* use defaults */ }
+    }
+
+    if (existing && isPrePromptsConfig(existing)) {
+      const backupPath = `${this.configPath}.pre-prompts.bak`;
+      if (!fs.existsSync(backupPath)) fs.copyFileSync(this.configPath, backupPath);
+    }
+
+    let existingLlmFlat: LlmConfigFlat = createDefaultLlmFlat();
+    if (existing?.llm) {
+      existingLlmFlat = { ...existingLlmFlat, ...existing.llm };
+      for (const field of SENSITIVE_FIELDS) {
+        const value = (existingLlmFlat as unknown as Record<string, unknown>)[field];
+        if (typeof value === "string" && value) {
+          (existingLlmFlat as unknown as Record<string, string>)[field] = this.secrets.decrypt(value);
+        }
+      }
     }
 
     const llmFlat: LlmConfigFlat = { ...existingLlmFlat, ...spreadLlmToFlat(config.llm) };

@@ -20,6 +20,7 @@ vi.mock("../../../src/main/audio/persistence", () => ({
 
 import { HistoryManager } from "../../../src/main/history/manager";
 import { deleteAudioFile } from "../../../src/main/audio/persistence";
+import { completedEntry, retryUpdate, type EntryContext } from "../../../src/main/history/entry";
 import type { TranscriptionEntry } from "../../../src/shared/types";
 
 describe("HistoryManager", () => {
@@ -269,6 +270,73 @@ describe("HistoryManager", () => {
 
       const result = manager.get(0, 10);
       expect(result.entries[0].audioFilePath).toBeUndefined();
+    });
+  });
+
+  describe("incomplete mark", () => {
+    const context: EntryContext = { whisperModel: "large", llmEnhanced: false };
+    const base = { originalText: "raw text", audioDurationMs: 1000 };
+
+    it("entry is stored with the mark", () => {
+      const entry = manager.add(completedEntry({ ...base, incomplete: true }, "Final text", context));
+
+      expect(entry.incomplete).toBe(true);
+      expect(entry.status).toBe(completedEntry(base, "Final text", context).status);
+      expect(entry.status).toBe("success");
+
+      const failed = manager.add(completedEntry({ ...base, incomplete: true, llmFailed: true }, "Final text", context));
+
+      expect(failed.incomplete).toBe(true);
+      expect(failed.status).toBe(completedEntry({ ...base, llmFailed: true }, "Final text", context).status);
+      expect(failed.status).toBe("llm_failed");
+    });
+
+    it("retry clears the mark", () => {
+      const { id } = manager.add(completedEntry({ ...base, incomplete: true }, "Final text", context));
+
+      manager.updateEntry(id, retryUpdate("raw text", "Final text", false, context));
+
+      expect(manager.getEntry(id)?.incomplete).toBeUndefined();
+      expect(manager.getEntry(id)?.status).toBe("success");
+    });
+
+    it("retry sets the mark", () => {
+      const { id } = manager.add(completedEntry(base, "Final text", context));
+
+      manager.updateEntry(id, retryUpdate("raw text", "Final text", true, context));
+
+      expect(manager.getEntry(id)?.incomplete).toBe(true);
+    });
+
+    it("incomplete entry follows the retention count", () => {
+      manager.add({
+        ...completedEntry({ ...base, incomplete: true }, "Oldest", context),
+        audioFilePath: "/mock/audio/oldest.wav",
+      });
+      manager.add({ ...completedEntry(base, "Middle", context), audioFilePath: "/mock/audio/middle.wav" });
+      manager.add({ ...completedEntry(base, "Newest", context), audioFilePath: "/mock/audio/newest.wav" });
+
+      manager.enforceAudioRetention(2);
+
+      const oldest = manager.get(0, 10).entries[2];
+      expect(oldest.text).toBe("Oldest");
+      expect(oldest.audioFilePath).toBeUndefined();
+      expect(deleteAudioFile).toHaveBeenCalledWith("/mock/audio/oldest.wav");
+      expect(oldest.incomplete).toBe(true);
+    });
+
+    it("a retry that returns no text leaves the mark as it was", () => {
+      const noSpeech = retryUpdate("  ", "", false, context);
+      const { id } = manager.add(completedEntry({ ...base, incomplete: true }, "Final text", context));
+
+      manager.updateEntry(id, noSpeech);
+
+      expect(noSpeech).toEqual({ status: "whisper_failed", errorMessage: "No speech detected", failedStep: "garbage" });
+      expect(manager.getEntry(id)?.incomplete).toBe(true);
+    });
+
+    it("a complete transcript stores no incomplete key", () => {
+      expect("incomplete" in completedEntry(base, "Final text", context)).toBe(false);
     });
   });
 

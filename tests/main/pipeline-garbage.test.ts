@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { Pipeline } from "../../src/main/pipeline";
+import { CanceledError, Pipeline, type PipelineDeps } from "../../src/main/pipeline";
 import { type LlmProvider } from "../../src/main/llm/provider";
+import { createDefaultConfig } from "../../src/shared/config";
+import { detectGarbage } from "../../src/main/garbage";
+import { deferred } from "./helpers/chunking";
 
 vi.mock("electron-log/main", () => ({
   default: {
@@ -22,7 +25,7 @@ describe("Pipeline garbage/hallucination detection", () => {
     correct: vi.fn().mockResolvedValue("corrected"),
   };
 
-  function createPipeline(transcriptionText: string | string[]) {
+  function createPipeline(transcriptionText: string | string[], onComplete?: PipelineDeps["onComplete"]) {
     const texts = Array.isArray(transcriptionText) ? transcriptionText : [transcriptionText];
     let callIndex = 0;
     return new Pipeline({
@@ -37,7 +40,9 @@ describe("Pipeline garbage/hallucination detection", () => {
         const text = texts[Math.min(callIndex++, texts.length - 1)];
         return Promise.resolve({ text });
       }),
-      llmProvider: mockProvider,
+      loadConfig: createDefaultConfig,
+      createLlmProvider: () => mockProvider,
+      onComplete,
       modelPath: "/models/ggml-small.bin",
     });
   }
@@ -126,34 +131,37 @@ describe("Pipeline garbage/hallucination detection", () => {
   });
 
   describe("hallucination loop detection", () => {
-    it("should reject sentence-level repetition loops", async () => {
+    it("should collapse a sentence-level repetition loop and send it to the LLM", async () => {
       const repeated = "Please subscribe to our channel. ".repeat(28).trim();
       const pipeline = createPipeline(repeated);
       await pipeline.startRecording();
       const result = await pipeline.stopAndProcess();
 
-      expect(result).toBe("");
-      expect(mockProvider.correct).not.toHaveBeenCalled();
+      expect(detectGarbage(repeated)).toBe("loop");
+      expect(result).toBe("corrected");
+      expect(mockProvider.correct).toHaveBeenCalledWith("Please subscribe to our channel.");
     });
 
-    it("should reject repetition loops without trailing punctuation", async () => {
+    it("should collapse a repetition loop without trailing punctuation and send it to the LLM", async () => {
       const repeated = Array(10).fill("Thank you for watching").join(". ");
       const pipeline = createPipeline(repeated);
       await pipeline.startRecording();
       const result = await pipeline.stopAndProcess();
 
-      expect(result).toBe("");
-      expect(mockProvider.correct).not.toHaveBeenCalled();
+      expect(detectGarbage(repeated)).toBe("loop");
+      expect(result).toBe("corrected");
+      expect(mockProvider.correct).toHaveBeenCalledWith("Thank you for watching.");
     });
 
-    it("should reject n-gram repetition loops (partial sentence loops)", async () => {
+    it("should collapse an n-gram repetition loop (partial sentence loop) and send it to the LLM", async () => {
       const repeated = "hello world test hello world test hello world test hello world test hello world test hello world test hello world test hello world test";
       const pipeline = createPipeline(repeated);
       await pipeline.startRecording();
       const result = await pipeline.stopAndProcess();
 
-      expect(result).toBe("");
-      expect(mockProvider.correct).not.toHaveBeenCalled();
+      expect(detectGarbage(repeated)).toBe("loop");
+      expect(result).toBe("corrected");
+      expect(mockProvider.correct).toHaveBeenCalledWith("hello world test");
     });
 
     it("should allow text with some natural repetition", async () => {
@@ -202,14 +210,61 @@ describe("Pipeline garbage/hallucination detection", () => {
       expect(mockProvider.correct).toHaveBeenCalledWith(goodText);
     });
 
-    it("should give up after all retries fail and return empty", async () => {
+    it("should collapse the loop after all retries fail, send it to the LLM and flag the transcript incomplete", async () => {
       const loopText = "Please subscribe to our channel. ".repeat(10).trim();
-      const pipeline = createPipeline([loopText, loopText, loopText]);
+      const onComplete = vi.fn();
+      const pipeline = createPipeline([loopText, loopText, loopText], onComplete);
       await pipeline.startRecording();
       const result = await pipeline.stopAndProcess();
 
-      expect(result).toBe("");
-      expect(mockProvider.correct).not.toHaveBeenCalled();
+      expect(detectGarbage(loopText)).toBe("loop");
+      expect(result).toBe("corrected");
+      expect(mockProvider.correct).toHaveBeenCalledWith("Please subscribe to our channel.");
+      expect(onComplete).toHaveBeenCalledTimes(1);
+      expect(onComplete.mock.calls[0][0].incomplete).toBe(true);
+      expect(pipeline.lastTranscriptIncomplete()).toBe(true);
+    });
+
+    it("should flag the transcript incomplete when the LLM fails on a collapsed loop", async () => {
+      const loopText = "Please subscribe to our channel. ".repeat(10).trim();
+      vi.mocked(mockProvider.correct).mockRejectedValueOnce(new Error("LLM down"));
+      const onComplete = vi.fn();
+      const pipeline = createPipeline([loopText, loopText, loopText], onComplete);
+      await pipeline.startRecording();
+      const result = await pipeline.stopAndProcess();
+
+      expect(result).toBe("Please subscribe to our channel.");
+      expect(onComplete).toHaveBeenCalledTimes(1);
+      expect(onComplete.mock.calls[0][0]).toMatchObject({
+        text: "Please subscribe to our channel.",
+        llmFailed: true,
+        incomplete: true,
+      });
+      expect(pipeline.lastTranscriptIncomplete()).toBe(true);
+    });
+
+    it("should keep the transcript flagged incomplete when a cancel at enhancing is undone", async () => {
+      const loopText = "Please subscribe to our channel. ".repeat(10).trim();
+      const pending = deferred<string>();
+      vi.mocked(mockProvider.correct).mockImplementationOnce(() => pending.promise);
+      const onComplete = vi.fn();
+      const pipeline = createPipeline([loopText, loopText, loopText], onComplete);
+      await pipeline.startRecording();
+      const processing = pipeline.stopAndProcess();
+      await vi.waitFor(() => expect(mockProvider.correct).toHaveBeenCalledTimes(1));
+
+      expect(pipeline.gracefulCancel().stage).toBe("enhancing");
+      pending.resolve("discarded");
+      await expect(processing).rejects.toBeInstanceOf(CanceledError);
+      expect(onComplete).not.toHaveBeenCalled();
+
+      const result = await pipeline.undoCancel();
+
+      expect(result).toBe("corrected");
+      expect(mockProvider.correct).toHaveBeenLastCalledWith("Please subscribe to our channel.");
+      expect(onComplete).toHaveBeenCalledTimes(1);
+      expect(onComplete.mock.calls[0][0].incomplete).toBe(true);
+      expect(pipeline.lastTranscriptIncomplete()).toBe(true);
     });
 
     it("should not retry for non-loop garbage types", async () => {
@@ -223,7 +278,8 @@ describe("Pipeline garbage/hallucination detection", () => {
           }),
         },
         transcribe: transcribeFn,
-        llmProvider: mockProvider,
+        loadConfig: createDefaultConfig,
+        createLlmProvider: () => mockProvider,
         modelPath: "/models/ggml-small.bin",
       });
       await pipeline.startRecording();
@@ -250,7 +306,8 @@ describe("Pipeline garbage/hallucination detection", () => {
           const text = texts[Math.min(callIndex++, texts.length - 1)];
           return Promise.resolve({ text });
         }),
-        llmProvider: mockProvider,
+        loadConfig: createDefaultConfig,
+        createLlmProvider: () => mockProvider,
         modelPath: "/models/ggml-small.bin",
         analytics: mockAnalytics,
       });
@@ -265,14 +322,15 @@ describe("Pipeline garbage/hallucination detection", () => {
   });
 
   describe("real-world regression cases", () => {
-    it("should catch the exact Whisper output from the 81-second hallucination loop", async () => {
+    it("should collapse the exact Whisper output from the 81-second hallucination loop and send it to the LLM", async () => {
       const realWhisperOutput = "Transcribe em estático. ".repeat(28).trim();
       const pipeline = createPipeline(realWhisperOutput);
       await pipeline.startRecording();
       const result = await pipeline.stopAndProcess();
 
-      expect(result).toBe("");
-      expect(mockProvider.correct).not.toHaveBeenCalled();
+      expect(detectGarbage(realWhisperOutput)).toBe("loop");
+      expect(result).toBe("corrected");
+      expect(mockProvider.correct).toHaveBeenCalledWith("Transcribe em estático.");
     });
   });
 

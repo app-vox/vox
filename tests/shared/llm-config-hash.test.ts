@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeLlmConfigHash } from "../../src/shared/llm-config-hash";
+import { computeLlmConfigHash, isEnhancementReady } from "../../src/shared/llm-config-hash";
 import { createDefaultConfig } from "../../src/shared/config";
 import type { VoxConfig, LlmConfig } from "../../src/shared/config";
 
@@ -67,5 +67,34 @@ describe("computeLlmConfigHash", () => {
       secretAccessKey: "", modelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
     });
     expect(computeLlmConfigHash(base)).not.toBe(computeLlmConfigHash(changed));
+  });
+});
+
+describe("isEnhancementReady", () => {
+  function testedConfig(): VoxConfig {
+    const config = { ...createDefaultConfig(), enableLlmEnhancement: true, llmConnectionTested: true };
+    return { ...config, llmConfigHash: computeLlmConfigHash(config) };
+  }
+
+  it("is true when enhancement is on, tested and the provider settings are unchanged", () => {
+    expect(isEnhancementReady(testedConfig())).toBe(true);
+  });
+
+  it("is false when enhancement is off", () => {
+    expect(isEnhancementReady({ ...testedConfig(), enableLlmEnhancement: false })).toBe(false);
+  });
+
+  it("is false when the connection is untested", () => {
+    expect(isEnhancementReady({ ...testedConfig(), llmConnectionTested: false })).toBe(false);
+  });
+
+  it("is false when the provider settings changed since the test", () => {
+    const changed = { ...testedConfig(), llm: { provider: "foundry" as const, endpoint: "https://other.example.com", apiKey: "", model: "gpt-4o" } };
+    expect(isEnhancementReady(changed)).toBe(false);
+  });
+
+  it("ignores prompt edits and switches", () => {
+    const prompts = [{ id: "a", name: "A", icon: "📝", instructions: "Be brief." }];
+    expect(isEnhancementReady({ ...testedConfig(), prompts, activePromptId: "a" })).toBe(true);
   });
 });

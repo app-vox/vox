@@ -4,11 +4,23 @@ import * as crypto from "crypto";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
-import { buildWhisperPrompt, buildWhisperArgs } from "../../shared/constants";
 import { whisper as whisperConfig } from "../platform";
+import { parseWhisperOutput, passLanguage } from "./whisper-output";
 
 export interface TranscriptionResult {
   text: string;
+  /** The language the pass ran in: the resolved one, or the one whisper-cli reported for `auto`; absent when it reported none. */
+  language?: string;
+}
+
+/** One whisper-cli run as its caller describes it: the prompt as given, the language before the platform resolves it. */
+export interface WhisperPass {
+  prompt: string;
+  language: string;
+  speechLanguages: string[];
+  temperature?: number;
+  /** Aborting it stops the transcription; the returned promise then rejects. */
+  signal?: AbortSignal;
 }
 
 // In packaged builds, native binaries are copied to extraResources via
@@ -21,9 +33,7 @@ export async function transcribe(
   audioBuffer: Float32Array,
   sampleRate: number,
   modelPath: string,
-  dictionary: string[] = [],
-  speechLanguages: string[] = [],
-  temperature?: number
+  pass: WhisperPass
 ): Promise<TranscriptionResult> {
   const tempPath = path.join(os.tmpdir(), `vox-recording-${crypto.randomUUID()}.wav`);
 
@@ -32,14 +42,14 @@ export async function transcribe(
     const wavBuffer = encodeWav(normalized, sampleRate);
     fs.writeFileSync(tempPath, wavBuffer);
 
-    const whisperArgs = buildWhisperArgs(speechLanguages);
-    const prompt = buildWhisperPrompt(dictionary, whisperArgs.promptPrefix);
-    const language = whisperConfig.resolveLanguage(whisperArgs.language, speechLanguages);
+    const language = whisperConfig.resolveLanguage(pass.language, pass.speechLanguages);
 
-    const stdout = await runWhisperCli(modelPath, tempPath, prompt, language, temperature);
-    const text = parseWhisperOutput(stdout);
+    const timeoutMs = whisperTimeoutMs(audioBuffer.length / sampleRate);
+    const output = await runWhisperCli(modelPath, tempPath, pass.prompt, language, pass.temperature, timeoutMs, pass.signal);
+    const text = parseWhisperOutput(output);
+    const ranIn = passLanguage(language, output);
 
-    return { text };
+    return ranIn === undefined ? { text } : { text, language: ranIn };
   } finally {
     if (fs.existsSync(tempPath)) {
       fs.unlinkSync(tempPath);
@@ -47,7 +57,20 @@ export async function transcribe(
   }
 }
 
-function runWhisperCli(modelPath: string, filePath: string, prompt: string, language = "auto", temperature?: number): Promise<string> {
+// Inference time grows with audio length, so a fixed timeout kills long recordings.
+export function whisperTimeoutMs(audioSeconds: number): number {
+  return whisperConfig.timeout + Math.ceil(audioSeconds * whisperConfig.timeoutPerAudioSecond);
+}
+
+function runWhisperCli(
+  modelPath: string,
+  filePath: string,
+  prompt: string,
+  language = "auto",
+  temperature: number | undefined,
+  timeoutMs: number,
+  signal: AbortSignal | undefined
+): Promise<string> {
   const args = [
     "-t", String(whisperConfig.threads),
     "-l", language,
@@ -63,7 +86,7 @@ function runWhisperCli(modelPath: string, filePath: string, prompt: string, lang
     execFile(
       WHISPER_BIN,
       args,
-      { timeout: whisperConfig.timeout },
+      { timeout: timeoutMs, signal },
       (error, stdout, stderr) => {
         if (error) {
           reject(new Error(`Whisper failed: ${stderr || error.message}`));
@@ -74,21 +97,6 @@ function runWhisperCli(modelPath: string, filePath: string, prompt: string, lang
       }
     );
   });
-}
-
-function parseWhisperOutput(output: string): string {
-  // Match lines like: [00:00:00.000 --> 00:00:03.000]   Testando para ver se funciona
-  const lines = output.match(/\[\d{2}:\d{2}:\d{2}\.\d{3}\s-->\s\d{2}:\d{2}:\d{2}\.\d{3}\]\s+.+/g);
-  if (!lines) return "";
-
-  return lines
-    .map((line) => {
-      const match = line.match(/\]\s+(.+)/);
-      return match ? match[1].trim() : "";
-    })
-    .filter(Boolean)
-    .join(" ")
-    .trim();
 }
 
 // Scale audio so peak amplitude reaches the target, preventing Whisper

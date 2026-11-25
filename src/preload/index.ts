@@ -67,6 +67,9 @@ export interface VoxAPI {
   llm: {
     test(config: import("../shared/config").VoxConfig): Promise<{ ok: boolean; error?: string }>;
   };
+  prompts: {
+    setActive(id: string | null): Promise<void>;
+  };
   whisper: {
     test(durationSec: number): Promise<string>;
   };
@@ -204,6 +207,9 @@ const voxApi: VoxAPI = {
   },
   llm: {
     test: (config) => ipcRenderer.invoke("llm:test", config),
+  },
+  prompts: {
+    setActive: (id) => ipcRenderer.invoke("prompts:set-active", id),
   },
   whisper: {
     test: (durationSec) => ipcRenderer.invoke("whisper:test", durationSec),

@@ -47,7 +47,7 @@ describe("getLlmModelName", () => {
 
   it("should return anthropicModel for anthropic", () => {
     const llm: LlmConfig = {
-      provider: "anthropic", anthropicApiKey: "", anthropicModel: "claude-sonnet-4-20250514",
+      provider: "anthropic", anthropicApiKey: "", anthropicModel: "claude-sonnet-4-20250514", anthropicEndpoint: "https://api.anthropic.com",
     };
     expect(getLlmModelName(llm)).toBe("claude-sonnet-4-20250514");
   });

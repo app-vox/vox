@@ -50,11 +50,26 @@ export function ShortcutsPanel() {
     triggerToast();
   };
 
-  const restoreDefaults = async () => {
-    updateConfig({ shortcuts: { mode: "toggle", hold: "Alt+Space", toggle: "Alt+Shift+Space" } });
+  const setNextPrompt = async (accelerator: string) => {
+    updateConfig({ shortcuts: { ...config.shortcuts, nextPrompt: accelerator } });
     await saveConfig(false);
     triggerToast();
   };
+
+  const restoreDefaults = async () => {
+    updateConfig({ shortcuts: { mode: "toggle", hold: "Alt+Space", toggle: "Alt+Shift+Space", nextPrompt: "" } });
+    await saveConfig(false);
+    triggerToast();
+  };
+
+  // The Next prompt shortcut must not take a key the active recording method already uses.
+  const activeRecordingShortcuts = [
+    ...(mode === "hold" || mode === "both" ? [config.shortcuts.hold] : []),
+    ...(mode === "toggle" || mode === "both" ? [config.shortcuts.toggle] : []),
+  ];
+
+  // Neither recording shortcut may take the Next prompt key.
+  const nextPromptShortcuts = config.shortcuts.nextPrompt ? [config.shortcuts.nextPrompt] : [];
 
   const modeLabels: Record<ShortcutMode, string> = {
     hold: t("shortcuts.mode.hold"),
@@ -91,7 +106,7 @@ export function ShortcutsPanel() {
             label={t("shortcuts.holdMode")}
             hint={t("shortcuts.holdHint")}
             value={config.shortcuts.hold}
-            otherValue={mode === "both" ? config.shortcuts.toggle : ""}
+            otherValues={[...(mode === "both" ? [config.shortcuts.toggle] : []), ...nextPromptShortcuts]}
             onChange={setHold}
           />
         )}
@@ -100,10 +115,19 @@ export function ShortcutsPanel() {
             label={t("shortcuts.toggleMode")}
             hint={t("shortcuts.toggleHint")}
             value={config.shortcuts.toggle}
-            otherValue={mode === "both" ? config.shortcuts.hold : ""}
+            otherValues={[...(mode === "both" ? [config.shortcuts.hold] : []), ...nextPromptShortcuts]}
             onChange={setToggle}
           />
         )}
+        <ShortcutRecorder
+          label={t("shortcuts.nextPrompt")}
+          hint={t("shortcuts.nextPromptHint")}
+          value={config.shortcuts.nextPrompt}
+          otherValues={activeRecordingShortcuts}
+          allowDoubleTap={false}
+          clearable
+          onChange={setNextPrompt}
+        />
 
         <button
           onClick={restoreDefaults}

@@ -25,8 +25,10 @@ export interface WhisperModule {
   binaryName: string;
   /** Number of threads for whisper inference */
   threads: number;
-  /** CLI process timeout in ms */
+  /** Base CLI process timeout in ms, for short audio */
   timeout: number;
+  /** Extra CLI timeout in ms granted per second of audio, so long recordings are not killed */
+  timeoutPerAudioSecond: number;
   /** Resolve the effective language for transcription */
   resolveLanguage(detected: string, speechLanguages: string[]): string;
 }

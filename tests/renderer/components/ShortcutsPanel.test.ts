@@ -12,7 +12,7 @@ beforeEach(() => {
 describe("ShortcutsPanel conflict resolution", () => {
   it("clears hold shortcut when toggle is set to same value in toggle mode", () => {
     const config = createDefaultConfig();
-    config.shortcuts = { mode: "toggle", hold: "Alt+Space", toggle: "Alt+Shift+Space" };
+    config.shortcuts = { mode: "toggle", hold: "Alt+Space", toggle: "Alt+Shift+Space", nextPrompt: "" };
     useConfigStore.setState({ config });
 
     const store = useConfigStore.getState();
@@ -32,7 +32,7 @@ describe("ShortcutsPanel conflict resolution", () => {
 
   it("clears toggle shortcut when hold is set to same value in hold mode", () => {
     const config = createDefaultConfig();
-    config.shortcuts = { mode: "hold", hold: "Alt+Space", toggle: "Alt+Shift+Space" };
+    config.shortcuts = { mode: "hold", hold: "Alt+Space", toggle: "Alt+Shift+Space", nextPrompt: "" };
     useConfigStore.setState({ config });
 
     const store = useConfigStore.getState();
@@ -52,7 +52,7 @@ describe("ShortcutsPanel conflict resolution", () => {
 
   it("does NOT clear other shortcut in 'both' mode", () => {
     const config = createDefaultConfig();
-    config.shortcuts = { mode: "both", hold: "Alt+Space", toggle: "Alt+Shift+Space" };
+    config.shortcuts = { mode: "both", hold: "Alt+Space", toggle: "Alt+Shift+Space", nextPrompt: "" };
     useConfigStore.setState({ config });
 
     const store = useConfigStore.getState();
@@ -73,7 +73,7 @@ describe("ShortcutsPanel conflict resolution", () => {
 
   it("does not clear when there is no conflict", () => {
     const config = createDefaultConfig();
-    config.shortcuts = { mode: "toggle", hold: "Alt+Space", toggle: "Alt+Shift+Space" };
+    config.shortcuts = { mode: "toggle", hold: "Alt+Space", toggle: "Alt+Shift+Space", nextPrompt: "" };
     useConfigStore.setState({ config });
 
     const store = useConfigStore.getState();

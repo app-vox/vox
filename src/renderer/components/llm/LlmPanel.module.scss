@@ -96,3 +96,204 @@
     }
   }
 }
+
+.promptManager {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: var(--spacing-5);
+  align-items: start;
+}
+
+.promptRows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-0-75);
+  max-height: 320px;
+  margin: 0;
+  padding: 0 var(--spacing-1) 0 0;
+  overflow-y: auto;
+  list-style: none;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background: var(--color-border);
+  }
+}
+
+.dragging {
+  opacity: 0.4;
+}
+
+.dropTarget {
+  border-radius: var(--radius-md);
+  box-shadow: 0 0 0 1px var(--color-accent);
+}
+
+.promptRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  width: 100%;
+  padding: var(--spacing-1-5) var(--spacing-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-default),
+              background var(--duration-fast) var(--ease-default);
+
+  &:hover {
+    background: var(--color-bg-hover);
+  }
+
+  &.selected {
+    border-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 6%, var(--color-bg-input));
+    color: var(--color-text-primary);
+  }
+}
+
+.promptIcon {
+  width: var(--size-icon-sm);
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.promptName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activeDot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+}
+
+.promptListActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-3);
+
+  button {
+    justify-content: center;
+    width: 100%;
+  }
+}
+
+.templateMenuAnchor {
+  position: relative;
+
+  > button[aria-expanded="true"] {
+    border-color: var(--color-border-hover);
+    background: var(--color-bg-hover);
+    outline: none;
+  }
+}
+
+.templateMenu {
+  position: absolute;
+  bottom: calc(100% + var(--spacing-1));
+  max-height: 320px;
+  overflow-y: auto;
+  left: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  width: max-content;
+  min-width: 200px;
+  max-width: 320px;
+  padding: var(--spacing-1) 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-card);
+  box-shadow: 0 4px 16px var(--color-shadow);
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background: var(--color-border);
+  }
+}
+
+.templateItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-1-5) var(--spacing-3);
+  border: none;
+  background: none;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-bg-hover);
+  }
+}
+
+.promptEditor {
+  min-width: 0;
+}
+
+.iconField {
+  width: 64px;
+  flex-shrink: 0;
+
+  input {
+    text-align: center;
+  }
+}
+
+.nameField {
+  flex: 1;
+  min-width: 0;
+}
+
+.editorActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin-top: var(--spacing-4);
+  padding: var(--spacing-3) 0;
+  background: var(--color-bg-card);
+}
+
+.confirmDelete {
+  border: 1px solid var(--color-error-border);
+  background: var(--color-error-bg-light);
+  color: var(--color-error);
+
+  &:hover {
+    background: var(--color-error-border-hover);
+  }
+}

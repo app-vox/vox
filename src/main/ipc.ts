@@ -4,11 +4,13 @@ import log from "electron-log/main";
 import { ConfigManager } from "./config/manager";
 import { ModelManager } from "./models/manager";
 import { HistoryManager } from "./history/manager";
+import { retryUpdate } from "./history/entry";
 import { AnalyticsService } from "./analytics/service";
 import { AudioRecorder } from "./audio/recorder";
 import { transcribe } from "./audio/whisper";
 import { createLlmProvider } from "./llm/factory";
 import { computeLlmConfigHash } from "../shared/llm-config-hash";
+import { buildWhisperPrompt } from "../shared/constants";
 import { type VoxConfig, type LlmProviderType, type WhisperModelSize } from "../shared/config";
 import { getResourcePath } from "./resources";
 import { SetupChecker } from "./setup/checker";
@@ -19,6 +21,7 @@ import { decodeWavFile } from "./audio/persistence";
 import { Pipeline } from "./pipeline";
 import { getLlmModelName } from "../shared/llm-utils";
 import { paster, permissions, applyCase, stripTrailingPeriod } from "./platform";
+import { type PromptSwitch } from "./prompt-switch";
 
 const testLog = log.scope("LlmTest");
 
@@ -26,6 +29,7 @@ export function registerIpcHandlers(
   configManager: ConfigManager,
   modelManager: ModelManager,
   historyManager: HistoryManager,
+  promptSwitch: PromptSwitch,
   onConfigChange?: () => void,
   analytics?: AnalyticsService
 ): void {
@@ -49,7 +53,7 @@ export function registerIpcHandlers(
 
   ipcMain.handle("config:save", (_event, config: VoxConfig) => {
     const previousConfig = configManager.load();
-    configManager.save(config);
+    promptSwitch.saveKeepingActivePrompt(config);
     nativeTheme.themeSource = config.theme;
 
     // Track config changes (field names only, never values)
@@ -69,8 +73,12 @@ export function registerIpcHandlers(
       });
     }
 
-    // Reload pipeline to apply new config (especially custom prompt changes)
+    // Reload pipeline to apply new config
     onConfigChange?.();
+  });
+
+  ipcMain.handle("prompts:set-active", (_event, id: string | null) => {
+    promptSwitch.setActivePrompt(id);
   });
 
   ipcMain.handle("models:list", () => {
@@ -138,15 +146,14 @@ export function registerIpcHandlers(
 
       config.llmConnectionTested = true;
       config.llmConfigHash = computeLlmConfigHash(config);
-      configManager.save(config);
+      promptSwitch.saveKeepingActivePrompt(config);
       onConfigChange?.();
 
       return { ok: true };
     } catch (err: unknown) {
       testLog.warn(">>> llm.correct() THREW: %s", err instanceof Error ? err.message : String(err));
-      config.llmConnectionTested = false;
-      config.llmConfigHash = "";
-      configManager.save(config);
+      promptSwitch.saveKeepingActivePrompt(config);
+      promptSwitch.markConnectionUntested();
 
       return { ok: false, error: err instanceof Error ? err.message : String(err) };
     }
@@ -181,7 +188,11 @@ export function registerIpcHandlers(
       await new Promise((r) => setTimeout(r, durationSec * 1000));
       const recording = await recorder.stop();
       const samples = resampleTo16kHz(recording.audioBuffer, recording.sampleRate);
-      const result = await transcribe(samples, 16000, modelPath, config.dictionary ?? []);
+      const result = await transcribe(samples, 16000, modelPath, {
+        prompt: buildWhisperPrompt(config.dictionary ?? []),
+        language: "auto",
+        speechLanguages: [],
+      });
       return result.text;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -211,7 +222,11 @@ export function registerIpcHandlers(
       await new Promise((r) => setTimeout(r, durationSec * 1000));
       const recording = await recorder.stop();
       const samples = resampleTo16kHz(recording.audioBuffer, recording.sampleRate);
-      const result = await transcribe(samples, 16000, modelPath, config.dictionary ?? []);
+      const result = await transcribe(samples, 16000, modelPath, {
+        prompt: buildWhisperPrompt(config.dictionary ?? []),
+        language: "auto",
+        speechLanguages: [],
+      });
       const rawText = result.text;
 
       let correctedText: string | null = null;
@@ -348,16 +363,15 @@ export function registerIpcHandlers(
     const modelPath = config.whisper.model
       ? modelManager.getModelPath(config.whisper.model)
       : "";
-    const llmProvider = createLlmProvider(config);
 
     const retryPipeline = new Pipeline({
       recorder: { start: async () => {}, stop: async () => recording, cancel: async () => {} },
       transcribe,
-      llmProvider,
+      loadConfig: () => configManager.load(),
+      createLlmProvider,
       modelPath,
       dictionary: config.dictionary ?? [],
       speechLanguages: config.speechLanguages ?? [],
-      hasCustomPrompt: Boolean(config.customPrompt),
       llmModelName: config.enableLlmEnhancement ? getLlmModelName(config.llm) : undefined,
       analytics,
     });
@@ -365,29 +379,14 @@ export function registerIpcHandlers(
     try {
       const text = await retryPipeline.retryFromRecording(recording);
 
-      if (!text.trim()) {
-        historyManager.updateEntry(entryId, {
-          status: "whisper_failed",
-          errorMessage: "No speech detected",
-          failedStep: "garbage",
-        });
-        return historyManager.getEntry(entryId);
-      }
-
       const finalText = applyCase(stripTrailingPeriod(text), config.lowercaseStart);
 
-      historyManager.updateEntry(entryId, {
-        text: finalText,
-        originalText: text,
-        wordCount: finalText.split(/\s+/).filter(Boolean).length,
-        status: "success",
-        errorMessage: undefined,
-        failedStep: undefined,
+      historyManager.updateEntry(entryId, retryUpdate(text, finalText, retryPipeline.lastTranscriptIncomplete(), {
         whisperModel: config.whisper.model || "unknown",
         llmEnhanced: config.enableLlmEnhancement,
         llmProvider: config.enableLlmEnhancement ? config.llm.provider : undefined,
         llmModel: config.enableLlmEnhancement ? getLlmModelName(config.llm) : undefined,
-      });
+      }));
 
       return historyManager.getEntry(entryId);
     } catch (err) {

@@ -82,6 +82,25 @@ describe("buildWhisperPrompt", () => {
     const result = buildWhisperPrompt(["Kubernetes"], "");
     expect(result).not.toContain("The speaker may use");
   });
+
+  it("carried text follows the usual prompt after one space", () => {
+    expect(buildWhisperPrompt(["Kubernetes"], "", "last words")).toBe(`Kubernetes. ${WHISPER_PROMPT} last words`);
+  });
+
+  it("the dictionary gives up the room of the carried text", () => {
+    const terms = Array.from({ length: 120 }, (_, i) => `term${String(i).padStart(3, "0")}`);
+    const carried = "c".repeat(200);
+    const termsOf = (prompt: string) => prompt.slice(0, prompt.indexOf(`. ${WHISPER_PROMPT}`)).split(", ");
+
+    const result = buildWhisperPrompt(terms, "", carried);
+
+    expect(result.length).toBeLessThanOrEqual(896);
+    expect(result.endsWith(`. ${WHISPER_PROMPT} ${carried}`)).toBe(true);
+    const kept = termsOf(result);
+    expect(kept).toEqual(terms.slice(0, kept.length));
+    expect(kept.length).toBeGreaterThanOrEqual(1);
+    expect(kept.length).toBeLessThan(termsOf(buildWhisperPrompt(terms)).length);
+  });
 });
 
 describe("buildSystemPrompt", () => {

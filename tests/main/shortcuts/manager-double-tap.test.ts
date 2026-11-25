@@ -81,6 +81,7 @@ vi.mock("../../../src/main/hud", () => {
       setInvertColors = vi.fn();
       showTextPanel = vi.fn();
       showTextPanelEmpty = vi.fn();
+      restoreTextPanel = vi.fn();
       updateTextPanel = vi.fn();
       hideTextPanel = vi.fn();
       resetPreviewSession = vi.fn();
@@ -123,10 +124,10 @@ function createMockPipeline() {
   return {
     startRecording: vi.fn().mockResolvedValue(undefined),
     stopAndProcess: vi.fn().mockResolvedValue("hello"),
-    stopAndProcessWithHint: vi.fn().mockResolvedValue("hello"),
     cancel: vi.fn().mockResolvedValue(undefined),
     playAudioCue: vi.fn().mockResolvedValue(undefined),
-    snapshotAndTranscribe: vi.fn().mockResolvedValue(null),
+    setPreviewShown: vi.fn(),
+    lastTranscriptIncomplete: vi.fn().mockReturnValue(false),
     gracefulCancel: vi.fn().mockReturnValue({ stage: "recording" }),
     confirmCancel: vi.fn(),
     undoCancel: vi.fn().mockResolvedValue("hello"),
@@ -214,6 +215,8 @@ describe("ShortcutManager — double-tap integration", () => {
       configManager: mockConfigManager,
       getPipeline: () => mockPipeline,
       hasModel: () => true,
+      setActivePrompt: vi.fn(),
+      saveAndAnnounce: (saved: unknown) => mockConfigManager.save(saved),
     } as unknown as ShortcutManagerDeps);
 
     manager.start();

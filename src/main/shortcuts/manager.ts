@@ -1,4 +1,4 @@
-import { BrowserWindow, clipboard, globalShortcut, ipcMain, Notification, screen } from "electron";
+import { clipboard, globalShortcut, ipcMain, Notification, screen } from "electron";
 import { uIOhook, UiohookKey } from "uiohook-napi";
 import log from "electron-log/main";
 import { type ConfigManager } from "../config/manager";
@@ -6,12 +6,15 @@ import { paster } from "../platform";
 import { type Pipeline, CanceledError, NoModelError } from "../pipeline";
 import { ShortcutStateMachine, RecordingState } from "./listener";
 import { DoubleTapDetector } from "./double-tap";
+import { pasteOutcome } from "./paste-outcome";
 import { isDoubleTap, getDoubleTapModifier } from "../../shared/shortcuts";
 import { HudWindow } from "../hud";
-import { setTrayListeningState, updateTrayConfig } from "../tray";
+import { setTrayListeningState } from "../tray";
 import { t } from "../../shared/i18n";
 import { generateCueSamples, isWavCue, getWavFilename, parseWavSamples } from "../../shared/audio-cue";
-import { type AudioCueType, createDefaultConfig } from "../../shared/config";
+import { type AudioCueType, type VoxConfig, createDefaultConfig } from "../../shared/config";
+import { findActivePrompt, nextPromptId, promptLabel } from "../../shared/prompts";
+import { isEnhancementReady } from "../../shared/llm-config-hash";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { app } from "electron";
@@ -99,6 +102,10 @@ export interface ShortcutManagerDeps {
   analytics?: { track(event: string, properties?: Record<string, unknown>): void };
   openSettings?: (tab?: string) => void;
   hasModel: () => boolean;
+  /** Makes the prompt with `id` active, or None when `id` is null. */
+  setActivePrompt: (id: string | null) => void;
+  /** Saves a config main changed itself, refreshes the tray and tells open windows to reload it. */
+  saveAndAnnounce: (config: VoxConfig) => void;
 }
 
 export class ShortcutManager {
@@ -117,15 +124,7 @@ export class ShortcutManager {
   private canceledAtStage: string | null = null;
   private devModelOverride: boolean | null = null;
   private lastUnpastedText: string | null = null;
-  private liveTranscriptionTimer: ReturnType<typeof setTimeout> | null = null;
-  private lastSnapshotText = "";
   private livePreviewClosedForSession = false;
-  private activePipeline: Pipeline | null = null;
-  private activePipelineGen = 0;
-  // How often to re-transcribe the full audio buffer during live preview
-  private static readonly LIVE_PREVIEW_INTERVAL_MS = 1000;
-  // Delay before the first snapshot after recording starts
-  private static readonly LIVE_PREVIEW_FIRST_SNAPSHOT_MS = 400;
   private isShiftHeld = false;
   private shiftAlone = false;
   private shiftTrackingActive = false;
@@ -345,7 +344,6 @@ export class ShortcutManager {
     }
     if (state === RecordingState.Hold || state === RecordingState.Toggle || state === RecordingState.Processing) {
       slog.info("Graceful cancel requested");
-      this.stopLiveTranscription();
       this.micActiveAt = 0;
       this.recordingGeneration++;
       const pipeline = this.deps.getPipeline();
@@ -411,8 +409,9 @@ export class ShortcutManager {
         slog.info("Undo succeeded, pasting text");
         const config = this.deps.configManager.load();
         const pasted = paster.pasteText(trimmedText, config.copyToClipboard, { finishWithPeriod: config.finishWithPeriod });
+        const outcome = pasteOutcome(pasted, pipeline.lastTranscriptIncomplete());
 
-        if (!pasted) {
+        if (outcome === "insert-failed") {
           slog.info("Text not inserted — showing HUD warning");
           const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
           this.playCue(errorCueType);
@@ -423,7 +422,11 @@ export class ShortcutManager {
           this.lastUnpastedText = null;
           this.deps.analytics?.track("paste_completed", { method: "undo-cancel" });
           this.stateMachine.setIdle();
-          this.hud.setState("idle");
+          if (outcome === "incomplete") {
+            this.hud.showIncompleteWarning();
+          } else {
+            this.hud.setState("idle");
+          }
         }
       }
       this.updateTrayState();
@@ -761,23 +764,22 @@ export class ShortcutManager {
     if ((mode === "toggle" || mode === "both") && !toggleOk) slog.warn("Failed to register toggle shortcut:", config.shortcuts.toggle);
 
     if (!holdOk || !toggleOk) {
-      const defaults = createDefaultConfig().shortcuts;
-      config.shortcuts = defaults;
-      this.deps.configManager.save(config);
-      for (const win of BrowserWindow.getAllWindows()) {
-        win.webContents.send("config:changed");
-      }
+      // Reset only the recording shortcuts; the Next prompt shortcut is handled on its own below.
+      config.shortcuts = { ...createDefaultConfig().shortcuts, nextPrompt: config.shortcuts.nextPrompt };
+      this.deps.saveAndAnnounce(config);
       new Notification({
         title: t("notification.shortcutReset.title"),
         body: t("notification.shortcutReset.body"),
       }).show();
     }
 
+    if (config.shortcuts.nextPrompt) this.registerNextPromptShortcut(config);
+
     if (!isDoubleTap(config.shortcuts.hold)) {
       this.holdKeyCodes = (mode === "hold" || mode === "both") ? getHoldKeyCodes(config.shortcuts.hold) : new Set();
     }
 
-    slog.info("Shortcuts registered: mode=%s, hold=%s, toggle=%s", mode, config.shortcuts.hold, config.shortcuts.toggle);
+    slog.info("Shortcuts registered: mode=%s, hold=%s, toggle=%s, nextPrompt=%s", mode, config.shortcuts.hold, config.shortcuts.toggle, config.shortcuts.nextPrompt);
 
     if (!busy) {
       // Re-enable shortcuts after a brief delay to prevent spurious activations
@@ -785,6 +787,48 @@ export class ShortcutManager {
         this.isInitializing = false;
         slog.info("Shortcuts re-enabled after registration");
       }, 300);
+    }
+  }
+
+  /** Registers the Next prompt shortcut; when that fails, clears only this shortcut and tells the user. */
+  private registerNextPromptShortcut(config: VoxConfig): void {
+    let ok: boolean;
+    try {
+      ok = globalShortcut.register(config.shortcuts.nextPrompt, () => this.switchToNextPrompt());
+    } catch (err: unknown) {
+      slog.error("Invalid next-prompt shortcut accelerator: %s", config.shortcuts.nextPrompt, err);
+      ok = false;
+    }
+    if (ok) return;
+
+    slog.warn("Failed to register next-prompt shortcut — clearing it:", config.shortcuts.nextPrompt);
+    config.shortcuts.nextPrompt = "";
+    this.deps.saveAndAnnounce(config);
+    new Notification({
+      title: t("notification.nextPromptCleared.title"),
+      body: t("notification.nextPromptCleared.body"),
+    }).show();
+  }
+
+  /** Activates the next prompt and shows it in the idle HUD, or as a notification when the HUD is off or busy. */
+  private switchToNextPrompt(): void {
+    const config = this.deps.configManager.load();
+    if (!isEnhancementReady(config)) {
+      new Notification({
+        title: t("notification.promptNotReady.title"),
+        body: t("notification.promptNotReady.body"),
+      }).show();
+      return;
+    }
+
+    const id = nextPromptId(config);
+    this.deps.setActivePrompt(id);
+    const prompt = findActivePrompt({ ...config, activePromptId: id });
+    const label = prompt ? promptLabel(prompt) : t("llm.prompts.none");
+    if (config.showHud && !this.isRecording()) {
+      this.hud.setState("prompt", label);
+    } else {
+      new Notification({ title: t("notification.promptSwitched.title"), body: label }).show();
     }
   }
 
@@ -865,12 +909,8 @@ export class ShortcutManager {
     ipcMain.handle("hud:disable", () => {
       const config = this.deps.configManager.load();
       config.showHud = false;
-      this.deps.configManager.save(config);
+      this.deps.saveAndAnnounce(config);
       this.hud.hide();
-      updateTrayConfig(config);
-      for (const win of BrowserWindow.getAllWindows()) {
-        win.webContents.send("config:changed");
-      }
     });
 
     ipcMain.on("hud:drag", (_event, dx: number, dy: number) => {
@@ -885,10 +925,7 @@ export class ShortcutManager {
         config.hudCustomX = result.nx;
         config.hudCustomY = result.ny;
         config.targetDisplayId = result.displayId;
-        this.deps.configManager.save(config);
-        for (const win of BrowserWindow.getAllWindows()) {
-          win.webContents.send("config:changed");
-        }
+        this.deps.saveAndAnnounce(config);
       }
     });
 
@@ -999,8 +1036,6 @@ export class ShortcutManager {
     const pipeline = this.deps.getPipeline();
     this.recordingGeneration++;
     this.livePreviewClosedForSession = false;
-    this.activePipeline = null;
-    this.activePipelineGen = 0;
     this.hud.resetPreviewSession();
     this.lastUnpastedText = null;
     this.shiftTrackingActive = false;
@@ -1036,7 +1071,8 @@ export class ShortcutManager {
 
       this.hud.setState("listening");
       if (config.alwaysShowPreview !== false && !this.livePreviewClosedForSession) {
-        this.startLiveTranscription(pipeline, gen);
+        this.hud.showTextPanelEmpty();
+        pipeline.setPreviewShown(true);
       }
     }).catch((err: Error) => {
       if (gen !== this.recordingGeneration) {
@@ -1064,7 +1100,6 @@ export class ShortcutManager {
   }
 
   private async onRecordingStop(): Promise<void> {
-    this.stopLiveTranscription();
     const elapsed = this.micActiveAt > 0 ? Date.now() - this.micActiveAt : 0;
     if (this.micActiveAt === 0 || elapsed < ShortcutManager.MIN_RECORDING_MS) {
       slog.info("Recording too short (%dms) or mic not ready — canceling", elapsed);
@@ -1099,10 +1134,7 @@ export class ShortcutManager {
 
     let hudEndState: "idle" | "error" | "canceled" | "warning" = "idle";
     try {
-      const hint = this.lastSnapshotText;
-      const text = hint
-        ? await pipeline.stopAndProcessWithHint(hint)
-        : await pipeline.stopAndProcess();
+      const text = await pipeline.stopAndProcess();
 
       // If generation changed, a restart/cancel happened — abandon this result
       if (gen !== this.recordingGeneration) {
@@ -1128,8 +1160,9 @@ export class ShortcutManager {
         const pasteConfig = this.deps.configManager.load();
         const forceCapitalize = this.isShiftHeld && this.shiftAlone && pasteConfig.shiftCapitalize && pasteConfig.lowercaseStart;
         const pasted = paster.pasteText(trimmedText, pasteConfig.copyToClipboard, { lowercaseStart: pasteConfig.lowercaseStart, shiftCapitalize: forceCapitalize, finishWithPeriod: pasteConfig.finishWithPeriod });
+        const outcome = pasteOutcome(pasted || !config.onboardingCompleted, pipeline.lastTranscriptIncomplete());
 
-        if (!pasted && config.onboardingCompleted) {
+        if (outcome === "insert-failed") {
           slog.info("Text not inserted — showing HUD warning");
           const errorCueType = (config.errorAudioCue ?? "error") as AudioCueType;
           this.playCue(errorCueType);
@@ -1140,6 +1173,7 @@ export class ShortcutManager {
           this.lastUnpastedText = null;
           this.hud.hideTextPanel();
           this.deps.analytics?.track("paste_completed", { method: !pasted ? "onboarding" : "auto-paste" });
+          if (outcome === "incomplete") this.hud.showIncompleteWarning();
         }
       }
     } catch (err: unknown) {
@@ -1180,78 +1214,19 @@ export class ShortcutManager {
     }
   }
 
-  private startLiveTranscription(pipeline: Pipeline, gen: number): void {
-    this.stopLiveTranscription();
-    this.activePipeline = pipeline;
-    this.activePipelineGen = gen;
-    this.lastSnapshotText = "";
-    let running = false;
-    this.hud.showTextPanelEmpty();
-
-    const tick = async (): Promise<void> => {
-      if (gen !== this.recordingGeneration) return;
-      if (running) {
-        // Previous transcription still in progress — retry shortly
-        this.liveTranscriptionTimer = setTimeout(() => { tick(); }, 300);
-        return;
-      }
-      running = true;
-      try {
-        const text = await pipeline.snapshotAndTranscribe();
-        if (gen !== this.recordingGeneration) return;
-        if (text) {
-          this.lastSnapshotText = text;
-          this.hud.updateTextPanel(text);
-        }
-      } catch {
-        // Ignore errors during live transcription
-      } finally {
-        running = false;
-      }
-      if (gen !== this.recordingGeneration) return;
-      this.liveTranscriptionTimer = setTimeout(
-        () => { tick(); },
-        ShortcutManager.LIVE_PREVIEW_INTERVAL_MS,
-      );
-    };
-
-    // First snapshot
-    this.liveTranscriptionTimer = setTimeout(() => { tick(); }, ShortcutManager.LIVE_PREVIEW_FIRST_SNAPSHOT_MS);
-  }
-
-  private stopLiveTranscription(): void {
-    if (this.liveTranscriptionTimer) {
-      clearTimeout(this.liveTranscriptionTimer);
-      this.liveTranscriptionTimer = null;
-    }
-    this.lastSnapshotText = "";
-  }
-
   private closeLivePreview(): void {
     this.livePreviewClosedForSession = true;
-    this.stopLiveTranscription();
+    this.deps.getPipeline().setPreviewShown(false);
     this.hud.hideTextPanel();
   }
 
   private restoreLivePreview(): void {
-    // If we're in a recording state but no active pipeline, start one
     const state = this.stateMachine.getState();
     const isRecording = state === RecordingState.Hold || state === RecordingState.Toggle || state === RecordingState.Processing;
-
-    if (!this.activePipeline || this.activePipelineGen !== this.recordingGeneration) {
-      // No active pipeline - need to start live transcription if we're recording
-      if (isRecording && this.recordingGeneration > 0) {
-        const pipeline = this.deps.getPipeline();
-        this.livePreviewClosedForSession = false;
-        this.startLiveTranscription(pipeline, this.recordingGeneration);
-        return;
-      }
-      return;
-    }
+    if (!isRecording) return;
 
     this.livePreviewClosedForSession = false;
-    // Show existing text immediately without animation
-    this.hud.restoreTextPanel(this.lastSnapshotText);
-    this.startLiveTranscription(this.activePipeline, this.activePipelineGen);
+    this.hud.restoreTextPanel("");
+    this.deps.getPipeline().setPreviewShown(true);
   }
 }

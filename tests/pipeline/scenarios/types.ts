@@ -12,6 +12,10 @@ export interface Scenario {
   minSimilarity: number;
   assertions: Assertion[];
   dictionary?: string[];
+  /** Instructions of the active custom prompt for this scenario. */
+  promptInstructions?: string;
+  /** Speech languages set in Vox for this scenario. */
+  speechLanguages?: string[];
 }
 
 export type ScenarioCategory =
@@ -26,7 +30,8 @@ export type ScenarioCategory =
   | "number-date-formatting"
   | "contextual-repair"
   | "mixed-complexity"
-  | "dictionary-terms";
+  | "dictionary-terms"
+  | "custom-instructions";
 
 export const SCENARIO_CATEGORIES: ScenarioCategory[] = [
   "filler-removal",
@@ -41,4 +46,5 @@ export const SCENARIO_CATEGORIES: ScenarioCategory[] = [
   "contextual-repair",
   "mixed-complexity",
   "dictionary-terms",
+  "custom-instructions",
 ];
